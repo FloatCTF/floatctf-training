@@ -1,0 +1,64 @@
+{
+  "fixtures": [
+    {
+      "id": "ssrf",
+      "category": "web-security",
+      "primaryMode": "mechanism",
+      "supportingModes": ["lab", "case-study"],
+      "evidenceProfiles": ["security"],
+      "assessments": ["interview", "lab-check"],
+      "motionLevel": "simulation",
+      "visualStory": "浏览器、应用服务器、内网服务和云元数据服务之间的请求路径与信任边界"
+    },
+    {
+      "id": "sql-injection",
+      "category": "web-security",
+      "primaryMode": "code",
+      "supportingModes": ["mechanism", "lab"],
+      "evidenceProfiles": ["security"],
+      "assessments": ["interview", "exercise"],
+      "motionLevel": "explanatory",
+      "visualStory": "用户输入进入字符串拼接、SQL 解析和参数化查询的不同路径"
+    },
+    {
+      "id": "deep-learning-basics",
+      "category": "ai-ml",
+      "primaryMode": "concept",
+      "supportingModes": ["mechanism", "lab"],
+      "evidenceProfiles": ["academic"],
+      "assessments": ["quiz", "exercise"],
+      "motionLevel": "simulation",
+      "visualStory": "输入经过网络层完成前向传播，损失函数随参数变化"
+    },
+    {
+      "id": "c-pointers",
+      "category": "programming",
+      "primaryMode": "code",
+      "supportingModes": ["mechanism", "troubleshooting"],
+      "evidenceProfiles": ["stable-technical"],
+      "assessments": ["exercise"],
+      "motionLevel": "explanatory",
+      "visualStory": "变量、地址、指针、栈帧和解引用之间的关系"
+    },
+    {
+      "id": "git-branch-merge",
+      "category": "engineering-tools",
+      "primaryMode": "tool",
+      "supportingModes": ["mechanism", "troubleshooting"],
+      "evidenceProfiles": ["versioned-tool"],
+      "assessments": ["exercise", "lab-check"],
+      "motionLevel": "simulation",
+      "visualStory": "Commit DAG、分支指针、merge、rebase 和冲突状态的变化"
+    },
+    {
+      "id": "burp-intercept",
+      "category": "engineering-tools",
+      "primaryMode": "tool",
+      "supportingModes": ["lab", "troubleshooting"],
+      "evidenceProfiles": ["versioned-tool", "security"],
+      "assessments": ["lab-check"],
+      "motionLevel": "explanatory",
+      "visualStory": "浏览器、代理和目标靶场之间的请求拦截、修改与转发过程"
+    }
+  ]
+}

@@ -1,0 +1,138 @@
+---
+title: RCE：命令注入与代码执行的信任边界
+description: 区分命令注入与代码执行，演示 shell 拼接风险，并对照公开 RCE 案例设计防御
+pageType: lesson
+template: splash
+lessonId: rce
+categoryId: web-security
+sources: ["owasp-command-injection", "owasp-command-defense", "cwe-78", "cve-2021-44228", "log4j-security", "cve-2022-22965", "appsec-interview-gist"]
+motionLevel: explanatory
+safetyScope: authorized-lab
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import CodeCompare from '../../../components/code-compare.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
+import InterviewAccordion from '../../../components/interview-accordion';
+import ScrollReveal from '../../../components/scroll-reveal';
+import manifest from '../../../data/lessons/rce.json';
+
+export const vulnerableSnippet = `// 危险：经 shell 拼接主机名
+const output = execSync('ping -c 1 ' + host, { encoding: 'utf8' });`;
+
+export const secureSnippet = `// 安全：固定二进制 + argv，不经 shell
+import { spawnSync } from 'node:child_process';
+if (!/^[A-Za-z0-9.-]+$/.test(host)) throw new Error('invalid host');
+const result = spawnSync('/bin/ping', ['-c', '1', host], { encoding: 'utf8' });`;
+
+<LessonHero
+  series="SECURITY TRAINING"
+  unit="WEB SECURITY · UNIT 05"
+  kicker="Remote Code Execution"
+  lines={[
+    { text: "远程执行" },
+    { text: "命令注入", accent: true },
+    { text: "RCE", latin: true },
+  ]}
+  summary="RCE 把应用输入推进到操作系统命令或语言求值器。先分清入口类型，再设计不经 shell 的调用与依赖治理。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：为什么“多打了一个分号”就能执行新命令？
+
+如果程序执行的是：
+
+```bash
+ping -c 1 <用户输入>
+```
+
+并且这行字符串交给 shell 解析，那么用户输入中的 `;`、`|`、`$()` 会成为 shell 语法，而不是 `ping` 的普通参数。
+
+CWE-78 描述的是 OS 命令中特殊元素中和不足；OWASP 给出攻击说明与防御清单。（来源：[CWE-78](#source-cwe-78)、[OWASP](#source-owasp-command-injection)）
+
+## 两条主路径
+
+1. **命令注入：** 输入进入 shell/命令行。
+2. **代码执行：** 输入进入 `eval`、反序列化、模板引擎或表达式引擎。
+
+最终都能控制进程，但审计搜索词和修复点不同。
+
+## 本地演示
+
+```bash
+node examples/command-injection-demo.mjs
+```
+
+预期：
+
+```text
+脆弱命令串： ping -c 1 127.0.0.1; id
+安全参数： {"argv":["ping","-c","1","127.0.0.1; id"], ...}
+```
+
+在 argv 形式下，`; id` 只是主机名参数的一部分，不会变成第二条命令。真实环境仍要校验主机格式。
+
+<CodeCompare
+  language="javascript"
+  vulnerable={vulnerableSnippet}
+  secure={secureSnippet}
+  vulnerableTitle="脆弱：shell 字符串拼接"
+  secureTitle="安全：固定二进制与 argv"
+/>
+
+## 其它 RCE 入口
+
+<DataTable
+  caption="常见代码执行入口"
+  headers={["入口", "机制", "防御要点"]}
+  rows={[
+    ["eval/exec", "字符串当代码", "删除动态求值，改数据驱动逻辑"],
+    ["反序列化", "对象重建触发方法", "拒绝不可信来源，用安全格式"],
+    ["SSTI", "模板表达式求值", "沙箱/逻辑无逻辑模板，或严格沙箱"],
+    ["表达式注入", "SpEL/OGNL/EL", "禁用危险求值，固定允许语法"],
+    ["组件漏洞", "日志查找/数据绑定", "依赖盘点、升级、关闭特性"],
+  ]}
+/>
+
+## 真实案例
+
+CVE-2021-44228（Log4Shell）展示日志消息中的查找语法如何通向远程加载；Apache 安全页持续记录修复版本。CVE-2022-22965 展示框架数据绑定问题也可形成 RCE。（来源：[CVE-2021-44228](#source-cve-2021-44228)、[Log4j Security](#source-log4j-security)、[CVE-2022-22965](#source-cve-2022-22965)）
+
+<Callout variant="warning" title="授权实验边界">
+本课演示只构造命令字符串与 argv，不在培训环境执行反弹 shell、持久化或对公共目标的利用。复现真实 CVE 请使用下一课的隔离靶场流程。
+</Callout>
+
+## 分层防御
+
+按 OWASP 命令注入防御思路：优先避免调用 OS 命令；必须调用时使用参数化/argv 风格 API；对参数做允许列表；以最小权限运行。（来源：[OWASP Defense](#source-owasp-command-defense)）
+
+<ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
+  <p>修复后的回归应覆盖：原参数位置、二次封装函数、异步任务与运维接口。RCE 入口经常藏在“临时脚本”和“内部工具页”。</p>
+</ScrollReveal>
+
+## 常见错误与边界
+
+- **过滤空格却放过 `$()` 与换行。**
+- **禁用了 `exec`，仍通过模板或反序列化执行。**
+- **容器以 root 运行，放大后果。**
+- **依赖长期不升级，框架默认特性变成攻击面。**
+
+## 面试检查
+
+<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+
+<KeyTakeaway>
+RCE 的根因是执行边界被输入穿透。命令路径避免 shell 并固定 argv；代码路径删除动态求值；组件路径做盘点与特性收敛。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />
+<SecurityDisclaimer />

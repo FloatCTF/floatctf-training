@@ -1,0 +1,147 @@
+@media print {
+  pre,
+  .table-scroll { overflow: visible; white-space: pre-wrap; }
+  .lesson-hero-summary { font-size: 1rem; }
+  .interview-print-item h4 { margin-block: 0 var(--training-space-2); }
+  .interview-question details { display: none !important; }
+  .category-panel,
+  .category-panel-overlay { display: none !important; }
+  .learning-box,
+  .intuition-box,
+  .callout,
+  .key-takeaway,
+  .cheat-sheet,
+  .source-list,
+  .simulator,
+  .lesson-meta,
+  .security-disclaimer,
+  .category-directory { break-inside: avoid; box-shadow: none; }
+  a { color: var(--training-link); text-decoration: underline; }
+  main { max-width: 100%; }
+  .page-lesson main > .content-panel:first-child { display: none !important; }
+  nav,
+  header.header,
+  .sidebar-pane,
+  .right-sidebar,
+  .timeline-controls,
+  .simulator-control { display: none !important; }
+  :root { color-scheme: light; }
+  @page {
+    margin: 16mm 15mm 18mm;
+    size: A4;
+  }
+
+  html,
+  body {
+    background: var(--training-page-bg) !important;
+  }
+
+  .sl-markdown-content * {
+    opacity: 1 !important;
+  }
+
+  .sl-anchor-link,
+  .expressive-code button {
+    display: none !important;
+  }
+
+  body {
+    font-size: 10.5pt;
+  }
+
+  .page-lesson .sl-markdown-content {
+    max-width: 100%;
+  }
+
+  .lesson-hero {
+    border-block-end: 1.5pt solid var(--training-heading);
+    min-height: auto;
+    padding-block: 0 18mm;
+  }
+
+  .lesson-hero-topline {
+    color: var(--training-heading);
+  }
+
+  .lesson-display-title {
+    font-size: 39pt;
+    line-height: 1;
+    max-width: 165mm;
+  }
+
+  .lesson-accent-rule {
+    height: 1.5pt;
+  }
+
+  .lesson-start-grid {
+    border-color: var(--training-heading);
+    margin-block-end: 16mm;
+  }
+
+  .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 {
+    break-after: avoid;
+    margin-block-start: 14mm;
+    padding-block-start: 5mm;
+  }
+
+  .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 h2,
+  .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 h3 {
+    break-after: avoid;
+  }
+
+  :where(.dark-code, .code-panel, .table-scroll, .simulator, .callout, .intuition-box, .key-takeaway, .cheat-sheet, .source-list, .security-disclaimer) {
+    break-inside: avoid;
+  }
+
+  .dark-code,
+  .code-panel,
+  .page-lesson .simulator {
+    border: 1pt solid var(--training-heading);
+  }
+
+  .dark-code figcaption,
+  .code-panel header,
+  .page-lesson .simulator > h2 {
+    background: var(--training-code-bg) !important;
+    color: var(--training-code-text) !important;
+  }
+
+  .dark-code pre,
+  .code-panel pre,
+  .simulator-control,
+  .timeline-controls {
+    background: var(--training-code-bg) !important;
+    color: var(--training-code-text) !important;
+  }
+
+  .simulator-control,
+  .timeline-controls {
+    display: none !important;
+  }
+
+  .flow-node,
+  .timeline-item,
+  .commit-node,
+  .scroll-reveal {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .interview-level details {
+    display: block !important;
+  }
+
+  .interview-level details > * {
+    display: block;
+  }
+
+  .interview-print-item { padding-block: var(--training-space-2); border-block-end: 0.08rem solid var(--training-border);
+    display: none !important;
+  }
+
+  a[href^='http']::after { overflow-wrap: anywhere; font-size: 0.76em; content: ' (' attr(href) ')';
+    color: var(--training-muted);
+  }
+}
+
+

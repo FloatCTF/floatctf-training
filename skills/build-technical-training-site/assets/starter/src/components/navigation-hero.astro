@@ -1,0 +1,13 @@
+---
+interface HeroData { title?: string; tagline?: string }
+interface RouteData { entry: { data: { title: string; description?: string; hero?: HeroData } } }
+const { entry } = (Astro.locals as unknown as { starlightRoute: RouteData }).starlightRoute;
+const hero = entry.data.hero;
+const title = hero?.title || entry.data.title;
+const tagline = hero?.tagline || entry.data.description;
+---
+<header class="navigation-hero">
+  <p class="navigation-eyebrow">TECHNICAL TRAINING CURRICULUM</p>
+  <h1 id="_top">{title}</h1>
+  <p class="navigation-lead">{tagline}</p>
+</header>

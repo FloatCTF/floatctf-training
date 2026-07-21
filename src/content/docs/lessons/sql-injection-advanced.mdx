@@ -1,0 +1,146 @@
+---
+title: SQL 注入进阶：预编译边界与代码审计
+description: 深入预编译机制、参数化盲区、危险代码模式与分层防御职责
+pageType: lesson
+template: splash
+lessonId: sql-injection-advanced
+categoryId: web-security
+sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2025-1094", "appsec-interview-gist"]
+motionLevel: subtle
+safetyScope: authorized-lab
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import CodeCompare from '../../../components/code-compare.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
+import InterviewAccordion from '../../../components/interview-accordion';
+import ScrollReveal from '../../../components/scroll-reveal';
+import manifest from '../../../data/lessons/sql-injection-advanced.json';
+
+export const vulnerableSnippet = "// MyBatis 风格风险：${} 直接拼接\n"
+  + "// SELECT * FROM orders ORDER BY ${sort}\n"
+  + "// sort=id; DROP TABLE orders -- 可改写结构";
+
+export const secureSnippet = `// 白名单映射标识符，值继续绑定
+const SORTS = { created: "created_at", amount: "amount" };
+const col = SORTS[sortKey];
+if (!col) throw new Error("unsupported sort");
+// col 来自白名单，limit 走参数绑定
+db.query("SELECT * FROM orders ORDER BY " + col + " ASC LIMIT ?", [limit]);`;
+
+<LessonHero
+  series="SECURITY TRAINING"
+  unit="WEB SECURITY · UNIT 03"
+  kicker="SQLi Advanced"
+  lines={[
+    { text: "预编译边界" },
+    { text: "代码审计", accent: true },
+    { text: "二次注入" },
+  ]}
+  summary="在已掌握基础注入后，继续追问预编译到底固定了什么，以及 ORM、排序字段和二次拼接如何重新打开攻击面。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：参数化之后，为什么还有注入？
+
+基础课已经说明：参数化让输入成为值。进阶问题是：
+
+1. 驱动是否真的做了服务端预编译？
+2. 业务是否在标识符位置拼接？
+3. 是否存在“先入库、后拼接”的二次路径？
+
+只要有一处答案是否定的，注入面就还在。
+
+## 预编译实际固定了什么
+
+以“真预编译”为模型：
+
+1. 发送语句模板，例如 `WHERE name = ?`。
+2. 数据库完成词法与语法分析，生成固定 AST。
+3. 后续只绑定参数值到叶子节点。
+4. 参数中的引号、注释和关键字不再具备语法角色。
+
+OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片段都能占位。（来源：[OWASP](#source-owasp-sqli-prevention)）
+
+<Callout variant="warning" title="模拟预编译的坑">
+部分驱动在某些模式下只在客户端转义后发送完整 SQL。配置审查要确认“参数化 API”最终是否走到结构绑定，而不是字符串拼装。
+</Callout>
+
+## 参数化盲区
+
+<DataTable
+  caption="常见参数化盲区"
+  headers={["位置", "为什么危险", "正确做法"]}
+  rows={[
+    ["ORDER BY / GROUP BY", "列名是标识符，不是值", "服务端枚举映射"],
+    ["表名/列名动态选择", "占位符不能绑定标识符", "白名单或固定查询"],
+    ["LIKE 模式", "通配符可被利用放大结果", "转义通配符并限制范围"],
+    ["IN 列表长度", "动态个数需安全生成占位", "按数量生成 ? 并绑定数组"],
+    ["二次拼接", "存储时安全、使用时拼接", "每次构造 SQL 都绑定"],
+  ]}
+/>
+
+## 代码审计清单
+
+- **PHP：** 检查是否关闭模拟预处理、是否用绑定 API、是否把请求参数拼进 `ORDER BY`。
+- **Java/MyBatis：** `#{}` 绑定值；`${}` 字符串替换，审计所有 `${}`。
+- **Python：** `cursor.execute(sql, params)` 正确；`execute(sql % values)` 或 f-string 拼 SQL 危险；Django `raw()`/`extra()` 需重点看。
+
+练习：在授权代码库中搜索 `ORDER BY`、`${`、`+ "SELECT`、`execute(f"`，把命中点分类为“值拼接”或“标识符拼接”。
+
+<CodeCompare
+  language="javascript"
+  vulnerable={vulnerableSnippet}
+  secure={secureSnippet}
+  vulnerableTitle="危险：动态标识符直拼"
+  secureTitle="安全：白名单映射 + 值绑定"
+/>
+
+## 分层职责
+
+<DataTable
+  caption="生产防御职责划分"
+  headers={["层级", "责任人", "动作"]}
+  rows={[
+    ["代码", "开发", "参数化、标识符白名单、禁止二次拼接"],
+    ["框架", "架构", "默认安全 API、禁用危险包装、统一数据访问层"],
+    ["数据库", "DBA", "最小权限、禁用高危过程、审计异常语句"],
+    ["网络/网关", "运维", "WAF 作为附加层，不替代修复"],
+    ["监控", "安全", "检测批量导出、报错风暴、非常规语法"],
+  ]}
+/>
+
+## 真实案例
+
+CVE-2023-34362 展示注入在业务系统中的大规模影响；CVE-2025-1094 提醒边界可能落在客户端工具链，不只在业务 Controller。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2025-1094](#source-cve-2025-1094)）
+
+<ScrollReveal client:visible motionLevel="subtle" label="审计复盘">
+  <p>进阶修复的验收标准不是“登录框打不了”，而是：所有动态 SQL 构造点都有绑定或白名单，并且二次使用路径被测试覆盖。</p>
+</ScrollReveal>
+
+## 常见错误与边界
+
+- **只修了一个 DAO，报表模块仍在拼接。**
+- **把 ORM 当银弹，忽略 raw 查询。**
+- **用黑名单过滤 `select/union`，在编码与注释面前失效。**
+- **忽略最小权限，注入后果被权限放大。**
+
+## 面试检查
+
+<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+
+<KeyTakeaway>
+预编译固定的是语句结构，不是“所有动态 SQL 都自动安全”。标识符、模拟预编译、ORM 原始接口和二次拼接是审计时的优先检查面。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />
+<SecurityDisclaimer />

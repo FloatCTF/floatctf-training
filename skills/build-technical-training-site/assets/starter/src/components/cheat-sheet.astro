@@ -1,0 +1,8 @@
+---
+interface Props { title?: string; items: Array<{ term: string; description: string }> }
+const { title = '速查卡', items } = Astro.props;
+---
+<section class="cheat-sheet" aria-labelledby="cheat-sheet-title">
+  <header class="component-heading"><p class="component-kicker">REFERENCE</p><h2 id="cheat-sheet-title">{title}</h2></header>
+  <dl>{items.map((item) => <div><dt>{item.term}</dt><dd>{item.description}</dd></div>)}</dl>
+</section>

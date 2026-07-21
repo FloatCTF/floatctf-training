@@ -1,0 +1,9 @@
+---
+interface Props { title?: string }
+const { title = '先建立直觉' } = Astro.props;
+---
+<aside class="intuition-box" aria-label={title}>
+  <p class="component-kicker">INTUITION</p>
+  <h2>{title}</h2>
+  <slot />
+</aside>

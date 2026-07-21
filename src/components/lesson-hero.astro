@@ -1,0 +1,35 @@
+---
+interface HeroLine {
+  text: string;
+  accent?: boolean;
+  latin?: boolean;
+}
+
+interface Props {
+  series: string;
+  unit: string;
+  kicker: string;
+  lines: HeroLine[];
+  summary: string;
+}
+
+const { series, unit, kicker, lines, summary } = Astro.props;
+const titleLength = lines.reduce((total, line) => total + line.text.replace(/\s+/g, '').length, 0);
+const lengthClass = titleLength <= 10 ? 'lesson-title-short' : titleLength <= 16 ? 'lesson-title-medium' : 'lesson-title-long';
+---
+<section class:list={['lesson-hero', lengthClass]} aria-labelledby="_top">
+  <div class="lesson-hero-topline">
+    <span class="lesson-series"><span class="lesson-signal" aria-hidden="true"></span>{series}</span>
+    <span>{unit}</span>
+  </div>
+  <div class="lesson-hero-main">
+    <p class="lesson-hero-kicker">{kicker}</p>
+    <div class="lesson-display-title" aria-hidden="true">
+      {lines.map((line) => (
+        <span class:list={[{ 'lesson-title-accent': line.accent, 'lesson-title-latin': line.latin }]}>{line.text}</span>
+      ))}
+    </div>
+    <span class="lesson-accent-rule" aria-hidden="true"></span>
+    <p class="lesson-hero-summary">{summary}</p>
+  </div>
+</section>

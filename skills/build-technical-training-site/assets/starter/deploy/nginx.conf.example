@@ -1,0 +1,44 @@
+# 根路径部署：将构建后的 dist 内容复制到 /srv/training-site/dist。
+# 子路径部署：构建时设置 TRAINING_BASE=/courses/，把 dist 内容复制到 /srv/training-site/www/courses/，
+# 再把 server 级 root 改为 /srv/training-site/www，并把 location / 改为 location /courses/。
+# Astro 已生成真实静态路径，try_files 以 =404 结束，保持无 SPA 回退。
+
+server {
+    listen 80;
+    server_name training.local;
+    root /srv/training-site/dist;
+    index index.html;
+
+    types {
+        text/html html;
+        text/css css;
+        application/javascript js mjs;
+        application/json json;
+        application/xml xml;
+        application/wasm wasm pagefind;
+        application/octet-stream pf_meta pf_index pf_fragment;
+        image/svg+xml svg;
+        image/png png;
+        image/jpeg jpg jpeg;
+        font/woff woff;
+        font/woff2 woff2;
+    }
+
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    # Pagefind 使用同源 WebAssembly 与 blob Web Worker；wasm-unsafe-eval 只开放 Wasm 编译，不开放 JavaScript eval。
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'" always;
+
+    location / {
+        try_files $uri $uri/ $uri/index.html =404;
+    }
+
+    location ~* \.(?:css|js|mjs|json|wasm|pagefind|pf_meta|pf_index|pf_fragment|woff|woff2|svg|png|jpg|jpeg)$ {
+        try_files $uri =404;
+        expires 30d;
+        add_header Cache-Control "public, max-age=2592000, immutable";
+        add_header X-Content-Type-Options "nosniff" always;
+        add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+        add_header Content-Security-Policy "default-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'self'" always;
+    }
+}

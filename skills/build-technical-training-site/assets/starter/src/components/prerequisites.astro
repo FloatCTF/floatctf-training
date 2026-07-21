@@ -1,0 +1,8 @@
+---
+interface Props { items: string[] }
+const { items } = Astro.props;
+---
+<section class="learning-box prerequisites" aria-labelledby="prerequisites-title">
+  <header class="learning-box-heading"><span aria-hidden="true">02</span><h2 id="prerequisites-title">前置知识</h2></header>
+  <ul>{items.map((item) => <li>{item}</li>)}</ul>
+</section>

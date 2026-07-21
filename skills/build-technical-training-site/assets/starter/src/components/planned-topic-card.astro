@@ -1,0 +1,10 @@
+---
+interface Props { title: string; summary: string; difficulty: string }
+const { title, summary, difficulty } = Astro.props;
+---
+<article class="topic-card planned-topic" aria-disabled="true">
+  <div class="topic-card-header"><span class="status-badge">规划中</span><span>{difficulty}</span></div>
+  <h3>{title}</h3>
+  <p>{summary}</p>
+  <span class="disabled-label">页面尚未发布</span>
+</article>

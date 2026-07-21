@@ -1,0 +1,125 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "web-security",
+      "name": "Web 安全",
+      "summary": "理解 Web 应用中的信任边界、输入流与防御设计。",
+      "order": 1,
+      "pagePath": "/categories/web-security/"
+    },
+    {
+      "id": "system-network-security",
+      "name": "系统与网络安全",
+      "summary": "分析主机、协议、身份与网络边界中的安全机制。",
+      "order": 2,
+      "pagePath": "/categories/system-network-security/"
+    },
+    {
+      "id": "ai-ml",
+      "name": "AI 与机器学习",
+      "summary": "从模型机制、训练过程与安全边界理解机器学习系统。",
+      "order": 3,
+      "pagePath": "/categories/ai-ml/"
+    },
+    {
+      "id": "programming",
+      "name": "编程语言",
+      "summary": "建立语言运行模型，并通过可运行示例掌握关键机制。",
+      "order": 4,
+      "pagePath": "/categories/programming/"
+    },
+    {
+      "id": "cs-foundations",
+      "name": "计算机基础",
+      "summary": "连接操作系统、网络、数据结构、编译与数据库的核心原理。",
+      "order": 5,
+      "pagePath": "/categories/cs-foundations/"
+    },
+    {
+      "id": "engineering-tools",
+      "name": "工程工具",
+      "summary": "通过版本明确的工作流掌握开发、调试与交付工具。",
+      "order": 6,
+      "pagePath": "/categories/engineering-tools/"
+    },
+    {
+      "id": "ctf-practice",
+      "name": "CTF 实践",
+      "summary": "在隔离靶场中训练分析、验证、复盘与报告能力。",
+      "order": 7,
+      "pagePath": "/categories/ctf-practice/"
+    },
+    {
+      "id": "custom",
+      "name": "综合实践",
+      "summary": "组织跨学科项目、案例分析与故障排查训练。",
+      "order": 8,
+      "pagePath": "/categories/custom/"
+    }
+  ],
+  "topics": [
+    {
+      "id": "ssrf",
+      "slug": "ssrf",
+      "categoryId": "web-security",
+      "title": "SSRF：识别服务端请求的信任边界",
+      "summary": "沿请求链理解 SSRF 根因，在本地实验中验证限制目标地址的防御。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/ssrf/",
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "sql-injection",
+      "slug": "sql-injection",
+      "categoryId": "web-security",
+      "title": "SQL 注入：从字符串拼接到参数化查询",
+      "summary": "追踪输入进入 SQL 解析器的路径，并比较脆弱查询与参数化查询。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/sql-injection/",
+      "prerequisites": [],
+      "order": 2
+    },
+    {
+      "id": "sql-injection-advanced",
+      "slug": "sql-injection-advanced",
+      "categoryId": "web-security",
+      "title": "SQL 注入进阶：预编译边界与代码审计",
+      "summary": "深入预编译盲区、ORM 危险模式与生产级分层防御。",
+      "difficulty": "advanced",
+      "status": "completed",
+      "pagePath": "/lessons/sql-injection-advanced/",
+      "prerequisites": [
+        "sql-injection"
+      ],
+      "order": 3
+    },
+    {
+      "id": "xss",
+      "slug": "xss",
+      "categoryId": "web-security",
+      "title": "XSS：输出上下文与浏览器侧信任边界",
+      "summary": "区分三类 XSS，按输出上下文编码，并叠加 CSP 与 Cookie 约束。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/xss/",
+      "prerequisites": [],
+      "order": 4
+    },
+    {
+      "id": "rce",
+      "slug": "rce",
+      "categoryId": "web-security",
+      "title": "RCE：命令注入与代码执行的信任边界",
+      "summary": "区分命令注入与代码执行，用 argv 调用和依赖治理收敛 RCE 面。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/rce/",
+      "prerequisites": [],
+      "order": 5
+    }
+  ]
+}

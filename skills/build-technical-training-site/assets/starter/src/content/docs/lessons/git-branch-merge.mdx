@@ -1,0 +1,154 @@
+---
+title: Git 分支与合并：读懂 Commit DAG
+description: 用版本明确的工作流理解分支指针、merge、rebase 与冲突
+pageType: lesson
+template: splash
+lessonId: git-branch-merge
+categoryId: engineering-tools
+sources: ["git-branch-255", "git-merge-255", "git-rebase-255", "git-switch-255"]
+motionLevel: simulation
+safetyScope: not-applicable
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import GitDagSimulator from '../../../components/git-dag-simulator';
+import ProcessTimeline from '../../../components/process-timeline';
+import manifest from '../../../data/lessons/git-branch-merge.json';
+
+export const mergeSteps = [
+  { title: '读取当前状态', detail: '用 git status 确认当前分支、未提交修改和冲突状态。' },
+  { title: '定位共同祖先', detail: 'Git 根据提交图找到当前分支与待合并分支的关系。' },
+  { title: '整合文件变化', detail: '互不冲突的变化自动组合，冲突路径保留待解决状态。' },
+  { title: '验证并提交', detail: '解决冲突、暂存文件、运行测试，再完成或继续操作。' },
+];
+
+<LessonHero
+  series="ENGINEERING TOOLS"
+  unit="GIT · UNIT 01"
+  kicker="Branch, Merge and Commit DAG"
+  lines={[
+    { text: "Git 分支" },
+    { text: "合并与变基", accent: true },
+    { text: "Commit DAG", latin: true },
+  ]}
+  summary="从提交图理解分支指针、merge、rebase 和冲突状态，再用可运行工作流验证每一步。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 目标版本与环境
+
+本页以 **Git 2.55.0** 为目标版本，命令已于 2026-07-19 在 Git CLI 2.55.0 上验证。示例依赖 Git 与 Node.js，可在 Linux、macOS、PowerShell 和 Windows 命令提示符中运行。Git 官方文档把分支描述为指向提交的可移动引用。（来源：[git-branch 2.55.0](#source-git-branch-255)）
+
+较旧 Git 可能缺少 `git switch`，相应操作可用 `git checkout` 完成。初始分支名受 `init.defaultBranch` 影响，因此实验显式创建 `main`。
+
+## 引导问题：分支移动了什么？
+
+提交对象保存项目快照与父提交关系。多个提交形成有向无环图（Directed Acyclic Graph，DAG）。分支名保存一个提交引用，`HEAD` 表示当前检出的分支或提交。创建新提交时，当前分支引用前移到新提交。
+
+<GitDagSimulator client:visible motionLevel="simulation" />
+
+图中的 A、B、C 和 M 代表提交。B 与 C 都以 A 为祖先；M 同时引用两条父历史，因此保留“两个开发方向在此汇合”的结构信息。
+
+## 最小成功路径
+
+在一个空目录中运行：
+
+```bash
+git init --initial-branch=main
+git config user.name "Training Student"
+git config user.email "student@example.invalid"
+node -e "require('node:fs').writeFileSync('notes.txt', 'base\\n')"
+git add notes.txt
+git commit -m "base"
+git switch -c feature
+node -e "require('node:fs').writeFileSync('feature.txt', 'feature\\n')"
+git add feature.txt
+git commit -m "feature work"
+git switch main
+git merge --no-ff feature -m "merge feature"
+git log --graph --oneline --decorate --all
+```
+
+预期结果：终端显示 `main`、`feature` 和一个合并提交形成的提交图。站点附带的跨平台验证脚本使用 Node.js 创建临时仓库：
+
+```bash
+node examples/git-workflow-check.mjs
+```
+
+脚本结束时输出 `Git 工作流验证通过。`，临时仓库随后被清理。
+
+## merge 的过程
+
+Git 官方文档说明，`git merge` 把命名提交以来的变化整合到当前分支。当前分支可以直接前移时会发生快进；两边都有独立提交时，Git 通常执行三方合并并创建合并提交。（来源：[git-merge 2.55.0](#source-git-merge-255)）
+
+<ProcessTimeline client:visible title="三方合并与冲突处理" steps={mergeSteps} motionLevel="explanatory" />
+
+## merge 与 rebase 的选择
+
+<DataTable
+  caption="统一维度下比较 merge 与 rebase"
+  headers={["维度", "merge", "rebase", "选择建议"]}
+  rows={[
+    ["提交图", "保留分叉并可创建合并提交", "把当前分支提交重新应用到新基底", "需要保留集成边界时使用 merge"],
+    ["提交身份", "已有提交保持原身份", "重新应用会生成新的提交对象", "整理个人未共享分支时可使用 rebase"],
+    ["冲突处理", "一次合并过程集中解决", "每个重新应用的提交都可能暂停", "按团队审查粒度选择"],
+    ["共享历史", "适合已经发布的分支", "改写已共享历史会增加协作成本", "共享分支优先保持历史稳定"],
+  ]}
+/>
+
+`git rebase main` 会在 `main` 之上重新应用当前分支独有的提交。它改变这些提交的父关系并产生新提交对象。（来源：[git-rebase 2.55.0](#source-git-rebase-255)）
+
+## 冲突排查路径
+
+1. 运行 `git status`，确认当前操作和冲突文件。
+2. 打开冲突文件，阅读 `<<<<<<<`、`=======`、`>>>>>>>` 标记两侧的内容。
+3. 根据目标行为编辑最终文件，删除冲突标记。
+4. 运行测试或最小验证命令。
+5. 使用 `git add <path>` 标记该文件已解决。
+6. 合并场景运行 `git commit` 或 `git merge --continue`；变基场景运行 `git rebase --continue`。
+7. 需要恢复操作前状态时，合并使用 `git merge --abort`，变基使用 `git rebase --abort`。
+
+<Callout variant="warning" title="中止前先读状态">
+中止命令会尝试恢复操作开始前的状态。未提交修改会提高恢复难度；开始集成前先提交、暂存到安全位置或建立可恢复副本。
+</Callout>
+
+## 实践任务与验收
+
+1. 创建 `main` 和 `feature`，让两个分支修改同一文件的不同行，完成无冲突合并。
+2. 再创建一个分支，让两边修改同一行，观察 `git status` 与冲突标记。
+3. 解决冲突并运行 `git log --graph --oneline --decorate --all`。
+4. 验收：你能指出每个分支引用、HEAD、共同祖先和合并提交的父节点。
+
+<CheatSheet
+  items={[
+    { term: 'git switch -c NAME', description: '创建并切换分支。' },
+    { term: 'git branch -vv', description: '查看本地分支、当前提交与上游。' },
+    { term: 'git merge --no-ff NAME', description: '整合分支并显式保留合并提交。' },
+    { term: 'git rebase BASE', description: '把当前分支提交重新应用到新基底。' },
+    { term: 'git status', description: '读取当前分支、暂存、修改与冲突状态。' },
+    { term: 'git log --graph --oneline --all', description: '用紧凑提交图检查历史结构。' },
+  ]}
+/>
+
+## 常见错误与边界
+
+- 在存在未提交修改时开始复杂集成，恢复路径随之变窄。
+- 对已经共享的提交执行 rebase，其他协作者需要重新对齐历史。
+- 只删除冲突标记，遗漏行为层面的合并验证。
+- 根据提交列表猜测拓扑，忽略父节点关系和分支引用。
+
+<KeyTakeaway>
+分支是移动引用，提交与父关系构成 DAG。merge 保留汇合结构，rebase 重新建立提交父关系；可靠操作始于读取状态，结束于提交图与行为验证。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />

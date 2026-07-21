@@ -1,0 +1,121 @@
+{
+  "schemaVersion": 1,
+  "defaults": {
+    "language": "zh-CN",
+    "address": "你",
+    "audience": "具有基础计算机知识的本科生",
+    "durationMinutes": {
+      "min": 60,
+      "max": 90,
+      "default": 75
+    },
+    "deployment": {
+      "kind": "nginx-static",
+      "base": "/",
+      "site": "http://training.local"
+    },
+    "motionLevel": "explanatory",
+    "securityScope": "authorized-lab",
+    "securityAssessments": ["interview", "lab-check"],
+    "generalAssessments": ["exercise"]
+  },
+  "runtimeQuestions": {
+    "maxCount": 3
+  },
+  "skill": {
+    "recommendedLines": {
+      "min": 100,
+      "max": 180
+    },
+    "hardMaxLines": 500
+  },
+  "lessonPlan": {
+    "maxSupportingModes": 3
+  },
+  "interview": {
+    "minQuestions": 8,
+    "maxQuestions": 12,
+    "minPerLevel": 2,
+    "levels": [1, 2, 3, 4]
+  },
+  "evidence": {
+    "security": {
+      "minEvidenceItems": 2
+    },
+    "academic": {
+      "minSources": 2,
+      "minPrimaryOrTeachingSources": 1
+    },
+    "versionedTool": {
+      "minOfficialSources": 1,
+      "minCommands": 1
+    },
+    "stableTechnical": {
+      "minAuthoritySources": 1,
+      "minRunnableExamples": 1
+    }
+  },
+  "typography": {
+    "bodyWeight": 500,
+    "boldWeight": 800,
+    "titleWeight": 900,
+    "labelWeight": 700,
+    "codeWeight": 400,
+    "bodyLineHeight": 1.9,
+    "contentMaxWidthPx": 860
+  },
+  "layout": {
+    "mobileBreakpointPx": 768,
+    "navigationMaxWidthPx": 1088,
+    "minInteractiveTargetPx": 44,
+    "sectionSpacingPx": 120
+  },
+  "motionBudget": {
+    "maxPrimaryAnimations": 1,
+    "supportingInteractions": {
+      "min": 1,
+      "max": 3
+    },
+    "maxScrollReveals": 4,
+    "revealDurationMs": 520,
+    "stepDurationMs": 420
+  },
+  "contrast": {
+    "normalText": 4.5,
+    "largeText": 3,
+    "ui": 3
+  },
+  "content": {
+    "maxKeyTakeaways": 1
+  },
+  "categories": [
+    "web-security",
+    "system-network-security",
+    "ai-ml",
+    "programming",
+    "cs-foundations",
+    "engineering-tools",
+    "ctf-practice",
+    "custom"
+  ],
+  "teachingModes": [
+    "concept",
+    "mechanism",
+    "code",
+    "tool",
+    "lab",
+    "case-study",
+    "project",
+    "comparison",
+    "troubleshooting"
+  ],
+  "evidenceProfiles": ["security", "academic", "versioned-tool", "stable-technical"],
+  "sourceKinds": ["cve", "advisory", "incident", "paper", "specification", "textbook", "university-course", "official-doc", "release-note", "interview-report"],
+  "assessments": ["interview", "quiz", "exercise", "lab-check", "project", "none"],
+  "difficultyLevels": ["beginner", "intermediate", "advanced"],
+  "motionLevels": ["static", "subtle", "explanatory", "simulation"],
+  "topicStatuses": ["completed", "planned"],
+  "researchStatuses": ["complete", "partial", "blocked"],
+  "safetyScopes": ["authorized-lab", "localhost", "ctf", "not-applicable"],
+  "qaStatuses": ["pass", "fail", "not-applicable", "not-run"]
+}

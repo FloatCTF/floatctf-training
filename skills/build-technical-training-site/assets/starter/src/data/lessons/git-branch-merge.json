@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "git-branch-merge",
+    "slug": "git-branch-merge",
+    "categoryId": "engineering-tools",
+    "title": "Git 分支与合并：读懂 Commit DAG",
+    "audience": "能够执行基础 Git 提交操作的本科生",
+    "durationMinutes": 75,
+    "primaryMode": "tool",
+    "supportingModes": ["mechanism", "troubleshooting"],
+    "evidenceProfiles": ["versioned-tool"],
+    "assessments": ["exercise", "lab-check"],
+    "motionLevel": "simulation",
+    "visualStory": "Commit DAG、分支指针、merge、rebase 和冲突状态的变化",
+    "learningObjectives": [
+      "区分提交对象、分支引用与 HEAD 的职责",
+      "从 Commit DAG 预测快进与三方合并结果",
+      "选择 merge 或 rebase 完成可审查的集成",
+      "按状态、冲突标记、暂存和继续操作排查合并冲突"
+    ],
+    "prerequisites": ["能够创建仓库并提交文件", "理解工作区与暂存区"],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-07-19"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-07-19",
+    "notes": "命令语义、选项与版本差异均使用 Git 2.55.0 官方文档和本地 Git 2.55.0 结果核验。"
+  },
+  "sources": [
+    {
+      "id": "git-branch-255",
+      "kind": "official-doc",
+      "title": "git-branch Documentation, version 2.55.0",
+      "publisher": "Git project",
+      "url": "https://git-scm.com/docs/git-branch/2.55.0",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-07-19",
+      "notes": "publishedAt 记录 Git 2.55.0 的官方发布日期。",
+      "supports": ["claim-branch", "evidence-git-official"]
+    },
+    {
+      "id": "git-merge-255",
+      "kind": "official-doc",
+      "title": "git-merge Documentation, version 2.55.0",
+      "publisher": "Git project",
+      "url": "https://git-scm.com/docs/git-merge/2.55.0",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-07-19",
+      "notes": "publishedAt 记录 Git 2.55.0 的官方发布日期。",
+      "supports": ["claim-merge", "command-merge", "claim-conflict", "evidence-git-official"]
+    },
+    {
+      "id": "git-rebase-255",
+      "kind": "official-doc",
+      "title": "git-rebase Documentation, version 2.55.0",
+      "publisher": "Git project",
+      "url": "https://git-scm.com/docs/git-rebase/2.55.0",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-07-19",
+      "notes": "publishedAt 记录 Git 2.55.0 的官方发布日期。",
+      "supports": ["claim-rebase", "command-rebase", "claim-conflict", "evidence-git-official"]
+    },
+    {
+      "id": "git-switch-255",
+      "kind": "official-doc",
+      "title": "git-switch Documentation, version 2.55.0",
+      "publisher": "Git project",
+      "url": "https://git-scm.com/docs/git-switch/2.55.0",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-07-19",
+      "notes": "publishedAt 记录 Git 2.55.0 的官方发布日期。",
+      "supports": ["claim-head", "command-branch", "evidence-git-official"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-git-official",
+      "kind": "official-doc",
+      "identifier": "git-2.55.0",
+      "topicRelation": "direct",
+      "sourceIds": ["git-branch-255", "git-merge-255", "git-rebase-255", "git-switch-255"],
+      "summary": "官方命令文档定义了分支、切换、合并和变基的行为与恢复路径。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-branch",
+      "text": "Git 分支是指向提交对象的可移动引用。",
+      "sourceIds": ["git-branch-255"]
+    },
+    {
+      "id": "claim-head",
+      "text": "切换分支会更新 HEAD 指向并更新工作树以匹配目标分支。",
+      "sourceIds": ["git-switch-255"]
+    },
+    {
+      "id": "claim-merge",
+      "text": "合并会把命名提交的历史整合进当前分支，并在需要时创建合并提交。",
+      "sourceIds": ["git-merge-255"]
+    },
+    {
+      "id": "claim-rebase",
+      "text": "变基会在新的基底上重新应用一组提交。",
+      "sourceIds": ["git-rebase-255"]
+    },
+    {
+      "id": "claim-conflict",
+      "text": "冲突发生后可以解决文件、暂存结果并继续，也可以使用中止命令恢复合并前状态。",
+      "sourceIds": ["git-merge-255", "git-rebase-255"]
+    }
+  ],
+  "assessments": ["exercise", "lab-check"],
+  "visualNarrative": {
+    "kind": "git-commit-dag",
+    "primaryAnimations": 1,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  },
+  "versionInfo": {
+    "targetVersion": "2.55.0",
+    "environment": "Git CLI 2.55.0；Linux、macOS 或 Windows 终端",
+    "verifiedAt": "2026-07-19",
+    "knownDifferences": [
+      "较旧版本可能缺少 git switch，可用 git checkout 完成相应切换操作。",
+      "默认初始分支名由 init.defaultBranch 配置决定，实验显式创建 main。"
+    ]
+  },
+  "commands": [
+    {
+      "id": "command-branch",
+      "command": "git switch -c feature",
+      "expectedResult": "创建并切换到 feature 分支，HEAD 指向 feature。",
+      "sourceIds": ["git-switch-255"]
+    },
+    {
+      "id": "command-merge",
+      "command": "git merge --no-ff feature",
+      "expectedResult": "把 feature 历史整合到当前分支并创建一个合并提交。",
+      "sourceIds": ["git-merge-255"]
+    },
+    {
+      "id": "command-rebase",
+      "command": "git rebase main",
+      "expectedResult": "把当前分支独有提交重新应用到 main 之上。",
+      "sourceIds": ["git-rebase-255"]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "git-workflow-check",
+      "path": "examples/git-workflow-check.mjs",
+      "command": "node examples/git-workflow-check.mjs",
+      "expectedResult": "临时仓库生成 feature 分支与合并提交，并打印 Commit DAG。"
+    }
+  ]
+}

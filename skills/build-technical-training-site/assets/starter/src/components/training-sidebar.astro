@@ -1,0 +1,13 @@
+---
+import DefaultSidebar from '@astrojs/starlight/components/Sidebar.astro';
+import catalog from '../data/catalog.json';
+
+const planned = catalog.topics.filter((topic) => topic.status === 'planned');
+---
+<DefaultSidebar {...Astro.props}><slot /></DefaultSidebar>
+{planned.length > 0 && (
+  <section class="sidebar-planned" aria-labelledby="sidebar-planned-title">
+    <h2 id="sidebar-planned-title">规划中</h2>
+    <ul>{planned.map((topic) => <li aria-disabled="true"><span>{topic.title}</span><small>规划中</small></li>)}</ul>
+  </section>
+)}

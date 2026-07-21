@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-07-20",
+  "reviewer": "agent",
+  "items": [
+    { "id": "mode-topic-fit", "level": "must", "status": "pass", "evidenceFile": "config/routing-fixtures.json", "note": "三份 lesson plan 分别使用机制、概念和工具主模式，辅助模式服务于专题目标。" },
+    { "id": "sequence-objectives", "level": "must", "status": "pass", "evidenceFile": "src/content/docs/lessons/ssrf.mdx", "note": "每页的讲解顺序从对应入口推进到机制、实践、边界和复习。" },
+    { "id": "analogy-value", "level": "must", "status": "pass", "evidenceFile": "src/content/docs/lessons/deep-learning-basics.mdx", "note": "直觉说明紧接正式定义和数学边界，未用比喻替代机制。" },
+    { "id": "term-definition", "level": "must", "status": "pass", "evidenceFile": "src/content/docs/lessons/git-branch-merge.mdx", "note": "SSRF、DAG、梯度等术语在首次出现处给出定义。" },
+    { "id": "source-traceability", "level": "must", "status": "pass", "evidenceFile": "src/data/lessons/ssrf.json", "note": "案例、主张、问题和答案通过 sourceIds 逐项绑定；持续更新来源记录修订日期或核验快照的依据。" },
+    { "id": "code-verification", "level": "must", "status": "pass", "evidenceFile": "examples/git-workflow-check.mjs", "note": "三个示例提供运行命令、预期输出，并纳入烟雾测试。" },
+    { "id": "security-scope", "level": "must", "status": "pass", "evidenceFile": "src/content/docs/lessons/ssrf.mdx", "note": "实验只监听 127.0.0.1，页面标明授权范围和免责声明。" },
+    { "id": "interaction-purpose", "level": "must", "status": "pass", "evidenceFile": "src/components/flow-simulator.tsx", "note": "交互分别表达请求链、传播过程、提交图和时间顺序。" },
+    { "id": "motion-purpose", "level": "must", "status": "pass", "evidenceFile": "src/data/lessons/ssrf.json", "note": "动效均绑定 visualStory 和受策略限制的预算。" },
+    { "id": "fallback-completeness", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "运行中切换减少动态或打印后，流程、Git DAG 和时间轴同步到完整终态并停用逐步控制；禁用 JavaScript 后正文、题目和来源完整。" },
+    { "id": "keyboard-access", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "分类摘要支持 Enter；面试 details 支持空格；SSRF 流程与 Git 时间轴滑杆均通过方向键改变步骤。" },
+    { "id": "mobile-overflow", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "390×844 下专题刊头、学习目标、面试手风琴和三个示例标题均保持页级无横向溢出。" },
+    { "id": "print-completeness", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "打印模式使用白底深色正文、紧凑刊头并隐藏交互控制；八道面试题答案生成打印布局。" },
+    { "id": "page-structure", "level": "must", "status": "pass", "evidenceFile": "src/components/lesson-navigation.astro", "note": "首页、分类页与专题页使用独立结构；专题页移除固定侧栏，并从 catalog 与标题层级生成课程路径和本课目录。" },
+    { "id": "visual-consistency", "level": "must", "status": "pass", "evidenceFile": "config/themes.json", "note": "暖白纸张、墨色正文、橙红强调、重分隔线、方形模块和编号章节均由语义 token 与共享组件实现。" },
+    { "id": "deployment-integrity", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "子路径静态构建通过；浏览器在 nginx 等价 CSP 下成功加载 Pagefind WebAssembly 与 Web Worker，并返回 SSRF 检索结果。" },
+    { "id": "opening-question", "level": "should", "status": "pass", "evidenceFile": "src/content/docs/lessons/deep-learning-basics.mdx", "note": "三页都用可检验的问题引导学习。" },
+    { "id": "diagram-value", "level": "should", "status": "pass", "evidenceFile": "src/components/attack-defense-flow.tsx", "note": "图示突出因果、数据流和状态变化。" },
+    { "id": "authentic-example", "level": "should", "status": "pass", "evidenceFile": "examples/ssrf-local-lab.mjs", "note": "示例对应本地安全实验、单步训练与临时 Git 仓库。" },
+    { "id": "review-card", "level": "should", "status": "pass", "evidenceFile": "src/content/docs/lessons/git-branch-merge.mdx", "note": "每个专题保留一个重点结论卡。" },
+    { "id": "motion-rhythm", "level": "should", "status": "pass", "evidenceFile": "config/training-policy.json", "note": "步骤与揭示时长由统一策略提供。" },
+    { "id": "visual-focus", "level": "should", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "专题页的顶部课程路径占用一行，主视觉保留给大字号分行刊头；正文从学习目标直接进入编号章节、演示台和复习模块。" }
+  ]
+}

@@ -1,0 +1,11 @@
+---
+interface Props { variant?: 'info' | 'warning' | 'danger' | 'success'; title: string }
+const { variant = 'info', title } = Astro.props;
+const roles = { info: 'note', warning: 'note', danger: 'alert', success: 'status' } as const;
+const labels = { info: 'INFORMATION', warning: 'WARNING', danger: 'DANGER', success: 'VERIFIED' } as const;
+---
+<aside class={`callout callout-${variant}`} role={roles[variant]} aria-label={title}>
+  <p class="callout-label">{labels[variant]}</p>
+  <h3>{title}</h3>
+  <slot />
+</aside>

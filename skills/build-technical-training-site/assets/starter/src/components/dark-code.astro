@@ -1,0 +1,8 @@
+---
+interface Props { language?: string; label?: string }
+const { language = 'text', label = '代码示例' } = Astro.props;
+---
+<figure class="dark-code">
+  <figcaption><span>{label}</span><span>{language}</span></figcaption>
+  <pre tabindex="0"><code><slot /></code></pre>
+</figure>

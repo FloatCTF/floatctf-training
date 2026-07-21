@@ -1,0 +1,111 @@
+---
+import catalog from '../data/catalog.json';
+import { Icon } from '@astrojs/starlight/components';
+
+interface Heading {
+  depth: number;
+  slug: string;
+  text: string;
+}
+
+interface RouteData {
+  entry: {
+    data: {
+      lessonId?: string;
+      title: string;
+    };
+  };
+  headings: Heading[];
+}
+
+interface OutlineSection {
+  heading: Heading;
+  children: Heading[];
+}
+
+interface Props {
+  variant?: 'standalone' | 'masthead';
+}
+
+const { variant = 'standalone' } = Astro.props;
+
+const route = (Astro.locals as unknown as { starlightRoute: RouteData }).starlightRoute;
+const lessonId = route.entry.data.lessonId;
+const topic = catalog.topics.find((item) => item.id === lessonId && item.status === 'completed');
+const category = catalog.categories.find((item) => item.id === topic?.categoryId);
+const base = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
+const withBase = (pagePath: string) => `${base}${pagePath}`;
+
+const sections: OutlineSection[] = [];
+for (const heading of route.headings.filter((item) => item.depth === 2 || item.depth === 3)) {
+  if (heading.depth === 2 || sections.length === 0) {
+    sections.push({ heading, children: [] });
+  } else {
+    sections.at(-1)?.children.push(heading);
+  }
+}
+---
+{topic && category && (
+  <div class:list={['lesson-navigation', { 'lesson-navigation--masthead': variant === 'masthead' }]} data-lesson-navigation>
+    <nav class="lesson-path" aria-label="课程路径">
+      <a class="lesson-map-link" href={withBase('/')} aria-label="返回课程地图">
+        <Icon name="left-arrow" size="1rem" aria-hidden="true" />
+        <span class="lesson-map-text">课程地图</span>
+      </a>
+      <span class="lesson-path-divider" aria-hidden="true"></span>
+      <span class="lesson-current">
+        <a href={withBase(category.pagePath)}>{category.name}</a>
+        <span aria-current="page">{topic.title}</span>
+      </span>
+    </nav>
+
+    <details class="lesson-outline" data-lesson-outline>
+      <summary>
+        <span class="lesson-outline-label"><span class="lesson-outline-label-full">本课目录</span><span class="lesson-outline-label-compact">目录</span></span>
+        <span class="lesson-outline-count">{String(sections.length).padStart(2, '0')}</span>
+        <span class="lesson-outline-toggle" aria-hidden="true"><Icon name="down-caret" size="1rem" /></span>
+      </summary>
+      <div class="lesson-outline-menu">
+        <p>学习路径</p>
+        <ol>
+          {sections.map((section, index) => (
+            <li>
+              <a class="lesson-outline-section" href={`#${section.heading.slug}`}>
+                <span>{String(index + 1).padStart(2, '0')}</span>
+                {section.heading.text}
+              </a>
+              {section.children.length > 0 && (
+                <ol>
+                  {section.children.map((heading) => (
+                    <li><a href={`#${heading.slug}`}>{heading.text}</a></li>
+                  ))}
+                </ol>
+              )}
+            </li>
+          ))}
+        </ol>
+      </div>
+    </details>
+  </div>
+)}
+
+<script>
+  document.querySelectorAll<HTMLDetailsElement>('[data-lesson-outline]').forEach((outline) => {
+    const summary = outline.querySelector('summary');
+    outline.querySelectorAll('a').forEach((link) => {
+      link.addEventListener('click', () => {
+        outline.open = false;
+      });
+    });
+
+    document.addEventListener('click', (event) => {
+      if (!outline.contains(event.target as Node)) outline.open = false;
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key !== 'Escape' || !outline.open) return;
+      outline.open = false;
+      summary?.focus();
+    });
+  });
+</script>

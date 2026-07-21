@@ -1,0 +1,86 @@
+---
+import Search from '@astrojs/starlight/components/Search.astro';
+import { Icon } from '@astrojs/starlight/components';
+import LessonNavigation from './lesson-navigation.astro';
+
+const route = (Astro.locals as unknown as {
+  starlightRoute: { siteTitleHref: string; entry: { data: { pageType?: string } } };
+}).starlightRoute;
+const { siteTitleHref } = route;
+const isLesson = route.entry.data.pageType === 'lesson';
+---
+
+<div class:list={['training-masthead', { 'is-lesson': isLesson }]}>
+  <a class="training-brand" href={siteTitleHref} aria-label="技术讲义首页">
+    <span class="training-brand-rule" aria-hidden="true"></span>
+    <span class="training-brand-copy">
+      <span class="training-brand-eyebrow">TECHNICAL LECTURES</span>
+      <span class="training-brand-title" translate="no">技术讲义</span>
+    </span>
+  </a>
+
+  {isLesson && (
+    <div class="training-masthead-course">
+      <LessonNavigation variant="masthead" />
+    </div>
+  )}
+
+  <div class="training-masthead-tools print:hidden">
+    <div class="training-masthead-search">
+      <Search />
+    </div>
+    <training-theme-toggle class="training-theme-toggle" aria-label="选择主题">
+      <button type="button" data-theme-choice="light" aria-label="使用浅色主题" title="浅色主题">
+        <Icon name="sun" size="1.2rem" />
+      </button>
+      <button type="button" data-theme-choice="dark" aria-label="使用深色主题" title="深色主题">
+        <Icon name="moon" size="1.2rem" />
+      </button>
+      <button class="training-theme-compact" type="button" data-theme-cycle aria-label="切换主题" title="切换主题">
+        <span data-theme-target="dark"><Icon name="moon" size="1.2rem" /></span>
+        <span data-theme-target="light"><Icon name="sun" size="1.2rem" /></span>
+      </button>
+    </training-theme-toggle>
+  </div>
+</div>
+
+<script>
+  class TrainingThemeToggle extends HTMLElement {
+    connectedCallback() {
+      const buttons = Array.from(this.querySelectorAll<HTMLButtonElement>('[data-theme-choice]'));
+      const cycleButton = this.querySelector<HTMLButtonElement>('[data-theme-cycle]');
+
+      const update = (theme: 'light' | 'dark') => {
+        document.documentElement.dataset.theme = theme;
+        localStorage.setItem('starlight-theme', theme);
+        this.dataset.currentTheme = theme;
+        buttons.forEach((button) => {
+          button.setAttribute('aria-pressed', String(button.dataset.themeChoice === theme));
+        });
+        if (cycleButton) {
+          const target = theme === 'dark' ? 'light' : 'dark';
+          cycleButton.setAttribute('aria-label', target === 'dark' ? '切换到深色主题' : '切换到浅色主题');
+          cycleButton.querySelectorAll<HTMLElement>('[data-theme-target]').forEach((icon) => {
+            icon.hidden = icon.dataset.themeTarget !== target;
+          });
+        }
+      };
+
+      const current = document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+      update(current);
+
+      buttons.forEach((button) => {
+        button.addEventListener('click', () => {
+          update(button.dataset.themeChoice === 'dark' ? 'dark' : 'light');
+        });
+      });
+      cycleButton?.addEventListener('click', () => {
+        update(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+      });
+    }
+  }
+
+  if (!customElements.get('training-theme-toggle')) {
+    customElements.define('training-theme-toggle', TrainingThemeToggle);
+  }
+</script>

@@ -1,0 +1,446 @@
+/* 专题深度页：无侧栏阅读壳层、编辑刊头与章节节奏 */
+
+.page-lesson main > .content-panel:first-child + .content-panel {
+  border-block-start: 0;
+}
+
+.lesson-screen-reader-title {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  overflow: hidden;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.lesson-path {
+  align-items: center;
+  display: grid;
+  gap: var(--training-space-3);
+  grid-template-columns: auto 1px minmax(0, 1fr);
+  min-width: 0;
+}
+
+.lesson-map-link:hover,
+.lesson-current a:hover { color: var(--training-link); }
+
+.lesson-path-divider {
+  align-self: stretch;
+  background: var(--training-border);
+}
+
+.lesson-current {
+  display: grid;
+  line-height: 1.35;
+  min-width: 0;
+}
+
+.lesson-outline { margin-inline-start: var(--training-space-4); }
+
+.lesson-outline summary::-webkit-details-marker { display: none; }
+.lesson-outline summary::marker { content: ''; }
+.lesson-outline summary::before { content: none; }
+.lesson-outline[open] summary { background: var(--training-heading); color: var(--training-page-bg); }
+.lesson-outline-count { color: var(--training-muted); }
+.lesson-outline[open] .lesson-outline-count { color: var(--training-page-bg); }
+.lesson-outline[open] .lesson-outline-toggle::after { content: '−'; }
+
+.lesson-outline-menu > p {
+  border-block-end: var(--training-rule-heavy);
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  margin: 0;
+  padding-block-end: var(--training-space-2);
+  text-transform: uppercase;
+}
+
+.lesson-outline-menu ol { list-style: none; margin: 0; padding: 0; }
+.lesson-outline-menu a { color: var(--training-heading); text-decoration: none; }
+.lesson-outline-menu a:hover { color: var(--training-link); }
+
+.lesson-outline-section > span {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+}
+
+.lesson-outline-menu li ol { padding-block-start: var(--training-space-2); padding-inline-start: 2.7rem; }
+.lesson-outline-menu li li + li { margin-block-start: var(--training-space-1); }
+.lesson-outline-menu li li a { color: var(--training-muted); font-size: 0.78rem; }
+
+.lesson-series { align-items: center; display: inline-flex; gap: var(--training-space-2); }
+.lesson-hero-main { margin-block-start: auto; }
+
+.lesson-hero-kicker::before { background: var(--training-accent); content: ''; height: 0.13rem; width: 2.5rem; }
+
+.lesson-display-title span { display: block; }
+.lesson-display-title .lesson-title-latin { font-style: normal; letter-spacing: -0.04em; }
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 + p {
+  font-family: var(--training-font-title);
+  font-size: 1.08rem;
+  line-height: 1.85;
+}
+
+.page-lesson .intuition-box { position: relative; }
+
+.page-lesson :is(.dark-code, .code-panel) { border-width: 0.12rem; border-radius: 0; }
+.page-lesson .code-panel h3 {
+  background: var(--training-code-bg);
+  border-inline-start: 0;
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+}
+
+.page-lesson .simulator input[type='range'] { accent-color: var(--training-accent); }
+
+
+/* Lesson shell and outline */
+.page-lesson .sidebar-pane,
+.page-lesson .right-sidebar {
+  display: none;
+}
+
+.page-lesson .main-pane {
+  --sl-content-width: var(--training-page-width);
+  width: 100%;
+}
+
+.page-lesson main > .content-panel:first-child {
+  display: none;
+}
+
+.lesson-navigation {
+  position: relative;
+  grid-template-columns: minmax(0, 1fr) auto;
+  display: grid;
+  align-items: stretch;
+  margin-inline: auto;
+  max-width: var(--training-page-width);
+  height: var(--training-nav-height);
+  min-height: var(--training-nav-height);
+}
+
+.lesson-navigation--masthead {
+  height: 100%;
+  min-height: 0;
+  max-width: none;
+}
+
+.lesson-navigation--masthead .lesson-map-link {
+  padding-inline: 0.75rem;
+}
+
+.lesson-navigation--masthead .lesson-outline {
+  margin-inline-start: 0.5rem;
+}
+
+.lesson-navigation--masthead .lesson-outline summary {
+  border-inline-end: 0;
+  border-inline-start: var(--training-rule-light);
+  min-width: 8.5rem;
+  padding-inline: 0.75rem 0;
+}
+
+.lesson-map-link {
+  text-decoration: none;
+  min-height: 2.75rem;
+  min-width: 2.75rem;
+  gap: var(--training-space-2);
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  display: inline-flex;
+  color: var(--training-heading);
+  align-items: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+}
+
+.lesson-current a {
+  text-transform: uppercase;
+  text-decoration: none;
+  letter-spacing: 0.12em;
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  color: var(--training-accent);
+  font-size: 0.62rem;
+}
+
+.lesson-current > span {
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  font-weight: 800;
+  font-family: var(--training-font-title);
+  color: var(--training-heading);
+  font-size: 0.82rem;
+}
+
+.lesson-outline summary {
+  padding-inline: var(--training-space-3);
+  list-style: none;
+  letter-spacing: 0.08em;
+  height: 100%;
+  gap: var(--training-space-2);
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  display: flex;
+  cursor: pointer;
+  color: var(--training-heading);
+  align-items: center;
+  border-inline: var(--training-rule-heavy);
+  font-size: 0.67rem;
+  min-height: 2.75rem;
+  min-width: 10rem;
+}
+
+.lesson-outline-toggle {
+  display: inline-flex;
+  transition: transform var(--training-duration-fast) ease;
+}
+
+.lesson-outline-toggle::after { content: none !important; }
+
+.lesson-outline-label-compact { display: none; }
+
+.lesson-outline[open] .lesson-outline-toggle {
+  transform: rotate(180deg);
+}
+
+.lesson-outline-menu {
+  width: min(34rem, 100%);
+  top: calc(100% - 0.08rem);
+  position: absolute;
+  overflow-y: auto;
+  max-height: min(70vh, 38rem);
+  inset-inline-end: 0;
+  border: var(--training-rule-heavy);
+  background: var(--training-surface-bg);
+  border-radius: 0;
+  box-shadow: 0 0.8rem 2.2rem color-mix(in srgb, var(--training-heading) 14%, transparent);
+  padding: 1.4rem 1.55rem;
+  z-index: calc(var(--training-layer-sticky) + 1);
+}
+
+.lesson-outline-menu > ol > li { border-block-end: var(--training-rule-light);
+  padding-block: 0.8rem;
+}
+
+.lesson-outline-section {
+  grid-template-columns: 1.7rem minmax(0, 1fr);
+  gap: var(--training-space-3);
+  font-weight: 800;
+  font-family: var(--training-font-title);
+  display: grid;
+  align-items: baseline;
+  font-size: 0.95rem;
+}
+
+.page-lesson .sl-markdown-content {
+  counter-reset: lesson-section;
+  margin-inline: auto;
+  max-width: var(--training-page-width);
+}
+
+.lesson-hero {
+  justify-content: space-between;
+  flex-direction: column;
+  display: flex;
+  border-block-end: var(--training-rule-heavy);
+  min-height: clamp(30rem, 65vh, 41rem);
+  padding-block: 2.2rem clamp(3.6rem, 7vw, 5.7rem);
+}
+
+.lesson-hero-topline {
+  text-transform: uppercase;
+  justify-content: space-between;
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  display: flex;
+  color: var(--training-heading);
+  align-items: center;
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+}
+
+.lesson-signal { display: inline-block; background: var(--training-accent);
+  height: 0.48rem;
+  width: 0.48rem;
+}
+
+.lesson-hero-kicker {
+  text-transform: uppercase;
+  margin-block: 0 var(--training-space-4);
+  gap: var(--training-space-3);
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  display: flex;
+  color: var(--training-accent);
+  align-items: center;
+  font-size: 0.68rem;
+  letter-spacing: 0.23em;
+  margin-block-end: 1.7rem;
+}
+
+.lesson-display-title {
+  font-weight: 900;
+  font-family: var(--training-font-title);
+  color: var(--training-heading);
+  font-size: clamp(3.55rem, 7.15vw, 6.15rem);
+  letter-spacing: -0.06em;
+  line-height: 0.96;
+  max-width: 61rem;
+  overflow-wrap: normal;
+  word-break: normal;
+  text-wrap: balance;
+}
+
+.lesson-title-medium .lesson-display-title {
+  font-size: clamp(3.35rem, 6.7vw, 5.75rem);
+}
+
+.lesson-title-long .lesson-display-title {
+  font-size: clamp(3.1rem, 6.1vw, 5.25rem);
+}
+
+.lesson-display-title > span {
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
+.lesson-display-title .lesson-title-latin {
+  white-space: nowrap;
+}
+
+.lesson-display-title .lesson-title-accent { font-style: italic; color: var(--training-accent);
+  font-weight: 500;
+}
+
+.lesson-accent-rule {
+  background: var(--training-accent);
+  display: block;
+  height: 0.18rem;
+  margin-block-start: 1.85rem;
+  width: 6.25rem;
+}
+
+.lesson-hero-summary {
+  margin-block: var(--training-space-5) 0;
+  line-height: 1.75;
+  font-family: var(--training-font-title);
+  color: var(--training-text);
+  font-size: clamp(1.02rem, 1.8vw, 1.22rem);
+  margin-block-start: 1.35rem;
+  max-width: 46rem;
+}
+
+.lesson-start-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: grid;
+  border-block: var(--training-rule-heavy);
+  gap: 0;
+  margin-block: 0 5.6rem;
+}
+
+.page-lesson .lesson-start-grid .learning-box {
+  min-height: 100%;
+  margin: 0;
+  border-radius: 0;
+  background: transparent;
+  border: 0;
+  border-inline-end: var(--training-rule-light);
+  padding: 1.75rem 2rem 1.85rem;
+}
+
+.page-lesson .lesson-start-grid .learning-box:last-child {
+  border-inline-end: 0;
+}
+
+.learning-box-heading {
+  align-items: baseline;
+  display: flex;
+  gap: 0.75rem;
+  margin-block-end: 0.8rem;
+}
+
+.learning-box-heading > span {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 700;
+}
+
+.page-lesson .lesson-start-grid .learning-box h2 {
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  font-family: var(--training-font-code);
+  font-size: 0.76rem;
+  margin: 0;
+}
+
+.lesson-start-grid .learning-box ul {
+  margin-block: 0;
+  padding-inline-start: 1.3rem;
+}
+
+.lesson-start-grid .learning-box li {
+  font-size: 0.9rem;
+  line-height: 1.75;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 {
+  display: block;
+  counter-increment: lesson-section;
+  border-block-start: var(--training-rule-heavy);
+  margin-block-start: clamp(5rem, 10vw, 7.5rem);
+  padding-block-start: 2.1rem;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2::before {
+  font-weight: 700;
+  font-family: var(--training-font-code);
+  display: block;
+  color: var(--training-accent);
+  content: counter(lesson-section, decimal-leading-zero) ' / SECTION';
+  font-size: 0.66rem;
+  letter-spacing: 0.18em;
+  margin-block-end: 1.05rem;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 h2 {
+  margin: 0;
+  letter-spacing: -0.035em;
+  font-size: clamp(2.2rem, 4.7vw, 3.45rem);
+  line-height: 1.14;
+  max-width: 47rem;
+  text-wrap: balance;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 {
+  border-inline-start: 0;
+  margin-block-start: 3rem;
+  padding-inline-start: 0;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 h3 {
+  margin: 0;
+  align-items: baseline;
+  display: flex;
+  font-size: clamp(1.3rem, 2.6vw, 1.72rem);
+  gap: 0.75rem;
+}
+
+.page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 h3::before {
+  background: var(--training-accent);
+  content: '';
+  flex: 0 0 1.5rem;
+  height: 0.17rem;
+}
+
+

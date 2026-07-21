@@ -1,0 +1,134 @@
+---
+title: 深度学习基础：从前向传播到参数更新
+description: 用单参数网络连接前向传播、损失、梯度与参数更新
+pageType: lesson
+template: splash
+lessonId: deep-learning-basics
+categoryId: ai-ml
+sources: ["rumelhart-1986", "deep-learning-book", "stanford-cs231n-networks", "stanford-cs231n-optimization"]
+motionLevel: simulation
+safetyScope: not-applicable
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import IntuitionBox from '../../../components/intuition-box.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import NeuralNetworkSimulator from '../../../components/neural-network-simulator';
+import ScrollReveal from '../../../components/scroll-reveal';
+import manifest from '../../../data/lessons/deep-learning-basics.json';
+
+<LessonHero
+  series="AI / ML FOUNDATION"
+  unit="NEURAL NETWORKS · UNIT 01"
+  kicker="Forward, Loss and Gradient"
+  lines={[
+    { text: "深度学习" },
+    { text: "前向传播", accent: true },
+    { text: "与参数更新" },
+  ]}
+  summary="用一个可计算的单参数模型连接前向传播、损失、梯度和参数更新，并观察学习率如何改变训练结果。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：模型怎样从一次错误中改变？
+
+给定输入 `x = 2` 和目标 `y = 4`，模型使用一个参数 `w` 计算预测 `ŷ = wx`。当 `w = 1` 时，预测为 `2`，平方误差为 `(2 - 4)² = 4`。训练需要回答两个问题：哪个参数影响了误差，以及参数应沿哪个方向改变。
+
+<IntuitionBox>
+把网络看作一串有参数的函数。前向传播计算当前答案，损失函数度量答案与目标的差距，反向传播计算每个参数对差距的局部影响，优化器据此更新参数。
+</IntuitionBox>
+
+## 正式定义与符号
+
+前馈神经网络把输入依次送入若干函数层。一个常见神经元先计算 `z = w·x + b`，再输出 `a = φ(z)`；`w` 是权重，`b` 是偏置，`φ` 是激活函数。激活函数提供非线性，使多层网络能够表示超出单个线性变换的关系。（来源：[Deep Learning 教材](#source-deep-learning-book)、[Stanford CS231n](#source-stanford-cs231n-networks)）
+
+本页使用单参数线性模型，目的是完整观察一次更新：
+
+- **前向传播：** `ŷ = wx`。
+- **损失：** `L = (ŷ - y)²`。
+- **梯度：** `dL/dw = 2(ŷ - y)x`。
+- **梯度下降：** `w ← w - η(dL/dw)`，其中 `η` 是学习率。
+
+Rumelhart、Hinton 与 Williams 的 1986 年论文描述了通过反向传播误差学习内部表示的方法。反向传播沿计算图反向组合局部导数，核心数学工具是链式法则。（来源：[Nature 论文](#source-rumelhart-1986)、[Stanford 反向传播课程](#source-stanford-cs231n-optimization)）
+
+<NeuralNetworkSimulator client:visible motionLevel="simulation" />
+
+拖动权重滑块，观察预测、损失和梯度同步变化。`w = 2` 时预测等于目标，这一个样本的平方误差与梯度都为零。这个结论只描述当前模型、当前样本和当前损失。
+
+## 一次完整参数更新
+
+初始值取 `w = 1`、`x = 2`、`y = 4`、学习率 `η = 0.1`：
+
+1. 前向传播得到 `ŷ = 1 × 2 = 2`。
+2. 损失为 `L = (2 - 4)² = 4`。
+3. 梯度为 `dL/dw = 2 × (2 - 4) × 2 = -8`。
+4. 更新得到 `w = 1 - 0.1 × (-8) = 1.8`。
+5. 再次前向传播得到 `ŷ = 3.6`，损失降为 `0.16`。
+
+运行经过验证的 Node.js 示例：
+
+```bash
+node examples/neural-step.mjs
+```
+
+预期输出：
+
+```text
+更新前损失：4.0000
+梯度：-8.0000
+更新后权重：1.8000
+更新后损失：0.1600
+```
+
+<ScrollReveal client:visible motionLevel="explanatory" label="链式法则检查">
+  <p>计算图把复合函数拆成局部步骤。对本例，`L` 对 `ŷ` 的导数是 `2(ŷ-y)`，`ŷ` 对 `w` 的导数是 `x`，两者相乘得到 `dL/dw`。</p>
+</ScrollReveal>
+
+## 学习率与边界条件
+
+<DataTable
+  caption="单参数示例中的学习率影响"
+  headers={["学习率 η", "一次更新后的 w", "更新后损失", "观察"]}
+  rows={[
+    ["0", "1.0", "4.00", "参数保持不变"],
+    ["0.1", "1.8", "0.16", "向当前样本的低损失区域移动"],
+    ["0.25", "3.0", "4.00", "跨过最优点并到达对称位置"],
+    ["0.5", "5.0", "36.00", "步长过大使本次损失上升"],
+  ]}
+/>
+
+学习率缩放更新步长。实际训练还受到批量采样、损失曲面、初始化、归一化和优化器状态影响；一次样本上的损失下降无法证明整个数据集会持续改善。（来源：[Stanford 反向传播课程](#source-stanford-cs231n-optimization)）
+
+<Callout variant="info" title="反向传播的职责">
+反向传播负责高效计算梯度。参数如何更新由优化算法决定；数据怎样采样、目标怎样定义和模型怎样正则化也属于独立设计选择。
+</Callout>
+
+## 常见误区与局限
+
+- **把层数当成效果保证。** 表达能力、数据、优化和泛化共同决定结果。
+- **把训练损失当成最终目标。** 验证集表现、任务指标和部署约束需要单独评估。
+- **忽略激活函数与初始化。** 梯度的尺度和传播会受到两者影响。
+- **把梯度方向理解为全局最优方向。** 梯度描述当前位置的局部变化率。
+- **从单样本实验推广到完整训练。** 小实验用于验证机制，完整结论需要明确数据、模型和评估协议。
+
+## 练习与测验
+
+1. 取 `x = 3`、`y = 6`、`w = 1`，手算预测、损失与梯度。
+2. 分别用 `η = 0.05` 和 `η = 0.3` 更新一次，比较新损失。
+3. 说明激活函数放入多层网络后，链式法则需要增加哪些局部导数。
+
+判断题：当某个参数的梯度为零时，模型已经在所有样本上达到最佳结果。答案为错；零梯度只描述当前计算条件下该参数的局部一阶变化。
+
+<KeyTakeaway>
+训练闭环由前向传播、损失、反向传播和参数更新组成。每一步都有独立职责；学习率控制局部更新步长，实验结论需要带上模型、数据与评估边界。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />

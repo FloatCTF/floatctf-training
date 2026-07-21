@@ -1,0 +1,183 @@
+{
+  "schemaVersion": 1,
+  "categories": [
+    {
+      "id": "web-security",
+      "name": "Web 安全",
+      "summary": "理解 Web 应用中的信任边界、输入流与防御设计。",
+      "order": 1,
+      "pagePath": "/categories/web-security/"
+    },
+    {
+      "id": "system-network-security",
+      "name": "系统与网络安全",
+      "summary": "分析主机、协议、身份与网络边界中的安全机制。",
+      "order": 2,
+      "pagePath": "/categories/system-network-security/"
+    },
+    {
+      "id": "ai-ml",
+      "name": "AI 与机器学习",
+      "summary": "从模型机制、训练过程与安全边界理解机器学习系统。",
+      "order": 3,
+      "pagePath": "/categories/ai-ml/"
+    },
+    {
+      "id": "programming",
+      "name": "编程语言",
+      "summary": "建立语言运行模型，并通过可运行示例掌握关键机制。",
+      "order": 4,
+      "pagePath": "/categories/programming/"
+    },
+    {
+      "id": "cs-foundations",
+      "name": "计算机基础",
+      "summary": "连接操作系统、网络、数据结构、编译与数据库的核心原理。",
+      "order": 5,
+      "pagePath": "/categories/cs-foundations/"
+    },
+    {
+      "id": "engineering-tools",
+      "name": "工程工具",
+      "summary": "通过版本明确的工作流掌握开发、调试与交付工具。",
+      "order": 6,
+      "pagePath": "/categories/engineering-tools/"
+    },
+    {
+      "id": "ctf-practice",
+      "name": "CTF 实践",
+      "summary": "在隔离靶场中训练分析、验证、复盘与报告能力。",
+      "order": 7,
+      "pagePath": "/categories/ctf-practice/"
+    },
+    {
+      "id": "custom",
+      "name": "综合实践",
+      "summary": "组织跨学科项目、案例分析与故障排查训练。",
+      "order": 8,
+      "pagePath": "/categories/custom/"
+    }
+  ],
+  "topics": [
+    {
+      "id": "ssrf",
+      "slug": "ssrf",
+      "categoryId": "web-security",
+      "title": "SSRF：识别服务端请求的信任边界",
+      "summary": "沿请求链理解 SSRF 根因，在本地实验中验证限制目标地址的防御。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/ssrf/",
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "sql-injection",
+      "slug": "sql-injection",
+      "categoryId": "web-security",
+      "title": "SQL 注入：从字符串拼接到参数化查询",
+      "summary": "追踪输入进入 SQL 解析器的路径，并比较脆弱查询与参数化查询。",
+      "difficulty": "intermediate",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [],
+      "order": 2
+    },
+    {
+      "id": "linux-permissions",
+      "slug": "linux-permissions",
+      "categoryId": "system-network-security",
+      "title": "Linux 权限、用户与能力边界",
+      "summary": "追踪用户、用户组、文件权限、sudo 与 Linux capabilities 的授权路径。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "deep-learning-basics",
+      "slug": "deep-learning-basics",
+      "categoryId": "ai-ml",
+      "title": "深度学习基础：从前向传播到参数更新",
+      "summary": "通过一条可调节的训练链路连接网络层、损失函数、梯度与参数更新。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/deep-learning-basics/",
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "c-pointers",
+      "slug": "c-pointers",
+      "categoryId": "programming",
+      "title": "C 语言指针与内存模型",
+      "summary": "连接变量、地址、指针、栈帧和解引用操作。",
+      "difficulty": "intermediate",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "tcp-state-machine",
+      "slug": "tcp-state-machine",
+      "categoryId": "cs-foundations",
+      "title": "TCP 连接与状态机",
+      "summary": "沿握手、数据传输和连接关闭过程理解序列号、确认与状态转换。",
+      "difficulty": "intermediate",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "git-branch-merge",
+      "slug": "git-branch-merge",
+      "categoryId": "engineering-tools",
+      "title": "Git 分支与合并：读懂 Commit DAG",
+      "summary": "通过提交图掌握分支指针、merge、rebase 与冲突状态。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/git-branch-merge/",
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "burp-intercept",
+      "slug": "burp-intercept",
+      "categoryId": "engineering-tools",
+      "title": "Burp Suite 请求拦截",
+      "summary": "在授权靶场中观察、修改和转发浏览器请求。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": ["ssrf"],
+      "order": 2
+    },
+    {
+      "id": "ctf-web-workflow",
+      "slug": "ctf-web-workflow",
+      "categoryId": "ctf-practice",
+      "title": "Web CTF 证据驱动解题流程",
+      "summary": "从入口枚举、假设记录、最小验证推进到可复现解题报告。",
+      "difficulty": "intermediate",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": ["ssrf"],
+      "order": 1
+    },
+    {
+      "id": "secure-lab-project",
+      "slug": "secure-lab-project",
+      "categoryId": "custom",
+      "title": "本地安全靶场课程项目",
+      "summary": "组合容器、日志、漏洞验证与修复复测，交付可重复运行的课程靶场。",
+      "difficulty": "advanced",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": ["ssrf", "git-branch-merge"],
+      "order": 1
+    }
+  ]
+}

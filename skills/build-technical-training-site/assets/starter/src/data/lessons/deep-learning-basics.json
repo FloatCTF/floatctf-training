@@ -1,0 +1,135 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "deep-learning-basics",
+    "slug": "deep-learning-basics",
+    "categoryId": "ai-ml",
+    "title": "深度学习基础：从前向传播到参数更新",
+    "audience": "掌握基础代数和函数概念的本科生",
+    "durationMinutes": 90,
+    "primaryMode": "concept",
+    "supportingModes": ["mechanism", "lab"],
+    "evidenceProfiles": ["academic"],
+    "assessments": ["quiz", "exercise"],
+    "motionLevel": "simulation",
+    "visualStory": "输入经过网络层完成前向传播，损失函数随参数变化",
+    "learningObjectives": [
+      "用张量、参数与层描述一个最小神经网络",
+      "计算单个神经元的前向传播与均方误差",
+      "解释反向传播如何用链式法则得到梯度",
+      "观察学习率对一次参数更新的影响"
+    ],
+    "prerequisites": ["一次函数", "导数与链式法则", "向量点积"],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-07-19"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-07-19",
+    "notes": "定义、反向传播、优化与实验结论已由原始论文、教材和大学课程资料交叉核验。"
+  },
+  "sources": [
+    {
+      "id": "rumelhart-1986",
+      "kind": "paper",
+      "title": "Learning representations by back-propagating errors",
+      "publisher": "Nature",
+      "url": "https://www.nature.com/articles/323533a0",
+      "publishedAt": "1986-10-09",
+      "accessedAt": "2026-07-19",
+      "supports": ["claim-backprop", "evidence-backprop-paper"]
+    },
+    {
+      "id": "deep-learning-book",
+      "kind": "textbook",
+      "title": "Deep Learning",
+      "publisher": "MIT Press",
+      "url": "https://www.deeplearningbook.org/",
+      "publishedAt": "2016-11-18",
+      "accessedAt": "2026-07-19",
+      "supports": ["claim-network"]
+    },
+    {
+      "id": "stanford-cs231n-networks",
+      "kind": "university-course",
+      "title": "CS231n: Neural Networks Part 1",
+      "publisher": "Stanford University",
+      "url": "https://cs231n.github.io/neural-networks-1/",
+      "publishedAt": "2026-05-14",
+      "accessedAt": "2026-07-19",
+      "notes": "持续更新课程页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
+      "supports": ["claim-neuron"]
+    },
+    {
+      "id": "stanford-cs231n-optimization",
+      "kind": "university-course",
+      "title": "CS231n: Backpropagation, Intuitions",
+      "publisher": "Stanford University",
+      "url": "https://cs231n.github.io/optimization-2/",
+      "publishedAt": "2026-05-14",
+      "accessedAt": "2026-07-19",
+      "notes": "持续更新课程页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
+      "supports": ["claim-backprop", "claim-learning-rate", "experiment-update", "evidence-course-derivation"]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-backprop-paper",
+      "kind": "paper",
+      "identifier": "doi:10.1038/323533a0",
+      "topicRelation": "direct",
+      "sourceIds": ["rumelhart-1986"],
+      "summary": "原始论文描述了通过反向传播误差学习内部表示的方法。"
+    },
+    {
+      "id": "evidence-course-derivation",
+      "kind": "university-course",
+      "identifier": "CS231n-optimization-2",
+      "topicRelation": "direct",
+      "sourceIds": ["stanford-cs231n-optimization"],
+      "summary": "课程材料用计算图和链式法则解释局部梯度的组合。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-network",
+      "text": "前馈神经网络把输入通过一系列函数映射为输出，训练过程学习这些函数中的参数。",
+      "sourceIds": ["deep-learning-book"]
+    },
+    {
+      "id": "claim-neuron",
+      "text": "常见神经元先计算输入的加权和与偏置，再经过非线性激活函数。",
+      "sourceIds": ["stanford-cs231n-networks"]
+    },
+    {
+      "id": "claim-backprop",
+      "text": "反向传播高效计算损失相对于网络参数的梯度。",
+      "sourceIds": ["rumelhart-1986", "stanford-cs231n-optimization"]
+    },
+    {
+      "id": "claim-learning-rate",
+      "text": "学习率缩放沿负梯度方向的参数更新步长，过大或过小都会影响优化过程。",
+      "sourceIds": ["stanford-cs231n-optimization"]
+    },
+    {
+      "id": "experiment-update",
+      "text": "示例使用单参数模型验证一次梯度下降更新会降低给定样本上的平方误差。",
+      "sourceIds": ["stanford-cs231n-optimization"]
+    }
+  ],
+  "assessments": ["quiz", "exercise"],
+  "visualNarrative": {
+    "kind": "neural-network-propagation",
+    "primaryAnimations": 1,
+    "supportingInteractions": 2,
+    "scrollReveals": 1
+  },
+  "runnableExamples": [
+    {
+      "id": "single-weight-step",
+      "path": "examples/neural-step.mjs",
+      "command": "node examples/neural-step.mjs",
+      "expectedResult": "一次梯度更新把平方误差从 4.0000 降至 0.1600。"
+    }
+  ]
+}

@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-07-21",
+  "reviewer": "agent",
+  "mode": "add-topic",
+  "summary": "Web 安全五专题已接入；已删除 CVE 复现实验与 AI 实战专题。",
+  "items": [
+    {
+      "id": "mode-topic-fit",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/data/catalog.json",
+      "note": "Web 漏洞用 mechanism/lab，CVE 用 lab，AI 用 tool，与学习目标一致。"
+    },
+    {
+      "id": "sequence-objectives",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/sql-injection.mdx",
+      "note": "各专题按引导问题→机制→演示/实验→防御→案例→边界→考核展开。"
+    },
+    {
+      "id": "analogy-value",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/ssrf.mdx",
+      "note": "正文以机制与数据流为主，未沿用旧 HTML 中冗长故事比喻。"
+    },
+    {
+      "id": "term-definition",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/xss.mdx",
+      "note": "SSRF、SQLi、XSS、RCE、MCP、Skills、CVE 等术语在首次出现时给出定义。"
+    },
+    {
+      "id": "source-traceability",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/data/lessons/sql-injection.json",
+      "note": "主张、证据与面试答案绑定 OWASP、CWE、CVE Program、官方文档等来源。"
+    },
+    {
+      "id": "code-verification",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "examples/ssrf-local-lab.mjs",
+      "note": "ssrf/sql/xss/command 本地演示已实际运行并写入预期结果。"
+    },
+    {
+      "id": "security-scope",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/components/security-disclaimer.astro",
+      "note": "安全专题 safetyScope 为 authorized-lab；页面含 SecurityDisclaimer；实验限本地/隔离靶场。"
+    },
+    {
+      "id": "interaction-purpose",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/rce.mdx",
+      "note": "SSRF 使用 AttackDefenseFlow；CVE/AI 使用 ProcessTimeline；其余以 CodeCompare 与面试折叠承担交互。"
+    },
+    {
+      "id": "motion-purpose",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/data/lessons/ssrf.json",
+      "note": "动效等级与 visualNarrative 记录一致，服务于步骤展示而非装饰。"
+    },
+    {
+      "id": "fallback-completeness",
+      "level": "must",
+      "status": "not-run",
+      "note": "本轮未重跑浏览器矩阵；结构门禁与构建已通过。"
+    },
+    {
+      "id": "keyboard-access",
+      "level": "must",
+      "status": "not-run",
+      "note": "本轮未重跑键盘验证；沿用既有组件的可聚焦控件。"
+    },
+    {
+      "id": "mobile-overflow",
+      "level": "must",
+      "status": "not-run",
+      "note": "本轮未重跑移动端截图验证。"
+    },
+    {
+      "id": "print-completeness",
+      "level": "must",
+      "status": "not-run",
+      "note": "本轮未重跑打印验证。"
+    },
+    {
+      "id": "page-structure",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/rce.mdx",
+      "note": "专题均使用 splash、LessonHero、学习目标、前置知识、SourceList 与 KeyTakeaway。"
+    },
+    {
+      "id": "visual-consistency",
+      "level": "must",
+      "status": "not-run",
+      "note": "本轮未重跑视觉矩阵；复用站点既有主题与组件。"
+    },
+    {
+      "id": "deployment-integrity",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "deploy/nginx.conf.example",
+      "note": "npm run verify 通过，静态构建生成 7 个专题页与分类/首页。"
+    },
+    {
+      "id": "opening-question",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/sql-injection.mdx",
+      "note": "各专题以引导问题开场。"
+    },
+    {
+      "id": "diagram-value",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/rce.mdx",
+      "note": "使用表格、对照代码与流程时间线表达机制，而非装饰图。"
+    },
+    {
+      "id": "authentic-example",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "examples/sql-injection-demo.mjs",
+      "note": "可运行示例与 CVE 证据来自可核验公开记录。"
+    },
+    {
+      "id": "review-card",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/xss.mdx",
+      "note": "每课保留单个 KeyTakeaway。"
+    },
+    {
+      "id": "motion-rhythm",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "src/data/lessons/xss.json",
+      "note": "ScrollReveal 与主要交互数量受 motionBudget 约束。"
+    },
+    {
+      "id": "visual-focus",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/ssrf.mdx",
+      "note": "刊头、目标区、机制与防御表格形成固定阅读路径。"
+    }
+  ]
+}

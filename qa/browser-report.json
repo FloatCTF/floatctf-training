@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "testedAt": "2026-07-21",
+  "target": "http://127.0.0.1:4321/",
+  "browser": "Codex in-app Chromium",
+  "pages": [
+    "/",
+    "/categories/",
+    "/categories/web-security/",
+    "/categories/system-network-security/",
+    "/categories/ai-ml/",
+    "/categories/programming/",
+    "/categories/cs-foundations/",
+    "/categories/engineering-tools/",
+    "/categories/ctf-practice/",
+    "/categories/custom/"
+  ],
+  "checks": [
+    { "id": "desktop-light", "status": "pass", "evidence": "1440×1000 下显示双栏课程目录，8 个分类默认收起，专题行数量为 0，页面无横向溢出。", "screenshot": "qa/screenshots/home-desktop-light.png" },
+    { "id": "desktop-dark", "status": "pass", "evidence": "深色主题切换成功，8 个空分类的标题、简介和焦点颜色可辨。", "screenshot": "qa/screenshots/home-desktop-dark.png" },
+    { "id": "lesson-editorial-desktop-light", "status": "not-applicable", "reason": "当前交付没有 completed 专题页。" },
+    { "id": "mobile-light", "status": "pass", "evidence": "390×844 下目录回落为单栏，页面宽度 375px，scrollWidth 375px。", "screenshot": "qa/screenshots/home-mobile-light.png" },
+    { "id": "lesson-mobile", "status": "not-applicable", "reason": "当前交付没有 completed 专题页。" },
+    { "id": "category-page", "status": "pass", "evidence": "Web 安全分类页无侧栏、无自引用入口，显示“暂无专题”空状态。" },
+    { "id": "directory-semantics", "status": "pass", "evidence": "首页包含 8 个原生 details、8 个空状态、0 个专题行和 0 个课程链接。" },
+    { "id": "print", "status": "pass", "evidence": "打印媒介下站点顶栏隐藏、目录内容展开、页面使用白色背景。", "screenshot": "qa/screenshots/home-print.png" },
+    { "id": "reduced-motion", "status": "pass", "evidence": "prefers-reduced-motion: reduce 生效，主内容不存在 opacity 为 0 的元素。" },
+    { "id": "no-javascript", "status": "pass", "evidence": "禁用脚本后标题、8 个原生分类目录和 0 专题统计完整呈现。", "screenshot": "qa/screenshots/home-no-javascript.png" },
+    { "id": "internal-links", "status": "pass", "evidence": "首页、分类总览和 8 个分类路由均返回 HTTP 200。" },
+    { "id": "lesson-keyboard", "status": "not-applicable", "reason": "当前交付没有专题页交互。" },
+    { "id": "deployment-csp-pagefind", "status": "pass", "evidence": "生产构建生成 Pagefind 索引；搜索 Web 返回 4 条结果；nginx CSP 与 MIME 通过结构门禁。" },
+    { "id": "console", "status": "pass", "evidence": "页面未产生 error；日志仅包含 Codex 浏览器宿主的 Electron CSP 提示。" },
+    { "id": "performance", "status": "pass", "evidence": "桌面与手机测试窗口均无页面级横向溢出，专题行数量为 0。" }
+  ],
+  "screenshots": [
+    "qa/screenshots/home-desktop-light.png",
+    "qa/screenshots/home-desktop-dark.png",
+    "qa/screenshots/home-mobile-light.png",
+    "qa/screenshots/home-print.png",
+    "qa/screenshots/home-no-javascript.png"
+  ]
+}

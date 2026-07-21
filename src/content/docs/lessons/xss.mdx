@@ -1,0 +1,138 @@
+---
+title: XSS：输出上下文与浏览器侧信任边界
+description: 区分三类 XSS，按输出上下文编码，并用本地演示验证编码差异
+pageType: lesson
+template: splash
+lessonId: xss
+categoryId: web-security
+sources: ["owasp-xss-prevention", "cwe-79", "cve-2023-27898", "cve-2023-1932", "appsec-interview-gist"]
+motionLevel: explanatory
+safetyScope: authorized-lab
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import CodeCompare from '../../../components/code-compare.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
+import InterviewAccordion from '../../../components/interview-accordion';
+import ScrollReveal from '../../../components/scroll-reveal';
+import manifest from '../../../data/lessons/xss.json';
+
+export const vulnerableSnippet = `// 危险：不可信数据进入 HTML 解析
+app.get('/search', (req, res) => {
+  res.send('<p>结果：' + req.query.q + '</p>');
+});`;
+
+export const secureSnippet = `// 安全：进入 HTML 文本上下文前编码
+import { escapeHtml } from './encode.js';
+app.get('/search', (req, res) => {
+  res.send('<p>结果：' + escapeHtml(req.query.q) + '</p>');
+});`;
+
+<LessonHero
+  series="SECURITY TRAINING"
+  unit="WEB SECURITY · UNIT 04"
+  kicker="Cross-Site Scripting"
+  lines={[
+    { text: "跨站脚本" },
+    { text: "输出上下文", accent: true },
+    { text: "XSS", latin: true },
+  ]}
+  summary="XSS 攻击的是浏览页面的人。沿着数据从输入到 HTML/JS 汇点的路径，学会按上下文编码并叠加 CSP 与 Cookie 约束。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：为什么“服务器没被入侵”，用户还是会中招？
+
+SQL 注入主要改服务器侧数据访问；XSS 把不可信数据变成浏览器会执行的脚本或事件。受害者是打开页面的用户会话、页面内容和后续操作。
+
+CWE-79 将其描述为网页生成过程中对输入中和不足；OWASP 给出按上下文的预防规则。（来源：[CWE-79](#source-cwe-79)、[OWASP](#source-owasp-xss-prevention)）
+
+## 三类 XSS 的数据流
+
+<DataTable
+  caption="XSS 类型对照"
+  headers={["类型", "数据路径", "典型汇点"]}
+  rows={[
+    ["反射型", "请求参数进入当次响应", "搜索页、错误页、跳转提示"],
+    ["存储型", "写入存储后被其他请求读出", "评论、工单、富文本资料"],
+    ["DOM 型", "浏览器脚本读取源并写入汇点", "location、innerHTML、文档写"],
+  ]}
+/>
+
+## 输出上下文决定编码
+
+同一段输入出现在不同位置，危险形态不同：
+
+1. **HTML 文本：** 需要 HTML 编码，防止长出新标签。
+2. **HTML 属性：** 需要属性编码，并优先使用引号包裹。
+3. **JavaScript 字符串：** 需要 JS 转义；更好的做法是避免把数据嵌进脚本。
+4. **URL：** 校验协议并做 URL 编码，拒绝 `javascript:` 等危险 scheme。
+
+<Callout variant="warning" title="入口过滤不等于输出安全">
+数据可能在服务端、消息队列、模板和前端路由间多次流转。编码应发生在进入对应上下文的输出边界。
+</Callout>
+
+## 本地演示
+
+```bash
+node examples/xss-encode-demo.mjs
+```
+
+预期会看到同一输入在 HTML 上下文被实体化，而 JS 字符串上下文需要另一套转义。培训页本身不执行示例 payload。
+
+<CodeCompare
+  language="javascript"
+  vulnerable={vulnerableSnippet}
+  secure={secureSnippet}
+  vulnerableTitle="脆弱：响应直接拼接"
+  secureTitle="安全：HTML 文本上下文编码"
+/>
+
+## 分层防御
+
+<DataTable
+  caption="XSS 控制点"
+  headers={["控制层", "关键动作", "局限"]}
+  rows={[
+    ["输出编码/安全模板", "按上下文编码或使用默认转义模板", "需覆盖全部输出点"],
+    ["前端汇点治理", "避免 innerHTML 等危险 API", "第三方脚本仍可能引入汇点"],
+    ["CSP", "限制脚本来源与危险特性", "配置过宽时收益有限"],
+    ["Cookie 属性", "HttpOnly、Secure、SameSite", "不阻止页面被篡改"],
+    ["输入校验", "格式与长度白名单", "只能辅助，不能替代输出编码"],
+  ]}
+/>
+
+## 真实案例
+
+CVE-2023-27898 与 CVE-2023-1932 说明管理界面和校验/错误消息路径都可能成为 XSS 输出点。（来源：[CVE-2023-27898](#source-cve-2023-27898)、[CVE-2023-1932](#source-cve-2023-1932)）
+
+<ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
+  <p>修复验收应覆盖：原输出点、同源模板片段、前端路由回写，以及错误页与邮件/富文本渲染链路。</p>
+</ScrollReveal>
+
+## 常见错误与边界
+
+- **只做标签黑名单。** 事件属性与编码变体很多。
+- **在 JS 上下文使用 HTML 编码。** 上下文错配。
+- **以为 HttpOnly 等于 XSS 已修复。**
+- **富文本消毒策略与业务需求冲突时缺少明确允许标签表。**
+
+## 面试检查
+
+<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+
+<KeyTakeaway>
+XSS 的关键判断是：不可信数据最终会在哪个浏览器上下文被解释。按上下文编码，管住危险汇点，再用 CSP 与 Cookie 属性做纵深防御。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />
+<SecurityDisclaimer />

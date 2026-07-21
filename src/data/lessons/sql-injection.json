@@ -1,0 +1,385 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "sql-injection",
+    "slug": "sql-injection",
+    "categoryId": "web-security",
+    "title": "SQL 注入：从字符串拼接到参数化查询",
+    "audience": "具有基础 SQL 与 Web 后端知识的本科生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "lab",
+      "case-study"
+    ],
+    "evidenceProfiles": [
+      "security"
+    ],
+    "assessments": [
+      "interview",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "用户输入进入查询构造后如何改写语句语义，以及参数绑定如何固定结构",
+    "learningObjectives": [
+      "解释 SQL 注入的根因、成立条件与主要影响",
+      "沿登录或检索接口追踪输入如何进入 SQL 语句",
+      "比较字符串拼接与参数化查询的语义差异",
+      "说明联合查询、盲注等类型的适用条件与验证思路"
+    ],
+    "prerequisites": [
+      "基础 SQL SELECT/WHERE",
+      "HTTP 表单与查询参数",
+      "一种后端语言的数据库访问代码阅读能力"
+    ],
+    "safetyScope": "authorized-lab",
+    "verifiedAt": "2026-07-21"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-07-21",
+    "queries": [
+      "SQL 注入 面试题",
+      "SQL injection interview questions appsec",
+      "SQLi 面经",
+      "渗透测试面试 SQL注入"
+    ],
+    "notes": "定义与防御对照 OWASP/CWE；两个直接相关 CVE 已写入证据。"
+  },
+  "sources": [
+    {
+      "id": "owasp-sqli-prevention",
+      "kind": "official-doc",
+      "title": "SQL Injection Prevention Cheat Sheet",
+      "publisher": "OWASP Foundation",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新页面；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-definition",
+        "claim-defense",
+        "interview-q1",
+        "interview-q2",
+        "interview-q3",
+        "interview-q5",
+        "interview-q6",
+        "interview-q7",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "cwe-89",
+      "kind": "specification",
+      "title": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command",
+      "publisher": "MITRE",
+      "url": "https://cwe.mitre.org/data/definitions/89.html",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新条目；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-definition",
+        "claim-impact",
+        "interview-q1",
+        "interview-q4",
+        "interview-q7"
+      ]
+    },
+    {
+      "id": "cve-2023-34362",
+      "kind": "cve",
+      "title": "CVE-2023-34362",
+      "publisher": "CVE Program",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2023-34362",
+      "publishedAt": "2023-06-02",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "evidence-moveit",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "cve-2023-48788",
+      "kind": "cve",
+      "title": "CVE-2023-48788",
+      "publisher": "CVE Program",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2023-48788",
+      "publishedAt": "2024-03-12",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "evidence-forticlient",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "appsec-interview-gist",
+      "kind": "interview-report",
+      "title": "Application Security Interview Questions",
+      "publisher": "GitHub Gist contributor mccabe615",
+      "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
+      "publishedAt": "2022-09-02",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "interview-q1",
+        "interview-q2",
+        "interview-q3",
+        "interview-q4",
+        "interview-q5",
+        "interview-q6",
+        "interview-q7",
+        "interview-q8"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-moveit",
+      "kind": "cve",
+      "identifier": "CVE-2023-34362",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "cve-2023-34362"
+      ],
+      "summary": "MOVEit Transfer 中的 SQL 注入漏洞，被大规模利用导致数据窃取。"
+    },
+    {
+      "id": "evidence-forticlient",
+      "kind": "cve",
+      "identifier": "CVE-2023-48788",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "cve-2023-48788"
+      ],
+      "summary": "FortiClient EMS 中的 SQL 注入，可导致未认证远程代码执行链路。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-definition",
+      "text": "SQL 注入发生在不可信输入被解释为 SQL 语法或命令的一部分。",
+      "sourceIds": [
+        "cwe-89",
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "claim-defense",
+      "text": "参数化查询或安全 API 将数据与语句结构分离，是主要防御手段。",
+      "sourceIds": [
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "claim-impact",
+      "text": "成功注入可导致未授权读写、认证绕过，并在部分环境下扩展到文件或命令能力。",
+      "sourceIds": [
+        "cwe-89"
+      ]
+    }
+  ],
+  "assessments": [
+    "interview",
+    "lab-check"
+  ],
+  "visualNarrative": {
+    "kind": "code-compare",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 1
+  },
+  "runnableExamples": [
+    {
+      "id": "sql-injection-demo",
+      "path": "examples/sql-injection-demo.mjs",
+      "command": "node examples/sql-injection-demo.mjs",
+      "expectedResult": "打印被改写的脆弱表达式，以及参数绑定后攻击输入无法认证成功。"
+    }
+  ],
+  "interviewQuestions": [
+    {
+      "id": "interview-q1",
+      "question": "什么是 SQL 注入？它为什么危险？",
+      "level": 1,
+      "answer": "SQL 注入是把不可信输入解释成 SQL 语法或命令的一部分，从而改变查询语义；它直接作用于数据库中的数据与权限边界。",
+      "keyPoints": [
+        "输入被当 SQL 解释",
+        "改变查询语义",
+        "影响数据与权限"
+      ],
+      "bonus": "CWE-89 把它归类为特殊元素中和不足。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cwe-89",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cwe-89",
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "interview-q2",
+      "question": "你会怎么修复 SQL 注入？",
+      "level": 1,
+      "answer": "优先使用参数化查询或安全 ORM API，把用户输入绑定为数据而不是拼进语句结构，并配合最小权限账户。",
+      "keyPoints": [
+        "参数化/预编译",
+        "安全 API",
+        "最小权限"
+      ],
+      "bonus": "OWASP 将参数化查询列为首选防御。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "interview-q3",
+      "question": "为什么只做输入过滤或转义单引号往往不够？",
+      "level": 2,
+      "answer": "编码、数值上下文、二次拼接、不同数据库语法和宽字节等问题会绕过简单过滤，结构绑定比字符黑名单更稳定。",
+      "keyPoints": [
+        "上下文差异",
+        "二次使用",
+        "黑名单脆弱"
+      ],
+      "bonus": "防御应优先固定语句结构，再谈辅助校验。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "interview-q4",
+      "question": "联合查询注入和盲注在验证信号上有什么差别？",
+      "level": 2,
+      "answer": "联合查询依赖响应中的数据回显位；盲注则通过布尔结果差异或时间差推断数据，不需要直接回显。",
+      "keyPoints": [
+        "回显 vs 推断",
+        "布尔/时间信号",
+        "利用条件不同"
+      ],
+      "bonus": "选择手法取决于应用是否把查询结果展示给用户。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cwe-89"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cwe-89"
+      ]
+    },
+    {
+      "id": "interview-q5",
+      "question": "参数化查询为什么能挡住经典注入？",
+      "level": 3,
+      "answer": "数据库先编译固定语句模板再绑定参数，参数只填充值节点，不能改写关键字、操作符或子句结构。",
+      "keyPoints": [
+        "模板先编译",
+        "参数是值",
+        "结构不可改写"
+      ],
+      "bonus": "ORDER BY 等标识符位置通常不能参数化，需要白名单。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "interview-q6",
+      "question": "如何设计登录接口的纵深防御？",
+      "level": 3,
+      "answer": "参数化查询是主防线，再叠加账户锁定与审计、错误信息收敛、数据库账户最小权限和异常查询检测。",
+      "keyPoints": [
+        "参数化主防线",
+        "权限收敛",
+        "可观测性"
+      ],
+      "bonus": "WAF 只能作为附加层，不能替代代码层修复。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-sqli-prevention"
+      ]
+    },
+    {
+      "id": "interview-q7",
+      "question": "代码评审中看到字符串拼接 SQL，你会按什么顺序审查？",
+      "level": 4,
+      "answer": "先追踪所有输入来源和调用点，确认是否存在参数化替代，检查动态表名与排序字段是否白名单，并评估权限与错误回显。",
+      "keyPoints": [
+        "数据流追踪",
+        "动态标识符",
+        "权限与回显"
+      ],
+      "bonus": "重点标出二次拼接：先安全存储、后不安全拼进新语句的路径。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-sqli-prevention",
+        "cwe-89"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-sqli-prevention",
+        "cwe-89"
+      ]
+    },
+    {
+      "id": "interview-q8",
+      "question": "发现疑似 SQL 注入后，你如何在授权范围内验证并推动修复？",
+      "level": 4,
+      "answer": "在书面授权环境用最小探测确认输入是否改变查询语义，记录证据后推动参数化修复，并用回归用例覆盖原注入点与相邻查询。",
+      "keyPoints": [
+        "授权与最小探测",
+        "证据记录",
+        "修复与回归"
+      ],
+      "bonus": "CVE-2023-34362 与 CVE-2023-48788 说明注入可升级为大规模数据窃取或远程执行链路。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cve-2023-34362",
+        "cve-2023-48788",
+        "owasp-sqli-prevention"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cve-2023-34362",
+        "cve-2023-48788",
+        "owasp-sqli-prevention"
+      ]
+    }
+  ]
+}

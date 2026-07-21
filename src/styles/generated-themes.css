@@ -1,0 +1,80 @@
+/* 由 scripts/generate-theme-css.mjs 生成。颜色只来自 config/themes.json。 */
+
+:root, :root[data-theme='light'] {
+  --training-page-bg: #F4F0E5;
+  --training-surface-bg: #FBF7EC;
+  --training-text: #28251E;
+  --training-muted: #6B6559;
+  --training-heading: #17150F;
+  --training-border: #817867;
+  --training-accent: #A63D2C;
+  --training-link: #8B2E23;
+  --training-info-bg: #F2E8C9;
+  --training-info-text: #694D16;
+  --training-warning-bg: #F5E2B8;
+  --training-warning-text: #67400A;
+  --training-danger-bg: #F4D8D1;
+  --training-danger-text: #7F261D;
+  --training-success-bg: #DDE9DA;
+  --training-success-text: #285D37;
+  --training-code-bg: #171714;
+  --training-code-text: #F2ECD9;
+  --training-focus: #A63D2C;
+  --training-table-header: #17150F;
+  --training-table-header-text: #F8F2E4;
+  --training-table-zebra: #EAE3D3;
+}
+
+:root[data-theme='dark'] {
+  --training-page-bg: #11110F;
+  --training-surface-bg: #1B1A17;
+  --training-text: #E8E1D3;
+  --training-muted: #B6AD9D;
+  --training-heading: #FFF8E9;
+  --training-border: #70685A;
+  --training-accent: #D36A4D;
+  --training-link: #E4896D;
+  --training-info-bg: #2A251D;
+  --training-info-text: #E5C98B;
+  --training-warning-bg: #342817;
+  --training-warning-text: #F0D28F;
+  --training-danger-bg: #321A18;
+  --training-danger-text: #F2A79A;
+  --training-success-bg: #18281D;
+  --training-success-text: #A9D3B2;
+  --training-code-bg: #090907;
+  --training-code-text: #F3ECDD;
+  --training-focus: #E4896D;
+  --training-table-header: #29261F;
+  --training-table-header-text: #FFF8E9;
+  --training-table-zebra: #22201B;
+}
+
+@media print {
+  :root,
+  :root[data-theme='light'],
+  :root[data-theme='dark'] {
+    --training-page-bg: #FFFFFF;
+    --training-surface-bg: #FFFFFF;
+    --training-text: #111111;
+    --training-muted: #444444;
+    --training-heading: #000000;
+    --training-border: #707070;
+    --training-accent: #8B2E23;
+    --training-link: #8B2E23;
+    --training-info-bg: #F1F5FA;
+    --training-info-text: #17375E;
+    --training-warning-bg: #FFF6D8;
+    --training-warning-text: #513600;
+    --training-danger-bg: #FBECEC;
+    --training-danger-text: #6F1D23;
+    --training-success-bg: #EAF5ED;
+    --training-success-text: #174A29;
+    --training-code-bg: #F2F2F2;
+    --training-code-text: #111111;
+    --training-focus: #8B2E23;
+    --training-table-header: #E8E8E8;
+    --training-table-header-text: #111111;
+    --training-table-zebra: #F6F6F6;
+  }
+}

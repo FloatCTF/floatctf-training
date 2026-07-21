@@ -1,0 +1,11 @@
+---
+interface Props { caption: string; headers: string[]; rows: Array<Array<string>> }
+const { caption, headers, rows } = Astro.props;
+---
+<div class="table-scroll" tabindex="0" role="region" aria-label={caption}>
+  <table class="training-table">
+    <caption>{caption}</caption>
+    <thead><tr>{headers.map((header) => <th scope="col">{header}</th>)}</tr></thead>
+    <tbody>{rows.map((row) => <tr>{row.map((cell) => <td>{cell}</td>)}</tr>)}</tbody>
+  </table>
+</div>

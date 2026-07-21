@@ -1,0 +1,26 @@
+---
+interface Props {
+  vulnerableTitle?: string;
+  secureTitle?: string;
+  vulnerable: string;
+  secure: string;
+  language?: string;
+}
+const {
+  vulnerableTitle = '脆弱实现',
+  secureTitle = '改进实现',
+  vulnerable,
+  secure,
+  language = 'text',
+} = Astro.props;
+---
+<div class="code-compare" aria-label="代码对照">
+  <section class="code-panel code-panel-danger">
+    <header><span>VULNERABLE</span><h3>{vulnerableTitle}</h3></header>
+    <pre tabindex="0"><code class={`language-${language}`}>{vulnerable}</code></pre>
+  </section>
+  <section class="code-panel code-panel-success">
+    <header><span>GUARDED</span><h3>{secureTitle}</h3></header>
+    <pre tabindex="0"><code class={`language-${language}`}>{secure}</code></pre>
+  </section>
+</div>

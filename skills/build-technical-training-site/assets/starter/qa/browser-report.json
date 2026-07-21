@@ -1,0 +1,226 @@
+{
+  "schemaVersion": 1,
+  "testedAt": "2026-07-20",
+  "target": "Astro 7.1.1 production preview at http://127.0.0.1:4330/; smoke test also rebuilt and checked /campus-training/",
+  "browser": "Playwright CLI Chromium",
+  "pages": [
+    "/",
+    "/categories/web-security/",
+    "/lessons/ssrf/",
+    "/lessons/deep-learning-basics/",
+    "/lessons/git-branch-merge/"
+  ],
+  "checks": [
+    {
+      "id": "desktop-light",
+      "status": "pass",
+      "evidence": {
+        "viewport": "1440x1000",
+        "theme": "light",
+        "h1": "技术培训导航站",
+        "nativeCategoryDirectories": 8,
+        "openDirectories": 0,
+        "plannedDisabledItems": 7,
+        "plannedLinks": 0,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/home-current-desktop-light.png"
+    },
+    {
+      "id": "desktop-dark",
+      "status": "pass",
+      "evidence": {
+        "dataTheme": "dark",
+        "themeButtonPressed": true,
+        "bodyBackground": "rgb(17, 17, 15)",
+        "bodyText": "rgb(232, 225, 211)",
+        "lessonSidebarCount": 0
+      },
+      "screenshot": "qa/screenshots/ssrf-current-desktop-dark.png"
+    },
+    {
+      "id": "lesson-editorial-desktop-light",
+      "status": "pass",
+      "evidence": {
+        "viewport": "1440x1000",
+        "h1": "SSRF：识别服务端请求的信任边界",
+        "sidebarCount": 0,
+        "detailsCount": 9,
+        "initiallyOpenDetails": 0,
+        "visiblePlanningLabels": [],
+        "securityDisclaimerCount": 1,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/ssrf-current-desktop-light.png"
+    },
+    {
+      "id": "table-header-contrast",
+      "status": "pass",
+      "evidence": {
+        "method": "validate-content.mjs 的 WCAG 相对亮度实现",
+        "themesChecked": 3,
+        "normalTextThreshold": "4.5:1",
+        "uiThreshold": "3:1"
+      }
+    },
+    {
+      "id": "mobile-light",
+      "status": "pass",
+      "evidence": {
+        "viewport": "390x844",
+        "nativeCategoryDirectories": 8,
+        "openDirectories": 0,
+        "plannedDisabledItems": 7,
+        "plannedLinks": 0,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/home-current-mobile-light.png"
+    },
+    {
+      "id": "category-page",
+      "status": "pass",
+      "evidence": {
+        "path": "/categories/web-security/",
+        "h1": "Web 安全",
+        "sidebarCount": 0,
+        "plannedDisabledItems": 1,
+        "plannedAnchors": 0,
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "id": "lesson-mobile",
+      "status": "pass",
+      "evidence": {
+        "viewport": "390x844",
+        "path": "/lessons/ssrf/",
+        "bodyFontSize": "16px",
+        "sidebarCount": 0,
+        "unsafeCodeOverflowBlocks": 0,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/ssrf-current-mobile-light.png"
+    },
+    {
+      "id": "reader-facing-metadata",
+      "status": "pass",
+      "evidence": {
+        "checkedPages": 3,
+        "forbiddenLabels": [],
+        "labels": ["时长", "受众", "教学模式", "证据策略"],
+        "internalPlanningDataRetainedInManifests": true
+      }
+    },
+    {
+      "id": "directory-semantics",
+      "status": "pass",
+      "evidence": {
+        "nativeDetails": 8,
+        "initiallyOpen": 0,
+        "plannedDisabledItems": 7,
+        "plannedAnchors": 0
+      }
+    },
+    {
+      "id": "print",
+      "status": "pass",
+      "evidence": {
+        "printMediaMatches": true,
+        "interactiveRangeControls": 0,
+        "gitVisibleCommitNodes": 4,
+        "gitTotalCommitNodes": 4,
+        "mainContentVisible": true,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/ssrf-print.png"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "pass",
+      "evidence": {
+        "reducedMotionMatches": true,
+        "gitRangeControls": 0,
+        "gitVisibleCommitNodes": 4,
+        "gitTotalCommitNodes": 4,
+        "gitFinalDescription": "合并：合并提交 M 同时引用 B 与 C。",
+        "horizontalOverflowPx": 0
+      }
+    },
+    {
+      "id": "no-javascript",
+      "status": "pass",
+      "evidence": {
+        "interviewDetails": 8,
+        "nativeDetailsOpenedWithEnter": true,
+        "flowNodes": 5,
+        "completeFlowNodes": 5,
+        "rangeControls": 0,
+        "noscriptNotice": 1,
+        "securityDisclaimer": 1,
+        "horizontalOverflowPx": 0
+      },
+      "screenshot": "qa/screenshots/ssrf-no-javascript.png"
+    },
+    {
+      "id": "internal-links",
+      "status": "pass",
+      "evidence": {
+        "reachablePages": 12,
+        "brokenPages": 0,
+        "plannedTopicLinks": 0
+      }
+    },
+    {
+      "id": "lesson-keyboard",
+      "status": "pass",
+      "evidence": {
+        "flowSliderBefore": 0,
+        "flowSliderAfterArrowRight": 1,
+        "interviewOpenedWithEnter": true,
+        "interviewClosedWithSpace": true,
+        "focusRemainedOnSummary": true
+      }
+    },
+    {
+      "id": "deployment-csp-pagefind",
+      "status": "pass",
+      "evidence": {
+        "rootPreviewSearchQuery": "SSRF",
+        "matchingSsrFLinks": 2,
+        "dialogResultLinks": 10,
+        "pagefindOrWasmRequests": 2,
+        "subpathBuild": "/campus-training/ passed in smoke test",
+        "nginxCspAndPagefindMime": "validated structurally"
+      }
+    },
+    {
+      "id": "console",
+      "status": "pass",
+      "evidence": {
+        "errors": 0,
+        "warnings": 0
+      }
+    },
+    {
+      "id": "performance",
+      "status": "pass",
+      "evidence": {
+        "viewport": "1440x1000",
+        "domNodes": 274,
+        "activeAnimationsAfterNetworkIdle": 0,
+        "loadEventEndMsLocalPreview": 64,
+        "domContentLoadedMsLocalPreview": 62,
+        "continuousAnimationLoops": 0
+      }
+    }
+  ],
+  "screenshots": [
+    "qa/screenshots/home-current-desktop-light.png",
+    "qa/screenshots/ssrf-current-desktop-light.png",
+    "qa/screenshots/ssrf-current-desktop-dark.png",
+    "qa/screenshots/home-current-mobile-light.png",
+    "qa/screenshots/ssrf-current-mobile-light.png",
+    "qa/screenshots/ssrf-print.png",
+    "qa/screenshots/ssrf-no-javascript.png"
+  ]
+}

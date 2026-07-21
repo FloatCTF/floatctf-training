@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="技术讲义">
+  <rect width="64" height="64" rx="14" fill="#151411"/>
+  <path d="M14 18h36v7H36v25h-8V25H14z" fill="#F6F3ED"/>
+  <circle cx="47" cy="45" r="7" fill="#8CD4FF"/>
+</svg>

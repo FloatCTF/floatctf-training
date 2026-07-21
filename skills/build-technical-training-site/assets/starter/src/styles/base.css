@@ -1,0 +1,154 @@
+:root[data-theme='dark'] { color-scheme: dark; }
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+h1,
+h2 { font-weight: 900; }
+
+.sl-markdown-content > h2 {
+  border-block-start: var(--training-rule-heavy);
+  margin-block-start: var(--training-space-6);
+  padding-block-start: var(--training-space-4);
+}
+
+.sl-markdown-content > h3 {
+  border-inline-start: 0.32rem solid var(--training-accent);
+  padding-inline-start: var(--training-space-3);
+}
+
+strong,
+b { font-weight: 800; }
+
+a { color: var(--training-link); }
+
+::selection {
+  background: var(--training-accent);
+  color: var(--training-surface-bg);
+}
+
+:where(a, button, input, summary, [tabindex]):focus-visible {
+  outline: 0.2rem solid var(--training-focus);
+  outline-offset: 0.2rem;
+}
+
+:where(code, pre, kbd, samp) { font-family: var(--training-font-code); }
+
+:where(:not(pre) > code) {
+  background: var(--training-warning-bg);
+  border: 0.07rem solid color-mix(in srgb, var(--training-warning-text) 45%, transparent);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-warning-text);
+  font-weight: 700;
+  padding: 0.08em 0.35em;
+}
+
+:root {
+  --sl-color-white: var(--training-heading);
+  --sl-color-accent: var(--training-accent);
+  --sl-color-accent-high: var(--training-link);
+  --sl-color-hairline: var(--training-border);
+  --sl-color-text-invert: var(--training-surface-bg);
+  --sl-color-text-accent: var(--training-link);
+  --sl-color-text: var(--training-text);
+  --sl-color-bg-sidebar: var(--training-surface-bg);
+  --sl-color-bg-nav: var(--training-surface-bg);
+  --sl-color-bg: var(--training-page-bg);
+  --sl-content-width: var(--training-content-width);
+  --sl-font-mono: var(--training-font-code);
+  --sl-font: var(--training-font-body);
+  --training-duration-step: 420ms;
+  --training-duration-fast: 180ms;
+  --training-layer-sticky: 20;
+  --training-layer-base: 1;
+  --training-shadow-lg: 0 0.7rem 2rem color-mix(in srgb, var(--training-heading) 9%, transparent);
+  --training-shadow-sm: 0 0.3rem 1rem color-mix(in srgb, var(--training-heading) 7%, transparent);
+  --training-space-7: 6rem;
+  --training-space-6: 3.5rem;
+  --training-space-5: 2.25rem;
+  --training-space-4: 1.5rem;
+  --training-space-3: 1rem;
+  --training-space-2: 0.65rem;
+  --training-space-1: 0.35rem;
+  --training-font-code: 'JetBrains Mono', monospace;
+  --training-font-body: 'Noto Sans SC', sans-serif;
+  --training-font-title: 'Noto Serif SC', serif;
+  --training-content-width: 53.75rem;
+  --training-page-width: 68rem;
+  --training-nav-height: 4rem;
+  --training-home-hero-height: 50vh;
+  --training-radius-sm: 0.15rem;
+  --training-radius-md: 0.3rem;
+  --training-radius-lg: 0.5rem;
+  --training-rule-heavy: 0.12rem solid var(--training-heading);
+  --training-rule-light: 0.0625rem solid color-mix(in srgb, var(--training-border) 54%, transparent);
+}
+
+html {
+  color-scheme: light;
+  color: var(--training-text);
+  background: var(--training-page-bg);
+  min-width: 20rem;
+  scroll-padding-top: calc(var(--sl-nav-height) + var(--training-space-5));
+}
+
+body {
+  text-rendering: optimizeLegibility;
+  line-height: 1.9;
+  font-weight: 500;
+  font-family: var(--training-font-body);
+  color: var(--training-text);
+  background: var(--training-page-bg);
+  font-size: 1rem;
+  letter-spacing: 0.006em;
+  overflow-wrap: break-word;
+}
+
+html:has(.page-lesson) {
+  scroll-padding-top: calc(var(--training-nav-height) + var(--training-space-4));
+}
+
+.sl-markdown-content {
+  color: var(--training-text);
+}
+
+.sl-markdown-content :where(p, li, dd, td) {
+  line-height: 1.9;
+}
+
+.sl-markdown-content > :where(p, ul, ol, blockquote) {
+  max-width: var(--training-content-width);
+}
+
+.component-kicker,
+.callout-label {
+  color: currentColor;
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  margin: 0 0 0.45rem;
+  text-transform: uppercase;
+}
+
+.component-heading {
+  border-block-end: var(--training-rule-light);
+  margin-block-end: var(--training-space-3);
+  padding-block-end: var(--training-space-3);
+}
+
+.component-heading h2 {
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  line-height: 1.2;
+  margin: 0;
+}
+

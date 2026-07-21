@@ -1,0 +1,421 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "rce",
+    "slug": "rce",
+    "categoryId": "web-security",
+    "title": "RCE：命令注入与代码执行的信任边界",
+    "audience": "理解进程、shell 与一种后端语言基础的本科生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "lab",
+      "case-study"
+    ],
+    "evidenceProfiles": [
+      "security"
+    ],
+    "assessments": [
+      "interview",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "用户输入如何进入 shell 命令行或语言求值器，从而越过应用预期的执行边界",
+    "learningObjectives": [
+      "区分 OS 命令注入与语言级代码执行",
+      "解释 shell 元字符如何把参数变成新命令",
+      "用参数数组 API 与危险功能禁用设计修复路径",
+      "结合公开 CVE 说明反序列化、模板与日志框架如何通向 RCE"
+    ],
+    "prerequisites": [
+      "Linux 基本命令",
+      "一种后端语言的进程调用 API",
+      "HTTP 输入如何到达服务端"
+    ],
+    "safetyScope": "authorized-lab",
+    "verifiedAt": "2026-07-21"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-07-21",
+    "queries": [
+      "命令注入 面试题",
+      "RCE interview questions",
+      "command injection 面经",
+      "Log4Shell defense"
+    ],
+    "notes": "命令注入定义对照 OWASP/CWE；Log4Shell 与其它 CVE 作为代码执行证据。"
+  },
+  "sources": [
+    {
+      "id": "owasp-command-injection",
+      "kind": "official-doc",
+      "title": "OS Command Injection",
+      "publisher": "OWASP",
+      "url": "https://owasp.org/www-community/attacks/Command_Injection",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新页面；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-definition",
+        "interview-q1",
+        "interview-q3"
+      ]
+    },
+    {
+      "id": "owasp-command-defense",
+      "kind": "official-doc",
+      "title": "OS Command Injection Defense Cheat Sheet",
+      "publisher": "OWASP Foundation",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新页面；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-defense",
+        "interview-q2",
+        "interview-q4",
+        "interview-q6",
+        "interview-q7"
+      ]
+    },
+    {
+      "id": "cwe-78",
+      "kind": "specification",
+      "title": "CWE-78: Improper Neutralization of Special Elements used in an OS Command",
+      "publisher": "MITRE",
+      "url": "https://cwe.mitre.org/data/definitions/78.html",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新条目；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-definition",
+        "interview-q1",
+        "interview-q2",
+        "interview-q7"
+      ]
+    },
+    {
+      "id": "cve-2021-44228",
+      "kind": "cve",
+      "title": "CVE-2021-44228",
+      "publisher": "CVE Program",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2021-44228",
+      "publishedAt": "2021-12-10",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "claim-log4shell",
+        "evidence-log4shell",
+        "interview-q5",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "log4j-security",
+      "kind": "advisory",
+      "title": "Apache Log4j Security Vulnerabilities",
+      "publisher": "Apache Logging Services",
+      "url": "https://logging.apache.org/log4j/2.x/security.html",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新公告页；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-log4shell",
+        "evidence-log4shell",
+        "interview-q5",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "cve-2022-22965",
+      "kind": "cve",
+      "title": "CVE-2022-22965",
+      "publisher": "CVE Program",
+      "url": "https://www.cve.org/CVERecord?id=CVE-2022-22965",
+      "publishedAt": "2022-03-31",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "evidence-spring4shell",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "appsec-interview-gist",
+      "kind": "interview-report",
+      "title": "Application Security Interview Questions",
+      "publisher": "GitHub Gist contributor mccabe615",
+      "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
+      "publishedAt": "2022-09-02",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "interview-q1",
+        "interview-q2",
+        "interview-q3",
+        "interview-q4",
+        "interview-q5",
+        "interview-q6",
+        "interview-q7",
+        "interview-q8"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-log4shell",
+      "kind": "cve",
+      "identifier": "CVE-2021-44228",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "cve-2021-44228",
+        "log4j-security"
+      ],
+      "summary": "Log4j 查找功能导致的远程代码执行，影响面极广。"
+    },
+    {
+      "id": "evidence-spring4shell",
+      "kind": "cve",
+      "identifier": "CVE-2022-22965",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "cve-2022-22965"
+      ],
+      "summary": "Spring Framework 数据绑定相关 RCE，展示框架特性如何通向代码执行。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-definition",
+      "text": "OS 命令注入发生在不可信输入被解释为操作系统命令的一部分。",
+      "sourceIds": [
+        "cwe-78",
+        "owasp-command-injection"
+      ]
+    },
+    {
+      "id": "claim-defense",
+      "text": "优先避免调用 shell；必要时使用参数数组 API，并对参数做严格允许列表。",
+      "sourceIds": [
+        "owasp-command-defense"
+      ]
+    },
+    {
+      "id": "claim-log4shell",
+      "text": "日志与表达式等间接求值路径同样可以把输入变成代码执行。",
+      "sourceIds": [
+        "cve-2021-44228",
+        "log4j-security"
+      ]
+    }
+  ],
+  "assessments": [
+    "interview",
+    "lab-check"
+  ],
+  "visualNarrative": {
+    "kind": "code-compare",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 1
+  },
+  "runnableExamples": [
+    {
+      "id": "command-injection-demo",
+      "path": "examples/command-injection-demo.mjs",
+      "command": "node examples/command-injection-demo.mjs",
+      "expectedResult": "打印 shell 拼接后的危险命令串，以及参数数组形式下 payload 仍是单个参数。"
+    }
+  ],
+  "interviewQuestions": [
+    {
+      "id": "interview-q1",
+      "question": "什么是命令注入？",
+      "level": 1,
+      "answer": "命令注入是把不可信输入拼进操作系统命令，使 shell 或命令解释器执行额外指令。",
+      "keyPoints": [
+        "不可信输入",
+        "进入 OS 命令",
+        "额外指令"
+      ],
+      "bonus": "对应 CWE-78。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cwe-78",
+        "owasp-command-injection"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cwe-78",
+        "owasp-command-injection"
+      ]
+    },
+    {
+      "id": "interview-q2",
+      "question": "命令注入和 SQL 注入有什么相同点？",
+      "level": 1,
+      "answer": "两者都是把数据解释成另一种语言的语法；差别在目标解释器分别是 shell 与 SQL 引擎。",
+      "keyPoints": [
+        "数据变语法",
+        "解释器不同",
+        "结构绑定思想类似"
+      ],
+      "bonus": "修复都强调避免字符串拼进解释器语言。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cwe-78",
+        "owasp-command-defense"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cwe-78",
+        "owasp-command-defense"
+      ]
+    },
+    {
+      "id": "interview-q3",
+      "question": "为什么 `ping` 功能容易出命令注入？",
+      "level": 2,
+      "answer": "常见实现把主机名拼进 shell 命令字符串，输入中的分隔符可以追加新命令。",
+      "keyPoints": [
+        "shell 拼接",
+        "分隔符",
+        "额外命令"
+      ],
+      "bonus": "应用应使用无 shell 的进程 API 并校验主机格式。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-command-injection"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-command-injection"
+      ]
+    },
+    {
+      "id": "interview-q4",
+      "question": "参数数组 API 如何降低风险？",
+      "level": 2,
+      "answer": "参数作为独立 argv 传递，不经 shell 解析元字符，因此分号和管道不再具备命令分隔作用。",
+      "keyPoints": [
+        "不经 shell",
+        "argv 独立",
+        "元字符失效"
+      ],
+      "bonus": "仍需校验参数语义，防止合法程序被喂入危险参数。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-command-defense"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-command-defense"
+      ]
+    },
+    {
+      "id": "interview-q5",
+      "question": "除了命令注入，还有哪些常见 RCE 入口？",
+      "level": 3,
+      "answer": "语言 eval、不安全反序列化、模板注入、表达式注入以及存在漏洞的日志/框架特性。",
+      "keyPoints": [
+        "eval",
+        "反序列化",
+        "模板/表达式",
+        "框架特性"
+      ],
+      "bonus": "Log4Shell 是间接求值导致 RCE 的典型。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cve-2021-44228",
+        "log4j-security"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cve-2021-44228",
+        "log4j-security"
+      ]
+    },
+    {
+      "id": "interview-q6",
+      "question": "如何设计外部命令调用的安全封装？",
+      "level": 3,
+      "answer": "固定可执行文件路径，使用 argv 传参，对每个参数做允许列表，设置超时、最小权限用户与无 shell 执行。",
+      "keyPoints": [
+        "固定二进制",
+        "argv",
+        "白名单",
+        "最小权限"
+      ],
+      "bonus": "默认拒绝未知参数比黑名单更稳。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-command-defense"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-command-defense"
+      ]
+    },
+    {
+      "id": "interview-q7",
+      "question": "发现可能的 RCE 时，授权验证应遵守什么边界？",
+      "level": 4,
+      "answer": "只在授权环境用最小、可回滚的验证证明执行点存在，避免持久化、横向移动或破坏性命令，并立刻推动临时缓解。",
+      "keyPoints": [
+        "授权范围",
+        "最小验证",
+        "临时缓解"
+      ],
+      "bonus": "验证记录应包含输入路径、进程身份与时间。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-command-defense",
+        "cwe-78"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-command-defense",
+        "cwe-78"
+      ]
+    },
+    {
+      "id": "interview-q8",
+      "question": "Log4Shell 对防御设计的启示是什么？",
+      "level": 4,
+      "answer": "间接字符串求值与外部查找会把“日志输入”变成执行面，因此依赖组件要可盘点、可升级，并关闭不必要的查找与反序列化特性。",
+      "keyPoints": [
+        "间接求值",
+        "依赖治理",
+        "关闭危险特性"
+      ],
+      "bonus": "CVE-2021-44228 与 CVE-2022-22965 都说明框架默认能力可能变成攻击面。",
+      "sourceIds": [
+        "appsec-interview-gist",
+        "cve-2021-44228",
+        "log4j-security",
+        "cve-2022-22965"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "cve-2021-44228",
+        "log4j-security",
+        "cve-2022-22965"
+      ]
+    }
+  ]
+}

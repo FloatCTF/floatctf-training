@@ -1,0 +1,171 @@
+---
+title: SQL 注入：从字符串拼接到参数化查询
+description: 追踪输入进入 SQL 的路径，比较拼接查询与参数化查询，并用本地演示验证修复
+pageType: lesson
+template: splash
+lessonId: sql-injection
+categoryId: web-security
+sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2023-48788", "appsec-interview-gist"]
+motionLevel: explanatory
+safetyScope: authorized-lab
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import CodeCompare from '../../../components/code-compare.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
+import InterviewAccordion from '../../../components/interview-accordion';
+import ScrollReveal from '../../../components/scroll-reveal';
+import manifest from '../../../data/lessons/sql-injection.json';
+
+export const vulnerableSnippet = `// 错误：把输入直接拼进 SQL 结构
+const sql = "SELECT * FROM users WHERE username='" + username +
+  "' AND password='" + password + "'";
+db.query(sql);`;
+
+export const secureSnippet = `// 正确：语句结构固定，输入只作为绑定值
+const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+db.query(sql, [username, password]);`;
+
+<LessonHero
+  series="SECURITY TRAINING"
+  unit="WEB SECURITY · UNIT 02"
+  kicker="SQL Injection"
+  lines={[
+    { text: "SQL 注入" },
+    { text: "参数化查询", accent: true },
+    { text: "CWE-89", latin: true },
+  ]}
+  summary="从登录查询出发，看清用户输入如何改写 SQL 语义，再用参数绑定把数据与语句结构拆开。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：单引号为什么能改写查询？
+
+登录接口把用户名和密码拼进：
+
+```sql
+SELECT * FROM users WHERE username='...' AND password='...'
+```
+
+若用户名是 `admin' OR '1'='1' --`，引号会提前结束字符串字面量，后续片段被数据库当作 SQL 语法解析。查询不再只是“匹配这一对凭据”，而是变成攻击者重写后的谓词。
+
+CWE-89 将这类问题描述为未正确中和 SQL 命令中的特殊元素；OWASP 强调应把不可信数据与语句结构分离。（来源：[CWE-89](#source-cwe-89)、[OWASP](#source-owasp-sqli-prevention)）
+
+## 机制：从字符串到执行计划
+
+1. **输入进入查询构造。** 搜索、排序、筛选、登录都可能拼接 SQL。
+2. **词法与语法分析。** 数据库把文本切成 token，并生成抽象语法树（AST）。
+3. **语义被固定。** 一旦 AST 形成，优化与执行都按这棵树进行。
+4. **注入改写 AST。** 闭合引号、追加 `OR`、注释后续条件，都能改变树结构。
+5. **影响取决于权限。** 数据库账号能读什么、写什么、调用什么过程，决定上限。
+
+成立条件可以写成：**应用用字符串构造 SQL + 输入影响该字符串 + 缺少结构绑定或等价安全 API**。
+
+<Callout variant="warning" title="过滤单引号不是主防线">
+不同数据库、编码转换、数值上下文和二次拼接都会让字符黑名单失效。优先固定语句结构，再处理业务允许的标识符白名单。
+</Callout>
+
+## 常见类型与验证信号
+
+<DataTable
+  caption="SQL 注入类型与观察信号"
+  headers={["类型", "关键条件", "观察信号"]}
+  rows={[
+    ["联合查询", "原查询结果可被 UNION 对齐并回显", "页面出现额外列数据或报错提示列数"],
+    ["报错注入", "错误信息回显给客户端", "数据库错误文本中出现探测结果"],
+    ["布尔盲注", "页面内容或状态随真假条件变化", "同一接口在真/假条件下响应不同"],
+    ["时间盲注", "可触发可控延迟函数", "条件成立时响应时延显著增加"],
+    ["二次注入", "先安全存储，后被拼进新语句", "存储内容在另一功能触发异常语义"],
+  ]}
+/>
+
+验证只能在授权靶场或本地实验中进行。课程不提供面向公共目标的扫描或拖库步骤。
+
+## 本地演示：拼接 vs 绑定
+
+运行环境：Node.js 22.12 或更高版本。
+
+```bash
+node examples/sql-injection-demo.mjs
+```
+
+预期输出包含：
+
+```text
+脆弱表达： username === 'admin' OR '1'='1' && password === 'x'
+安全绑定： ... "authenticated":false
+合法登录： ... "authenticated":true
+```
+
+演示用内存比较模拟“语义被改写”与“数据被绑定”的差别。生产代码应使用数据库驱动的参数化接口。
+
+<CodeCompare
+  language="javascript"
+  vulnerable={vulnerableSnippet}
+  secure={secureSnippet}
+  vulnerableTitle="脆弱：字符串拼接查询"
+  secureTitle="安全：参数化查询"
+/>
+
+## 分层防御
+
+<DataTable
+  caption="SQL 注入控制点"
+  headers={["控制层", "关键动作", "修复验证"]}
+  rows={[
+    ["代码", "参数化查询 / 安全 ORM；禁止拼字符串", "用原注入样本确认语义不再改变"],
+    ["标识符", "表名、列名、ORDER BY 使用白名单", "拒绝未登记字段名"],
+    ["权限", "应用账号最小权限，禁用高危过程", "确认只读/只写边界符合业务"],
+    ["错误与日志", "对外收敛错误细节，对内记录异常查询", "客户端看不到数据库栈信息"],
+    ["检测", "监控异常语法模式与批量导出", "告警能覆盖演练样本"],
+  ]}
+/>
+
+OWASP 把预编译语句、安全存储过程与允许列表输入验证作为主要控制措施，并把转义视为最后手段。（来源：[OWASP](#source-owasp-sqli-prevention)）
+
+<ScrollReveal client:visible motionLevel="explanatory" label="防御复盘">
+  <p>修复一个登录点后，继续搜索项目中所有原始查询、报表导出和动态排序。二次拼接路径经常藏在“看起来已经转义过”的存储字段里。</p>
+</ScrollReveal>
+
+## 真实案例
+
+<DataTable
+  caption="与 SQL 注入直接相关的公开漏洞"
+  headers={["证据", "事实", "教学价值"]}
+  rows={[
+    ["CVE-2023-34362", "MOVEit Transfer 的 SQL 注入被大规模利用。", "展示注入可升级为广泛数据窃取。"],
+    ["CVE-2023-48788", "FortiClient EMS 的 SQL 注入可进入远程执行链路。", "展示注入不只影响数据机密性。"],
+  ]}
+/>
+
+案例用于根因与修复分析，不提供对公共系统的利用步骤。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2023-48788](#source-cve-2023-48788)）
+
+## 常见错误与边界
+
+- **把“转义”当成完成修复。** 主防线是结构绑定。
+- **忽略动态标识符。** `ORDER BY`、表名通常不能参数化，需要白名单。
+- **只测登录框。** 搜索、导出、后台筛选同样常见。
+- **数据库账号权限过大。** 注入影响随权限扩大。
+- **错误信息过详。** 详细报错会把探测成本降到接近零。
+
+## 面试与实战检查
+
+先给定义与边界，再说明成立条件，然后给出参数化与权限收敛，最后用已核验案例收束。
+
+<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+
+<KeyTakeaway>
+SQL 注入的核心是“数据被当成语法”。把语句结构固定下来，让输入只能当值；再对动态标识符、权限、错误回显和二次拼接做独立控制。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />
+<SecurityDisclaimer />

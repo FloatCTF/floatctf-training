@@ -1,0 +1,345 @@
+---
+import catalog from '../data/catalog.json';
+import { Icon } from '@astrojs/starlight/components';
+
+interface Props { categoryId?: string }
+interface CatalogTopic {
+  id: string;
+  categoryId: string;
+  title: string;
+  summary: string;
+  difficulty: string;
+  status: 'completed' | 'planned';
+  pagePath: string | null;
+  order: number;
+}
+const { categoryId } = Astro.props;
+const catalogTopics = catalog.topics as CatalogTopic[];
+const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
+const withBase = (pagePath: string) => `${base}${pagePath}`;
+const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
+const difficultyLabels: Record<string, string> = {
+  beginner: '入门',
+  intermediate: '中级',
+  advanced: '进阶',
+};
+const categories = catalog.categories
+  .filter((category) => !categoryId || category.id === categoryId)
+  .sort((a, b) => a.order - b.order);
+const completedTotal = catalogTopics.filter((topic) => topic.status === 'completed').length;
+const isHomeMap = !categoryId;
+
+const panelPayload = isHomeMap
+  ? categories.map((category) => {
+      const topics = catalogTopics
+        .filter((topic) => topic.categoryId === category.id)
+        .sort((a, b) => a.order - b.order)
+        .map((topic) => ({
+          id: topic.id,
+          title: topic.title,
+          summary: topic.summary,
+          difficulty: difficultyLabels[topic.difficulty] || topic.difficulty,
+          status: topic.status,
+          href: topic.status === 'completed' && topic.pagePath ? withBase(topic.pagePath) : null,
+        }));
+      const completed = topics.filter((topic) => topic.status === 'completed').length;
+      return {
+        id: category.id,
+        name: category.name,
+        summary: category.summary,
+        roman: romanNumerals[category.order - 1] || String(category.order),
+        pagePath: withBase(category.pagePath),
+        topicCount: topics.length,
+        completed,
+        topics,
+      };
+    })
+  : [];
+---
+<div
+  class:list={['learning-map', { 'learning-map-single': Boolean(categoryId) }]}
+  data-learning-map={isHomeMap ? 'home' : 'category'}
+>
+  {categories.map((category) => {
+    const topics = catalogTopics
+      .filter((topic) => topic.categoryId === category.id)
+      .sort((a, b) => a.order - b.order);
+    const completed = topics.filter((topic) => topic.status === 'completed').length;
+    const roman = romanNumerals[category.order - 1] || category.order;
+    const countLabel = `${String(topics.length).padStart(2, '0')} 专题　·　已完成 ${String(completed).padStart(2, '0')}`;
+
+    return isHomeMap ? (
+      <a
+        class="category-directory category-trigger"
+        href={withBase(category.pagePath)}
+        data-category-id={category.id}
+        aria-haspopup="dialog"
+        aria-controls="category-panel"
+      >
+        <span class="category-directory-header">
+          <span class="category-number" aria-hidden="true">{roman}</span>
+          <span class="category-heading">
+            <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
+            <span class="category-summary">{category.summary}</span>
+            <span class="category-count">{countLabel}</span>
+          </span>
+          <span class="category-toggle" aria-hidden="true"><Icon name="right-arrow" size="1rem" /></span>
+        </span>
+      </a>
+    ) : (
+      <section class="category-directory category-directory-static" aria-labelledby={`category-${category.id}`}>
+        <div class="category-directory-header">
+          <span class="category-number" aria-hidden="true">{roman}</span>
+          <span class="category-heading">
+            <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
+            <span class="category-summary">{category.summary}</span>
+            <span class="category-count">{countLabel}</span>
+          </span>
+        </div>
+        <div class="directory-topics" id={`topics-${category.id}`}>
+          {topics.length > 0 ? topics.map((topic) => topic.status === 'completed' && topic.pagePath ? (
+            <a class="directory-topic directory-topic-completed" href={withBase(topic.pagePath)}>
+              <span class="directory-topic-copy">
+                <strong>{topic.title}</strong>
+                <span>{topic.summary}</span>
+              </span>
+              <span class="directory-topic-meta">
+                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <Icon name="right-arrow" size="1rem" aria-hidden="true" />
+              </span>
+            </a>
+          ) : (
+            <article class="directory-topic directory-topic-planned" aria-disabled="true">
+              <span class="directory-topic-copy">
+                <strong>{topic.title}</strong>
+                <span>{topic.summary}</span>
+              </span>
+              <span class="directory-topic-meta">
+                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <span class="directory-status">规划中</span>
+              </span>
+            </article>
+          )) : <p class="directory-empty">当前分类等待首个专题。</p>}
+        </div>
+      </section>
+    );
+  })}
+</div>
+
+{isHomeMap && (
+  <>
+    <div class="category-panel-overlay" id="category-panel-overlay" hidden></div>
+    <div
+      class="category-panel"
+      id="category-panel"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="category-panel-title"
+      hidden
+    >
+      <div class="category-panel-grabber" aria-hidden="true"></div>
+      <div class="category-panel-header">
+        <button type="button" class="category-panel-close" id="category-panel-close" aria-label="关闭">
+          <svg viewBox="0 0 12 12" aria-hidden="true" width="12" height="12">
+            <path d="M1 1l10 10M11 1L1 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
+          </svg>
+        </button>
+        <div class="category-panel-kicker" id="category-panel-roman"></div>
+        <h2 class="category-panel-title" id="category-panel-title"></h2>
+        <p class="category-panel-summary" id="category-panel-summary"></p>
+        <div class="category-panel-count" id="category-panel-count"></div>
+      </div>
+      <div class="category-panel-body" id="category-panel-body"></div>
+      <div class="category-panel-footer">
+        <a class="category-panel-link" id="category-panel-link" href="#">
+          查看完整分类说明
+          <Icon name="right-arrow" size="1rem" aria-hidden="true" />
+        </a>
+      </div>
+    </div>
+    <script is:inline type="application/json" id="learning-map-data" set:html={JSON.stringify(panelPayload)} />
+    <script is:inline>
+      function initCategoryPanel() {
+        const map = document.querySelector('[data-learning-map="home"]');
+        const dataEl = document.getElementById('learning-map-data');
+        const overlay = document.getElementById('category-panel-overlay');
+        const panel = document.getElementById('category-panel');
+        const panelClose = document.getElementById('category-panel-close');
+        const panelBody = document.getElementById('category-panel-body');
+        const panelLink = document.getElementById('category-panel-link');
+        const panelRoman = document.getElementById('category-panel-roman');
+        const panelTitle = document.getElementById('category-panel-title');
+        const panelSummary = document.getElementById('category-panel-summary');
+        const panelCount = document.getElementById('category-panel-count');
+
+        if (!map || !dataEl || !overlay || !panel || !panelClose || !panelBody || !panelLink) return;
+        if (map.dataset.panelReady === '1') return;
+        map.dataset.panelReady = '1';
+
+        /** @type {Array<any>} */
+        let payload = [];
+        try {
+          payload = JSON.parse(dataEl.textContent || '[]');
+        } catch {
+          return;
+        }
+
+        const byId = new Map(payload.map((item) => [item.id, item]));
+        let lastFocus = null;
+        let closingTimer = null;
+        let isOpen = false;
+        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+
+        function pad(n) {
+          return String(n).padStart(2, '0');
+        }
+
+        function renderTopics(category) {
+          const topics = category.topics || [];
+          if (!topics.length) {
+            panelBody.innerHTML = '<p class="directory-empty">当前分类等待首个专题。</p>';
+            return;
+          }
+
+          const frag = document.createDocumentFragment();
+          topics.forEach((topic) => {
+            const isDone = topic.status === 'completed' && topic.href;
+            const el = document.createElement(isDone ? 'a' : 'article');
+            el.className = `directory-topic ${isDone ? 'directory-topic-completed' : 'directory-topic-planned'}`;
+            if (isDone) {
+              el.href = topic.href;
+            } else {
+              el.setAttribute('aria-disabled', 'true');
+            }
+
+            const copy = document.createElement('span');
+            copy.className = 'directory-topic-copy';
+            const title = document.createElement('strong');
+            title.textContent = topic.title;
+            const summary = document.createElement('span');
+            summary.textContent = topic.summary;
+            copy.append(title, summary);
+
+            const meta = document.createElement('span');
+            meta.className = 'directory-topic-meta';
+            const difficulty = document.createElement('span');
+            difficulty.textContent = topic.difficulty;
+            const trailing = document.createElement('span');
+            trailing.className = isDone ? 'topic-trailing' : 'directory-status';
+            trailing.textContent = isDone ? '→' : '规划中';
+            meta.append(difficulty, trailing);
+
+            el.append(copy, meta);
+            frag.appendChild(el);
+          });
+          panelBody.replaceChildren(frag);
+        }
+
+        function getFocusable() {
+          return [...panel.querySelectorAll(
+            'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          )].filter((el) => !el.hasAttribute('disabled') && (el.offsetParent !== null || el === panelClose));
+        }
+
+        function openPanel(categoryId, trigger) {
+          const category = byId.get(categoryId);
+          if (!category) return;
+
+          if (closingTimer) {
+            clearTimeout(closingTimer);
+            closingTimer = null;
+          }
+
+          lastFocus = trigger || document.activeElement;
+          panelRoman.textContent = category.roman;
+          panelTitle.textContent = category.name;
+          panelSummary.textContent = category.summary;
+          panelCount.textContent = `${pad(category.topicCount)} 专题　·　已完成 ${pad(category.completed)}`;
+          panelLink.href = category.pagePath;
+          renderTopics(category);
+
+          panel.classList.remove('is-open', 'is-closing');
+          overlay.classList.remove('is-open');
+          overlay.hidden = false;
+          panel.hidden = false;
+
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              overlay.classList.add('is-open');
+              panel.classList.add('is-open');
+              document.body.classList.add('category-panel-locked');
+              isOpen = true;
+              panelClose.focus({ preventScroll: true });
+            });
+          });
+        }
+
+        function closePanel() {
+          if (!isOpen && panel.hidden) return;
+          isOpen = false;
+          panel.classList.add('is-closing');
+          panel.classList.remove('is-open');
+          overlay.classList.remove('is-open');
+          document.body.classList.remove('category-panel-locked');
+
+          const finish = () => {
+            panel.classList.remove('is-closing');
+            overlay.hidden = true;
+            panel.hidden = true;
+            if (lastFocus && typeof lastFocus.focus === 'function') {
+              lastFocus.focus({ preventScroll: true });
+            }
+            lastFocus = null;
+            closingTimer = null;
+          };
+
+          if (reduceMotion.matches) {
+            finish();
+            return;
+          }
+          closingTimer = window.setTimeout(finish, 320);
+        }
+
+        map.addEventListener('click', (event) => {
+          const trigger = event.target.closest('.category-trigger');
+          if (!trigger || !map.contains(trigger)) return;
+          const categoryId = trigger.getAttribute('data-category-id');
+          if (!categoryId || !byId.has(categoryId)) return;
+          event.preventDefault();
+          openPanel(categoryId, trigger);
+        });
+
+        panelClose.addEventListener('click', closePanel);
+        overlay.addEventListener('click', closePanel);
+
+        document.addEventListener('keydown', (event) => {
+          if (!isOpen) return;
+          if (event.key === 'Escape') {
+            event.preventDefault();
+            closePanel();
+            return;
+          }
+          if (event.key === 'Tab') {
+            const focusable = getFocusable();
+            if (!focusable.length) return;
+            const first = focusable[0];
+            const last = focusable[focusable.length - 1];
+            if (event.shiftKey && document.activeElement === first) {
+              event.preventDefault();
+              last.focus();
+            } else if (!event.shiftKey && document.activeElement === last) {
+              event.preventDefault();
+              first.focus();
+            }
+          }
+        });
+      }
+
+      initCategoryPanel();
+      document.addEventListener('astro:page-load', initCategoryPanel);
+    </script>
+    <footer class="learning-map-footer">
+      AUTHORIZED LAB USE ONLY　·　{catalog.categories.length} 分类　·　{catalog.topics.length} 专题　·　{completedTotal} 可进入
+    </footer>
+  </>
+)}
