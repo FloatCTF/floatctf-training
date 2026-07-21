@@ -59,7 +59,7 @@ export default defineConfig({
       },
       sidebar,
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },
-      lastUpdated: true,
+      lastUpdated: false,
     }),
   ],
 });
