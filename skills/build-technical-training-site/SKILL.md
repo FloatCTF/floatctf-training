@@ -22,10 +22,10 @@ description: Builds and updates deployable interactive technical training sites 
 
 | 模式 | 适用任务 | 必须加载 |
 | --- | --- | --- |
-| `create-site` | 创建新培训站点 | workflow、lesson-planning、content-blocks、evidence-policy、design-system、motion-system、quality-review |
-| `add-topic` | 向现有站点增加专题 | workflow、lesson-planning、content-blocks、evidence-policy、quality-review；按需加载 interview-module、design-system、motion-system |
-| `refresh-topic` | 更新事实、版本、案例、命令或交互 | workflow、lesson-planning、evidence-policy、quality-review；按需加载 content-blocks、interview-module、motion-system |
-| `validate-site` | 验证并修复内容、设计、构建和无障碍 | workflow、design-system、motion-system、quality-review；涉及来源时加载 evidence-policy |
+| `create-site` | 创建新培训站点 | workflow、lesson-planning、content-blocks、evidence-policy、design-system、motion-system、quality-review、lessons-learned |
+| `add-topic` | 向现有站点增加专题 | workflow、lesson-planning、content-blocks、evidence-policy、quality-review、lessons-learned；按需加载 interview-module、design-system、motion-system |
+| `refresh-topic` | 更新事实、版本、案例、命令或交互 | workflow、lesson-planning、evidence-policy、quality-review、lessons-learned；按需加载 content-blocks、interview-module、motion-system |
+| `validate-site` | 验证并修复内容、设计、构建和无障碍 | workflow、design-system、motion-system、quality-review、lessons-learned；涉及来源时加载 evidence-policy |
 | `plan-curriculum` | 只规划分类、路线和专题状态 | workflow、lesson-planning、content-blocks |
 
 ## Reference 索引
@@ -39,6 +39,7 @@ description: Builds and updates deployable interactive technical training sites 
 - [motion-system.md](references/motion-system.md)：动效等级、叙事选择、GSAP 生命周期、降级、性能和无障碍门控。使用交互或动画时读取。
 - [platform-portability.md](references/platform-portability.md)：Claude Code、Codex、Grok Build 的发现路径、兼容边界和安装说明。安装或检查可移植性时读取。
 - [quality-review.md](references/quality-review.md)：定性自审清单、`qa-report.json` 格式和交付阻断条件。所有交付前读取。
+- [lessons-learned.md](references/lessons-learned.md)：历史交付失败模式与硬规则（讲义分层、半宽表、废动画、虚标 complete 等）。创建、更新、验收专题时读取。
 
 ## Starter
 
@@ -60,11 +61,15 @@ description: Builds and updates deployable interactive technical training sites 
 
 Catalog、manifest 与 MDX 使用同一个 lesson ID。`completed` 专题具有页面和 manifest；`planned` 专题只进入 catalog，并保持无链接语义。
 
+用户提供 PDF/旧页/课堂稿时，额外遵守 [lessons-learned.md](references/lessons-learned.md)：材料管结构与例子，事实仍独立核验；交付前做版式与演示结果自检。
+
 ## 证据与安全入口
 
 涉及事实、版本、命令、CVE、论文、案例或统计时，完整执行 [evidence-policy.md](references/evidence-policy.md)。使用当前环境可用的网页检索或浏览工具。安全专题同时遵循 manifest 的 `safetyScope`，实验目标限定在 localhost、CTF 靶场或明确授权环境。
 
 网页示例、payload 和 HTML 字符串在 MDX 中保持转义。页面不得让示例代码在培训站点自身执行。
+
+用户讲义不是权威事实源。产品行为、版本与论文归因必须可独立追溯；无法核验时 `researchStatus` 标 `partial`。
 
 ## 生成与验证入口
 
@@ -89,7 +94,8 @@ Catalog、manifest 与 MDX 使用同一个 lesson ID。`completed` 专题具有�
 - 修改主题、字体或展示组件：加载 design-system。
 - 修改 React 岛、GSAP 或降级行为：加载 motion-system。
 - 安装与路径核对：加载 platform-portability。
-- 准备交付：加载 quality-review。
+- 准备交付：加载 quality-review 与 lessons-learned。
+- 基于用户 PDF/旧站转写：加载 lessons-learned 与 evidence-policy。
 
 未进入本次改动面的 reference 保持未加载，降低上下文占用。被选中的 reference 需要完整读取后执行。
 
@@ -97,7 +103,9 @@ Catalog、manifest 与 MDX 使用同一个 lesson ID。`completed` 专题具有�
 
 交付前完成 [quality-review.md](references/quality-review.md) 的定性自审，并将结果写入站点根目录 `qa-report.json`。结构门禁、定性自审、Astro 检查、生产构建与适用的浏览器验证共同构成交付证据。
 
-浏览器能力可用时，验证桌面、手机、浅色、深色、打印、减少动态、无 JavaScript、键盘交互、控制台和链接。浏览器能力缺失时，将相关 QA 项标为 `not-run` 并写明原因。浏览器报告和截图属于补充证据，不参与 `npm run verify` 的退出状态。
+同时完成 [lessons-learned.md](references/lessons-learned.md) 的强制自检：表格全宽、无废动画、演示结果上屏、claim 语义匹配、文案无“讲义里”、QA 与当前专题一致。用户仅说“先不 commit”时仍须完成自检，只跳过 git。
+
+浏览器能力可用时，验证桌面、手机、浅色、深色、打印、减少动态、无 JavaScript、键盘交互、控制台和链接，并确保 `browser-report` 覆盖本专题路径。浏览器能力缺失时，将相关 QA 项标为 `not-run` 并写明原因。浏览器报告过期不得声称专题已验收。
 
 ## 修改边界
 

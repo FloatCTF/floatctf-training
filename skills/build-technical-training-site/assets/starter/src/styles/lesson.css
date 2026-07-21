@@ -430,17 +430,15 @@
 
 .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 h3 {
   margin: 0;
-  align-items: baseline;
-  display: flex;
-  font-size: clamp(1.3rem, 2.6vw, 1.72rem);
-  gap: 0.75rem;
+  display: block;
+  font-size: clamp(1.28rem, 2.4vw, 1.65rem);
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+  max-width: 44rem;
 }
 
 .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h3 h3::before {
-  background: var(--training-accent);
-  content: '';
-  flex: 0 0 1.5rem;
-  height: 0.17rem;
+  content: none;
 }
 
 

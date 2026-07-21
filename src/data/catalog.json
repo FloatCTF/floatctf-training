@@ -120,6 +120,18 @@
       "pagePath": "/lessons/rce/",
       "prerequisites": [],
       "order": 5
+    },
+    {
+      "id": "ai-literacy",
+      "slug": "ai-literacy",
+      "categoryId": "ai-ml",
+      "title": "理解大模型，用好 AI Coding",
+      "summary": "从机器学习与 Transformer 到上下文工程、Harness 与 Claude Code 工作流。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/ai-literacy/",
+      "prerequisites": [],
+      "order": 1
     }
   ]
 }

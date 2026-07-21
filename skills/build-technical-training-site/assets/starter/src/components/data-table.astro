@@ -1,11 +1,22 @@
 ---
 interface Props { caption: string; headers: string[]; rows: Array<Array<string>> }
 const { caption, headers, rows } = Astro.props;
+const colCount = headers.length;
 ---
-<div class="table-scroll" tabindex="0" role="region" aria-label={caption}>
-  <table class="training-table">
-    <caption>{caption}</caption>
-    <thead><tr>{headers.map((header) => <th scope="col">{header}</th>)}</tr></thead>
-    <tbody>{rows.map((row) => <tr>{row.map((cell) => <td>{cell}</td>)}</tr>)}</tbody>
-  </table>
-</div>
+<figure class="data-table not-content" style={`--data-cols: ${colCount}`} aria-label={caption}>
+  <figcaption class="data-table-caption">{caption}</figcaption>
+  <div class="data-table-grid" role="table">
+    <div class="data-table-row data-table-head" role="row">
+      {headers.map((header) => (
+        <div class="data-table-cell" role="columnheader">{header}</div>
+      ))}
+    </div>
+    {rows.map((row) => (
+      <div class="data-table-row" role="row">
+        {row.map((cell) => (
+          <div class="data-table-cell" role="cell">{cell}</div>
+        ))}
+      </div>
+    ))}
+  </div>
+</figure>

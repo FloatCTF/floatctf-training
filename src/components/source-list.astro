@@ -1,15 +1,55 @@
 ---
-interface Source { id: string; title: string; publisher: string; url: string; publishedAt: string; accessedAt: string }
+interface Source {
+  id: string;
+  title: string;
+  publisher: string;
+  url: string;
+  publishedAt: string;
+  accessedAt: string;
+  kind?: string;
+  notes?: string;
+}
 interface Props { sources: Source[] }
 const { sources } = Astro.props;
+
+const kindLabel: Record<string, string> = {
+  paper: '论文',
+  textbook: '教材',
+  'official-doc': '官方文档',
+  'university-course': '课程',
+  specification: '规范',
+  cve: 'CVE',
+  advisory: '公告',
+  incident: '事件',
+  'release-note': '发布说明',
+  'interview-report': '面经',
+};
 ---
-<section class="source-list" aria-labelledby="source-list-title">
-  <header class="component-heading"><p class="component-kicker">SOURCES · {String(sources.length).padStart(2, '0')}</p><h2 id="source-list-title">来源</h2></header>
-  <ol>
-    {sources.map((source) => (
-      <li id={`source-${source.id}`}>
-        <a href={source.url} rel="noreferrer">{source.title}</a>
-        <span> — {source.publisher}；发布或修订：{source.publishedAt}；访问：{source.accessedAt}</span>
+<section class="source-list not-content" aria-labelledby="source-list-title">
+  <header class="source-list-header">
+    <p class="source-list-kicker">References</p>
+    <h2 id="source-list-title">参考来源</h2>
+    <p class="source-list-lead">正文中的主张可追溯到下列材料。持续更新的文档以访问日为准。</p>
+  </header>
+  <ol class="source-list-items">
+    {sources.map((source, index) => (
+      <li class="source-list-item" id={`source-${source.id}`}>
+        <span class="source-list-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        <div class="source-list-body">
+          <a class="source-list-title" href={source.url} rel="noreferrer">{source.title}</a>
+          <p class="source-list-meta">
+            {source.kind && kindLabel[source.kind] ? (
+              <span class="source-list-kind">{kindLabel[source.kind]}</span>
+            ) : null}
+            <span class="source-list-meta-text">
+              {source.publisher}
+              <span class="source-list-sep" aria-hidden="true">·</span>
+              发布 {source.publishedAt}
+              <span class="source-list-sep" aria-hidden="true">·</span>
+              访问 {source.accessedAt}
+            </span>
+          </p>
+        </div>
       </li>
     ))}
   </ol>

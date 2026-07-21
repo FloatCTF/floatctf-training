@@ -1,0 +1,632 @@
+---
+title: 理解大模型，用好 AI Coding
+description: 从 AI 能力演进、下一词预测与上下文窗口，到 Harness、Claude Code、Skills 与 Hooks 的工程实践
+pageType: lesson
+template: splash
+lessonId: ai-literacy
+categoryId: ai-ml
+sources: ["vaswani-2017", "deep-learning-book", "agent-skills", "claude-code-overview", "mcp-intro"]
+motionLevel: static
+safetyScope: not-applicable
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import CodeCompare from '../../../components/code-compare.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import IntuitionBox from '../../../components/intuition-box.astro';
+import StepList from '../../../components/step-list.astro';
+import ProbBars from '../../../components/prob-bars.astro';
+import manifest from '../../../data/lessons/ai-literacy.json';
+
+export const evolutionSteps = [
+  { title: '专家系统', detail: '人工把知识写成 if-else。规则穷举，遇到例外与变化就失效。' },
+  { title: '机器学习', detail: '给数据与反馈，让机器学规律。监督、无监督、强化是三条主路。' },
+  { title: '深度学习', detail: '多层网络自动抽特征。擅长分类与判断，仍偏“选择题”。' },
+  { title: 'Transformer', detail: '自注意力看全局关系，可并行训练。算力放大带来能力跃迁。' },
+  { title: '基础模型 + Harness', detail: '能生成与推理，再靠工程约束把 Agent 变成可交付系统。' },
+];
+
+export const agentLoopSteps = [
+  { title: '收集上下文', detail: '读仓库、日志、报错、相关文件与任务说明。' },
+  { title: '采取行动', detail: '改代码、调工具、跑命令，在权限边界内执行。' },
+  { title: '验证结果', detail: '测试、lint、构建或人工审查，确认没有引入新问题。' },
+  { title: '完成或回环', detail: '达标就停；否则带着反馈重新收集上下文。' },
+];
+
+export const verboseSkill = `description: |
+  这个 skill 用于帮助你审查 Rust 项目的代码变更。
+  它会检查一些常见问题，例如 unsafe 代码、错误处理等……
+  当你希望在合并前确保代码质量时使用它。`;
+
+export const compactSkill = `description: 用于 PR 审查，重点关注正确性。`;
+
+export const releaseCheck = `---
+name: release-check
+description: 在发布前使用，用于验证构建、版本号和冒烟测试。
+---
+## 发布前检查（以下项目必须全部通过）
+- [ ] \`cargo build --release\` 通过
+- [ ] \`cargo clippy -- -D warnings\` 无警告
+- [ ] \`Cargo.toml\` 中的版本号已更新
+- [ ] \`CHANGELOG\` 已更新
+- [ ] 在干净环境下执行 \`kaku doctor\` 通过
+
+## 输出
+逐项给出 Pass / Fail。只要有任一项 Fail，都必须先修复后再发布。`;
+
+export const configMigration = `---
+name: config-migration
+description: 迁移配置 schema。仅在被明确要求时运行。
+disable-model-invocation: true
+---
+## 步骤
+1. 备份：\`cp ~/.config/kaku/config.toml ~/.config/kaku/config.toml.bak\`
+2. 试运行：\`kaku config migrate --dry-run\`
+3. 应用：确认输出无误后，去掉 \`--dry-run\`
+4. 验证：\`kaku doctor\` 全部通过
+
+## 回滚
+\`cp ~/.config/kaku/config.toml.bak ~/.config/kaku/config.toml\``;
+
+export const runtimeDiagnosis = `---
+name: runtime-diagnosis
+description: 当 kaku 在运行时崩溃、卡死或出现异常行为时使用。
+---
+## 证据收集
+1. 运行 \`kaku doctor\` 并完整保存输出
+2. 读取日志目录最后 50 行
+3. 列出插件状态
+
+## 决策矩阵
+| 症状 | 首先检查 |
+| --- | --- |
+| 启动崩溃 | doctor 输出 → 语法错误 |
+| 渲染异常 | GPU / 终端能力 |
+| 配置未生效 | 配置路径 + schema 版本 |
+
+## 输出格式
+根因 / 影响范围 / 修复步骤 / 验证命令`;
+
+<LessonHero
+  series="AI LITERACY"
+  unit="LLM · UNIT 01"
+  kicker="Understand Models, Use AI Coding"
+  lines={[
+    { text: "理解大模型" },
+    { text: "用好 AI Coding", accent: true },
+  ]}
+  summary="本页完整展开：AI 如何从规则系统走到 Transformer，大模型如何预测下一个词，上下文窗口的代价与失焦，以及 Harness 与 Claude Code 的工程用法。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：为什么规则写不完？
+
+故事要从 1950 年说起。计算机科学奠基者之一 Alan Turing 提出图灵测试：如果一个人隔着墙聊天，分不清对方是人还是机器，就可以认为这台机器表现出了智能。
+
+最早真正落地的工程路线，却不是“全面理解世界”，而是 **专家系统**：基于规则驱动的程序。程序员把人类知识写成大量 `if-else`，本质是**规则穷举**。
+
+```text
+如果 看到毛茸茸的、有尖耳朵的、有长尾巴的动物，那么 它是猫。
+```
+
+局限立刻出现：
+
+- 一只猫因为意外失去了尾巴怎么办？
+- 一只没有毛的猫怎么办？
+- 世界上的例外远比规则作者想得更多。
+
+世界过于复杂，人力写不完所有规则；世界又在变化，规则很难及时更新。  
+结论很自然：**与其把人类总结的规则硬塞给机器，不如让机器对着数据自己找规律。**
+
+## 一、AI 是怎么学会“思考”的
+
+### 1. 从专家系统到机器学习
+
+机器学习阶段不再手工编写每一条规则，而是提供大量数据和对应答案（或反馈信号），让机器自己“学出”中间规律。
+
+这一阶段主要有三种主流学习方式：
+
+#### 监督学习（Supervised Learning）
+
+给机器提供**带标签**的数据。例如：
+
+- 给它看 10000 张猫的图片，并标注为“猫”
+- 再给它看 10000 张狗的图片，并标注为“非猫”
+
+机器通过梯度下降等方法不断试错、调整内部参数，最终自己总结出“猫”的统计特征。
+
+#### 无监督学习（Unsupervised Learning）
+
+不给数据打标签，而是让机器自己发现结构和规律。比如把一批新闻交给它，它可以自动把体育、财经、娱乐等内容聚类区分开。
+
+#### 强化学习（Reinforcement Learning）
+
+不直接告诉机器正确答案，而是通过奖励和惩罚引导它优化行为。像训练小狗：做对了给奖励，做错了受惩罚。自动驾驶，以及击败柯洁的 AlphaGo，背后都能看到强化学习的影子。
+
+<DataTable
+  caption="三种主流学习方式对照"
+  headers={["方式", "给机器什么", "机器在学什么", "典型场景"]}
+  rows={[
+    ["监督学习", "带标签样本", "输入到标签的映射", "图像分类、垃圾邮件识别"],
+    ["无监督学习", "无标签样本", "结构、聚类、表征", "新闻聚类、异常分组"],
+    ["强化学习", "环境与奖励信号", "能拿更高回报的策略", "博弈、控制、部分决策任务"],
+  ]}
+/>
+
+### 2. 深度学习：自动抽特征
+
+数据从**输入层**进入，经过一层层**隐藏层（Hidden Layers）** 的过滤、提取与组合，最终在**输出层**得到结果。
+
+在这个阶段，机器已经不再依赖人工手动提取特征。只要神经网络层数足够深、数据量足够大，它就能从海量数据中自动学习有效特征。也正是这一时期，深度学习在自然语言处理和计算机视觉领域大放异彩。
+
+但即便如此，这一阶段的 AI 本质上仍更擅长“选择题”和“判断题”：在已有选项或目标中做出最优判断，而不是主动组织长篇答案。
+
+### 3. Transformer 与注意力机制
+
+真正的下一次跃迁，来自 2017 年 Google 的论文《Attention Is All You Need》。它提出了 **Transformer** 架构。
+
+其中最关键的突破是**注意力机制（Attention Mechanism）**。它克服了 RNN 和 LSTM 必须从左到右、逐词处理信息的局限，使模型能够同时看到句子中的所有词语，并快速捕捉它们之间的关系。（来源：[Attention Is All You Need](#source-vaswani-2017)）
+
+看这句话：
+
+```text
+我今天买了两个苹果，洗干净后就吃了。
+```
+
+“苹果”既可以指水果，也可以指苹果公司。
+
+- 传统模型如果只做词典式机械匹配，很难稳定消歧。  
+- 注意力机制会同时关注“苹果”周围的上下文：`两个`、`洗干净`、`吃了`，并对语义强相关的信息赋予更高权重，从而判断这里更可能是水果。
+
+Transformer 还有一个关键优势：**天然适合并行计算**。  
+随着 GPU 规模扩展，训练效率与能力同步跃升，算力的“量变”更容易推动模型能力的“质变”。
+
+### 4. 基础模型与能力边界变化
+
+当数据规模、模型参数和训练算力都达到一定程度后，**基础模型（Foundation Model）** 开始出现。这类模型不仅学会了人类语言的语法和表达方式，还逐渐展现出一些此前并未被显式设计进去的能力，也就是所谓的**涌现能力（Emergent Abilities）**，例如：
+
+- 逻辑推理  
+- 代码生成  
+- 复杂表达  
+- 对情绪语气的理解与模拟  
+
+到了这一步，AI 的能力边界发生变化：
+
+它不再只是做“选择题”，而是进入“填空题”和“作文题”阶段——不仅能判断哪个答案更对，还能主动生成答案、组织语言，甚至完成较复杂的内容创作。
+
+<StepList title="能力演进：从规则到生成" steps={evolutionSteps} />
+
+## 二、大模型底层的特性
+
+### 1. 核心思想：预测下一个词
+
+大模型的训练目标，出乎意料地简单：
+
+**给定前面所有的词，通过注意力机制预测下一个词最可能是什么。**
+
+就这一句话，撑起了整个大模型的世界。
+
+来看一个例子：
+
+```text
+输入：小明在操场___，因为今天天气很好
+模型预测：踢球（42%）、跑步（18%）、……
+```
+
+#### 自注意力在填空时做了什么
+
+当我们让模型完成句子填空时，它大致要做 3 件事：
+
+1. **词嵌入（Token Embedding）**  
+   把每个词转换成计算机能处理的数字向量。例如：  
+   `小明 → [0.2, 0.5, -0.1]`，`操场 → [0.3, 0.1, 0.7]`。
+
+2. **注意力权重计算**  
+   模型计算“每个词和其他词的关联程度”，用权重表示。例如：  
+   - `___` 与 `操场` 权重很高（活动地点）  
+   - `___` 与 `天气很好` 权重很高（适合户外）  
+   - `___` 与 `小明` 权重也高（动作执行者）
+
+3. **加权求和**  
+   把高权重词的向量组合起来，得到 `___` 位置的表示，再据此预测 `跑步`、`踢球` 这类词。
+
+<IntuitionBox>
+自注意力让模型“知道该关注哪些词”，从而理解文本里的局部逻辑。同时要记住：大模型本质上是基于统计的参数化概率模型，擅长相关性，不天然等于严格的因果推理机。
+</IntuitionBox>
+
+不同上下文会把概率推到不同的下一词上。下面直接展示两组示意结果（固定权重，不是真实模型输出）：
+
+<ProbBars
+  scenarios={[
+    {
+      context: '小明在操场___，因为今天天气很好',
+      candidates: [
+        { token: '踢球', percent: 42 },
+        { token: '跑步', percent: 18 },
+        { token: '睡觉', percent: 5 },
+        { token: '开会', percent: 3 },
+      ],
+    },
+    {
+      context: '我今天买了两个苹果，洗干净后就___了',
+      candidates: [
+        { token: '吃', percent: 55 },
+        { token: '卖', percent: 12 },
+        { token: '发布', percent: 4 },
+        { token: '上市', percent: 3 },
+      ],
+    },
+  ]}
+/>
+
+### 2. 上下文窗口
+
+#### 2.1 为什么不能无限扩大
+
+上下文窗口的本质，是注意力可计算范围的边界。为什么不能无限扩大？核心是**注意力计算的复杂度陷阱**。
+
+- 自注意力计算复杂度 ≈ **O(n²)**  
+- `n` 是输入文本的 token 数量  
+- 含义：计算量会随 token 数呈平方级增长
+
+用具体数量级对比：
+
+<DataTable
+  caption="token 规模与计算压力（示意数量级）"
+  headers={["token 数量 n", "计算量 n²", "示意显存压力（每元素 4 字节）", "普通硬件体感"]}
+  rows={[
+    ["512", "262,144", "约 1 MB", "轻松支撑"],
+    ["2048", "4,194,304", "约 16 MB", "轻松支撑"],
+    ["8192", "67,108,864", "约 262 MB", "开始吃力"],
+    ["65536", "4,294,967,296", "约 16.4 GB", "需要高显存"],
+    ["131072", "17,179,869,184", "约 65.5 GB", "普通显卡很难支撑"],
+  ]}
+/>
+
+这就是数学边界：哪怕只想把窗口从 8192 扩到 131072，计算量与显存需求都会暴涨。窗口大小首先是硬件与算法成本问题，不是“产品开关随便拧大”。
+
+#### 2.2 窗口越大，塞越多越好吗？
+
+窗口变大，不等于模型就能稳定理解和利用全部内容。
+
+随着上下文变长，常见现象是：**约束遗忘**与**回答质量下降**。前面写过的规则更容易失效，回答更容易偏题、变浅、抓不住重点。
+
+原因在于：大模型并不像数据库那样“精确存储并调用前文”，而是在生成每个 token 时，动态地从整段上下文中分配注意力。内容越多，越容易出现：
+
+1. **注意力被稀释**  
+   前面写入的规则还在窗口里，但在大量新内容冲刷下，权重不断下降。
+
+2. **更偏向最近信息**  
+   离当前问题更近的内容，通常更容易在注意力竞争中占优。
+
+3. **中间区域最容易被忽略**  
+   开头往往还能保留任务背景，结尾因为靠近生成位置也更受关注；中间那一大段最容易“看起来放进去了，实际利用率不高”。
+
+4. **信噪比下降**  
+   无关信息、重复信息、弱相关信息越多，筛选重点和维持推理一致性就越难。
+
+因此，长上下文带来的不只是“能装更多”，还有副作用：
+
+- 信息越多，越容易失焦  
+- 约束越长，越容易遗忘  
+- 中间区域最容易被淹没  
+
+<Callout variant="warning" title="工程含义">
+给模型塞满仓库、聊天记录和工具输出，不等于它“都看见了、都记住了”。上下文管理本身就是系统设计工作。
+</Callout>
+
+## 三、大模型应用的演进：Harness
+
+### 1. 为什么“更聪明的模型”还不够
+
+当模型已经能生成代码和长文，真正的瓶颈会转移到：
+
+- 它中间忘了上下文怎么办？  
+- 它写了一堆垃圾代码谁来拦？  
+- 它犯了错自己却不知道怎么办？  
+
+这些问题，往往不是“换一个更聪明的模型”能单独解决的。
+
+### 2. 什么是 Harness
+
+可以把一个 Agent 系统想成一台电脑：
+
+<DataTable
+  caption="Agent 系统与计算机的类比"
+  headers={["组件", "类比", "职责"]}
+  rows={[
+    ["模型", "CPU", "提供原始智能算力"],
+    ["上下文窗口", "内存", "临时存放内容，会话结束就没了"],
+    ["Agent", "应用程序", "真正执行任务的流程"],
+    ["Harness", "操作系统", "约束、调度、反馈、沉淀"],
+  ]}
+/>
+
+没有操作系统，CPU 再猛也只是一块芯片。  
+同样，没有 Harness，模型再聪明也只是一个聊天框。
+
+### 3. Harness 的三件事
+
+Harness 的核心可以概括为：**架构约束、执行闭环、记忆治理**。
+
+#### 架构约束
+
+先把规则立住，让 Agent 清楚什么能做、什么不能做。包括：
+
+- 架构边界  
+- 代码规范  
+- 权限范围  
+- CI、Linter 等硬性约束  
+
+关键不只是“写在文档里”，而是要把这些规则**显式化、工具化、自动执行**，避免 Agent 越界发挥。
+
+#### 执行闭环
+
+Harness 不是让 Agent “写完就算”，而是让它在可控流程里持续运行：
+
+任务拆解 → 上下文注入 → 工具调用 → 测试校验 → 审查反馈 → 错误修正 → PR 与合并 → 必要的人类介入点。
+
+目标是把 Agent 从“单次回答”变成“在反馈中不断修正的执行者”。一句话：
+
+**人类掌舵，Agent 执行。**
+
+#### 记忆治理
+
+每次 Agent 出错，都不应只停留在当次修复，而应把经验沉淀为长期资产：
+
+- 文档  
+- 规则  
+- 测试用例  
+- 检查器  
+- 操作规范  
+
+这样同类问题以后会越来越少，系统会随着使用变得更稳。
+
+所以，**Harness Engineering** 并不是去优化模型本身，而是在模型之外设计一套可运行、可约束、可反馈、可沉淀的工程环境，让 Agent 能稳定完成工作。
+
+## 四、Claude Code：把通识落到编码工作流
+
+### 1. 底层运行逻辑：不是回答，是循环
+
+Claude Code 的核心不是“回答一次”，而是一个反复循环的代理过程：（来源：[Claude Code 概览](#source-claude-code-overview)）
+
+```text
+收集上下文 → 采取行动 → 验证结果 → [完成 or 回到收集]
+        ↑                              ↓
+   CLAUDE.md / Hooks / 权限 / 沙箱
+   Skills / Tools / MCP / Memory
+```
+
+<StepList title="Agent 执行循环" steps={agentLoopSteps} />
+
+### 2. 上下文工程：最重要的系统约束
+
+名义上的大窗口，并不等于全部可用。以 200K 上下文为例，常见会被拆成：
+
+```text
+200K 总上下文
+├── 固定开销（约 15–20K，也可能更高）
+│   ├── 系统指令
+│   ├── 所有启用的 Skill 描述符
+│   ├── MCP / 工具相关说明
+│   └── LSP 等状态
+├── 半固定（约 5–10K）
+│   ├── CLAUDE.md
+│   └── Memory
+└── 动态可用（约 160–180K）
+    ├── 对话历史
+    ├── 文件内容
+    └── 工具调用结果
+```
+
+#### 工具定义为什么曾是“隐形杀手”
+
+一个常用的数量级例子：一个典型 MCP Server（如 GitHub）若包含 20–30 个工具定义，每个约 200 tokens，合计可能 4000–6000 tokens。接 5 个 Server，固定开销就可能到约 25000 tokens（约 12.5%）。
+
+需要注意产品会迭代。当前 Claude Code 对 MCP 工具加载策略可能采用更激进的按需加载（例如 Tool Search），不能把某一年的“全量常驻”当成永远成立的实现细节。工程原则仍然成立：
+
+- 只启用当前任务真正需要的 Skill 与 MCP  
+- 长文档用检索、摘要、按需读取，不要整本硬塞  
+- 稳定规则写进可重复加载的文件，而不是每次口头复述  
+
+（来源：[MCP 介绍](#source-mcp-intro)、[Claude Code 概览](#source-claude-code-overview)）
+
+### 3. Plan Mode 的工程价值
+
+Plan Mode 的核心是把**探索**和**执行**拆开：
+
+- 探索阶段以只读为主：澄清目标、边界，再提交具体方案  
+- 执行成本在计划确认之后才发生  
+
+这能显著减少“边猜边改”造成的无效 diff 和半截重构。
+
+### 4. Subagents：最大价值是隔离
+
+Subagent 是从主对话派出去的独立 Claude 实例：
+
+- 有自己的上下文窗口  
+- 只用你指定的工具  
+- 干完后汇报结果（最好是结构化摘要）
+
+它最大的价值常常不是“并行”，而是**隔离**。扫代码库、跑测试、做审查这类会产生大量输出的事，塞进主线程很快就会把有效上下文挤没；交给 Subagent，主线程只拿一个干净摘要。
+
+Claude Code 内置常见类型包括：
+
+- Explore：只读扫库，可用更便宜模型  
+- Plan：规划调研  
+- General-purpose：通用  
+
+也可以自定义。配置时要显式约束：
+
+- `tools` / `disallowedTools`：别给和主线程一样宽的权限  
+- `model`：探索用更便宜模型，重要审查用更强模型  
+- `maxTurns`：防止跑飞  
+- `isolation: worktree`：需要动文件时隔离文件系统  
+
+实用细节：长时间 bash 可以移到后台，后续用输出查看工具取结果，避免阻塞主线程。Subagent 同理，可以直接要求“在后台跑”。
+
+#### 常见反模式
+
+- 子代理权限和主线程一样宽，隔离没有意义  
+- 输出格式不固定，主线程拿到没法用  
+- 子任务之间强依赖、频繁共享中间状态：这种情况不适合硬拆 Subagent  
+
+### 5. Skills：按需加载的工作流，不是模板库
+
+Skill 的官方描述是“按需加载的知识与工作流”：描述符常驻上下文，完整内容按需加载。它和“保存的 Prompt”差别很大。（来源：[Agent Skills](#source-agent-skills)）
+
+#### 一个好 Skill 应满足什么
+
+- 描述让模型知道“**何时该用我**”，而不只是“我是干什么的”  
+- 有完整步骤、输入、输出和停止条件  
+- 正文只放导航和核心约束，大资料拆到 supporting files  
+- 有副作用的 Skill 要显式禁止模型擅自自动调用  
+
+#### 渐进式披露
+
+Claude Code 团队反复强调 progressive disclosure：先给索引和导航，再按需拉取细节。
+
+- `SKILL.md`：任务语义、边界、执行骨架  
+- supporting files：领域细节  
+- scripts：确定性收集上下文或证据  
+
+稳定结构示例：
+
+```text
+.claude/skills/
+└── incident-triage/
+    ├── SKILL.md
+    ├── runbook.md
+    ├── examples.md
+    └── scripts/
+        └── collect-context.sh
+```
+
+#### 三种常见类型
+
+**类型一：检查清单型（质量门禁）**
+
+<pre tabindex="0"><code class="language-markdown">{releaseCheck}</code></pre>
+
+**类型二：工作流型（标准化操作）**
+
+配置迁移等高风险操作：显式调用 + 内置回滚。低频任务应禁止模型自动调用。
+
+<pre tabindex="0"><code class="language-markdown">{configMigration}</code></pre>
+
+**类型三：领域专家型（封装决策框架）**
+
+运行时出问题，按固定路径收集证据，不要瞎猜。
+
+<pre tabindex="0"><code class="language-markdown">{runtimeDiagnosis}</code></pre>
+#### 描述符要短
+
+每个启用的 Skill 都在偷你的上下文空间。优化前后差距可以很大：
+
+<CodeCompare
+  language="yaml"
+  tone="neutral"
+  vulnerableBadge="VERBOSE"
+  secureBadge="COMPACT"
+  vulnerable={verboseSkill}
+  secure={compactSkill}
+  vulnerableTitle="低效描述（约 45 tokens 量级）"
+  secureTitle="高效描述（约 9 tokens 量级）"
+/>
+
+#### 调用策略
+
+<DataTable
+  caption="Skill 自动调用策略"
+  headers={["频率", "策略", "原因"]}
+  rows={[
+    ["高频（每会话多次）", "允许自动触发，但优化描述符", "省得反复手动叫，同时少占上下文"],
+    ["低频（每会话少于 1 次）", "禁用自动调用，手动触发", "描述符不必常驻"],
+    ["极低频（每月少于 1 次）", "别做成 Skill，改成文档，需要时 @ 引用", "维护成本高于收益"],
+  ]}
+/>
+
+#### Skills 反模式
+
+- 描述过短过宽：`help with backend` 什么都能触发  
+- 正文过长：几百行手册全塞进 `SKILL.md`  
+- 一个 Skill 包办 review / deploy / debug / docs / incident  
+- 有副作用却允许模型自动调用  
+
+### 6. Hooks：把不能临场发挥的事收回确定性流程
+
+Hooks 很容易被当成“自动运行的脚本”。更准确的理解是：在 Claude 执行操作前后，强制插入你自己的逻辑，把不能指望模型每次都记得的事，收回确定性流程。
+
+例如：
+
+- 格式化要不要跑  
+- 保护文件能不能改  
+- 任务完成后要不要通知  
+
+#### 适合放进 Hooks
+
+- 阻断修改受保护文件  
+- Edit 后自动格式化 / lint / 轻量校验  
+- Session Start 后注入动态上下文（Git 分支、环境变量）  
+- 任务完成后推送通知  
+
+#### 不适合放进 Hooks
+
+- 需要读大量上下文的复杂语义判断  
+- 长时间运行的业务流程  
+- 需要多步推理和权衡的决策  
+
+这些应放在 Skill 或 Subagent 里。
+
+### 7. 上下文压缩与会话策略
+
+默认压缩算法往往按“可重新读取”来判断，早期 Tool Output 和文件内容会被优先删掉，有时连架构决策和约束理由一起冲掉。两小时后再改，可能根本不记得两小时前定了什么，莫名其妙的 Bug 就是这么来的。
+
+可用策略：
+
+1. **Continue**  
+   继续同一会话，但主动重申必须保留的约束。
+
+2. **/rewind（Esc Esc）**  
+   跳回之前某条消息重试。方向性错误优先回退，与其硬纠不如重来。
+
+3. **/clear**  
+   开新会话，通常带上你刚提炼的简报。
+
+4. **主动总结 / compact**  
+   在工具自动压缩前，先固定“必须保留的方向”。
+
+5. **Subagents**  
+   把下一段脏活委托给有独立干净上下文的代理，只把结果拉回来。
+
+## 常见错误与边界
+
+- 把模型当数据库：它不会像精确检索系统那样调用全文每一句。  
+- 窗口开满就当记忆增强：长上下文会失焦，中间内容尤其容易丢。  
+- MCP / Skill 无脑全开：固定开销会挤掉真正有用的对话与代码。  
+- 只换更强模型，不补 Harness：长任务稳定性取决于约束、验证与记忆治理。  
+- Subagent 权限过大：隔离失效，噪音和风险一起回来。  
+- 有副作用的流程允许自动调用：迁移、删除、发布必须显式触发。  
+- 依赖默认压缩“帮你记重点”：重要决策要主动写回文件或简报。
+
+## 练习
+
+1. 对照上方两组下一词示意：如果你把“天气很好”改成“突然下大雨”，你认为概率会怎么变？写一句理由。  
+2. 用本页“检查清单型 Skill”模板，为你当前项目写一份发布前检查大纲，并写清停止条件。  
+3. 列出你常用的 MCP 或工具源，删掉至少 1 个当前任务不需要的项，说明能少占哪一类上下文。  
+4. 选一个真实小任务：先只读规划步骤，确认后再执行；记录比直接开改少走了哪些弯路。  
+5. 故意走错一步（例如先改错模块），练习回退到错误前的状态，而不是在错误路线上连续打补丁。
+
+<KeyTakeaway>
+大模型的核心是在上下文中预测下一个 token；注意力带来全局关系建模，也带来窗口成本与失焦。AI Coding 要靠 Harness、上下文预算、Plan / Subagent / Skills / Hooks，把会说话的模型变成可约束、可验证、可沉淀的执行系统。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />

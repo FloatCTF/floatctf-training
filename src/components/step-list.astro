@@ -1,0 +1,19 @@
+---
+interface Step { title: string; detail: string }
+interface Props { title: string; steps: Step[] }
+const { title, steps } = Astro.props;
+---
+<section class="step-list not-content" aria-label={title}>
+  <h3 class="step-list-title">{title}</h3>
+  <ol class="step-list-items">
+    {steps.map((step, index) => (
+      <li class="step-list-item">
+        <span class="step-list-index" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span>
+        <div class="step-list-copy">
+          <strong>{step.title}</strong>
+          <p>{step.detail}</p>
+        </div>
+      </li>
+    ))}
+  </ol>
+</section>

@@ -2,25 +2,35 @@
 interface Props {
   vulnerableTitle?: string;
   secureTitle?: string;
+  vulnerableBadge?: string;
+  secureBadge?: string;
   vulnerable: string;
   secure: string;
   language?: string;
+  tone?: 'security' | 'neutral';
 }
 const {
   vulnerableTitle = '脆弱实现',
   secureTitle = '改进实现',
+  vulnerableBadge,
+  secureBadge,
   vulnerable,
   secure,
   language = 'text',
+  tone = 'security',
 } = Astro.props;
+const leftBadge = vulnerableBadge ?? (tone === 'neutral' ? 'BEFORE' : 'VULNERABLE');
+const rightBadge = secureBadge ?? (tone === 'neutral' ? 'AFTER' : 'GUARDED');
+const leftClass = tone === 'neutral' ? 'code-panel code-panel-neutral' : 'code-panel code-panel-danger';
+const rightClass = tone === 'neutral' ? 'code-panel code-panel-neutral code-panel-neutral-accent' : 'code-panel code-panel-success';
 ---
 <div class="code-compare" aria-label="代码对照">
-  <section class="code-panel code-panel-danger">
-    <header><span>VULNERABLE</span><h3>{vulnerableTitle}</h3></header>
+  <section class={leftClass}>
+    <header><span>{leftBadge}</span><h3>{vulnerableTitle}</h3></header>
     <pre tabindex="0"><code class={`language-${language}`}>{vulnerable}</code></pre>
   </section>
-  <section class="code-panel code-panel-success">
-    <header><span>GUARDED</span><h3>{secureTitle}</h3></header>
+  <section class={rightClass}>
+    <header><span>{rightBadge}</span><h3>{secureTitle}</h3></header>
     <pre tabindex="0"><code class={`language-${language}`}>{secure}</code></pre>
   </section>
 </div>

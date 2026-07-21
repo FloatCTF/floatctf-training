@@ -1,0 +1,197 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "ai-literacy",
+    "slug": "ai-literacy",
+    "categoryId": "ai-ml",
+    "title": "理解大模型，用好 AI Coding",
+    "audience": "希望建立 AI 通识、并把大模型用于编程协作的本科生与工程师",
+    "durationMinutes": 100,
+    "primaryMode": "concept",
+    "supportingModes": [
+      "mechanism",
+      "tool"
+    ],
+    "evidenceProfiles": [
+      "academic",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise"
+    ],
+    "motionLevel": "static",
+    "visualStory": "从规则系统到 Transformer 的能力跃迁，再到 Agent Harness 与上下文工程的约束闭环",
+    "learningObjectives": [
+      "说明 AI 从专家系统、机器学习到 Transformer 与基础模型的能力边界变化",
+      "用“预测下一个词”和自注意力解释大模型如何利用上下文",
+      "解释上下文窗口的二次复杂度与长上下文失焦现象",
+      "描述 Harness、Plan Mode、Subagent、Skills 与 Hooks 在 AI Coding 中的分工",
+      "在本地演示中观察上下文如何改变下一词的相对概率"
+    ],
+    "prerequisites": [
+      "会读写简单代码",
+      "了解基本命令行操作"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-07-21"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-07-21",
+    "queries": [
+      "Attention Is All You Need Transformer",
+      "Agent Skills progressive disclosure",
+      "Claude Code context window skills MCP",
+      "LLM next token prediction"
+    ],
+    "notes": "讲义结构对齐本地课程 PDF《理解大模型，用好ai》；机制主张绑定 Transformer 论文与官方 Skills/Claude Code 文档。不设面试模块。"
+  },
+  "sources": [
+    {
+      "id": "vaswani-2017",
+      "kind": "paper",
+      "title": "Attention Is All You Need",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/1706.03762",
+      "publishedAt": "2017-06-12",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "claim-attention",
+        "claim-next-token",
+        "evidence-transformer-paper"
+      ]
+    },
+    {
+      "id": "deep-learning-book",
+      "kind": "textbook",
+      "title": "Deep Learning",
+      "publisher": "MIT Press",
+      "url": "https://www.deeplearningbook.org/",
+      "publishedAt": "2016-11-18",
+      "accessedAt": "2026-07-21",
+      "supports": [
+        "claim-ml-shift",
+        "claim-network"
+      ]
+    },
+    {
+      "id": "agent-skills",
+      "kind": "official-doc",
+      "title": "Agent Skills",
+      "publisher": "Agent Skills",
+      "url": "https://agentskills.io/home",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新站点；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-skills"
+      ]
+    },
+    {
+      "id": "claude-code-overview",
+      "kind": "official-doc",
+      "title": "Claude Code overview",
+      "publisher": "Anthropic",
+      "url": "https://docs.anthropic.com/en/docs/claude-code/overview",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新文档；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-agent-loop"
+      ]
+    },
+    {
+      "id": "mcp-intro",
+      "kind": "official-doc",
+      "title": "What is the Model Context Protocol (MCP)?",
+      "publisher": "Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/getting-started/intro",
+      "publishedAt": "2026-07-21",
+      "accessedAt": "2026-07-21",
+      "notes": "持续更新文档；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-mcp"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-transformer-paper",
+      "kind": "paper",
+      "identifier": "arXiv:1706.03762",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "vaswani-2017"
+      ],
+      "summary": "提出基于自注意力的 Transformer 架构，支持并行计算并建模全局依赖。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-ml-shift",
+      "text": "机器学习用数据学习规律，替代手工穷举规则的专家系统。",
+      "sourceIds": [
+        "deep-learning-book"
+      ]
+    },
+    {
+      "id": "claim-network",
+      "text": "深度网络通过多层表示学习自动提取特征，而不是依赖人工特征工程。",
+      "sourceIds": [
+        "deep-learning-book"
+      ]
+    },
+    {
+      "id": "claim-attention",
+      "text": "自注意力让模型在生成时对输入各位置分配权重，从而利用全局上下文关系。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "claim-next-token",
+      "text": "当代大语言模型的核心训练目标是根据已有上下文预测下一个 token。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "claim-skills",
+      "text": "Agent Skills 以按需加载的程序性知识组织工作流，描述符常驻、正文渐进披露。",
+      "sourceIds": [
+        "agent-skills"
+      ]
+    },
+    {
+      "id": "claim-agent-loop",
+      "text": "编码型 Agent 通过收集上下文、采取行动、验证结果的循环完成任务，而不是只做单次回答。",
+      "sourceIds": [
+        "claude-code-overview"
+      ]
+    },
+    {
+      "id": "claim-mcp",
+      "text": "MCP 为模型提供统一的工具与上下文接入方式，工具定义会占用上下文预算。",
+      "sourceIds": [
+        "mcp-intro"
+      ]
+    }
+  ],
+  "assessments": [
+    "exercise"
+  ],
+  "visualNarrative": {
+    "kind": "static-diagram",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  },
+  "runnableExamples": [
+    {
+      "id": "next-token-demo",
+      "path": "examples/next-token-demo.mjs",
+      "command": "node examples/next-token-demo.mjs",
+      "expectedResult": "打印两段上下文下候选下一词的相对概率条形图。"
+    }
+  ]
+}
