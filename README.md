@@ -50,18 +50,74 @@ npm run build
 - `TRAINING_BASE`：子路径部署时的 base，例如 `/training/`
 - `TRAINING_SITE`：站点 URL，写入 sitemap 等
 
-## 讲义协作（PR）
+## 协作流程（同仓分支 + PR）
 
-1. 从 `main` 拉分支。
-2. 按 Skill / 现有专题约定修改：
-   - `src/data/catalog.json`：登记专题
-   - `src/data/lessons/<id>.json`：manifest / 来源 / 面试题
-   - `src/content/docs/lessons/<id>.mdx`：正文
-   - 需要时增加 `examples/` 可运行示例
-3. 本地执行 `npm run verify`。
-4. 提 PR，合并后服务器 `git pull && npm ci && npm run build`。
+团队默认采用 **同一仓库开 feature 分支，向 `main` 提 PR**。  
+这是内部协作的标准做法：比直接 push `main` 更安全，也比每人 fork 更轻。
+
+### 原则
+
+| 规则 | 说明 |
+| --- | --- |
+| 不直接改 `main` | 讲义、站点、Skill 改动一律走 PR |
+| 同仓分支 | 有 FloatCTF 写权限的同学在本仓建分支即可，不必 fork |
+| 服务器只跟 `main` | 合并后再 `git pull`，避免拉到半成品 |
+| 合并前自检 | 本地跑通 `npm run verify` |
+
+没有 org 写权限的临时协作者，再用 **fork + PR** 即可。
+
+### 日常开发步骤
+
+```bash
+# 1. 同步主分支
+git checkout main
+git pull origin main
+
+# 2. 从 main 建分支（命名示例）
+git checkout -b lesson/sql-injection-polish
+# 也可用：feat/...  fix/...  docs/...
+
+# 3. 修改讲义或站点
+# 见下方「讲义改哪些文件」
+
+# 4. 本地验收
+npm run verify
+
+# 5. 推分支并开 PR
+git push -u origin HEAD
+# 在 GitHub 上：base = main，compare = 你的分支
+# 标题写清改了什么；需要时 @ 同学 review
+```
+
+PR 合并后，部署机执行：
+
+```bash
+cd /path/to/floatctf-training
+git pull
+npm ci
+npm run build
+```
+
+### 讲义改哪些文件
+
+按现有专题约定修改（可配合 `skills/build-technical-training-site/`）：
+
+- `src/data/catalog.json`：登记专题、顺序、状态
+- `src/data/lessons/<id>.json`：manifest / 来源 / 面试题
+- `src/content/docs/lessons/<id>.mdx`：正文
+- 需要时增加 `examples/` 可运行示例
 
 安全专题请保持授权范围说明，实验仅限本地 / CTF 靶场 / 授权环境。
+
+### 建议的仓库设置（管理员）
+
+在 GitHub 仓库 Settings → Branches 为 `main` 开启保护，例如：
+
+- 禁止直接 push 到 `main`
+- 合并前至少 1 人 Approve
+- （可选）要求 CI 通过后再合并
+
+有空可再加 GitHub Actions，在 PR 上自动跑 `npm run verify`。
 
 ## 安装 Skill（给写讲义的 Agent 用）
 
