@@ -26,7 +26,7 @@
       "区分 OS 命令注入与语言级代码执行",
       "解释 shell 元字符如何把参数变成新命令",
       "用参数数组 API 与危险功能禁用设计修复路径",
-      "结合公开 CVE 说明反序列化、模板与日志框架如何通向 RCE"
+      "结合公开 CVE 说明日志查找与框架数据绑定如何通向 RCE"
     ],
     "prerequisites": [
       "Linux 基本命令",
@@ -34,18 +34,18 @@
       "HTTP 输入如何到达服务端"
     ],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-07-23"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-07-23",
     "queries": [
       "命令注入 面试题",
       "RCE interview questions",
       "command injection 面经",
       "Log4Shell defense"
     ],
-    "notes": "命令注入定义对照 OWASP/CWE；Log4Shell 与其它 CVE 作为代码执行证据。"
+    "notes": "命令注入定义和防御对照 OWASP/CWE 与 Node.js 进程 API；Log4Shell 与 Spring4Shell 的触发条件按项目官方公告核对。"
   },
   "sources": [
     {
@@ -55,7 +55,7 @@
       "publisher": "OWASP",
       "url": "https://owasp.org/www-community/attacks/Command_Injection",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -70,7 +70,7 @@
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-defense",
@@ -87,7 +87,7 @@
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/78.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新条目；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -103,7 +103,7 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2021-44228",
       "publishedAt": "2021-12-10",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "claim-log4shell",
         "evidence-log4shell",
@@ -116,9 +116,9 @@
       "kind": "advisory",
       "title": "Apache Log4j Security Vulnerabilities",
       "publisher": "Apache Logging Services",
-      "url": "https://logging.apache.org/log4j/2.x/security.html",
+      "url": "https://logging.apache.org/security.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新公告页；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-log4shell",
@@ -134,20 +134,50 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2022-22965",
       "publishedAt": "2022-03-31",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-spring4shell",
         "interview-q8"
       ]
     },
     {
-      "id": "appsec-interview-gist",
+      "id": "node-child-process",
+      "kind": "official-doc",
+      "title": "Child process",
+      "publisher": "Node.js",
+      "url": "https://nodejs.org/api/child_process.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新页面；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-defense",
+        "interview-q4",
+        "interview-q6",
+        "interview-q7"
+      ]
+    },
+    {
+      "id": "spring-cve-2022-22965",
+      "kind": "advisory",
+      "title": "Spring Framework RCE, Early Announcement",
+      "publisher": "Spring",
+      "url": "https://spring.io/blog/2022/03/31/spring-framework-rce-early-announcement/",
+      "publishedAt": "2022-03-31",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-spring4shell",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "tib3rius-interview",
       "kind": "interview-report",
-      "title": "Application Security Interview Questions",
-      "publisher": "GitHub Gist contributor mccabe615",
-      "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
-      "publishedAt": "2022-09-02",
-      "accessedAt": "2026-07-21",
+      "title": "Web Application Penetration Testing Interview Questions",
+      "publisher": "Tib3rius",
+      "url": "https://tib3rius.com/interview-questions.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新的面试题集合；本课按其 OS 命令执行与盲命令注入主题改写题干。",
       "supports": [
         "interview-q1",
         "interview-q2",
@@ -170,7 +200,7 @@
         "cve-2021-44228",
         "log4j-security"
       ],
-      "summary": "Log4j 查找功能导致的远程代码执行，影响面极广。"
+      "summary": "CVE-2021-44228 影响 log4j-core [2.0-beta9, 2.3.1)、[2.4, 2.12.2) 与 [2.13.0, 2.15.0)；攻击者控制日志消息或参数时，JNDI Lookup 可从 LDAP 服务器加载并执行任意代码。对应 Java 6、7、8+ 分支的修复版本为 2.3.1、2.12.2 与 2.15.0。"
     },
     {
       "id": "evidence-spring4shell",
@@ -178,9 +208,10 @@
       "identifier": "CVE-2022-22965",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2022-22965"
+        "cve-2022-22965",
+        "spring-cve-2022-22965"
       ],
-      "summary": "Spring Framework 数据绑定相关 RCE，展示框架特性如何通向代码执行。"
+      "summary": "Spring Framework 5.3.0–5.3.17 与 5.2.0–5.2.19 在 JDK 9+、Spring MVC/WebFlux、传统 WAR 部署和特定 Servlet 容器条件下可经数据绑定形成 RCE；5.3.18 与 5.2.20 已修复，Spring Boot 默认可执行 JAR 部署不满足已公开利用链条件。"
     }
   ],
   "claims": [
@@ -194,14 +225,15 @@
     },
     {
       "id": "claim-defense",
-      "text": "优先避免调用 shell；必要时使用参数数组 API，并对参数做严格允许列表。",
+      "text": "优先使用语言库替代外部命令；确需启动进程时固定程序路径、禁用 shell、使用参数数组、校验参数语义，并限制超时、输出与进程权限。",
       "sourceIds": [
-        "owasp-command-defense"
+        "owasp-command-defense",
+        "node-child-process"
       ]
     },
     {
       "id": "claim-log4shell",
-      "text": "日志与表达式等间接求值路径同样可以把输入变成代码执行。",
+      "text": "Log4j Core 的消息查找与 JNDI 功能曾让攻击者控制的日志数据触发远程资源查找并形成代码执行链。",
       "sourceIds": [
         "cve-2021-44228",
         "log4j-security"
@@ -223,7 +255,7 @@
       "id": "command-injection-demo",
       "path": "examples/command-injection-demo.mjs",
       "command": "node examples/command-injection-demo.mjs",
-      "expectedResult": "打印 shell 拼接后的危险命令串，以及参数数组形式下 payload 仍是单个参数。"
+      "expectedResult": "打印危险 shell 命令串；恶意输入与选项输入被语义校验拒绝，合法 IP 生成固定程序、shell=false、超时和输出上限的调用描述；示例不启动进程。"
     }
   ],
   "interviewQuestions": [
@@ -239,12 +271,12 @@
       ],
       "bonus": "对应 CWE-78。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-78",
         "owasp-command-injection"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-78",
@@ -263,12 +295,12 @@
       ],
       "bonus": "修复都强调避免字符串拼进解释器语言。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-78",
         "owasp-command-defense"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-78",
@@ -287,11 +319,11 @@
       ],
       "bonus": "应用应使用无 shell 的进程 API 并校验主机格式。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-command-injection"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-command-injection"
@@ -301,43 +333,45 @@
       "id": "interview-q4",
       "question": "参数数组 API 如何降低风险？",
       "level": 2,
-      "answer": "参数作为独立 argv 传递，不经 shell 解析元字符，因此分号和管道不再具备命令分隔作用。",
+      "answer": "shell=false 时参数作为独立 argv 传递，分号和管道不会被 shell 当成命令分隔符；目标程序仍会解释自己的参数，因此还需阻止选项注入并校验业务语义。",
       "keyPoints": [
         "不经 shell",
         "argv 独立",
-        "元字符失效"
+        "shell 元字符不再分隔命令",
+        "目标程序仍解析选项"
       ],
       "bonus": "仍需校验参数语义，防止合法程序被喂入危险参数。",
       "sourceIds": [
-        "appsec-interview-gist",
-        "owasp-command-defense"
+        "tib3rius-interview",
+        "owasp-command-defense",
+        "node-child-process"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
-        "owasp-command-defense"
+        "owasp-command-defense",
+        "node-child-process"
       ]
     },
     {
       "id": "interview-q5",
-      "question": "除了命令注入，还有哪些常见 RCE 入口？",
+      "question": "语言级代码执行与 OS 命令注入的执行边界有何差异？",
       "level": 3,
-      "answer": "语言 eval、不安全反序列化、模板注入、表达式注入以及存在漏洞的日志/框架特性。",
+      "answer": "语言级代码执行让输入进入 eval、模板或表达式等语言解释器；OS 命令注入让输入进入 shell 或外部程序参数。两条路径可能互相衔接，审计时应分别标出解释器与进程边界。",
       "keyPoints": [
-        "eval",
-        "反序列化",
-        "模板/表达式",
-        "框架特性"
+        "语言解释器",
+        "shell 与进程参数",
+        "边界衔接"
       ],
       "bonus": "Log4Shell 是间接求值导致 RCE 的典型。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cve-2021-44228",
         "log4j-security"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cve-2021-44228",
@@ -348,73 +382,80 @@
       "id": "interview-q6",
       "question": "如何设计外部命令调用的安全封装？",
       "level": 3,
-      "answer": "固定可执行文件路径，使用 argv 传参，对每个参数做允许列表，设置超时、最小权限用户与无 shell 执行。",
+      "answer": "固定可执行文件路径，使用 argv 传参并禁用 shell，对每个参数做允许列表，设置超时与 maxBuffer，检查 error、status 和 signal，并以最小权限用户运行。",
       "keyPoints": [
         "固定二进制",
         "argv",
         "白名单",
+        "资源上限与结果检查",
         "最小权限"
       ],
       "bonus": "默认拒绝未知参数比黑名单更稳。",
       "sourceIds": [
-        "appsec-interview-gist",
-        "owasp-command-defense"
+        "tib3rius-interview",
+        "owasp-command-defense",
+        "node-child-process"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
-        "owasp-command-defense"
+        "owasp-command-defense",
+        "node-child-process"
       ]
     },
     {
       "id": "interview-q7",
-      "question": "发现可能的 RCE 时，授权验证应遵守什么边界？",
+      "question": "代码评审看到 `execSync('ping -c 1 ' + host)`，你会怎样修复并验证？",
       "level": 4,
-      "answer": "只在授权环境用最小、可回滚的验证证明执行点存在，避免持久化、横向移动或破坏性命令，并立刻推动临时缓解。",
+      "answer": "先用语言库替代 ping；确需调用时改成固定路径和 argv，设置 shell=false、超时、输出上限及最小权限，并对 host 做 IP 或受控域名语义校验。测试覆盖 shell 元字符、选项前缀、超长输出和超时场景。",
       "keyPoints": [
-        "授权范围",
-        "最小验证",
-        "临时缓解"
+        "移除 shell 拼接",
+        "参数语义校验",
+        "资源与异常测试"
       ],
-      "bonus": "验证记录应包含输入路径、进程身份与时间。",
+      "bonus": "POSIX 工具支持时可在用户参数前加入 `--` 终止选项解析，同时保留允许列表校验。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-command-defense",
+        "node-child-process",
         "cwe-78"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-command-defense",
+        "node-child-process",
         "cwe-78"
       ]
     },
     {
       "id": "interview-q8",
-      "question": "Log4Shell 对防御设计的启示是什么？",
+      "question": "Log4Shell 与 Spring4Shell 的成立条件和修复路径分别是什么？",
       "level": 4,
-      "answer": "间接字符串求值与外部查找会把“日志输入”变成执行面，因此依赖组件要可盘点、可升级，并关闭不必要的查找与反序列化特性。",
+      "answer": "Log4Shell 需核对 log4j-core 版本、攻击者数据是否进入消息查找以及 JNDI 相关运行条件，修复以升级受支持版本为主。Spring4Shell 的公开利用链要求受影响的 Spring Framework、JDK 9+、Web MVC/WebFlux、传统 WAR 和相应 Servlet 容器条件，修复到 5.3.18 或 5.2.20 及以上。",
       "keyPoints": [
-        "间接求值",
-        "依赖治理",
-        "关闭危险特性"
+        "组件与版本清单",
+        "触发条件核对",
+        "升级到修复版本"
       ],
-      "bonus": "CVE-2021-44228 与 CVE-2022-22965 都说明框架默认能力可能变成攻击面。",
+      "bonus": "Spring Boot 默认可执行 JAR 部署不满足公开 Spring4Shell 利用链的 WAR 条件，仍应根据依赖版本和实际部署逐项核验。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cve-2021-44228",
         "log4j-security",
-        "cve-2022-22965"
+        "cve-2022-22965",
+        "spring-cve-2022-22965"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cve-2021-44228",
         "log4j-security",
-        "cve-2022-22965"
+        "cve-2022-22965",
+        "spring-cve-2022-22965"
       ]
     }
   ]

@@ -1,23 +1,10 @@
-// 教学演示：不同上下文的最小输出编码差异
-function htmlEncode(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#39;');
-}
-
-function jsStringEscape(value) {
-  return String(value)
-    .replaceAll('\\', '\\\\')
-    .replaceAll("'", "\\'")
-    .replaceAll('"', '\\"')
-    .replaceAll('\n', '\\n')
-    .replaceAll('</', '<\\/');
-}
-
+// 教学演示：同一输入进入危险汇点、安全汇点与 URL 参数时的处理差异。
+// 脚本只打印数据流，不创建 DOM，也不执行 payload。
 const payload = `"><img src=x onerror=alert(1)>`;
-console.log('HTML 上下文：', htmlEncode(payload));
-console.log('JS 字符串上下文：', jsStringEscape(payload));
-console.log('说明：编码必须匹配输出上下文；错误上下文编码仍可能被解释为代码。');
+const target = new URL('https://training.local/search');
+target.searchParams.set('q', payload);
+
+console.log('危险汇点：', `result.innerHTML = ${JSON.stringify(payload)}`);
+console.log('安全汇点：', `result.textContent = ${JSON.stringify(payload)}`);
+console.log('URL 参数：', target.href);
+console.log('说明：textContent 把输入作为文本；URLSearchParams 只处理 URL 参数编码。');

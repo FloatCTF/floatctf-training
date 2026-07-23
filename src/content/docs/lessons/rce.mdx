@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: rce
 categoryId: web-security
-sources: ["owasp-command-injection", "owasp-command-defense", "cwe-78", "cve-2021-44228", "log4j-security", "cve-2022-22965", "appsec-interview-gist"]
+sources: ["owasp-command-injection", "owasp-command-defense", "cwe-78", "node-child-process", "cve-2021-44228", "log4j-security", "cve-2022-22965", "spring-cve-2022-22965", "tib3rius-interview"]
 motionLevel: explanatory
 safetyScope: authorized-lab
 researchStatus: complete
@@ -28,8 +28,12 @@ const output = execSync('ping -c 1 ' + host, { encoding: 'utf8' });`;
 
 export const secureSnippet = `// 安全：固定二进制 + argv，不经 shell
 import { spawnSync } from 'node:child_process';
-if (!/^[A-Za-z0-9.-]+$/.test(host)) throw new Error('invalid host');
-const result = spawnSync('/bin/ping', ['-c', '1', host], { encoding: 'utf8' });`;
+import { isIP } from 'node:net';
+if (isIP(host) === 0) throw new Error('IP literal required');
+const result = spawnSync('/usr/bin/ping', ['-c', '1', '--', host], {
+  shell: false, encoding: 'utf8', timeout: 2000, maxBuffer: 65_536
+});
+if (result.error || result.status !== 0) throw result.error ?? new Error('ping failed');`;
 
 <LessonHero
   series="SECURITY TRAINING"
@@ -55,16 +59,16 @@ const result = spawnSync('/bin/ping', ['-c', '1', host], { encoding: 'utf8' });`
 ping -c 1 <用户输入>
 ```
 
-并且这行字符串交给 shell 解析，那么用户输入中的 `;`、`|`、`$()` 会成为 shell 语法，而不是 `ping` 的普通参数。
+并且这行字符串交给 shell 解析，那么用户输入中的 `;`、`|`、`$()` 会成为 shell 语法；`ping` 无法把它们作为普通参数接收。
 
 CWE-78 描述的是 OS 命令中特殊元素中和不足；OWASP 给出攻击说明与防御清单。（来源：[CWE-78](#source-cwe-78)、[OWASP](#source-owasp-command-injection)）
 
 ## 两条主路径
 
-1. **命令注入：** 输入进入 shell/命令行。
-2. **代码执行：** 输入进入 `eval`、反序列化、模板引擎或表达式引擎。
+1. **OS 命令注入：** 输入进入 shell 或命令解释路径，可能增加命令、选项或参数。
+2. **语言级代码执行：** 输入进入 `eval`、反序列化、模板引擎或表达式引擎，并在当前运行时权限内影响执行流。
 
-最终都能控制进程，但审计搜索词和修复点不同。
+两类问题都越过应用预期的执行边界。OS 命令注入可以直接调用外部程序；语言级执行受运行时、沙箱和可用 API 约束。
 
 ## 本地演示
 
@@ -76,10 +80,12 @@ node examples/command-injection-demo.mjs
 
 ```text
 脆弱命令串： ping -c 1 127.0.0.1; id
-安全参数： {"argv":["ping","-c","1","127.0.0.1; id"], ...}
+恶意输入： {"accepted":false,"reason":"只允许 IP 字面量"}
+选项输入： {"accepted":false,"reason":"只允许 IP 字面量"}
+合法输入： {"accepted":true,"file":"/usr/bin/ping", ...}
 ```
 
-在 argv 形式下，`; id` 只是主机名参数的一部分，不会变成第二条命令。真实环境仍要校验主机格式。
+脚本只构造调用参数，不启动进程。无 shell 的 argv 形式会消除 shell 元字符语义；参数仍可能被目标程序解释为选项，因此示例限制为 IP 字面量，并用 `--` 结束选项。`--` 属于 POSIX 工具约定，跨平台封装需要按目标程序文档调整。
 
 <CodeCompare
   language="javascript"
@@ -94,10 +100,11 @@ node examples/command-injection-demo.mjs
 <DataTable
   caption="常见代码执行入口"
   headers={["入口", "机制", "防御要点"]}
+  columnRatios={[0.8, 1, 1.45]}
   rows={[
     ["eval/exec", "字符串当代码", "删除动态求值，改数据驱动逻辑"],
     ["反序列化", "对象重建触发方法", "拒绝不可信来源，用安全格式"],
-    ["SSTI", "模板表达式求值", "沙箱/逻辑无逻辑模板，或严格沙箱"],
+    ["SSTI", "模板表达式求值", "使用逻辑受限模板，或启用严格沙箱"],
     ["表达式注入", "SpEL/OGNL/EL", "禁用危险求值，固定允许语法"],
     ["组件漏洞", "日志查找/数据绑定", "依赖盘点、升级、关闭特性"],
   ]}
@@ -105,7 +112,7 @@ node examples/command-injection-demo.mjs
 
 ## 真实案例
 
-CVE-2021-44228（Log4Shell）展示日志消息中的查找语法如何通向远程加载；Apache 安全页持续记录修复版本。CVE-2022-22965 展示框架数据绑定问题也可形成 RCE。（来源：[CVE-2021-44228](#source-cve-2021-44228)、[Log4j Security](#source-log4j-security)、[CVE-2022-22965](#source-cve-2022-22965)）
+CVE-2021-44228 影响特定 Log4j Core 版本：攻击者控制进入日志的消息或参数后，JNDI Lookup 可能从 LDAP 加载并执行代码；Apache 为 Java 6、7、8 及以上分支分别发布了修复版本。CVE-2022-22965 的公开利用场景要求 JDK 9 及以上、受影响 Spring Framework、`spring-webmvc` 或 `spring-webflux`、传统 WAR 部署和特定 Servlet 容器；常见 Spring Boot 可执行 JAR 不受该公开利用链影响。（来源：[CVE-2021-44228](#source-cve-2021-44228)、[Apache 公告](#source-log4j-security)、[CVE-2022-22965](#source-cve-2022-22965)、[Spring 公告](#source-spring-cve-2022-22965)）
 
 <Callout variant="warning" title="授权实验边界">
 本课演示只构造命令字符串与 argv，不在培训环境执行反弹 shell、持久化或对公共目标的利用。复现真实 CVE 请使用下一课的隔离靶场流程。
@@ -113,10 +120,10 @@ CVE-2021-44228（Log4Shell）展示日志消息中的查找语法如何通向远
 
 ## 分层防御
 
-按 OWASP 命令注入防御思路：优先避免调用 OS 命令；必须调用时使用参数化/argv 风格 API；对参数做允许列表；以最小权限运行。（来源：[OWASP Defense](#source-owasp-command-defense)）
+按 OWASP 命令注入防御思路：优先使用语言库替代 OS 命令；必须调用时固定程序、禁用 shell、使用 argv、校验每个参数的语义，并设置最小权限、超时和输出上限。参数数组仍需防止选项注入。（来源：[OWASP Defense](#source-owasp-command-defense)、[Node.js](#source-node-child-process)）
 
 <ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
-  <p>修复后的回归应覆盖：原参数位置、二次封装函数、异步任务与运维接口。RCE 入口经常藏在“临时脚本”和“内部工具页”。</p>
+  <p>修复回归覆盖原参数位置、二次封装函数、异步任务和运维接口，并检查 shell 配置、选项注入、超时、输出上限和进程权限。</p>
 </ScrollReveal>
 
 ## 常见错误与边界
@@ -131,7 +138,7 @@ CVE-2021-44228（Log4Shell）展示日志消息中的查找语法如何通向远
 <InterviewAccordion client:visible questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
-RCE 的根因是执行边界被输入穿透。命令路径避免 shell 并固定 argv；代码路径删除动态求值；组件路径做盘点与特性收敛。
+RCE 的根因是输入越过应用预期的执行边界。命令路径固定程序并禁用 shell；代码路径删除不必要的动态求值；组件路径建立版本盘点和升级流程。
 </KeyTakeaway>
 
 <SourceList sources={manifest.sources} />

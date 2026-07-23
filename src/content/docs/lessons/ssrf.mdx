@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: ssrf
 categoryId: web-security
-sources: ["owasp-ssrf-cheat-sheet", "portswigger-ssrf", "nvd-cve-2021-26855", "apache-cve-2021-40438", "nvd-cve-2021-40438", "aws-imdsv2", "appsec-interview-gist", "linkedin-ssrf-interview"]
+sources: ["owasp-ssrf-cheat-sheet", "portswigger-ssrf", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438", "nvd-cve-2021-40438", "aws-imdsv2", "appsec-interview-gist", "linkedin-ssrf-interview"]
 motionLevel: simulation
 safetyScope: authorized-lab
 researchStatus: complete
@@ -31,9 +31,9 @@ export const vulnerableSnippet = `async function preview(userUrl) {
 
 export const guardedSnippet = `async function preview(rawUrl) {
   const target = new URL(rawUrl);
-  assertAllowedProtocol(target.protocol);
-  const addresses = await resolveAll(target.hostname);
-  assertPublicAddresses(addresses);
+  assertAllowedUrlParts(target);        // 协议、主机、端口、用户信息
+  const addresses = await resolveAll(target.hostname); // 全部 A 与 AAAA
+  assertAllowedAddresses(addresses);    // 每个地址都必须符合策略
   return fetchPinnedTarget(target, addresses, {
     redirect: "manual",
     timeoutMs: 2000,
@@ -81,7 +81,7 @@ OWASP 将 SSRF 描述为利用服务端应用访问非预期位置的行为；Po
 
 ## localhost 最小实验
 
-实验脚本只在 `127.0.0.1` 的随机端口启动临时 HTTP 服务。它先展示未经约束的服务端取回，再让实验校验器拒绝私有 IPv4 地址。该校验器用于讲解第一层边界，生产系统还需要域名允许列表、连接绑定、出口控制、超时与响应限制。
+实验脚本只在 `127.0.0.1` 的随机端口启动临时 HTTP 服务。它先展示未经约束的服务端取回，再让教学校验器拒绝 `127.0.0.0/8` 环回 IPv4 字面量。校验器对域名和 IPv6 失败关闭，且不承担生产校验职责。
 
 运行环境：Node.js 22.12 或更高版本。
 
@@ -93,10 +93,10 @@ node examples/ssrf-local-lab.mjs
 
 ```text
 脆弱流程：training-secret
-安全流程：已阻止私有地址
+安全流程：已阻止环回 IPv4 地址
 ```
 
-实验检查：把脚本中的目标改成另一个 `127.0.0.1` 端口，确认安全流程继续阻止；随后阅读 `guardedFetch`，指出它仍未处理的域名解析与 IPv6 边界。
+实验检查：把目标改成另一个 `127.0.0.1` 端口，确认安全流程继续阻止；再阅读页面中的生产设计轮廓，列出域名允许列表、全部 A/AAAA 解析、连接绑定、逐跳重定向校验和出口控制的职责。
 
 <CodeCompare
   language="javascript"
@@ -111,6 +111,7 @@ node examples/ssrf-local-lab.mjs
 <DataTable
   caption="SSRF 控制点与验证方法"
   headers={["控制层", "关键动作", "修复验证"]}
+  columnRatios={[0.85, 1.6, 1.35]}
   rows={[
     ["输入与业务", "优先接收资源 ID；确需 URL 时固定协议、主机和端口允许列表", "拒绝未登记主机、用户信息段和非 HTTP 协议"],
     ["解析与连接", "解析全部地址，拒绝环回、私有、链路本地和保留地址；连接使用已验证结果", "覆盖多地址、IPv4/IPv6、解析变化和编码形式"],
@@ -131,13 +132,14 @@ AWS 文档说明，EC2 IMDSv2 使用会话令牌流程，并支持响应跳数�
 <DataTable
   caption="两个与 SSRF 直接相关的公开漏洞"
   headers={["证据", "产品与事实", "教学价值"]}
+  columnRatios={[0.85, 1.55, 1.2]}
   rows={[
-    ["CVE-2021-26855", "NVD 将 Microsoft Exchange Server 漏洞映射到 CWE-918。", "展示 SSRF 如何成为大型产品攻击面的入口。"],
-    ["CVE-2021-40438", "Apache 官方公告说明 mod_proxy 可把请求转发到攻击者选择的源服务器。", "展示代理配置、URI 处理与目标约束的关系。"],
+    ["CVE-2021-26855", "Microsoft 将其描述为 Exchange 的预认证 SSRF，可发送任意 HTTP 请求并以 Exchange 服务器身份认证；NVD 映射到 CWE-918。", "展示服务端网络位置和身份如何放大影响。"],
+    ["CVE-2021-40438", "Apache HTTP Server 2.4.48 及更早版本的 mod_proxy 可被构造 URI 路径引导到远程用户选择的源服务器；2.4.49 修复。", "展示代理 URI 处理与目标约束的关系。"],
   ]}
 />
 
-案例只用于根因和修复分析。课程不提供面向公共目标的扫描、持久化、凭据获取或破坏步骤。（来源：[NVD CVE-2021-26855](#source-nvd-cve-2021-26855)、[Apache 公告](#source-apache-cve-2021-40438)、[NVD CVE-2021-40438](#source-nvd-cve-2021-40438)）
+案例只用于根因和修复分析。课程不提供面向公共目标的扫描、持久化、凭据获取或破坏步骤。（来源：[NVD CVE-2021-26855](#source-nvd-cve-2021-26855)、[Microsoft 说明](#source-microsoft-cve-2021-26855)、[Apache 公告](#source-apache-cve-2021-40438)、[NVD CVE-2021-40438](#source-nvd-cve-2021-40438)）
 
 ## 常见错误与边界
 

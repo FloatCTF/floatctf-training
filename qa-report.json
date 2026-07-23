@@ -1,16 +1,16 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-07-21",
+  "reviewedAt": "2026-07-23",
   "reviewer": "agent",
-  "mode": "add-topic",
-  "summary": "Web 安全五专题已接入；已删除 CVE 复现实验与 AI 实战专题。",
+  "mode": "validate-site",
+  "summary": "完成 SSRF、SQL 注入、SQL 注入进阶、XSS、RCE 五个专题页的结构、构建、桌面、手机、深色、打印、无脚本、减少动态、锚点、焦点和控制台检查。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
       "evidenceFile": "src/data/catalog.json",
-      "note": "Web 漏洞用 mechanism/lab，CVE 用 lab，AI 用 tool，与学习目标一致。"
+      "note": "五个专题均以 mechanism 为主要模式，并按主题组合 lab、case-study、code 或 comparison。"
     },
     {
       "id": "sequence-objectives",
@@ -31,7 +31,7 @@
       "level": "must",
       "status": "pass",
       "evidenceFile": "src/content/docs/lessons/xss.mdx",
-      "note": "SSRF、SQLi、XSS、RCE、MCP、Skills、CVE 等术语在首次出现时给出定义。"
+      "note": "SSRF、SQL 注入、XSS、RCE、预编译和参数化查询等术语在首次出现时给出定义。"
     },
     {
       "id": "source-traceability",
@@ -45,7 +45,7 @@
       "level": "must",
       "status": "pass",
       "evidenceFile": "examples/ssrf-local-lab.mjs",
-      "note": "ssrf/sql/xss/command 本地演示已实际运行并写入预期结果。"
+      "note": "四个本地演示均已实际运行：SQL 使用内存 SQLite 执行拼接与绑定查询；SSRF 仅覆盖 IPv4 环回地址；XSS 不执行载荷；命令注入示例不启动外部进程。"
     },
     {
       "id": "security-scope",
@@ -59,7 +59,7 @@
       "level": "must",
       "status": "pass",
       "evidenceFile": "src/content/docs/lessons/rce.mdx",
-      "note": "SSRF 使用 AttackDefenseFlow；CVE/AI 使用 ProcessTimeline；其余以 CodeCompare 与面试折叠承担交互。"
+      "note": "SSRF 使用 AttackDefenseFlow；其余页面用 CodeCompare、ScrollReveal 和面试折叠解释数据流、代码差异与复习问题。"
     },
     {
       "id": "motion-purpose",
@@ -71,46 +71,51 @@
     {
       "id": "fallback-completeness",
       "level": "must",
-      "status": "not-run",
-      "note": "本轮未重跑浏览器矩阵；结构门禁与构建已通过。"
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "五页在减少动态、打印和无脚本状态下保留标题、正文、表格、代码和面试答案。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
-      "status": "not-run",
-      "note": "本轮未重跑键盘验证；沿用既有组件的可聚焦控件。"
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "本课目录和面试题使用原生 summary；表格滚动区设置 tabIndex=0 和中文 aria-label；焦点控件显示实线焦点环。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
-      "status": "not-run",
-      "note": "本轮未重跑移动端截图验证。"
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "390×844 下五页的 document scrollWidth 与内容宽度均为 375px；代码块和表格分别在自身容器内滚动。"
     },
     {
       "id": "print-completeness",
       "level": "must",
-      "status": "not-run",
-      "note": "本轮未重跑打印验证。"
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "打印媒介隐藏顶栏并使用浅色背景；五页面试答案完整显示，表格取消最小宽度并避免跨页断裂。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/rce.mdx",
-      "note": "专题均使用 splash、LessonHero、学习目标、前置知识、SourceList 与 KeyTakeaway。"
+      "evidenceFile": "qa/browser-report.json",
+      "note": "五页均使用无侧栏壳层、单一顶栏、唯一 H1、课程路径、本课目录、LessonHero、学习目标和前置知识。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
-      "status": "not-run",
-      "note": "本轮未重跑视觉矩阵；复用站点既有主题与组件。"
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "五页在桌面与手机下保持一致的刊头、章节留白、表格、代码面板、语义色和深色主题；10 个表格按内容密度使用加权列宽。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "pass",
       "evidenceFile": "deploy/nginx.conf.example",
-      "note": "npm run verify 通过，静态构建生成 7 个专题页与分类/首页。"
+      "note": "npm run verify 通过，静态构建生成 17 个页面，其中包含 6 个专题页。"
     },
     {
       "id": "opening-question",
@@ -131,7 +136,7 @@
       "level": "should",
       "status": "pass",
       "evidenceFile": "examples/sql-injection-demo.mjs",
-      "note": "可运行示例与 CVE 证据来自可核验公开记录。"
+      "note": "可运行示例已和正文预期输出逐项核对；CVE 事实同时引用项目、厂商或 NVD 等可核验记录。"
     },
     {
       "id": "review-card",

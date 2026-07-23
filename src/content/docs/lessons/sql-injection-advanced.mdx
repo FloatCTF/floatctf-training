@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: sql-injection-advanced
 categoryId: web-security
-sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2025-1094", "appsec-interview-gist"]
+sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2025-1094", "postgresql-cve-2025-1094", "tib3rius-interview"]
 motionLevel: subtle
 safetyScope: authorized-lab
 researchStatus: complete
@@ -28,10 +28,10 @@ export const vulnerableSnippet = "// MyBatis 风格风险：${} 直接拼接\n"
   + "// sort=id; DROP TABLE orders -- 可改写结构";
 
 export const secureSnippet = `// 白名单映射标识符，值继续绑定
-const SORTS = { created: "created_at", amount: "amount" };
+const SORTS = Object.freeze({ created: "created_at", amount: "amount" });
+if (!Object.hasOwn(SORTS, sortKey)) throw new Error("unsupported sort");
 const col = SORTS[sortKey];
-if (!col) throw new Error("unsupported sort");
-// col 来自白名单，limit 走参数绑定
+// SQLite/常见 MySQL 驱动用 ?；其它驱动按自身占位符语法调整
 db.query("SELECT * FROM orders ORDER BY " + col + " ASC LIMIT ?", [limit]);`;
 
 <LessonHero
@@ -54,25 +54,25 @@ db.query("SELECT * FROM orders ORDER BY " + col + " ASC LIMIT ?", [limit]);`;
 
 基础课已经说明：参数化让输入成为值。进阶问题是：
 
-1. 驱动是否真的做了服务端预编译？
+1. 代码是否调用了真正的参数绑定 API？
 2. 业务是否在标识符位置拼接？
 3. 是否存在“先入库、后拼接”的二次路径？
 
-只要有一处答案是否定的，注入面就还在。
+任一条件未满足，都会留下对应的注入风险。
 
 ## 预编译实际固定了什么
 
-以“真预编译”为模型：
+以参数绑定 API 为模型：
 
-1. 发送语句模板，例如 `WHERE name = ?`。
-2. 数据库完成词法与语法分析，生成固定 AST。
-3. 后续只绑定参数值到叶子节点。
-4. 参数中的引号、注释和关键字不再具备语法角色。
+1. 应用先定义语句模板，例如 `WHERE name = ?`。
+2. 驱动通过数据库 API 传递模板与参数，数据库将参数按值处理。
+3. 参数中的引号、注释和关键字不会进入模板的语法位置。
+4. 数据库仍可按统计信息和实现选择或调整执行计划。
 
 OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片段都能占位。（来源：[OWASP](#source-owasp-sqli-prevention)）
 
-<Callout variant="warning" title="模拟预编译的坑">
-部分驱动在某些模式下只在客户端转义后发送完整 SQL。配置审查要确认“参数化 API”最终是否走到结构绑定，而不是字符串拼装。
+<Callout variant="warning" title="确认驱动的绑定语义">
+部分驱动支持客户端模拟模式。审查时确认参数通过驱动绑定接口传递，并检查驱动文档、配置和最终调用路径，避免业务代码自行拼接 SQL。
 </Callout>
 
 ## 参数化盲区
@@ -80,10 +80,11 @@ OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片
 <DataTable
   caption="常见参数化盲区"
   headers={["位置", "为什么危险", "正确做法"]}
+  columnRatios={[1.1, 1.35, 1.15]}
   rows={[
     ["ORDER BY / GROUP BY", "列名是标识符，不是值", "服务端枚举映射"],
     ["表名/列名动态选择", "占位符不能绑定标识符", "白名单或固定查询"],
-    ["LIKE 模式", "通配符可被利用放大结果", "转义通配符并限制范围"],
+    ["LIKE 模式语义", "参数中的 % 与 _ 仍是通配符，可能扩大匹配范围；这不属于 SQL 语法注入", "按业务意图转义通配符并指定 ESCAPE"],
     ["IN 列表长度", "动态个数需安全生成占位", "按数量生成 ? 并绑定数组"],
     ["二次拼接", "存储时安全、使用时拼接", "每次构造 SQL 都绑定"],
   ]}
@@ -110,6 +111,7 @@ OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片
 <DataTable
   caption="生产防御职责划分"
   headers={["层级", "责任人", "动作"]}
+  columnRatios={[0.75, 0.85, 1.8]}
   rows={[
     ["代码", "开发", "参数化、标识符白名单、禁止二次拼接"],
     ["框架", "架构", "默认安全 API、禁用危险包装、统一数据访问层"],
@@ -121,16 +123,16 @@ OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片
 
 ## 真实案例
 
-CVE-2023-34362 展示注入在业务系统中的大规模影响；CVE-2025-1094 提醒边界可能落在客户端工具链，不只在业务 Controller。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2025-1094](#source-cve-2025-1094)）
+CVE-2023-34362 作为基础案例的进阶复盘，重点检查产品中的查询构造与补丁覆盖面。CVE-2025-1094 影响 PostgreSQL 17.3、16.7、15.11、14.16、13.19 之前的版本：特定 libpq quoting API 的结果被用于构造 `psql` 输入时可能形成 SQL 注入；命令行工具路径还涉及 BIG5 与 EUC_TW 或 MULE_INTERNAL 的编码组合。该案例属于特定客户端工具链条件，不代表参数绑定失效。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2025-1094](#source-cve-2025-1094)、[PostgreSQL 公告](#source-postgresql-cve-2025-1094)）
 
 <ScrollReveal client:visible motionLevel="subtle" label="审计复盘">
-  <p>进阶修复的验收标准不是“登录框打不了”，而是：所有动态 SQL 构造点都有绑定或白名单，并且二次使用路径被测试覆盖。</p>
+  <p>进阶修复需要覆盖全部动态 SQL 构造点：值通过绑定 API 传递，标识符来自服务端枚举，二次使用路径进入回归测试。</p>
 </ScrollReveal>
 
 ## 常见错误与边界
 
 - **只修了一个 DAO，报表模块仍在拼接。**
-- **把 ORM 当银弹，忽略 raw 查询。**
+- **默认信任 ORM，忽略 raw 查询。**
 - **用黑名单过滤 `select/union`，在编码与注释面前失效。**
 - **忽略最小权限，注入后果被权限放大。**
 
@@ -139,7 +141,7 @@ CVE-2023-34362 展示注入在业务系统中的大规模影响；CVE-2025-1094 
 <InterviewAccordion client:visible questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
-预编译固定的是语句结构，不是“所有动态 SQL 都自动安全”。标识符、模拟预编译、ORM 原始接口和二次拼接是审计时的优先检查面。
+参数绑定 API 将参数作为值传递。标识符、客户端模拟模式、ORM 原始接口和二次拼接仍需单独审计。
 </KeyTakeaway>
 
 <SourceList sources={manifest.sources} />

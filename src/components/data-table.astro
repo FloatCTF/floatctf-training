@@ -1,22 +1,39 @@
 ---
-interface Props { caption: string; headers: string[]; rows: Array<Array<string>> }
-const { caption, headers, rows } = Astro.props;
+interface Props {
+  caption: string;
+  headers: string[];
+  rows: Array<Array<string>>;
+  columnRatios?: number[];
+}
+
+const { caption, headers, rows, columnRatios } = Astro.props;
 const colCount = headers.length;
+const hasValidRatios = columnRatios?.length === colCount && columnRatios.every((ratio) => Number.isFinite(ratio) && ratio > 0);
+const columnTemplate = hasValidRatios
+  ? columnRatios.map((ratio) => `minmax(0, ${ratio}fr)`).join(' ')
+  : `repeat(${colCount}, minmax(0, 1fr))`;
+const minWidthRem = Math.max(36, colCount * 11);
 ---
-<figure class="data-table not-content" style={`--data-cols: ${colCount}`} aria-label={caption}>
+<figure
+  class="data-table not-content"
+  style={`--data-columns: ${columnTemplate}; --data-table-min-width: ${minWidthRem}rem`}
+  aria-label={caption}
+>
   <figcaption class="data-table-caption">{caption}</figcaption>
-  <div class="data-table-grid" role="table">
-    <div class="data-table-row data-table-head" role="row">
-      {headers.map((header) => (
-        <div class="data-table-cell" role="columnheader">{header}</div>
-      ))}
-    </div>
-    {rows.map((row) => (
-      <div class="data-table-row" role="row">
-        {row.map((cell) => (
-          <div class="data-table-cell" role="cell">{cell}</div>
+  <div class="data-table-scroll" tabindex="0" aria-label={`${caption}，可横向滚动`}>
+    <div class="data-table-grid" role="table" aria-colcount={colCount} aria-rowcount={rows.length + 1}>
+      <div class="data-table-row data-table-head" role="row">
+        {headers.map((header) => (
+          <div class="data-table-cell" role="columnheader">{header}</div>
         ))}
       </div>
-    ))}
+      {rows.map((row) => (
+        <div class="data-table-row" role="row">
+          {row.map((cell) => (
+            <div class="data-table-cell" role="cell">{cell}</div>
+          ))}
+        </div>
+      ))}
+    </div>
   </div>
 </figure>

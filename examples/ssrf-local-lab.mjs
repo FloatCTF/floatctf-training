@@ -1,21 +1,20 @@
 import { isIP } from 'node:net';
 import { createServer } from 'node:http';
 
-function isPrivateIpv4(address) {
-  const parts = address.split('.').map(Number);
-  return (
-    parts[0] === 10 ||
-    parts[0] === 127 ||
-    (parts[0] === 169 && parts[1] === 254) ||
-    (parts[0] === 172 && parts[1] >= 16 && parts[1] <= 31) ||
-    (parts[0] === 192 && parts[1] === 168)
-  );
+class TargetRejectedError extends Error {}
+
+function isLoopbackIpv4Literal(address) {
+  if (isIP(address) !== 4) return false;
+  const [firstOctet] = address.split('.').map(Number);
+  return firstOctet === 127;
 }
 
 async function guardedFetch(rawUrl) {
   const target = new URL(rawUrl);
   if (!['http:', 'https:'].includes(target.protocol)) throw new Error('协议不在允许范围');
-  if (isIP(target.hostname) === 4 && isPrivateIpv4(target.hostname)) throw new Error('已阻止私有地址');
+  if (target.username || target.password) throw new Error('URL 不允许包含用户信息');
+  if (isIP(target.hostname) !== 4) throw new Error('教学校验器只接受 IPv4 字面量');
+  if (isLoopbackIpv4Literal(target.hostname)) throw new TargetRejectedError('已阻止环回 IPv4 地址');
   return fetch(target, { redirect: 'manual' });
 }
 
@@ -38,9 +37,9 @@ try {
   console.log(`脆弱流程：${await vulnerableResponse.text()}`);
   try {
     await guardedFetch(labUrl);
-    throw new Error('安全流程未阻止私有地址');
+    throw new Error('安全流程未阻止环回地址');
   } catch (error) {
-    if (error.message === '安全流程未阻止私有地址') throw error;
+    if (!(error instanceof TargetRejectedError)) throw error;
     console.log(`安全流程：${error.message}`);
   }
 } finally {

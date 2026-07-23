@@ -465,10 +465,22 @@
   line-height: 1.45;
 }
 
+.data-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+}
+
+.data-table-scroll:focus-visible {
+  outline: 0.2rem solid var(--training-focus);
+  outline-offset: 0.2rem;
+}
+
 .data-table-grid {
   display: grid;
   width: 100%;
-  grid-template-columns: repeat(var(--data-cols, 3), minmax(0, 1fr));
+  grid-template-columns: var(--data-columns, repeat(3, minmax(0, 1fr)));
 }
 
 .data-table-row {
@@ -484,7 +496,8 @@
   color: var(--training-text);
   font-size: 0.92rem;
   line-height: 1.55;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  word-break: normal;
   background: color-mix(in srgb, var(--training-page-bg) 88%, var(--training-surface-bg));
 }
 
@@ -939,7 +952,5 @@
   margin-block: 1.8rem;
   padding-inline-start: 1.2rem;
 }
-
-
 
 

@@ -26,7 +26,7 @@
       "区分反射型、存储型与 DOM 型 XSS 的数据流",
       "根据输出上下文选择正确的编码与安全 API",
       "说明 CSP、HttpOnly 与 Cookie 属性的防御位置与局限",
-      "在本地演示中验证错误编码与正确编码的差异"
+      "在本地演示中比较危险汇点、安全汇点与 URL 参数编码"
     ],
     "prerequisites": [
       "HTML 与 DOM 基础",
@@ -34,18 +34,18 @@
       "HTTP Cookie 与同源策略概念"
     ],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-07-23"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-07-23",
     "queries": [
       "XSS 面试题",
       "DOM XSS interview questions",
       "cross site scripting 面经",
       "how do you fix XSS"
     ],
-    "notes": "定义与防御对照 OWASP/CWE；两个直接相关 CVE 作为证据。"
+    "notes": "定义、上下文规则与安全汇点对照 OWASP/CWE；Jenkins 与 Hibernate Validator 案例按官方公告和 NVD 条目核对触发条件。"
   },
   "sources": [
     {
@@ -55,7 +55,7 @@
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -77,7 +77,7 @@
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/79.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新条目；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -93,7 +93,7 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2023-27898",
       "publishedAt": "2023-03-08",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-jenkins",
         "interview-q8"
@@ -105,8 +105,8 @@
       "title": "CVE-2023-1932",
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2023-1932",
-      "publishedAt": "2023-04-04",
-      "accessedAt": "2026-07-21",
+      "publishedAt": "2024-11-07",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-hibernate",
         "interview-q8"
@@ -119,10 +119,48 @@
       "publisher": "GitHub Gist contributor mccabe615",
       "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
       "publishedAt": "2022-09-02",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "interview-q1",
-        "interview-q2",
+        "interview-q2"
+      ]
+    },
+    {
+      "id": "jenkins-cve-2023-27898",
+      "kind": "advisory",
+      "title": "Security advisory 2023-03-08",
+      "publisher": "Jenkins Project",
+      "url": "https://www.jenkins.io/security/advisory/2023-03-08/",
+      "publishedAt": "2023-03-08",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-jenkins",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "nvd-cve-2023-1932",
+      "kind": "cve",
+      "title": "CVE-2023-1932 Detail",
+      "publisher": "National Vulnerability Database",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-1932",
+      "publishedAt": "2024-11-07",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-hibernate",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "tib3rius-interview",
+      "kind": "interview-report",
+      "title": "Web Application Penetration Testing Interview Questions",
+      "publisher": "Tib3rius",
+      "url": "https://tib3rius.com/interview-questions.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新的面试题集合；本课按其 XSS 类型、上下文和评审主题改写题干。",
+      "supports": [
         "interview-q3",
         "interview-q4",
         "interview-q5",
@@ -139,9 +177,10 @@
       "identifier": "CVE-2023-27898",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2023-27898"
+        "cve-2023-27898",
+        "jenkins-cve-2023-27898"
       ],
-      "summary": "Jenkins 相关 XSS 问题，展示管理界面中的脚本注入风险。"
+      "summary": "Jenkins 2.270–2.393 与 LTS 2.277.1–2.375.3 未转义插件依赖的 Jenkins 版本错误消息；能向已配置更新站点提供插件并让实例显示该消息的攻击者可触发存储型 XSS。2.394、LTS 2.375.4 与 2.387.1 已修复。"
     },
     {
       "id": "evidence-hibernate",
@@ -149,9 +188,10 @@
       "identifier": "CVE-2023-1932",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2023-1932"
+        "cve-2023-1932",
+        "nvd-cve-2023-1932"
       ],
-      "summary": "Hibernate Validator 消息处理相关 XSS，展示错误处理路径也会成为输出点。"
+      "summary": "Hibernate Validator 的 SafeHtmlValidator.isValid 可被省略标签结束小于号的输入绕过；浏览器可能继续渲染该无效 HTML，形成 HTML 注入或 XSS。"
     }
   ],
   "claims": [
@@ -172,7 +212,7 @@
     },
     {
       "id": "claim-defense",
-      "text": "上下文编码、安全模板、CSP 与 Cookie 约束共同构成分层防御。",
+      "text": "安全汇点和上下文编码负责阻止不可信数据成为代码；CSP 与 Cookie 属性提供纵深限制。",
       "sourceIds": [
         "owasp-xss-prevention"
       ]
@@ -193,7 +233,7 @@
       "id": "xss-encode-demo",
       "path": "examples/xss-encode-demo.mjs",
       "command": "node examples/xss-encode-demo.mjs",
-      "expectedResult": "打印同一输入在 HTML 上下文与 JS 字符串上下文中的不同编码结果。"
+      "expectedResult": "打印同一输入进入 innerHTML 与 textContent 的赋值形式，以及 URLSearchParams 生成的参数编码结果；示例不执行载荷。"
     }
   ],
   "interviewQuestions": [
@@ -255,11 +295,11 @@
       ],
       "bonus": "同一业务可能同时存在多条路径。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-79"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-79"
@@ -275,13 +315,13 @@
         "规则不同",
         "错配仍危险"
       ],
-      "bonus": "编码点应靠近输出，而不是只在入口过滤一次。",
+      "bonus": "编码点应靠近输出；入口过滤承担独立的数据校验职责。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-xss-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-xss-prevention"
@@ -291,7 +331,7 @@
       "id": "interview-q5",
       "question": "CSP 能替代输出编码吗？",
       "level": 3,
-      "answer": "不能。CSP 是纵深防御，用于限制脚本来源与危险特性；输出编码仍是阻止注入成为代码的主控制。",
+      "answer": "输出上下文编码与安全汇点承担主控制，阻止输入成为代码；CSP 作为纵深防御，限制脚本来源与危险特性。",
       "keyPoints": [
         "CSP 是附加层",
         "编码是主控制",
@@ -299,11 +339,11 @@
       ],
       "bonus": "宽松 CSP 或含不安全指令时保护显著下降。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-xss-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-xss-prevention"
@@ -321,11 +361,11 @@
       ],
       "bonus": "还应设置 Secure 与 SameSite 等属性。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-xss-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-xss-prevention"
@@ -333,7 +373,7 @@
     },
     {
       "id": "interview-q7",
-      "question": "代码评审看到 innerHTML = userInput，你会怎样处理？",
+      "question": "代码评审看到 `preview.innerHTML = new URLSearchParams(location.search).get('msg')`，你会怎样处理？",
       "level": 4,
       "answer": "确认数据是否不可信，要求改为 textContent 或经过消毒且默认安全的渲染路径，并补充针对该汇点的回归测试。",
       "keyPoints": [
@@ -343,12 +383,12 @@
       ],
       "bonus": "同步搜索相邻的 outerHTML、insertAdjacentHTML 与动态脚本创建。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-xss-prevention",
         "cwe-79"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-xss-prevention",
@@ -359,25 +399,29 @@
       "id": "interview-q8",
       "question": "授权测试中如何证明 XSS 影响并推动修复？",
       "level": 4,
-      "answer": "在授权环境用无害证明载荷展示脚本执行或 DOM 改写，记录源到汇点路径，推动上下文编码与 CSP 收紧，并回归相关页面。",
+      "answer": "在授权测试环境用无害载荷证明 DOM 改写，记录输入源、转换过程和危险汇点；优先替换危险汇点或实施上下文编码，再收紧 CSP 并回归相关页面。",
       "keyPoints": [
         "无害证明",
         "源汇点路径",
         "修复回归"
       ],
-      "bonus": "CVE-2023-27898 与 CVE-2023-1932 说明管理界面与错误消息路径都可能成为输出点。",
+      "bonus": "Jenkins 案例要求攻击者控制已配置更新站点返回的错误消息；Hibernate Validator 案例源于 SafeHtmlValidator 对不完整标签的校验绕过。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cve-2023-27898",
         "cve-2023-1932",
+        "jenkins-cve-2023-27898",
+        "nvd-cve-2023-1932",
         "owasp-xss-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cve-2023-27898",
         "cve-2023-1932",
+        "jenkins-cve-2023-27898",
+        "nvd-cve-2023-1932",
         "owasp-xss-prevention"
       ]
     }

@@ -21,7 +21,7 @@
       "lab-check"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "用户输入进入查询构造后如何改写语句语义，以及参数绑定如何固定结构",
+    "visualStory": "用户输入进入查询构造后如何影响解析结果，以及参数绑定如何分离语句结构与数据",
     "learningObjectives": [
       "解释 SQL 注入的根因、成立条件与主要影响",
       "沿登录或检索接口追踪输入如何进入 SQL 语句",
@@ -34,18 +34,18 @@
       "一种后端语言的数据库访问代码阅读能力"
     ],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-07-23"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-07-23",
     "queries": [
       "SQL 注入 面试题",
       "SQL injection interview questions appsec",
       "SQLi 面经",
       "渗透测试面试 SQL注入"
     ],
-    "notes": "定义与防御对照 OWASP/CWE；两个直接相关 CVE 已写入证据。"
+    "notes": "定义与防御对照 OWASP/CWE；本地示例使用 Node.js 内置 SQLite；案例结论交叉核对 CVE、厂商公告与 CISA 通报。"
   },
   "sources": [
     {
@@ -55,7 +55,7 @@
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -76,7 +76,7 @@
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/89.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新条目；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-definition",
@@ -93,7 +93,7 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2023-34362",
       "publishedAt": "2023-06-02",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-moveit",
         "interview-q8"
@@ -106,7 +106,7 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2023-48788",
       "publishedAt": "2024-03-12",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-forticlient",
         "interview-q8"
@@ -119,10 +119,74 @@
       "publisher": "GitHub Gist contributor mccabe615",
       "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
       "publishedAt": "2022-09-02",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "interview-q2"
+      ]
+    },
+    {
+      "id": "node-sqlite",
+      "kind": "official-doc",
+      "title": "SQLite",
+      "publisher": "Node.js",
+      "url": "https://nodejs.org/api/sqlite.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新页面；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-example-runtime"
+      ]
+    },
+    {
+      "id": "progress-moveit-advisory",
+      "kind": "advisory",
+      "title": "MOVEit Transfer Critical Vulnerability",
+      "publisher": "Progress Software",
+      "url": "https://community.progress.com/s/article/MOVEit-Transfer-Critical-Vulnerability-31May2023",
+      "publishedAt": "2023-05-31",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-moveit",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "nvd-cve-2023-48788",
+      "kind": "cve",
+      "title": "CVE-2023-48788 Detail",
+      "publisher": "National Vulnerability Database",
+      "url": "https://nvd.nist.gov/vuln/detail/CVE-2023-48788",
+      "publishedAt": "2024-03-12",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-forticlient",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "fortinet-cve-2023-48788",
+      "kind": "advisory",
+      "title": "FG-IR-24-007: FortiClientEMS SQL Injection",
+      "publisher": "Fortinet",
+      "url": "https://www.fortiguard.com/psirt/FG-IR-24-007",
+      "publishedAt": "2024-03-12",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-forticlient",
+        "interview-q8"
+      ]
+    },
+    {
+      "id": "tib3rius-interview",
+      "kind": "interview-report",
+      "title": "Web Application Penetration Testing Interview Questions",
+      "publisher": "Tib3rius",
+      "url": "https://tib3rius.com/interview-questions.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新的面试题集合；本课按其 SQL 注入主题与难度线索改写题干。",
       "supports": [
         "interview-q1",
-        "interview-q2",
         "interview-q3",
         "interview-q4",
         "interview-q5",
@@ -139,9 +203,10 @@
       "identifier": "CVE-2023-34362",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2023-34362"
+        "cve-2023-34362",
+        "progress-moveit-advisory"
       ],
-      "summary": "MOVEit Transfer 中的 SQL 注入漏洞，被大规模利用导致数据窃取。"
+      "summary": "MOVEit Transfer 的 SQL 注入漏洞可让未认证攻击者访问数据库并执行影响其内容的操作；CISA 记录了 Cl0p 的大规模利用与数据窃取活动。"
     },
     {
       "id": "evidence-forticlient",
@@ -149,9 +214,11 @@
       "identifier": "CVE-2023-48788",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2023-48788"
+        "cve-2023-48788",
+        "nvd-cve-2023-48788",
+        "fortinet-cve-2023-48788"
       ],
-      "summary": "FortiClient EMS 中的 SQL 注入，可导致未认证远程代码执行链路。"
+      "summary": "FortiClientEMS 7.2.0–7.2.2 与 7.0.1–7.0.10 存在 SQL 注入，未认证攻击者可通过构造数据包执行未授权代码或命令。"
     }
   ],
   "claims": [
@@ -176,6 +243,13 @@
       "sourceIds": [
         "cwe-89"
       ]
+    },
+    {
+      "id": "claim-example-runtime",
+      "text": "本地演示使用 Node.js 内置 SQLite 在内存数据库中执行脆弱查询和参数化查询。",
+      "sourceIds": [
+        "node-sqlite"
+      ]
     }
   ],
   "assessments": [
@@ -193,7 +267,7 @@
       "id": "sql-injection-demo",
       "path": "examples/sql-injection-demo.mjs",
       "command": "node examples/sql-injection-demo.mjs",
-      "expectedResult": "打印被改写的脆弱表达式，以及参数绑定后攻击输入无法认证成功。"
+      "expectedResult": "真实 SQLite 查询返回被绕过的管理员记录；同一输入经参数绑定后返回 null，合法凭据仍能查询成功。"
     }
   ],
   "interviewQuestions": [
@@ -209,12 +283,12 @@
       ],
       "bonus": "CWE-89 把它归类为特殊元素中和不足。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-89",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-89",
@@ -225,7 +299,7 @@
       "id": "interview-q2",
       "question": "你会怎么修复 SQL 注入？",
       "level": 1,
-      "answer": "优先使用参数化查询或安全 ORM API，把用户输入绑定为数据而不是拼进语句结构，并配合最小权限账户。",
+      "answer": "优先使用参数化查询或安全 ORM API，把用户输入绑定为数据并保持语句结构固定，同时配合最小权限账户。",
       "keyPoints": [
         "参数化/预编译",
         "安全 API",
@@ -255,11 +329,11 @@
       ],
       "bonus": "防御应优先固定语句结构，再谈辅助校验。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -277,11 +351,11 @@
       ],
       "bonus": "选择手法取决于应用是否把查询结果展示给用户。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-89"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-89"
@@ -291,19 +365,19 @@
       "id": "interview-q5",
       "question": "参数化查询为什么能挡住经典注入？",
       "level": 3,
-      "answer": "数据库先编译固定语句模板再绑定参数，参数只填充值节点，不能改写关键字、操作符或子句结构。",
+      "answer": "参数化 API 分别传递语句模板和参数，数据库按值处理参数，因此输入无法改写关键字、操作符或子句结构；具体执行计划可随数据库与数据变化。",
       "keyPoints": [
-        "模板先编译",
+        "模板与参数分离",
         "参数是值",
         "结构不可改写"
       ],
       "bonus": "ORDER BY 等标识符位置通常不能参数化，需要白名单。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -321,11 +395,11 @@
       ],
       "bonus": "WAF 只能作为附加层，不能替代代码层修复。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -333,7 +407,7 @@
     },
     {
       "id": "interview-q7",
-      "question": "代码评审中看到字符串拼接 SQL，你会按什么顺序审查？",
+      "question": "代码评审中看到 `WHERE name = '${name}' ORDER BY ${sort}`，你会按什么顺序审查？",
       "level": 4,
       "answer": "先追踪所有输入来源和调用点，确认是否存在参数化替代，检查动态表名与排序字段是否白名单，并评估权限与错误回显。",
       "keyPoints": [
@@ -343,12 +417,12 @@
       ],
       "bonus": "重点标出二次拼接：先安全存储、后不安全拼进新语句的路径。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention",
         "cwe-89"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention",
@@ -359,25 +433,32 @@
       "id": "interview-q8",
       "question": "发现疑似 SQL 注入后，你如何在授权范围内验证并推动修复？",
       "level": 4,
-      "answer": "在书面授权环境用最小探测确认输入是否改变查询语义，记录证据后推动参数化修复，并用回归用例覆盖原注入点与相邻查询。",
+      "answer": "确认书面授权、目标与停止条件后，在测试环境使用只读账户和最小探测验证输入是否影响查询语义；保存请求、响应与日志证据，随后推动参数化修复并为原注入点和相邻查询增加回归测试。",
       "keyPoints": [
         "授权与最小探测",
+        "只读环境与停止条件",
         "证据记录",
         "修复与回归"
       ],
-      "bonus": "CVE-2023-34362 与 CVE-2023-48788 说明注入可升级为大规模数据窃取或远程执行链路。",
+      "bonus": "MOVEit 案例体现数据窃取风险；FortiClientEMS 案例体现代码或命令执行风险。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cve-2023-34362",
         "cve-2023-48788",
+        "progress-moveit-advisory",
+        "nvd-cve-2023-48788",
+        "fortinet-cve-2023-48788",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cve-2023-34362",
         "cve-2023-48788",
+        "progress-moveit-advisory",
+        "nvd-cve-2023-48788",
+        "fortinet-cve-2023-48788",
         "owasp-sqli-prevention"
       ]
     }

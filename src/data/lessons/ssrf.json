@@ -21,18 +21,18 @@
     ],
     "prerequisites": ["HTTP 请求与 URL 基础", "服务端与客户端的角色差异"],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-07-23"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-07-23",
     "queries": [
       "SSRF 面试题",
       "SSRF 面经",
       "渗透测试面试 SSRF",
       "SSRF interview questions appsec"
     ],
-    "notes": "核心机制、两个直接相关 CVE、云元数据防护和面试问法均已追溯到列出的来源。"
+    "notes": "核心机制与分层防御对照 OWASP；Exchange 与 Apache 案例按厂商公告和 NVD 核对；本地演示明确限定为 IPv4 环回地址教学。"
   },
   "sources": [
     {
@@ -42,7 +42,7 @@
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
       "publishedAt": "2026-07-17",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
       "supports": ["claim-definition", "claim-defense", "interview-q1", "interview-q3", "interview-q5", "interview-q6", "interview-q7", "interview-q8"]
     },
@@ -53,7 +53,7 @@
       "publisher": "PortSwigger",
       "url": "https://portswigger.net/web-security/ssrf",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面未公开发布或修订日期；publishedAt 记录本次核验快照日期。",
       "supports": ["claim-mechanism", "interview-q2", "interview-q4"]
     },
@@ -64,7 +64,7 @@
       "publisher": "National Vulnerability Database",
       "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-26855",
       "publishedAt": "2021-03-02",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": ["evidence-proxylogon", "interview-q8"]
     },
     {
@@ -74,7 +74,7 @@
       "publisher": "Apache Software Foundation",
       "url": "https://httpd.apache.org/security/vulnerabilities_24.html",
       "publishedAt": "2021-09-16",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": ["evidence-apache-proxy", "interview-q8"]
     },
     {
@@ -84,7 +84,7 @@
       "publisher": "National Vulnerability Database",
       "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-40438",
       "publishedAt": "2021-09-16",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": ["evidence-apache-proxy"]
     },
     {
@@ -94,7 +94,7 @@
       "publisher": "Amazon Web Services",
       "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html",
       "publishedAt": "2026-07-18",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
       "supports": ["claim-imdsv2", "interview-q6", "interview-q7"]
     },
@@ -105,8 +105,8 @@
       "publisher": "GitHub Gist contributor mccabe615",
       "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
       "publishedAt": "2022-09-02",
-      "accessedAt": "2026-07-21",
-      "supports": ["interview-q1", "interview-q2", "interview-q3", "interview-q4", "interview-q5", "interview-q6"]
+      "accessedAt": "2026-07-23",
+      "supports": ["interview-q1"]
     },
     {
       "id": "linkedin-ssrf-interview",
@@ -115,8 +115,19 @@
       "publisher": "Sergey Gusev",
       "url": "https://www.linkedin.com/pulse/breaking-down-appsecpentester-interview-question-ssrf-sergey-gusev-612af",
       "publishedAt": "2024-05-13",
-      "accessedAt": "2026-07-21",
-      "supports": ["interview-q7", "interview-q8"]
+      "accessedAt": "2026-07-23",
+      "notes": "围绕 SSRF 面试问题的拆解文章；本课按其评审维度改写为分层追问。",
+      "supports": ["interview-q2", "interview-q3", "interview-q4", "interview-q5", "interview-q6", "interview-q7", "interview-q8"]
+    },
+    {
+      "id": "microsoft-cve-2021-26855",
+      "kind": "advisory",
+      "title": "HAFNIUM targeting Exchange Servers with 0-day exploits",
+      "publisher": "Microsoft Security",
+      "url": "https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/",
+      "publishedAt": "2021-03-02",
+      "accessedAt": "2026-07-23",
+      "supports": ["evidence-proxylogon", "interview-q8"]
     }
   ],
   "evidence": [
@@ -125,8 +136,8 @@
       "kind": "cve",
       "identifier": "CVE-2021-26855",
       "topicRelation": "direct",
-      "sourceIds": ["nvd-cve-2021-26855"],
-      "summary": "Microsoft Exchange Server 中的服务端请求伪造漏洞，NVD 将其映射到 CWE-918。"
+      "sourceIds": ["nvd-cve-2021-26855", "microsoft-cve-2021-26855"],
+      "summary": "Microsoft Exchange Server 的预认证 SSRF 漏洞允许攻击者以 Exchange 服务器身份发送任意 HTTP 请求并完成认证；微软记录了其在攻击链中的实际利用。"
     },
     {
       "id": "evidence-apache-proxy",
@@ -171,7 +182,7 @@
       "id": "ssrf-local-lab",
       "path": "examples/ssrf-local-lab.mjs",
       "command": "node examples/ssrf-local-lab.mjs",
-      "expectedResult": "脆弱流程读取本地私有响应，安全流程阻止私有地址。"
+      "expectedResult": "脆弱流程读取本地环回服务的测试值；安全流程识别并阻止 127.0.0.0/8。示例对域名与 IPv6 默认拒绝，不宣称覆盖完整生产校验。"
     }
   ],
   "interviewQuestions": [
@@ -193,8 +204,8 @@
       "answer": "应用需要存在服务端取回资源的功能，并让用户输入直接或间接控制目标，同时缺少足够严格的目标校验或出口限制。",
       "keyPoints": ["服务端取回功能", "可控目标", "校验或出口限制不足"],
       "bonus": "头像抓取、Webhook、PDF 渲染和 URL 预览都可能形成服务端取回入口。",
-      "sourceIds": ["appsec-interview-gist", "portswigger-ssrf"],
-      "questionSourceIds": ["appsec-interview-gist"],
+      "sourceIds": ["linkedin-ssrf-interview", "portswigger-ssrf"],
+      "questionSourceIds": ["linkedin-ssrf-interview"],
       "answerSourceIds": ["portswigger-ssrf"]
     },
     {
@@ -204,8 +215,8 @@
       "answer": "URL 可以使用其他地址表示、域名解析和重定向到私有地址，因此校验需要在规范化和解析后判断实际目标，并在连接阶段继续约束。",
       "keyPoints": ["地址表示", "DNS 解析", "重定向", "连接阶段复核"],
       "bonus": "允许列表方案还需要固定协议、端口，并防止解析结果在校验后发生变化。",
-      "sourceIds": ["appsec-interview-gist", "owasp-ssrf-cheat-sheet"],
-      "questionSourceIds": ["appsec-interview-gist"],
+      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet"],
+      "questionSourceIds": ["linkedin-ssrf-interview"],
       "answerSourceIds": ["owasp-ssrf-cheat-sheet"]
     },
     {
@@ -215,8 +226,8 @@
       "answer": "可见回显的 SSRF 可以从应用响应判断请求结果，盲 SSRF 通常依赖受控外部服务的 DNS 或 HTTP 交互记录确认服务端行为。",
       "keyPoints": ["响应可见性", "带外交互", "受控验证端点"],
       "bonus": "验证应使用自有域名或授权协作服务，并把请求时间和唯一标识写入实验记录。",
-      "sourceIds": ["appsec-interview-gist", "portswigger-ssrf"],
-      "questionSourceIds": ["appsec-interview-gist"],
+      "sourceIds": ["linkedin-ssrf-interview", "portswigger-ssrf"],
+      "questionSourceIds": ["linkedin-ssrf-interview"],
       "answerSourceIds": ["portswigger-ssrf"]
     },
     {
@@ -226,8 +237,8 @@
       "answer": "我会固定 HTTPS，使用主机允许列表和端口限制，解析全部地址并拒绝私有或特殊地址，关闭自动重定向，并通过受限出口代理执行请求。",
       "keyPoints": ["协议和主机允许列表", "IP 分类", "重定向", "出口代理"],
       "bonus": "连接时应绑定已经验证的地址，并限制响应大小、超时和内容类型。",
-      "sourceIds": ["appsec-interview-gist", "owasp-ssrf-cheat-sheet"],
-      "questionSourceIds": ["appsec-interview-gist"],
+      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet"],
+      "questionSourceIds": ["linkedin-ssrf-interview"],
       "answerSourceIds": ["owasp-ssrf-cheat-sheet"]
     },
     {
@@ -237,8 +248,8 @@
       "answer": "应用校验仍可能受到解析差异和新入口影响，网络出口控制能限制进程可达的地址与端口，形成独立的安全边界。",
       "keyPoints": ["独立边界", "最小可达范围", "降低绕过影响"],
       "bonus": "云环境还应启用实例元数据服务的强化配置，并限制工作负载取得不必要的身份权限。",
-      "sourceIds": ["appsec-interview-gist", "owasp-ssrf-cheat-sheet", "aws-imdsv2"],
-      "questionSourceIds": ["appsec-interview-gist"],
+      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "aws-imdsv2"],
+      "questionSourceIds": ["linkedin-ssrf-interview"],
       "answerSourceIds": ["owasp-ssrf-cheat-sheet", "aws-imdsv2"]
     },
     {
@@ -263,9 +274,9 @@
       "answer": "我会在书面授权范围内使用最小化、只读的验证请求，记录请求链和影响证据，立即限制出口与入口功能，并在修复后复测解析、重定向和权限边界。",
       "keyPoints": ["授权与最小化", "证据记录", "临时缓解", "完整复测"],
       "bonus": "CVE-2021-26855 与 CVE-2021-40438 展示了 SSRF 进入真实产品攻击面的不同方式。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "apache-cve-2021-40438"],
+      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438"],
       "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "apache-cve-2021-40438"]
+      "answerSourceIds": ["owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438"]
     }
   ]
 }

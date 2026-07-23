@@ -1,11 +1,11 @@
 ---
 title: XSS：输出上下文与浏览器侧信任边界
-description: 区分三类 XSS，按输出上下文编码，并用本地演示验证编码差异
+description: 区分三类 XSS，按输出上下文选择安全 API，并用本地演示验证汇点差异
 pageType: lesson
 template: splash
 lessonId: xss
 categoryId: web-security
-sources: ["owasp-xss-prevention", "cwe-79", "cve-2023-27898", "cve-2023-1932", "appsec-interview-gist"]
+sources: ["owasp-xss-prevention", "cwe-79", "cve-2023-27898", "jenkins-cve-2023-27898", "cve-2023-1932", "nvd-cve-2023-1932", "appsec-interview-gist", "tib3rius-interview"]
 motionLevel: explanatory
 safetyScope: authorized-lab
 researchStatus: complete
@@ -23,16 +23,13 @@ import InterviewAccordion from '../../../components/interview-accordion';
 import ScrollReveal from '../../../components/scroll-reveal';
 import manifest from '../../../data/lessons/xss.json';
 
-export const vulnerableSnippet = `// 危险：不可信数据进入 HTML 解析
-app.get('/search', (req, res) => {
-  res.send('<p>结果：' + req.query.q + '</p>');
-});`;
+export const vulnerableSnippet = `// 危险：innerHTML 会把输入交给 HTML 解析器
+const query = new URL(location.href).searchParams.get("q") ?? "";
+result.innerHTML = query;`;
 
-export const secureSnippet = `// 安全：进入 HTML 文本上下文前编码
-import { escapeHtml } from './encode.js';
-app.get('/search', (req, res) => {
-  res.send('<p>结果：' + escapeHtml(req.query.q) + '</p>');
-});`;
+export const secureSnippet = `// 安全：HTML 文本位置使用 textContent
+const query = new URL(location.href).searchParams.get("q") ?? "";
+result.textContent = query;`;
 
 <LessonHero
   series="SECURITY TRAINING"
@@ -54,17 +51,18 @@ app.get('/search', (req, res) => {
 
 SQL 注入主要改服务器侧数据访问；XSS 把不可信数据变成浏览器会执行的脚本或事件。受害者是打开页面的用户会话、页面内容和后续操作。
 
-CWE-79 将其描述为网页生成过程中对输入中和不足；OWASP 给出按上下文的预防规则。（来源：[CWE-79](#source-cwe-79)、[OWASP](#source-owasp-xss-prevention)）
+CWE-79 将其描述为网页生成期间未正确中和输入；OWASP 给出按上下文选择编码器与安全汇点的规则。（来源：[CWE-79](#source-cwe-79)、[OWASP](#source-owasp-xss-prevention)）
 
 ## 三类 XSS 的数据流
 
 <DataTable
   caption="XSS 类型对照"
   headers={["类型", "数据路径", "典型汇点"]}
+  columnRatios={[0.75, 1.35, 1.2]}
   rows={[
     ["反射型", "请求参数进入当次响应", "搜索页、错误页、跳转提示"],
     ["存储型", "写入存储后被其他请求读出", "评论、工单、富文本资料"],
-    ["DOM 型", "浏览器脚本读取源并写入汇点", "location、innerHTML、文档写"],
+    ["DOM 型", "浏览器脚本从 location、postMessage 等来源读取数据", "innerHTML、document.write 等危险汇点"],
   ]}
 />
 
@@ -74,8 +72,9 @@ CWE-79 将其描述为网页生成过程中对输入中和不足；OWASP 给出�
 
 1. **HTML 文本：** 需要 HTML 编码，防止长出新标签。
 2. **HTML 属性：** 需要属性编码，并优先使用引号包裹。
-3. **JavaScript 字符串：** 需要 JS 转义；更好的做法是避免把数据嵌进脚本。
-4. **URL：** 校验协议并做 URL 编码，拒绝 `javascript:` 等危险 scheme。
+3. **JavaScript：** 只把数据放入加引号的数据值位置，并使用成熟的 JavaScript 编码器；优先把数据放进独立 JSON 响应或 DOM 属性。
+4. **URL：** 先限制协议，再对参数使用 `URLSearchParams` 或 `encodeURIComponent`；写入 `href`、`src` 时仍需安全属性 API。
+5. **CSS：** 避免动态拼接样式文本；确有业务需要时使用受限属性和值，并采用对应编码规则。
 
 <Callout variant="warning" title="入口过滤不等于输出安全">
 数据可能在服务端、消息队列、模板和前端路由间多次流转。编码应发生在进入对应上下文的输出边界。
@@ -87,14 +86,14 @@ CWE-79 将其描述为网页生成过程中对输入中和不足；OWASP 给出�
 node examples/xss-encode-demo.mjs
 ```
 
-预期会看到同一输入在 HTML 上下文被实体化，而 JS 字符串上下文需要另一套转义。培训页本身不执行示例 payload。
+预期会看到同一输入分别进入 `innerHTML`、`textContent` 和 URL 参数。脚本只打印数据流，不创建 DOM，也不执行 payload。示例强调安全汇点与 URL 参数编码的职责边界。
 
 <CodeCompare
   language="javascript"
   vulnerable={vulnerableSnippet}
   secure={secureSnippet}
-  vulnerableTitle="脆弱：响应直接拼接"
-  secureTitle="安全：HTML 文本上下文编码"
+  vulnerableTitle="脆弱：写入 innerHTML"
+  secureTitle="安全：写入 textContent"
 />
 
 ## 分层防御
@@ -102,6 +101,7 @@ node examples/xss-encode-demo.mjs
 <DataTable
   caption="XSS 控制点"
   headers={["控制层", "关键动作", "局限"]}
+  columnRatios={[1.15, 1.35, 1.1]}
   rows={[
     ["输出编码/安全模板", "按上下文编码或使用默认转义模板", "需覆盖全部输出点"],
     ["前端汇点治理", "避免 innerHTML 等危险 API", "第三方脚本仍可能引入汇点"],
@@ -113,7 +113,7 @@ node examples/xss-encode-demo.mjs
 
 ## 真实案例
 
-CVE-2023-27898 与 CVE-2023-1932 说明管理界面和校验/错误消息路径都可能成为 XSS 输出点。（来源：[CVE-2023-27898](#source-cve-2023-27898)、[CVE-2023-1932](#source-cve-2023-1932)）
+CVE-2023-27898 影响 Jenkins 2.270–2.393 与 LTS 2.277.1–2.375.3：插件管理器未转义插件依赖的 Jenkins 版本错误消息；攻击者还需要向已配置更新站点提供插件并让实例显示该消息。修复版本为 2.394、LTS 2.375.4 与 2.387.1。CVE-2023-1932 是 Hibernate Validator `SafeHtmlValidator.isValid` 的校验绕过，浏览器可能把无效 HTML 解释为 HTML 注入或 XSS。（来源：[CVE-2023-27898](#source-cve-2023-27898)、[Jenkins 公告](#source-jenkins-cve-2023-27898)、[CVE-2023-1932](#source-cve-2023-1932)、[NVD](#source-nvd-cve-2023-1932)）
 
 <ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
   <p>修复验收应覆盖：原输出点、同源模板片段、前端路由回写，以及错误页与邮件/富文本渲染链路。</p>
@@ -131,7 +131,7 @@ CVE-2023-27898 与 CVE-2023-1932 说明管理界面和校验/错误消息路径�
 <InterviewAccordion client:visible questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
-XSS 的关键判断是：不可信数据最终会在哪个浏览器上下文被解释。按上下文编码，管住危险汇点，再用 CSP 与 Cookie 属性做纵深防御。
+XSS 的关键判断是浏览器将在哪个上下文解释不可信数据。优先使用安全汇点和默认转义模板；需要编码时匹配具体上下文；CSP 与 Cookie 属性承担纵深防御。
 </KeyTakeaway>
 
 <SourceList sources={manifest.sources} />

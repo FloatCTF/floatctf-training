@@ -45,6 +45,8 @@
   .timeline-controls label { grid-column: 1 / -1; }
   .timeline-controls { grid-template-columns: 1fr 1fr; }
   .code-compare { grid-template-columns: 1fr; }
+  .data-table-grid { min-width: var(--data-table-min-width, 36rem); }
+  .data-table-cell { padding: 0.78rem 0.85rem; }
   .learning-map-footer { margin-inline: var(--training-space-3); }
   .directory-topic-meta { justify-content: space-between; }
   .navigation-eyebrow { letter-spacing: 0.18em; }

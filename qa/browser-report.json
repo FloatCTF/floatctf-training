@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-07-21",
+  "testedAt": "2026-07-23",
   "target": "http://127.0.0.1:4321/",
   "browser": "Codex in-app Chromium",
   "pages": [
@@ -13,30 +13,109 @@
     "/categories/cs-foundations/",
     "/categories/engineering-tools/",
     "/categories/ctf-practice/",
-    "/categories/custom/"
+    "/categories/custom/",
+    "/lessons/ssrf/",
+    "/lessons/sql-injection/",
+    "/lessons/sql-injection-advanced/",
+    "/lessons/xss/",
+    "/lessons/rce/"
   ],
   "checks": [
-    { "id": "desktop-light", "status": "pass", "evidence": "1440×1000 下显示双栏课程目录，8 个分类默认收起，专题行数量为 0，页面无横向溢出。", "screenshot": "qa/screenshots/home-desktop-light.png" },
-    { "id": "desktop-dark", "status": "pass", "evidence": "深色主题切换成功，8 个空分类的标题、简介和焦点颜色可辨。", "screenshot": "qa/screenshots/home-desktop-dark.png" },
-    { "id": "lesson-editorial-desktop-light", "status": "not-applicable", "reason": "当前交付没有 completed 专题页。" },
-    { "id": "mobile-light", "status": "pass", "evidence": "390×844 下目录回落为单栏，页面宽度 375px，scrollWidth 375px。", "screenshot": "qa/screenshots/home-mobile-light.png" },
-    { "id": "lesson-mobile", "status": "not-applicable", "reason": "当前交付没有 completed 专题页。" },
-    { "id": "category-page", "status": "pass", "evidence": "Web 安全分类页无侧栏、无自引用入口，显示“暂无专题”空状态。" },
-    { "id": "directory-semantics", "status": "pass", "evidence": "首页包含 8 个原生 details、8 个空状态、0 个专题行和 0 个课程链接。" },
-    { "id": "print", "status": "pass", "evidence": "打印媒介下站点顶栏隐藏、目录内容展开、页面使用白色背景。", "screenshot": "qa/screenshots/home-print.png" },
-    { "id": "reduced-motion", "status": "pass", "evidence": "prefers-reduced-motion: reduce 生效，主内容不存在 opacity 为 0 的元素。" },
-    { "id": "no-javascript", "status": "pass", "evidence": "禁用脚本后标题、8 个原生分类目录和 0 专题统计完整呈现。", "screenshot": "qa/screenshots/home-no-javascript.png" },
-    { "id": "internal-links", "status": "pass", "evidence": "首页、分类总览和 8 个分类路由均返回 HTTP 200。" },
-    { "id": "lesson-keyboard", "status": "not-applicable", "reason": "当前交付没有专题页交互。" },
-    { "id": "deployment-csp-pagefind", "status": "pass", "evidence": "生产构建生成 Pagefind 索引；搜索 Web 返回 4 条结果；nginx CSP 与 MIME 通过结构门禁。" },
-    { "id": "console", "status": "pass", "evidence": "页面未产生 error；日志仅包含 Codex 浏览器宿主的 Electron CSP 提示。" },
-    { "id": "performance", "status": "pass", "evidence": "桌面与手机测试窗口均无页面级横向溢出，专题行数量为 0。" }
+    {
+      "id": "desktop-light",
+      "status": "pass",
+      "evidence": "1440×900 下 5 个 Web 安全专题页的刊头、目标区、正文和 10 个表格均保持完整；页面宽度为 1425px，无页面级横向溢出。",
+      "screenshot": "qa/screenshots/home-desktop-light.png"
+    },
+    {
+      "id": "desktop-dark",
+      "status": "pass",
+      "evidence": "深色主题下 data-theme=dark、color-scheme=dark，正文、表头和代码区颜色变量生效；10 个表格保持组件内 overflow-x:auto，页面无横向溢出。",
+      "screenshot": "qa/screenshots/rce-desktop-dark.png"
+    },
+    {
+      "id": "lesson-editorial-desktop-light",
+      "status": "pass",
+      "evidence": "SSRF、SQL 注入、SQL 注入进阶、XSS、RCE 在 1440×900 下均保留单一顶栏、唯一 H1、完整刊头和一致的章节留白；10 个正文表格的每行均保持 3 个单元格，未出现遮挡、断裂或错位。",
+      "screenshot": "qa/screenshots/desktop-body-contact.png"
+    },
+    {
+      "id": "mobile-light",
+      "status": "pass",
+      "evidence": "390×844 下首页和专题页回落为单栏，浏览器内容宽度为 375px。",
+      "screenshot": "qa/screenshots/home-mobile-light.png"
+    },
+    {
+      "id": "lesson-mobile",
+      "status": "pass",
+      "evidence": "5 个专题页在 390×844 下的标题、摘要和学习目标均位于 375px 内容宽度内；表格使用 340px 可聚焦滚动区承载 576px 内容网格，长文本保持自然换行，页面宽度稳定为 375px。",
+      "screenshot": "qa/screenshots/mobile-body-contact.png"
+    },
+    {
+      "id": "category-page",
+      "status": "pass",
+      "evidence": "Web 安全分类页无侧栏和自引用入口，显示 5 个已完成专题。"
+    },
+    {
+      "id": "directory-semantics",
+      "status": "pass",
+      "evidence": "首页显示 8 个真实分类链接、1 个分类弹层和“8 分类、6 专题、6 可进入”统计；弹层关闭时不占布局空间。"
+    },
+    {
+      "id": "print",
+      "status": "pass",
+      "evidence": "5 个专题页在打印媒介下隐藏站点顶栏，使用浅色背景；面试 details、summary 和答案均显示；表格取消最小宽度、完整铺满纸面，并通过 break-inside: avoid 避免跨页断裂。",
+      "screenshot": "qa/screenshots/rce-print.png"
+    },
+    {
+      "id": "reduced-motion",
+      "status": "pass",
+      "evidence": "5 个专题页在 prefers-reduced-motion: reduce 下均命中减少动态媒介；ScrollReveal 的 opacity 为 1、transform 为 none。"
+    },
+    {
+      "id": "no-javascript",
+      "status": "pass",
+      "evidence": "禁用脚本后，5 个专题页均保留唯一 H1、完整正文和 8 组原生面试 details；390px 视口下页面宽度仍为 375px。",
+      "screenshot": "qa/screenshots/ssrf-mobile-no-javascript.png"
+    },
+    {
+      "id": "internal-links",
+      "status": "pass",
+      "evidence": "5 个专题路由与 Web 安全分类路由均返回 HTTP 200；每页 20 至 23 个页内锚点全部存在，未发现重复 ID。"
+    },
+    {
+      "id": "lesson-keyboard",
+      "status": "pass",
+      "evidence": "本课目录和面试题均使用原生 summary，tabIndex 为 0；焦点实测进入 summary，显示 3.2px 实线焦点环。"
+    },
+    {
+      "id": "deployment-csp-pagefind",
+      "status": "pass",
+      "evidence": "生产构建生成 Pagefind 索引；nginx CSP、MIME 和缓存配置通过结构门禁。"
+    },
+    {
+      "id": "console",
+      "status": "pass",
+      "evidence": "5 个专题页逐页加载后未记录来自站点脚本或资源的 error、warn、warning；浏览器外壳记录了 Electron 开发环境 CSP 警告，与静态站点资源无关。"
+    },
+    {
+      "id": "performance",
+      "status": "pass",
+      "evidence": "5 个专题页在 1440px 和 390px 视口下均无页面级横向溢出；桌面 document scrollWidth 为 1425px，手机为 375px，表格横向滚动被限制在组件内部。"
+    }
   ],
   "screenshots": [
     "qa/screenshots/home-desktop-light.png",
     "qa/screenshots/home-desktop-dark.png",
     "qa/screenshots/home-mobile-light.png",
     "qa/screenshots/home-print.png",
-    "qa/screenshots/home-no-javascript.png"
+    "qa/screenshots/home-no-javascript.png",
+    "qa/screenshots/desktop-contact.png",
+    "qa/screenshots/desktop-body-contact.png",
+    "qa/screenshots/mobile-contact.png",
+    "qa/screenshots/mobile-body-contact.png",
+    "qa/screenshots/rce-desktop-dark.png",
+    "qa/screenshots/rce-print.png",
+    "qa/screenshots/ssrf-mobile-no-javascript.png"
   ]
 }

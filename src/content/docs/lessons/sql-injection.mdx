@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: sql-injection
 categoryId: web-security
-sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2023-48788", "appsec-interview-gist"]
+sources: ["owasp-sqli-prevention", "cwe-89", "node-sqlite", "cve-2023-34362", "progress-moveit-advisory", "cve-2023-48788", "nvd-cve-2023-48788", "fortinet-cve-2023-48788", "appsec-interview-gist", "tib3rius-interview"]
 motionLevel: explanatory
 safetyScope: authorized-lab
 researchStatus: complete
@@ -29,8 +29,10 @@ const sql = "SELECT * FROM users WHERE username='" + username +
 db.query(sql);`;
 
 export const secureSnippet = `// 正确：语句结构固定，输入只作为绑定值
+import { DatabaseSync } from "node:sqlite";
+const db = new DatabaseSync(":memory:");
 const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-db.query(sql, [username, password]);`;
+db.prepare(sql).get(username, password);`;
 
 <LessonHero
   series="SECURITY TRAINING"
@@ -56,17 +58,17 @@ db.query(sql, [username, password]);`;
 SELECT * FROM users WHERE username='...' AND password='...'
 ```
 
-若用户名是 `admin' OR '1'='1' --`，引号会提前结束字符串字面量，后续片段被数据库当作 SQL 语法解析。查询不再只是“匹配这一对凭据”，而是变成攻击者重写后的谓词。
+以本页 SQLite 实验为例，用户名 `admin' --` 会提前结束字符串字面量，并用 `--` 注释输入末尾的密码条件。注释和字符串语法随数据库方言变化，验证前必须确认目标方言。
 
 CWE-89 将这类问题描述为未正确中和 SQL 命令中的特殊元素；OWASP 强调应把不可信数据与语句结构分离。（来源：[CWE-89](#source-cwe-89)、[OWASP](#source-owasp-sqli-prevention)）
 
 ## 机制：从字符串到执行计划
 
-1. **输入进入查询构造。** 搜索、排序、筛选、登录都可能拼接 SQL。
-2. **词法与语法分析。** 数据库把文本切成 token，并生成抽象语法树（AST）。
-3. **语义被固定。** 一旦 AST 形成，优化与执行都按这棵树进行。
-4. **注入改写 AST。** 闭合引号、追加 `OR`、注释后续条件，都能改变树结构。
-5. **影响取决于权限。** 数据库账号能读什么、写什么、调用什么过程，决定上限。
+1. **输入进入查询构造。** 登录、搜索和筛选中的值可能被拼进 SQL；排序字段和表名属于标识符，需要单独设计。
+2. **解析完整查询文本。** 数据库对应用提交的整段 SQL 做词法和语法分析。
+3. **输入影响解析结果。** 提前闭合引号、增加操作符或注释后续文本，会形成应用未预期的语法结构。
+4. **优化并执行。** 数据库按解析后的语义生成执行方案。
+5. **权限决定影响。** 数据库账号可读写的对象和可调用功能决定影响范围。
 
 成立条件可以写成：**应用用字符串构造 SQL + 输入影响该字符串 + 缺少结构绑定或等价安全 API**。
 
@@ -79,6 +81,7 @@ CWE-89 将这类问题描述为未正确中和 SQL 命令中的特殊元素；OW
 <DataTable
   caption="SQL 注入类型与观察信号"
   headers={["类型", "关键条件", "观察信号"]}
+  columnRatios={[0.8, 1.25, 1.25]}
   rows={[
     ["联合查询", "原查询结果可被 UNION 对齐并回显", "页面出现额外列数据或报错提示列数"],
     ["报错注入", "错误信息回显给客户端", "数据库错误文本中出现探测结果"],
@@ -92,7 +95,7 @@ CWE-89 将这类问题描述为未正确中和 SQL 命令中的特殊元素；OW
 
 ## 本地演示：拼接 vs 绑定
 
-运行环境：Node.js 22.12 或更高版本。
+运行环境：Node.js 22.13 或更高版本。该版本可以直接使用内置的 `node:sqlite`。
 
 ```bash
 node examples/sql-injection-demo.mjs
@@ -101,12 +104,12 @@ node examples/sql-injection-demo.mjs
 预期输出包含：
 
 ```text
-脆弱表达： username === 'admin' OR '1'='1' && password === 'x'
-安全绑定： ... "authenticated":false
-合法登录： ... "authenticated":true
+脆弱结果： {"username":"admin","role":"admin"}
+参数化结果： null
+合法结果： {"username":"alice","role":"user"}
 ```
 
-演示用内存比较模拟“语义被改写”与“数据被绑定”的差别。生产代码应使用数据库驱动的参数化接口。
+脚本在当前进程中创建内存 SQLite 数据库。脆弱查询真实执行被改写的 SQL；参数化查询通过 `prepare().get()` 绑定同一输入，并返回空结果。数据库不会连接网络或写入磁盘。
 
 <CodeCompare
   language="javascript"
@@ -121,6 +124,7 @@ node examples/sql-injection-demo.mjs
 <DataTable
   caption="SQL 注入控制点"
   headers={["控制层", "关键动作", "修复验证"]}
+  columnRatios={[0.8, 1.5, 1.2]}
   rows={[
     ["代码", "参数化查询 / 安全 ORM；禁止拼字符串", "用原注入样本确认语义不再改变"],
     ["标识符", "表名、列名、ORDER BY 使用白名单", "拒绝未登记字段名"],
@@ -141,13 +145,14 @@ OWASP 把预编译语句、安全存储过程与允许列表输入验证作为�
 <DataTable
   caption="与 SQL 注入直接相关的公开漏洞"
   headers={["证据", "事实", "教学价值"]}
+  columnRatios={[0.9, 1.4, 1.15]}
   rows={[
-    ["CVE-2023-34362", "MOVEit Transfer 的 SQL 注入被大规模利用。", "展示注入可升级为广泛数据窃取。"],
-    ["CVE-2023-48788", "FortiClient EMS 的 SQL 注入可进入远程执行链路。", "展示注入不只影响数据机密性。"],
+    ["CVE-2023-34362", "Progress 确认 MOVEit Transfer 漏洞可导致权限提升和未授权访问；CISA 记录了利用活动。", "展示产品级 SQL 注入与数据窃取事件的关联。"],
+    ["CVE-2023-48788", "FortiClient EMS 7.0.1–7.0.10 与 7.2.0–7.2.2 的 SQL 注入可导致未授权代码或命令执行。", "展示数据库注入在特定产品权限下可能进入执行链路。"],
   ]}
 />
 
-案例用于根因与修复分析，不提供对公共系统的利用步骤。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2023-48788](#source-cve-2023-48788)）
+案例用于根因与修复分析，不提供对公共系统的利用步骤。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[Progress 公告](#source-progress-moveit-advisory)、[CVE-2023-48788](#source-cve-2023-48788)、[NVD](#source-nvd-cve-2023-48788)、[Fortinet 公告](#source-fortinet-cve-2023-48788)）
 
 ## 常见错误与边界
 
@@ -164,7 +169,7 @@ OWASP 把预编译语句、安全存储过程与允许列表输入验证作为�
 <InterviewAccordion client:visible questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
-SQL 注入的核心是“数据被当成语法”。把语句结构固定下来，让输入只能当值；再对动态标识符、权限、错误回显和二次拼接做独立控制。
+SQL 注入的核心是输入影响了 SQL 解析结果。参数化 API 把输入绑定为值；动态标识符、权限、错误回显和二次拼接需要独立控制。
 </KeyTakeaway>
 
 <SourceList sources={manifest.sources} />

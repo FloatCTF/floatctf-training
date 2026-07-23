@@ -21,7 +21,7 @@
       "exercise"
     ],
     "motionLevel": "subtle",
-    "visualStory": "预编译如何固定 AST，以及 ORDER BY、模拟预编译与 ORM 拼接如何重新打开注入面",
+    "visualStory": "参数绑定如何分离语句结构与数据，以及 ORDER BY、模拟预编译与 ORM 拼接如何重新引入注入面",
     "learningObjectives": [
       "解释真预编译与模拟预编译在安全边界上的差异",
       "识别 ORDER BY、动态标识符与二次拼接等参数化盲区",
@@ -32,17 +32,17 @@
       "sql-injection"
     ],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-07-23"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-07-23",
     "queries": [
       "SQL 注入 预编译 面试",
       "MyBatis ${} SQL injection",
       "prepared statement order by"
     ],
-    "notes": "进阶机制与防御边界对照 OWASP/CWE，并保留与注入直接相关的 CVE 证据。"
+    "notes": "进阶机制与防御边界对照 OWASP/CWE；PostgreSQL 案例按官方安全公告核对精确利用条件与修复版本。"
   },
   "sources": [
     {
@@ -52,7 +52,7 @@
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-prepare",
@@ -74,7 +74,7 @@
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/89.html",
       "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "notes": "持续更新条目；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-second-order",
@@ -90,7 +90,7 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2023-34362",
       "publishedAt": "2023-06-02",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-moveit"
       ]
@@ -102,19 +102,32 @@
       "publisher": "CVE Program",
       "url": "https://www.cve.org/CVERecord?id=CVE-2025-1094",
       "publishedAt": "2025-02-13",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-07-23",
       "supports": [
         "evidence-psql"
       ]
     },
     {
-      "id": "appsec-interview-gist",
+      "id": "postgresql-cve-2025-1094",
+      "kind": "advisory",
+      "title": "CVE-2025-1094: PostgreSQL quoting APIs miss neutralizing quoting syntax in certain encodings",
+      "publisher": "PostgreSQL Global Development Group",
+      "url": "https://www.postgresql.org/support/security/CVE-2025-1094/",
+      "publishedAt": "2025-02-13",
+      "accessedAt": "2026-07-23",
+      "supports": [
+        "evidence-psql"
+      ]
+    },
+    {
+      "id": "tib3rius-interview",
       "kind": "interview-report",
-      "title": "Application Security Interview Questions",
-      "publisher": "GitHub Gist contributor mccabe615",
-      "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
-      "publishedAt": "2022-09-02",
-      "accessedAt": "2026-07-21",
+      "title": "Web Application Penetration Testing Interview Questions",
+      "publisher": "Tib3rius",
+      "url": "https://tib3rius.com/interview-questions.html",
+      "publishedAt": "2026-07-23",
+      "accessedAt": "2026-07-23",
+      "notes": "持续更新的面试题集合；本课按其 SQL 注入主题与难度线索改写题干。",
       "supports": [
         "interview-q1",
         "interview-q2",
@@ -144,15 +157,16 @@
       "identifier": "CVE-2025-1094",
       "topicRelation": "direct",
       "sourceIds": [
-        "cve-2025-1094"
+        "cve-2025-1094",
+        "postgresql-cve-2025-1094"
       ],
-      "summary": "PostgreSQL 客户端工具链相关 SQL 注入问题，说明边界不仅在应用业务代码。"
+      "summary": "PostgreSQL 17.2、16.6、15.10、14.15、13.18 及更早受支持版本的 libpq 引号处理 API 在特定多字节编码下可能错误转义；当结果继续进入 psql 输入时可形成 SQL 注入，命令行路径还要求 BIG5 与 EUC_TW 或 MULE_INTERNAL 的编码组合。17.3、16.7、15.11、14.16、13.19 已修复。"
     }
   ],
   "claims": [
     {
       "id": "claim-prepare",
-      "text": "真预编译先固定语句结构，再绑定数据值，使参数无法改写语法树。",
+      "text": "参数化 API 分别传递语句模板与参数，使参数按数据值处理，无法改写关键字、操作符或子句结构；数据库可根据实现与数据选择执行计划。",
       "sourceIds": [
         "owasp-sqli-prevention"
       ]
@@ -187,7 +201,7 @@
       "id": "sql-injection-demo",
       "path": "examples/sql-injection-demo.mjs",
       "command": "node examples/sql-injection-demo.mjs",
-      "expectedResult": "再次确认绑定语义；进阶页用该演示对照参数化盲区讨论。"
+      "expectedResult": "真实 SQLite 查询展示拼接输入可绕过认证，参数绑定阻止同一输入改变查询结构。"
     }
   ],
   "interviewQuestions": [
@@ -197,17 +211,17 @@
       "level": 1,
       "answer": "参数化把输入作为数据绑定进已编译结构；转义只是尝试让输入在某一上下文看起来安全，仍依赖编码与上下文判断正确。",
       "keyPoints": [
-        "结构绑定 vs 字符处理",
+        "结构绑定与字符处理",
         "上下文依赖",
         "主防线不同"
       ],
       "bonus": "OWASP 将转义视为最后手段。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -215,7 +229,7 @@
     },
     {
       "id": "interview-q2",
-      "question": "为什么说“用了 ORM 就一定没有 SQL 注入”不成立？",
+      "question": "ORM 项目仍需审计哪些 SQL 注入入口？",
       "level": 1,
       "answer": "ORM 在提供安全 API 的同时也常暴露原始 SQL、字符串模板或动态排序拼接，误用这些接口仍会注入。",
       "keyPoints": [
@@ -225,12 +239,12 @@
       ],
       "bonus": "审计应搜索 raw、extra、${} 等危险模式。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention",
         "cwe-89"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention",
@@ -241,19 +255,19 @@
       "id": "interview-q3",
       "question": "真预编译和模拟预编译差在哪里？",
       "level": 2,
-      "answer": "真预编译在数据库侧固定执行计划与结构；模拟预编译常在客户端转义后仍发送完整 SQL 文本，边界更依赖驱动实现。",
+      "answer": "服务端预处理通常由数据库分别接收语句与绑定值；模拟预处理可能由客户端驱动转义参数后生成完整 SQL 文本，安全边界取决于驱动实现、配置与字符编码。",
       "keyPoints": [
-        "服务端结构固定",
+        "服务端分别接收语句和值",
         "客户端模拟",
         "驱动差异"
       ],
-      "bonus": "配置错误时“看起来像预编译”仍可能拼接。",
+      "bonus": "审计时应查阅具体驱动文档并验证配置，避免仅凭 API 名称判断。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -263,7 +277,7 @@
       "id": "interview-q4",
       "question": "ORDER BY 为什么经常成为参数化盲区？",
       "level": 2,
-      "answer": "排序字段是标识符而不是字面量值，占位符不能像值那样绑定列名，因此必须用允许列表映射到已知列。",
+      "answer": "排序字段属于标识符，值占位符无法绑定列名，因此必须用允许列表映射到已知列。",
       "keyPoints": [
         "标识符非值",
         "不能直接占位",
@@ -271,11 +285,11 @@
       ],
       "bonus": "同类问题还包括动态表名与列名。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -293,12 +307,12 @@
       ],
       "bonus": "同时检查存储后再次拼进语句的二次路径。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "cwe-89",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "cwe-89",
@@ -317,11 +331,11 @@
       ],
       "bonus": "控制链要能在代码回归后继续提供告警。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -329,21 +343,21 @@
     },
     {
       "id": "interview-q7",
-      "question": "面试时如何解释“预编译为什么能防注入”？",
+      "question": "评审 `const column = SORTS[sortKey]; sql += ' ORDER BY ' + column` 时，你会检查什么？",
       "level": 4,
-      "answer": "先说明语句在绑定前完成词法语法分析并固定 AST，再说明参数只替换叶子值，最后指出标识符位置仍需白名单。",
+      "answer": "确认 SORTS 是服务端固定映射，并使用 Object.hasOwn 拒绝原型链属性和未知键；排序方向也需独立枚举，所有筛选值继续参数化。",
       "keyPoints": [
-        "AST 固定",
-        "值绑定",
-        "标识符例外"
+        "固定映射",
+        "自有属性检查",
+        "筛选值参数化"
       ],
-      "bonus": "能画出“拼接改树 / 绑定不改树”对照的人通常更清楚。",
+      "bonus": "冻结映射对象并为 `__proto__`、未知键与异常排序方向增加单元测试。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention"
@@ -353,20 +367,20 @@
       "id": "interview-q8",
       "question": "若业务必须动态拼排序与筛选，你会怎样设计安全接口？",
       "level": 4,
-      "answer": "把允许的列名与操作符做成服务端枚举映射，值继续参数化，拒绝未知字段，并对生成 SQL 做单测覆盖恶意标识符。",
+      "answer": "把允许的列名、操作符和排序方向定义为服务端枚举映射，值继续参数化，拒绝未知字段；记录被拒绝的键并测试恶意标识符、原型属性与空值。",
       "keyPoints": [
         "枚举映射",
         "值参数化",
         "未知拒绝"
       ],
-      "bonus": "把映射表当作安全边界文档，而不是散落在各处的 if。",
+      "bonus": "把映射表集中维护为安全边界文档。",
       "sourceIds": [
-        "appsec-interview-gist",
+        "tib3rius-interview",
         "owasp-sqli-prevention",
         "cwe-89"
       ],
       "questionSourceIds": [
-        "appsec-interview-gist"
+        "tib3rius-interview"
       ],
       "answerSourceIds": [
         "owasp-sqli-prevention",

@@ -1,25 +1,39 @@
-// 教学演示：字符串拼接查询 vs 参数化查询（内存“数据库”，无网络）
-const users = [
-  { id: 1, username: 'alice', role: 'user' },
-  { id: 2, username: 'admin', role: 'admin' },
-];
+import { DatabaseSync } from 'node:sqlite';
+
+// 教学演示：真实内存 SQLite 中的字符串拼接与参数化查询。
+// 数据库只存在于当前进程，不连接网络，也不写入磁盘。
+const database = new DatabaseSync(':memory:');
+database.exec(`
+  CREATE TABLE users (
+    id INTEGER PRIMARY KEY,
+    username TEXT NOT NULL,
+    password TEXT NOT NULL,
+    role TEXT NOT NULL
+  );
+  INSERT INTO users (username, password, role) VALUES
+    ('alice', 'correct-password-for-demo', 'user'),
+    ('admin', 'admin-password-for-demo', 'admin');
+`);
 
 function vulnerableLogin(username, password) {
-  // 模拟错误写法：把输入拼进查询语义
-  const expression = `username === '${username}' && password === '${password}'`;
-  // 演示用：不执行任意代码，只展示拼接后的表达式会被如何改写
-  return { expression, note: '若后端把该表达式当 SQL/代码执行，即可改写语义' };
+  const sql = `SELECT username, role FROM users WHERE username = '${username}' AND password = '${password}'`;
+  return { sql, row: database.prepare(sql).get() ?? null };
 }
 
 function safeLogin(username, password) {
-  // 参数化语义：用户名与密码始终是数据，不能改写比较结构
-  const user = users.find((u) => u.username === username);
-  const ok = Boolean(user) && password === 'correct-password-for-demo' && user.username === username;
-  return { bound: { username, passwordLength: password.length }, authenticated: ok && user?.username === 'alice' };
+  const statement = database.prepare(
+    'SELECT username, role FROM users WHERE username = ? AND password = ?',
+  );
+  return statement.get(username, password) ?? null;
 }
 
-const attackUser = "admin' OR '1'='1";
-const attackPass = 'x';
-console.log('脆弱表达：', vulnerableLogin(attackUser, attackPass).expression);
-console.log('安全绑定：', JSON.stringify(safeLogin(attackUser, attackPass)));
-console.log('合法登录：', JSON.stringify(safeLogin('alice', 'correct-password-for-demo')));
+const attackUser = "admin' --";
+const attackPassword = 'wrong-password';
+const vulnerable = vulnerableLogin(attackUser, attackPassword);
+
+console.log('脆弱查询：', vulnerable.sql);
+console.log('脆弱结果：', JSON.stringify(vulnerable.row));
+console.log('参数化结果：', JSON.stringify(safeLogin(attackUser, attackPassword)));
+console.log('合法结果：', JSON.stringify(safeLogin('alice', 'correct-password-for-demo')));
+
+database.close();
