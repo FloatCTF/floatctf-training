@@ -91,6 +91,8 @@ a { color: var(--training-link); }
   --training-radius-lg: 0.5rem;
   --training-rule-heavy: 0.12rem solid var(--training-heading);
   --training-rule-light: 0.0625rem solid color-mix(in srgb, var(--training-border) 54%, transparent);
+  --training-scrollbar-thumb: color-mix(in srgb, var(--training-border) 52%, transparent);
+  --training-scrollbar-thumb-active: color-mix(in srgb, var(--training-border) 82%, transparent);
 }
 
 html {
@@ -99,6 +101,36 @@ html {
   background: var(--training-page-bg);
   min-width: 20rem;
   scroll-padding-top: calc(var(--sl-nav-height) + var(--training-space-5));
+  /*
+    浏览器默认滚动条是一条冷灰色块，压在纸色页面上很跳。
+    轨道留透明让页面底色透出来，滑块取边框色的淡版，深浅两套主题各自成立。
+  */
+  scrollbar-color: var(--training-scrollbar-thumb) transparent;
+  scrollbar-width: thin;
+  /*
+    始终留出滚动条的位置：打开分类弹层时会给 body 上 overflow: hidden，
+    没有这一行，滚动条撤走会让整页横向跳一下。
+  */
+  scrollbar-gutter: stable;
+}
+
+/* 旧版 WebKit 不认 scrollbar-color；Chrome 有标准属性时会忽略下面这几条 */
+html::-webkit-scrollbar {
+  height: 0.5rem;
+  width: 0.5rem;
+}
+
+html::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb {
+  background: var(--training-scrollbar-thumb);
+  border-radius: 999px;
+}
+
+html::-webkit-scrollbar-thumb:hover {
+  background: var(--training-scrollbar-thumb-active);
 }
 
 body {
