@@ -387,11 +387,50 @@ html.category-morphing::view-transition-new(root) {
   width: 2.25rem;
 }
 
+/*
+  头部沿用分类卡片的版式：罗马数字居左、标题与摘要成列，两张快照的排版一致，
+  交叉淡化才不会读成两套文字。
+
+  变形时浏览器把两张快照都缩放到当前框宽，所以卡片那张的放大倍数是面板那张的
+  640/496.4 倍。头部各项按同一个倍数放大，缩到卡片宽度时两边才落在一处。
+  下面每个数值都是分类卡片对应项乘以这个倍数，改卡片时要一起改。
+  页面宽度封顶 68rem、面板封顶 40rem，所以 1088px 以上这个比例是恒定的；
+  再窄一些会有偏差，效果退化成略有缩放的溶解，仍然可用。
+*/
 .category-panel-header {
+  --morph-scale: 1.2893;
+  align-items: start;
   border-block-end: var(--training-rule-light);
+  display: grid;
   flex-shrink: 0;
-  padding: 1.35rem 1.45rem 1.15rem;
+  gap: calc(1.05rem * var(--morph-scale));
+  grid-template-columns: calc(3.25rem * var(--morph-scale)) minmax(0, 1fr) 2rem;
+  min-height: calc(7.2rem * var(--morph-scale));
+  padding:
+    calc(1.55rem * var(--morph-scale))
+    calc(1.7rem * var(--morph-scale))
+    calc(1.45rem * var(--morph-scale));
   position: relative;
+}
+
+.category-panel-number {
+  color: var(--training-accent);
+  font-family: var(--training-font-title);
+  font-size: calc(1.65rem * var(--morph-scale));
+  font-weight: 500;
+  grid-column: 1;
+  grid-row: 1;
+  line-height: 1;
+  overflow-wrap: normal;
+  white-space: nowrap;
+  word-break: keep-all;
+}
+
+.category-panel-heading {
+  display: grid;
+  gap: calc(0.2rem * var(--morph-scale));
+  grid-column: 2;
+  grid-row: 1;
 }
 
 /*
@@ -427,11 +466,12 @@ html.category-morphing::view-transition-new(root) {
   color: var(--training-muted);
   cursor: pointer;
   display: inline-flex;
+  grid-column: 3;
+  grid-row: 1;
   height: 2rem;
   justify-content: center;
-  position: absolute;
-  inset-inline-end: 1.1rem;
-  inset-block-start: 1.15rem;
+  justify-self: end;
+  margin-block-start: 0.1rem;
   transition:
     background var(--training-duration-fast) ease,
     color var(--training-duration-fast) ease,
@@ -454,13 +494,8 @@ html.category-morphing::view-transition-new(root) {
   outline: none;
 }
 
-.category-panel-kicker {
-  color: var(--training-accent);
-  font-family: var(--training-font-title);
-  font-size: 1.05rem;
-  font-weight: 500;
-  line-height: 1;
-  margin: 0 0 0.35rem;
+/* 外观见上方 .category-panel-number，这里只管回落路径的进场 */
+.category-panel-number {
   opacity: 0;
   transform: translateY(8px);
   transition:
@@ -468,7 +503,7 @@ html.category-morphing::view-transition-new(root) {
     transform 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.05s;
 }
 
-.category-panel.is-lit .category-panel-kicker {
+.category-panel.is-lit .category-panel-number {
   opacity: 1;
   transform: translateY(0);
 }
@@ -476,12 +511,11 @@ html.category-morphing::view-transition-new(root) {
 .category-panel-title {
   color: var(--training-heading);
   font-family: var(--training-font-title);
-  font-size: 1.5rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.25;
+  font-size: calc(1.22rem * var(--morph-scale));
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.35;
   margin: 0;
-  max-width: calc(100% - 2.75rem);
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -496,10 +530,10 @@ html.category-morphing::view-transition-new(root) {
 
 .category-panel-summary {
   color: var(--training-text);
-  font-size: 0.86rem;
+  font-size: calc(0.82rem * var(--morph-scale));
   line-height: 1.65;
-  margin: 0.4rem 0 0;
-  max-width: 32rem;
+  margin: 0;
+  max-width: 34rem;
   opacity: 0;
   transform: translateY(10px);
   transition:
@@ -515,9 +549,9 @@ html.category-morphing::view-transition-new(root) {
 .category-panel-count {
   color: var(--training-muted);
   font-family: var(--training-font-code);
-  font-size: 0.64rem;
+  font-size: calc(0.64rem * var(--morph-scale));
   letter-spacing: 0.08em;
-  margin-block-start: 0.45rem;
+  margin-block-start: calc(0.15rem * var(--morph-scale));
   opacity: 0;
   transform: translateY(8px);
   transition:

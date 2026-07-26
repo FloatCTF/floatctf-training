@@ -106,7 +106,7 @@
     {
       "id": "category-panel-morph",
       "status": "pass",
-      "evidence": "桌面且未开启减少动效时走 View Transition：卡片与面板各取一张快照，浏览器按各自宽高比缩放并在 110ms 内交叉淡化，两端都不会出现无文字的空白面板。逐帧截图核对展开与收起的 60/140/260/400ms，未见重影残留或空白帧。键盘回车打开、Esc 关闭后焦点回到源卡片；连开关三次、以及展开途中打断再开另一张卡片，均无 view-transition-name 残留、无滚动锁残留，控制台无 error 或 warning。不支持 View Transition 时回落到 transform 行进：起点与源卡片偏差不超过 0.02px，落点不超过 0.27px，逐帧采样无空档帧。390×780 下两条路径都不启用，仍走 responsive.css 的底部抽屉。",
+      "evidence": "桌面且未开启减少动效时走 View Transition：卡片与面板各取一张快照，浏览器按各自宽高比缩放并在 110ms 内交叉淡化，两端都不会出现无文字的空白面板。面板头部改用与分类卡片相同的版式（罗马数字居左、标题摘要成列），各项尺寸按面板与卡片的宽度比 1.2893 换算，交叠期间两套文字基本落在一处，逐帧核对展开与收起的 55/110/200/400ms 未见重影或空白帧。键盘回车打开、Esc 关闭后焦点回到源卡片；连开关三次、以及展开途中打断再开另一张卡片，均无 view-transition-name 残留、无滚动锁残留，控制台无 error 或 warning。不支持 View Transition 时回落到 transform 行进：起点与源卡片偏差不超过 0.02px，落点不超过 0.27px，逐帧采样无空档帧。820px 下头部高 161.2px、390px 下把换算比例还原为 1（抽屉不走变形），头部高 146.8px，标题与关闭按钮无重叠，两种宽度均无页面级横向溢出。",
       "screenshot": "qa/screenshots/home-category-panel-morph.png"
     }
   ],

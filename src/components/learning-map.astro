@@ -144,10 +144,12 @@ const panelPayload = isHomeMap
             <path d="M1 1l10 10M11 1L1 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
           </svg>
         </button>
-        <div class="category-panel-kicker" id="category-panel-roman"></div>
-        <h2 class="category-panel-title" id="category-panel-title"></h2>
-        <p class="category-panel-summary" id="category-panel-summary"></p>
-        <div class="category-panel-count" id="category-panel-count"></div>
+        <span class="category-panel-number" id="category-panel-roman" aria-hidden="true"></span>
+        <div class="category-panel-heading">
+          <h2 class="category-panel-title" id="category-panel-title"></h2>
+          <p class="category-panel-summary" id="category-panel-summary"></p>
+          <div class="category-panel-count" id="category-panel-count"></div>
+        </div>
       </div>
       <div class="category-panel-body" id="category-panel-body"></div>
       <div class="category-panel-footer">
