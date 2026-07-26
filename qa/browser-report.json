@@ -59,7 +59,7 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "首页显示 8 个真实分类链接、1 个分类弹层和“8 分类、6 专题、6 可进入”统计；弹层关闭时不占布局空间。"
+      "evidence": "首页显示 8 个真实分类链接、1 个分类弹层和“8 分类、6 专题、6 可进入”统计；弹层关闭时不占布局空间。清掉从正文流继承的 margin-block-start 后，弹层静止位置由偏下 16px 修正为视口正中（y 128.7，视口 900），遮罩顶部不再漏出 16px 未覆盖条带。"
     },
     {
       "id": "print",
@@ -70,7 +70,7 @@
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "5 个专题页在 prefers-reduced-motion: reduce 下均命中减少动态媒介；ScrollReveal 的 opacity 为 1、transform 为 none。"
+      "evidence": "5 个专题页在 prefers-reduced-motion: reduce 下均命中减少动态媒介；ScrollReveal 的 opacity 为 1、transform 为 none。首页分类弹层在该模式下跳过卡片放大，直接居中显示与消失，收起后源卡片 opacity 恢复为 1，焦点回到触发卡片。"
     },
     {
       "id": "no-javascript",
@@ -102,6 +102,12 @@
       "id": "performance",
       "status": "pass",
       "evidence": "5 个专题页在 1440px 和 390px 视口下均无页面级横向溢出；桌面 document scrollWidth 为 1425px，手机为 375px，表格横向滚动被限制在组件内部。"
+    },
+    {
+      "id": "category-panel-morph",
+      "status": "pass",
+      "evidence": "1440×900 下点击第 1、2、6、8 张分类卡片：弹层起点与源卡片的位置和尺寸偏差均不超过 0.02px，收起落点偏差不超过 0.27px。展开、收起、以及展开途中按 Esc 打断三种情形各逐帧采样 45 至 60 帧，未出现“源卡片已隐藏且弹层不在画面上”的空档帧；收起后源卡片 opacity 均恢复为 1。390×780 下弹层不套用卡片放大，仍走 responsive.css 的底部抽屉（无内联 transform，宽度 390）。",
+      "screenshot": "qa/screenshots/home-category-panel-light.png"
     }
   ],
   "screenshots": [
@@ -116,6 +122,11 @@
     "qa/screenshots/mobile-body-contact.png",
     "qa/screenshots/rce-desktop-dark.png",
     "qa/screenshots/rce-print.png",
-    "qa/screenshots/ssrf-mobile-no-javascript.png"
-  ]
+    "qa/screenshots/ssrf-mobile-no-javascript.png",
+    "qa/screenshots/home-category-panel-light.png",
+    "qa/screenshots/home-category-panel-dark.png"
+  ],
+  "revalidatedAt": "2026-07-26",
+  "revalidatedScope": "仅重跑首页分类弹层相关项：category-panel-morph、directory-semantics、reduced-motion。其余检查仍为 2026-07-23 全量结果，本次改动未触及其范围。",
+  "revalidatedBrowser": "Playwright Chromium 1228"
 }

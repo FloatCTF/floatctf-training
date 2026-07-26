@@ -261,6 +261,8 @@ body.category-panel-locked {
   backdrop-filter: blur(0) saturate(100%);
   background: color-mix(in srgb, var(--training-heading) 0%, transparent);
   inset: 0;
+  /* 面板与遮罩落在 Starlight 正文流里，会被继承 margin-block-start，顶部因此漏出一条没盖住 */
+  margin: 0;
   opacity: 0;
   pointer-events: none;
   position: fixed;
@@ -280,10 +282,21 @@ body.category-panel-locked {
   pointer-events: auto;
 }
 
+/* 收起比展开快，遮罩要在面板落回卡片之前散完 */
+.category-panel-overlay:not(.is-open) {
+  transition-duration: 0.26s;
+}
+
 .category-panel {
+  --panel-travel: 0.52s;
+  --panel-back: 0.34s;
+  --panel-lit-delay: 0.19s;
+  --panel-spring: cubic-bezier(0.16, 1.02, 0.3, 1);
+  --panel-swift: cubic-bezier(0.32, 0.72, 0, 1);
   background: var(--training-surface-bg);
   border: var(--training-rule-light);
-  border-radius: calc(var(--training-radius-lg) + 0.2rem);
+  /* 与分类卡片同圆角，缩到卡片尺寸时轮廓才对得上 */
+  border-radius: var(--training-radius-lg);
   box-shadow:
     0 0 0 0.5px color-mix(in srgb, var(--training-border) 80%, transparent),
     0 24px 80px color-mix(in srgb, var(--training-heading) 18%, transparent),
@@ -291,35 +304,41 @@ body.category-panel-locked {
   display: flex;
   flex-direction: column;
   left: 50%;
+  /* 同上：不清掉继承的 margin，面板会整体偏离视口中心 */
+  margin: 0;
   max-height: min(86vh, 46rem);
   max-width: 40rem;
   opacity: 0;
   overflow: hidden;
   position: fixed;
   top: 50%;
-  transform: translate3d(-50%, -46%, 0) scale(0.94);
+  transform: translate3d(-50%, -50%, 0);
   transform-origin: center center;
-  transition:
-    opacity 0.38s cubic-bezier(0.32, 0.72, 0, 1),
-    transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: transform var(--panel-travel) var(--panel-spring);
   visibility: hidden;
   width: calc(100% - 1.5rem);
-  will-change: transform, opacity;
+  will-change: transform;
   z-index: 90;
 }
 
-.category-panel.is-open {
+/*
+  面板在行进的两端都严丝合缝盖住源卡片，所以它全程保持不透明：
+  卡片的隐藏与恢复都发生在被面板遮住的时候，交接不会露出空白。
+*/
+.category-panel.is-open,
+.category-panel.is-closing {
   opacity: 1;
-  transform: translate3d(-50%, -50%, 0) scale(1);
   visibility: visible;
 }
 
 .category-panel.is-closing {
+  transition: transform var(--panel-back) var(--panel-swift);
+}
+
+/* 源卡片瞬时隐藏与恢复，不做过渡，避免与面板出现叠影或空档 */
+.category-trigger.is-source {
   opacity: 0;
-  transform: translate3d(-50%, -46%, 0) scale(0.96);
-  transition:
-    opacity 0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
-    transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+  transition: none;
 }
 
 .category-panel[hidden],
@@ -341,6 +360,30 @@ body.category-panel-locked {
   flex-shrink: 0;
   padding: 1.35rem 1.45rem 1.15rem;
   position: relative;
+}
+
+/*
+  面板内容整块延后淡入：行进过半、长宽比接近成品后才显影，
+  遮住横竖不等比缩放带来的挤压。收起时先于面板淡出，落点是一块干净的纸面。
+*/
+.category-panel-header,
+.category-panel-body,
+.category-panel-footer {
+  opacity: 0;
+}
+
+.category-panel.is-lit .category-panel-header,
+.category-panel.is-lit .category-panel-body,
+.category-panel.is-lit .category-panel-footer {
+  opacity: 1;
+  transition: opacity 0.24s ease var(--panel-lit-delay);
+}
+
+.category-panel.is-closing .category-panel-header,
+.category-panel.is-closing .category-panel-body,
+.category-panel.is-closing .category-panel-footer {
+  opacity: 0;
+  transition: opacity 0.14s ease;
 }
 
 .category-panel-close {
@@ -393,7 +436,7 @@ body.category-panel-locked {
     transform 0.45s cubic-bezier(0.32, 0.72, 0, 1) 0.05s;
 }
 
-.category-panel.is-open .category-panel-kicker {
+.category-panel.is-lit .category-panel-kicker {
   opacity: 1;
   transform: translateY(0);
 }
@@ -414,7 +457,7 @@ body.category-panel-locked {
     transform 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.08s;
 }
 
-.category-panel.is-open .category-panel-title {
+.category-panel.is-lit .category-panel-title {
   opacity: 1;
   transform: translateY(0);
 }
@@ -432,7 +475,7 @@ body.category-panel-locked {
     transform 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.12s;
 }
 
-.category-panel.is-open .category-panel-summary {
+.category-panel.is-lit .category-panel-summary {
   opacity: 1;
   transform: translateY(0);
 }
@@ -450,7 +493,7 @@ body.category-panel-locked {
     transform 0.48s cubic-bezier(0.32, 0.72, 0, 1) 0.16s;
 }
 
-.category-panel.is-open .category-panel-count {
+.category-panel.is-lit .category-panel-count {
   opacity: 1;
   transform: translateY(0);
 }
@@ -500,36 +543,26 @@ body.category-panel-locked {
     transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-.category-panel.is-open .category-panel-body .directory-topic {
+.category-panel.is-lit .category-panel-body .directory-topic {
   opacity: 1;
   transform: translateY(0);
 }
 
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(1) { transition-delay: 0.12s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(2) { transition-delay: 0.16s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(3) { transition-delay: 0.2s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(4) { transition-delay: 0.24s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(5) { transition-delay: 0.28s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(6) { transition-delay: 0.32s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(7) { transition-delay: 0.36s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(8) { transition-delay: 0.4s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(9) { transition-delay: 0.44s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(10) { transition-delay: 0.48s; }
-.category-panel.is-open .category-panel-body .directory-topic:nth-child(n+11) { transition-delay: 0.5s; }
+/* 逐条错峰接在整块显影之后，让课程列表带出节奏而不是整片弹出 */
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(1) { transition-delay: calc(var(--panel-lit-delay) + 0.02s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(2) { transition-delay: calc(var(--panel-lit-delay) + 0.06s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(3) { transition-delay: calc(var(--panel-lit-delay) + 0.1s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(4) { transition-delay: calc(var(--panel-lit-delay) + 0.14s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(5) { transition-delay: calc(var(--panel-lit-delay) + 0.18s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(6) { transition-delay: calc(var(--panel-lit-delay) + 0.22s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(7) { transition-delay: calc(var(--panel-lit-delay) + 0.26s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(8) { transition-delay: calc(var(--panel-lit-delay) + 0.3s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(9) { transition-delay: calc(var(--panel-lit-delay) + 0.34s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(10) { transition-delay: calc(var(--panel-lit-delay) + 0.38s); }
+.category-panel.is-lit .category-panel-body .directory-topic:nth-child(n+11) { transition-delay: calc(var(--panel-lit-delay) + 0.4s); }
 
-.category-panel.is-open .category-panel-body .directory-topic-planned {
+.category-panel.is-lit .category-panel-body .directory-topic-planned {
   opacity: 0.62;
-}
-
-.category-panel.is-closing .category-panel-body .directory-topic,
-.category-panel.is-closing .category-panel-kicker,
-.category-panel.is-closing .category-panel-title,
-.category-panel.is-closing .category-panel-summary,
-.category-panel.is-closing .category-panel-count {
-  opacity: 0;
-  transform: translateY(4px);
-  transition-delay: 0s !important;
-  transition-duration: 0.15s !important;
 }
 
 .category-panel-footer {
