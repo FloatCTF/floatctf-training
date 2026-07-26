@@ -341,6 +341,38 @@ body.category-panel-locked {
   transition: none;
 }
 
+/*
+  卡片与面板的变形交给 View Transition：浏览器按各自的宽高比缩放两张快照并交叉淡化，
+  文字随外框一起变形，不会像单纯缩放外框那样在两端露出一块空白面板。
+  不支持这个能力时回落到上面的 transform 行进。
+*/
+html.category-morphing::view-transition-group(category-morph) {
+  animation-duration: 0.44s;
+  animation-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* 裁到变形框内，两张快照的高矮差不会溢出成残影 */
+html.category-morphing::view-transition-image-pair(category-morph) {
+  border-radius: var(--training-radius-lg);
+  overflow: hidden;
+}
+
+/*
+  两张快照的排版不同，交叠越久越像重影，所以交接压到 110ms 内完成，
+  剩下的行程只剩目标那张在缩放。
+*/
+html.category-morphing::view-transition-old(category-morph),
+html.category-morphing::view-transition-new(category-morph) {
+  animation-duration: 0.11s;
+  animation-timing-function: linear;
+}
+
+/* 页面其余部分只负责遮罩变暗变糊，比变形收得快一些 */
+html.category-morphing::view-transition-old(root),
+html.category-morphing::view-transition-new(root) {
+  animation-duration: 0.3s;
+}
+
 .category-panel[hidden],
 .category-panel-overlay[hidden] {
   display: none !important;

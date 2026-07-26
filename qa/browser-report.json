@@ -106,8 +106,8 @@
     {
       "id": "category-panel-morph",
       "status": "pass",
-      "evidence": "1440×900 下点击第 1、2、6、8 张分类卡片：弹层起点与源卡片的位置和尺寸偏差均不超过 0.02px，收起落点偏差不超过 0.27px。展开、收起、以及展开途中按 Esc 打断三种情形各逐帧采样 45 至 60 帧，未出现“源卡片已隐藏且弹层不在画面上”的空档帧；收起后源卡片 opacity 均恢复为 1。390×780 下弹层不套用卡片放大，仍走 responsive.css 的底部抽屉（无内联 transform，宽度 390）。",
-      "screenshot": "qa/screenshots/home-category-panel-light.png"
+      "evidence": "桌面且未开启减少动效时走 View Transition：卡片与面板各取一张快照，浏览器按各自宽高比缩放并在 110ms 内交叉淡化，两端都不会出现无文字的空白面板。逐帧截图核对展开与收起的 60/140/260/400ms，未见重影残留或空白帧。键盘回车打开、Esc 关闭后焦点回到源卡片；连开关三次、以及展开途中打断再开另一张卡片，均无 view-transition-name 残留、无滚动锁残留，控制台无 error 或 warning。不支持 View Transition 时回落到 transform 行进：起点与源卡片偏差不超过 0.02px，落点不超过 0.27px，逐帧采样无空档帧。390×780 下两条路径都不启用，仍走 responsive.css 的底部抽屉。",
+      "screenshot": "qa/screenshots/home-category-panel-morph.png"
     }
   ],
   "screenshots": [
@@ -124,7 +124,8 @@
     "qa/screenshots/rce-print.png",
     "qa/screenshots/ssrf-mobile-no-javascript.png",
     "qa/screenshots/home-category-panel-light.png",
-    "qa/screenshots/home-category-panel-dark.png"
+    "qa/screenshots/home-category-panel-dark.png",
+    "qa/screenshots/home-category-panel-morph.png"
   ],
   "revalidatedAt": "2026-07-26",
   "revalidatedScope": "仅重跑首页分类弹层相关项：category-panel-morph、directory-semantics、reduced-motion。其余检查仍为 2026-07-23 全量结果，本次改动未触及其范围。",

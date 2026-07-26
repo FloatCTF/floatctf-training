@@ -228,6 +228,55 @@ const panelPayload = isHomeMap
           return canMorph.matches && !reduceMotion.matches;
         }
 
+        // 有 View Transition 就交给浏览器：它对卡片和面板各拍一张快照，
+        // 一边变形一边交叉淡化，文字随外框一起缩放，两端都不会出现空白面板。
+        const supportsViewTransition = typeof document.startViewTransition === 'function';
+        const MORPH_NAME = 'category-morph';
+        let vtToken = 0;
+        let morphNamed = null;
+
+        function useViewTransition() {
+          return supportsViewTransition && useMorph();
+        }
+
+        function applyOpenState(trigger) {
+          overlay.hidden = false;
+          panel.hidden = false;
+          overlay.classList.add('is-open');
+          panel.classList.add('is-open', 'is-lit');
+          if (trigger) trigger.classList.add('is-source');
+          document.body.classList.add('category-panel-locked');
+          isOpen = true;
+        }
+
+        function applyCloseState(card) {
+          panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
+          panel.style.transform = '';
+          overlay.classList.remove('is-open');
+          overlay.hidden = true;
+          panel.hidden = true;
+          if (card) card.classList.remove('is-source');
+          document.body.classList.remove('category-panel-locked');
+          isOpen = false;
+        }
+
+        /**
+         * 同一时刻只能有一个元素挂着变形用的名字，重名会让浏览器直接中止转场。
+         * 用一个指针记住当前是谁，换人时先把上一个摘掉。
+         */
+        function setMorphName(el) {
+          if (morphNamed && morphNamed !== el) morphNamed.style.viewTransitionName = '';
+          morphNamed = el || null;
+          if (el) el.style.viewTransitionName = MORPH_NAME;
+        }
+
+        /** 收尾。已经有更新的转场接管时交给它收，避免摘掉别人正在用的名字 */
+        function endMorph(token) {
+          if (token !== vtToken) return;
+          setMorphName(null);
+          document.documentElement.classList.remove('category-morphing');
+        }
+
         function pad(n) {
           return String(n).padStart(2, '0');
         }
@@ -300,6 +349,21 @@ const panelPayload = isHomeMap
 
           panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
           overlay.classList.remove('is-open');
+
+          if (useViewTransition() && sourceCard) {
+            const token = ++vtToken;
+            const card = sourceCard;
+            setMorphName(card);
+            document.documentElement.classList.add('category-morphing');
+            const vt = document.startViewTransition(() => {
+              setMorphName(panel);
+              applyOpenState(card);
+              panelClose.focus({ preventScroll: true });
+            });
+            vt.finished.then(() => endMorph(token), () => endMorph(token));
+            return;
+          }
+
           overlay.hidden = false;
           panel.hidden = false;
           // 先锁滚动再量：上锁会收掉滚动条并改变布局，量早了起点会偏
@@ -333,10 +397,33 @@ const panelPayload = isHomeMap
 
         function closePanel() {
           if (!isOpen && panel.hidden) return;
-          isOpen = false;
-          overlay.classList.remove('is-open');
 
           const card = sourceCard;
+
+          if (useViewTransition() && card) {
+            const token = ++vtToken;
+            if (closingTimer) {
+              clearTimeout(closingTimer);
+              closingTimer = null;
+            }
+            setMorphName(panel);
+            document.documentElement.classList.add('category-morphing');
+            const restore = lastFocus;
+            const vt = document.startViewTransition(() => {
+              setMorphName(card);
+              applyCloseState(card);
+              if (restore && typeof restore.focus === 'function') {
+                restore.focus({ preventScroll: true });
+              }
+            });
+            lastFocus = null;
+            sourceCard = null;
+            vt.finished.then(() => endMorph(token), () => endMorph(token));
+            return;
+          }
+
+          isOpen = false;
+          overlay.classList.remove('is-open');
           const finish = () => {
             panel.style.transition = 'none';
             panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
