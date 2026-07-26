@@ -117,6 +117,11 @@
     display: block;
   }
 
+  /* 抽屉不走卡片变形，头部不必按比例放大，回到与卡片相同的字号 */
+  .category-panel-header {
+    --morph-scale: 1;
+  }
+
   .category-number {
     font-size: 1.4rem;
   }
@@ -368,7 +373,7 @@
   }
   .category-panel,
   .category-panel-overlay,
-  .category-panel-kicker,
+  .category-panel-number,
   .category-panel-title,
   .category-panel-summary,
   .category-panel-count,

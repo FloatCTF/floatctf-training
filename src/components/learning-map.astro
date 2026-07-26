@@ -144,10 +144,12 @@ const panelPayload = isHomeMap
             <path d="M1 1l10 10M11 1L1 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path>
           </svg>
         </button>
-        <div class="category-panel-kicker" id="category-panel-roman"></div>
-        <h2 class="category-panel-title" id="category-panel-title"></h2>
-        <p class="category-panel-summary" id="category-panel-summary"></p>
-        <div class="category-panel-count" id="category-panel-count"></div>
+        <span class="category-panel-number" id="category-panel-roman" aria-hidden="true"></span>
+        <div class="category-panel-heading">
+          <h2 class="category-panel-title" id="category-panel-title"></h2>
+          <p class="category-panel-summary" id="category-panel-summary"></p>
+          <div class="category-panel-count" id="category-panel-count"></div>
+        </div>
       </div>
       <div class="category-panel-body" id="category-panel-body"></div>
       <div class="category-panel-footer">
@@ -186,9 +188,96 @@ const panelPayload = isHomeMap
 
         const byId = new Map(payload.map((item) => [item.id, item]));
         let lastFocus = null;
+        let sourceCard = null;
         let closingTimer = null;
         let isOpen = false;
+        let naturalRect = null;
         const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+        // 48rem 以下是底部抽屉，由 responsive.css 驱动，不套用卡片放大
+        const canMorph = window.matchMedia('(min-width: 48.0625rem)');
+        const BACK_MS = 340;
+
+        /**
+         * 量面板静止时的矩形。实测而不是假定它正好在视口中心：
+         * 面板处在正文流里，外层样式随时可能给它加上 margin 或改变包含块。
+         */
+        function measureNaturalRect() {
+          const prevTransform = panel.style.transform;
+          const prevTransition = panel.style.transition;
+          panel.style.transition = 'none';
+          panel.style.transform = 'translate3d(-50%, -50%, 0)';
+          const rect = panel.getBoundingClientRect();
+          panel.style.transform = prevTransform;
+          panel.style.transition = prevTransition;
+          return rect;
+        }
+
+        /**
+         * 把面板压成源卡片的矩形：位移取两者中心差，横竖分别缩放。
+         * 落点与卡片同位置同尺寸，交接时才不会出现跳动或空档。
+         */
+        function cardTransform(card) {
+          const pr = naturalRect;
+          const cr = card.getBoundingClientRect();
+          if (!pr || !pr.width || !pr.height || !cr.width || !cr.height) return '';
+          const dx = cr.left + cr.width / 2 - (pr.left + pr.width / 2);
+          const dy = cr.top + cr.height / 2 - (pr.top + pr.height / 2);
+          return `translate3d(calc(-50% + ${dx.toFixed(2)}px), calc(-50% + ${dy.toFixed(2)}px), 0)`
+            + ` scale(${(cr.width / pr.width).toFixed(4)}, ${(cr.height / pr.height).toFixed(4)})`;
+        }
+
+        function useMorph() {
+          return canMorph.matches && !reduceMotion.matches;
+        }
+
+        // 有 View Transition 就交给浏览器：它对卡片和面板各拍一张快照，
+        // 一边变形一边交叉淡化，文字随外框一起缩放，两端都不会出现空白面板。
+        const supportsViewTransition = typeof document.startViewTransition === 'function';
+        const MORPH_NAME = 'category-morph';
+        let vtToken = 0;
+        let morphNamed = null;
+
+        function useViewTransition() {
+          return supportsViewTransition && useMorph();
+        }
+
+        function applyOpenState(trigger) {
+          overlay.hidden = false;
+          panel.hidden = false;
+          overlay.classList.add('is-open');
+          panel.classList.add('is-open', 'is-lit');
+          if (trigger) trigger.classList.add('is-source');
+          document.body.classList.add('category-panel-locked');
+          isOpen = true;
+        }
+
+        function applyCloseState(card) {
+          panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
+          panel.style.transform = '';
+          overlay.classList.remove('is-open');
+          overlay.hidden = true;
+          panel.hidden = true;
+          if (card) card.classList.remove('is-source');
+          document.body.classList.remove('category-panel-locked');
+          isOpen = false;
+        }
+
+        /**
+         * 同一时刻只能有一个元素挂着变形用的名字，重名会让浏览器直接中止转场。
+         * 用一个指针记住当前是谁，换人时先把上一个摘掉。
+         */
+        function setMorphName(el) {
+          if (morphNamed && morphNamed !== el) morphNamed.style.viewTransitionName = '';
+          morphNamed = el || null;
+          if (el) el.style.viewTransitionName = MORPH_NAME;
+        }
+
+        /** 收尾。已经有更新的转场接管时交给它收，避免摘掉别人正在用的名字 */
+        function endMorph(token) {
+          if (token !== vtToken) return;
+          setMorphName(null);
+          document.documentElement.classList.remove('category-morphing');
+        }
 
         function pad(n) {
           return String(n).padStart(2, '0');
@@ -249,8 +338,10 @@ const panelPayload = isHomeMap
             clearTimeout(closingTimer);
             closingTimer = null;
           }
+          if (sourceCard) sourceCard.classList.remove('is-source');
 
           lastFocus = trigger || document.activeElement;
+          sourceCard = trigger || null;
           panelRoman.textContent = category.roman;
           panelTitle.textContent = category.name;
           panelSummary.textContent = category.summary;
@@ -258,17 +349,49 @@ const panelPayload = isHomeMap
           panelLink.href = category.pagePath;
           renderTopics(category);
 
-          panel.classList.remove('is-open', 'is-closing');
+          panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
           overlay.classList.remove('is-open');
+
+          if (useViewTransition() && sourceCard) {
+            const token = ++vtToken;
+            const card = sourceCard;
+            setMorphName(card);
+            document.documentElement.classList.add('category-morphing');
+            const vt = document.startViewTransition(() => {
+              setMorphName(panel);
+              applyOpenState(card);
+              panelClose.focus({ preventScroll: true });
+            });
+            vt.finished.then(() => endMorph(token), () => endMorph(token));
+            return;
+          }
+
           overlay.hidden = false;
           panel.hidden = false;
+          // 先锁滚动再量：上锁会收掉滚动条并改变布局，量早了起点会偏
+          document.body.classList.add('category-panel-locked');
+          isOpen = true;
+
+          naturalRect = measureNaturalRect();
+          const startTransform = useMorph() && sourceCard ? cardTransform(sourceCard) : '';
+          if (startTransform) {
+            // 起点正好盖住卡片，所以卡片可以直接隐藏，不会露空
+            panel.style.transition = 'none';
+            panel.style.transform = startTransform;
+            panel.classList.add('is-open');
+            sourceCard.classList.add('is-source');
+            void panel.offsetWidth;
+            panel.style.transition = '';
+          }
 
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               overlay.classList.add('is-open');
-              panel.classList.add('is-open');
-              document.body.classList.add('category-panel-locked');
-              isOpen = true;
+              panel.classList.add('is-open', 'is-lit');
+              if (startTransform) {
+                panel.classList.add('is-animating');
+                panel.style.transform = 'translate3d(-50%, -50%, 0)';
+              }
               panelClose.focus({ preventScroll: true });
             });
           });
@@ -276,20 +399,51 @@ const panelPayload = isHomeMap
 
         function closePanel() {
           if (!isOpen && panel.hidden) return;
-          isOpen = false;
-          panel.classList.add('is-closing');
-          panel.classList.remove('is-open');
-          overlay.classList.remove('is-open');
-          document.body.classList.remove('category-panel-locked');
 
+          const card = sourceCard;
+
+          if (useViewTransition() && card) {
+            const token = ++vtToken;
+            if (closingTimer) {
+              clearTimeout(closingTimer);
+              closingTimer = null;
+            }
+            setMorphName(panel);
+            document.documentElement.classList.add('category-morphing');
+            const restore = lastFocus;
+            const vt = document.startViewTransition(() => {
+              setMorphName(card);
+              applyCloseState(card);
+              if (restore && typeof restore.focus === 'function') {
+                restore.focus({ preventScroll: true });
+              }
+            });
+            lastFocus = null;
+            sourceCard = null;
+            vt.finished.then(() => endMorph(token), () => endMorph(token));
+            return;
+          }
+
+          isOpen = false;
+          overlay.classList.remove('is-open');
           const finish = () => {
-            panel.classList.remove('is-closing');
+            panel.style.transition = 'none';
+            panel.classList.remove('is-open', 'is-closing', 'is-animating', 'is-lit');
+            // 与上一行同帧执行：面板撤下的瞬间卡片就回来，中间没有空档
+            if (card) card.classList.remove('is-source');
+            panel.style.transform = '';
             overlay.hidden = true;
             panel.hidden = true;
+            // 滚动锁留到最后一刻解开，行程全程都在同一套布局里量
+            document.body.classList.remove('category-panel-locked');
+            requestAnimationFrame(() => {
+              panel.style.transition = '';
+            });
             if (lastFocus && typeof lastFocus.focus === 'function') {
               lastFocus.focus({ preventScroll: true });
             }
             lastFocus = null;
+            sourceCard = null;
             closingTimer = null;
           };
 
@@ -297,7 +451,16 @@ const panelPayload = isHomeMap
             finish();
             return;
           }
-          closingTimer = window.setTimeout(finish, 320);
+
+          panel.classList.remove('is-animating');
+          panel.classList.add('is-closing');
+
+          const backTransform = useMorph() && card ? cardTransform(card) : '';
+          if (backTransform) {
+            panel.style.transform = backTransform;
+          }
+
+          closingTimer = window.setTimeout(finish, BACK_MS);
         }
 
         map.addEventListener('click', (event) => {
@@ -311,6 +474,11 @@ const panelPayload = isHomeMap
 
         panelClose.addEventListener('click', closePanel);
         overlay.addEventListener('click', closePanel);
+
+        // 开着面板时改窗口大小，静止矩形会变，收起前重新量一次
+        window.addEventListener('resize', () => {
+          if (isOpen) naturalRect = measureNaturalRect();
+        });
 
         document.addEventListener('keydown', (event) => {
           if (!isOpen) return;
