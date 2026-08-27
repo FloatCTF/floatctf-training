@@ -1,0 +1,59 @@
+---
+import { DIGIT_BITMAPS } from '../data/handwritten-digits';
+
+const VARIANTS = DIGIT_BITMAPS.filter((d) => d.char === '3');
+
+const CELL = 8;
+const SIZE = 28 * CELL;
+const GAP = 0.9;
+
+function inkCells(rows: string[]) {
+  const cells: { x: number; y: number; level: number }[] = [];
+  rows.forEach((row, y) => {
+    row.split('').forEach((ch, x) => {
+      const level = Number.parseInt(ch, 16);
+      if (level > 0) cells.push({ x, y, level });
+    });
+  });
+  return cells;
+}
+
+const PANELS = VARIANTS.map((v) => ({ ...v, cells: inkCells(v.rows) }));
+const GUIDES = [7, 14, 21];
+---
+
+<section class="digit-threes not-content" aria-label="四种写法的手写 3 像素图">
+  <header class="digit-threes__header">
+    <p class="lesson-diagram__eyebrow">手写数字 / 同一个标签的多种像素</p>
+    <h3 class="lesson-diagram__title">四种写法的「3」，在 28×28 像素里的样子</h3>
+    <p class="digit-threes__intro">每个小方块是一个像素，越黑亮度越接近 1。四个「3」标签相同，784 个数字却几乎对不上。</p>
+  </header>
+  <div class="digit-threes__grid">
+    {PANELS.map((p) => (
+      <figure class="digit-threes__panel">
+        <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="img" aria-label={p.label + '：28×28 像素的手写 3'}>
+          <title>{p.label}</title>
+          <rect class="digit-threes__paper" x="0" y="0" width={SIZE} height={SIZE} />
+          {GUIDES.map((t) => (
+            <line class="digit-threes__gridline" x1={t * CELL} y1="0" x2={t * CELL} y2={SIZE} />
+          ))}
+          {GUIDES.map((t) => (
+            <line class="digit-threes__gridline" x1="0" y1={t * CELL} x2={SIZE} y2={t * CELL} />
+          ))}
+          {p.cells.map((c) => (
+            <rect
+              class="digit-threes__ink"
+              x={c.x * CELL + GAP}
+              y={c.y * CELL + GAP}
+              width={CELL - GAP * 2}
+              height={CELL - GAP * 2}
+              style={`--ink: ${(c.level / 15).toFixed(3)}`}
+            />
+          ))}
+        </svg>
+        <figcaption>{p.label}</figcaption>
+      </figure>
+    ))}
+  </div>
+  <p class="lesson-diagram__note digit-threes__note">笔画的位置、粗细、倾斜、大小全在变，写死的规则无从下手；把 784 个数字交给网络、让它从大量样本里自己调权重，正是这一课的主线。</p>
+</section>

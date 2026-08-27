@@ -28,6 +28,44 @@
   .cheat-sheet,
   .source-list,
   .simulator,
+  .containment-explorer,
+  .stack-explorer,
+  .trace-replay,
+  .xor-stage,
+  .xor-mapping,
+  .digit-threes__panel,
+  .af-results,
+  .loss-landscape__figure,
+  .embedding-space__figure,
+  .matrix-steps__body,
+  .matrix-steps,
+  .bp-figure,
+  .bp-update,
+  .conv-window__body,
+  .rnn-unfold__body,
+  .at-matrix__figure,
+  .sp-bars,
+  .training-scale__body,
+  .data-pipeline__body,
+  .retrieval-sandbox__layout,
+  .retrieval-ledger,
+  .lora-decomposition__body,
+  .distillation-flow,
+  .request-journey-map__body,
+  .data-pipeline,
+  .loss-landscape,
+  .mcp-architecture,
+  .skill-loading,
+  .choice-ladder,
+  .training-scale,
+  .memory-layers,
+  .lora-decomposition,
+  .distillation-comparison,
+  .request-journey-map,
+  .skill-loading__steps,
+  .skill-loading__step,
+  .choice-ladder__step,
+  .choice-ladder__item,
   .lesson-meta,
   .security-disclaimer,
   .category-directory { break-inside: avoid; box-shadow: none; }
@@ -104,8 +142,140 @@
     break-after: avoid;
   }
 
-  :where(.dark-code, .code-panel, .table-scroll, .simulator, .callout, .intuition-box, .key-takeaway, .cheat-sheet, .source-list, .security-disclaimer) {
+  :where(.dark-code, .code-panel, .table-scroll, .simulator, .containment-explorer, .stack-explorer, .callout, .intuition-box, .key-takeaway, .cheat-sheet, .source-list, .security-disclaimer) {
     break-inside: avoid;
+  }
+
+  .containment-explorer {
+    border: 1pt solid var(--training-heading);
+  }
+
+  .containment-explorer__header {
+    grid-template-columns: 1fr;
+  }
+
+  .containment-explorer__header > p,
+  .containment-explorer__header > button,
+  .containment-detail {
+    display: none !important;
+  }
+
+  .containment-explorer__body {
+    display: block;
+  }
+
+  .containment-map {
+    min-block-size: 112mm;
+  }
+
+  .containment-layer,
+  .containment-layer__label,
+  .containment-methods {
+    animation: none !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .containment-print-summary {
+    border-block-start: 1pt solid var(--training-border);
+    display: grid;
+    gap: 4mm;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding: 4mm;
+  }
+
+  .containment-print-summary article {
+    border-inline-start: 2pt solid var(--training-accent);
+    padding-inline-start: 3mm;
+  }
+
+  .containment-print-summary p {
+    font-size: 8.5pt;
+    line-height: 1.55;
+    margin: 1.5mm 0 0;
+  }
+
+  .stack-explorer {
+    border: 1pt solid var(--training-heading);
+  }
+
+  .stack-explorer__header {
+    grid-template-columns: 1fr;
+  }
+
+  .stack-explorer__header > p,
+  .stack-detail {
+    display: none !important;
+  }
+
+  .stack-explorer__body {
+    display: block;
+  }
+
+  .stack-explorer__columns {
+    background: none;
+    padding: 4mm;
+  }
+
+  .stack-chip {
+    transform: none !important;
+  }
+
+  .stack-explorer[data-presentation='interactive'] .stack-explorer__summary {
+    display: grid;
+  }
+
+  .stack-explorer__summary {
+    border-block-start: 1pt solid var(--training-border);
+    gap: 4mm;
+    padding: 4mm;
+  }
+
+  .stack-explorer__summary article {
+    border-inline-start: 2pt solid var(--training-accent);
+    break-inside: avoid;
+    padding-inline-start: 3mm;
+  }
+
+  .stack-explorer__summary li {
+    font-size: 8.5pt;
+    line-height: 1.55;
+  }
+
+  .trace-replay {
+    border: 1pt solid var(--training-heading);
+  }
+
+  .trace-replay__header {
+    grid-template-columns: 1fr;
+  }
+
+  .trace-replay__header > p,
+  .trace-replay__panel,
+  .trace-replay__steps {
+    display: none !important;
+  }
+
+  .trace-replay[data-presentation='interactive'] .trace-replay__summary {
+    display: grid;
+  }
+
+  .trace-replay__summary {
+    border-block-start: 1pt solid var(--training-border);
+    gap: 4mm;
+    padding: 4mm;
+  }
+
+  .trace-replay__summary article {
+    border-inline-start: 2pt solid var(--training-accent);
+    break-inside: avoid;
+    padding-inline-start: 3mm;
+  }
+
+  .trace-replay__summary li {
+    font-size: 8.5pt;
+    line-height: 1.55;
   }
 
   .dark-code,
@@ -158,4 +328,3 @@
     color: var(--training-muted);
   }
 }
-

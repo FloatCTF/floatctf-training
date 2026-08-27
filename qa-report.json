@@ -1,163 +1,190 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-07-23",
+  "reviewedAt": "2026-08-23",
   "reviewer": "agent",
   "mode": "validate-site",
-  "summary": "完成 SSRF、SQL 注入、SQL 注入进阶、XSS、RCE 五个专题页的结构、构建、桌面、手机、深色、打印、无脚本、减少动态、锚点、焦点和控制台检查。",
+  "summary": "AI 与机器学习五课逐图深度审查完成：共核对 37 个图与交互实例，发现并修复 25 项数学语义、来源语义、裁切重叠、移动端、hydration、控制台和打印分页问题。五课在桌面浅色/深色、390×844、交互和 A4 打印态通过复验；npm run verify 通过，102 个 Astro 文件为 0 错误、0 警告、0 提示，静态构建生成 21 个页面。完整记录见 qa/ai-ml-deep-audit.json。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/catalog.json",
-      "note": "五个专题均以 mechanism 为主要模式，并按主题组合 lab、case-study、code 或 comparison。"
+      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
+      "note": "五课继续使用 mechanism/concept 主模式；L1/L3/L5 的 simulation 与 L2/L4 的 explanatory 对应可拖参数和可逐步机制。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/sql-injection.mdx",
-      "note": "各专题按引导问题→机制→演示/实验→防御→案例→边界→考核展开。"
+      "evidenceFile": "src/data/catalog.json",
+      "note": "L1 经典训练闭环→L2 表示学习→L3 大模型→L4 Agent 工程→L5 生产全景的 prerequisite 链完整，五课正文各自收束后承接下一课。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ssrf.mdx",
-      "note": "正文以机制与数据流为主，未沿用旧 HTML 中冗长故事比喻。"
+      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
+      "note": "检索空间、分页记忆、教师学生和请求旅程均直接连接对应技术定义；二维平面明确标注为高维 embedding 的教学压缩。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/xss.mdx",
-      "note": "SSRF、SQL 注入、XSS、RCE、预编译和参数化查询等术语在首次出现时给出定义。"
+      "evidenceFile": "src/content/docs/lessons/agent-harness-engineering.mdx",
+      "note": "Prompt、MCP、Skill、Context、Harness、Loop 与 Graph 首次出现均给出工作定义、产物和责任边界。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/sql-injection.json",
-      "note": "主张、证据与面试答案绑定 OWASP、CWE、CVE Program、官方文档等来源。"
+      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
+      "note": "按原始论文和官方规范复核关键主张；phi-4 数据配比修正为 40% synthetic 加 15% web rewrites，Dropout、LoRA、蒸馏、RAG 与 MCP 语义保持来源支持的适用范围。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "examples/ssrf-local-lab.mjs",
-      "note": "四个本地演示均已实际运行：SQL 使用内存 SQLite 执行拼接与绑定查询；SSRF 仅覆盖 IPv4 环回地址；XSS 不执行载荷；命令注入示例不启动外部进程。"
+      "evidenceFile": "src/components/retrieval-sandbox.tsx",
+      "note": "Astro check 为 0 错误、0 警告、0 提示；浏览器验证 query 切换、余弦排序、top-k range、L4 单步控制和 L1–L3 交互水合。"
     },
     {
       "id": "security-scope",
       "level": "must",
-      "status": "pass",
-      "evidenceFile": "src/components/security-disclaimer.astro",
-      "note": "安全专题 safetyScope 为 authorized-lab；页面含 SecurityDisclaimer；实验限本地/隔离靶场。"
+      "status": "not-applicable",
+      "note": "五课 safetyScope 均为 not-applicable，本轮不包含安全实验或外部目标操作。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/rce.mdx",
-      "note": "SSRF 使用 AttackDefenseFlow；其余页面用 CodeCompare、ScrollReveal 和面试折叠解释数据流、代码差异与复习问题。"
+      "evidenceFile": "src/components/context-window-evolution.tsx",
+      "note": "每课主交互只解释一个高理解成本关系：优化轨迹、梯度回传、注意力/采样、窗口演化或向量检索。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ssrf.json",
-      "note": "动效等级与 visualNarrative 记录一致，服务于步骤展示而非装饰。"
+      "evidenceFile": "src/data/lessons/agent-harness-engineering.json",
+      "note": "L4 仅把 ContextWindowEvolution 计为 primary、TraceReplay 计为 supporting；L5 仅把检索沙盒计为 primary、技能栈计为 supporting；请求旅程继续使用静态 StepList。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/browser-report.json",
-      "note": "五页在减少动态、打印和无脚本状态下保留标题、正文、表格、代码和面试答案。"
+      "note": "减少动态、打印和无 JavaScript 下五课控制区均停用，固定账本、静态图、公式、结果和来源完整保留。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/browser-report.json",
-      "note": "本课目录和面试题使用原生 summary；表格滚动区设置 tabIndex=0 和中文 aria-label；焦点控件显示实线焦点环。"
+      "note": "L4 单步按钮接受 Enter 并保持焦点；L5 query 使用原生 button，top-k 使用原生 range，End 键将值设为 4并保持焦点；首页 Esc 关闭弹层后焦点返回分类卡。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/browser-report.json",
-      "note": "390×844 下五页的 document scrollWidth 与内容宽度均为 375px；代码块和表格分别在自身容器内滚动。"
+      "note": "五课、首页和 AI 分类页在 390×844 下 document、body 与 viewport 同宽；宽表和固定账本只在组件内部滚动。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "打印媒介隐藏顶栏并使用浅色背景；五页面试答案完整显示，表格取消最小宽度并避免跨页断裂。"
+      "evidenceFile": "src/styles/print.css",
+      "note": "A4 打印状态隐藏控制区并保留全部静态图和固定账本；五课共 106 页，抽样目检 12 个关键图页，矩阵组件修复为标题与主体同页。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "五页均使用无侧栏壳层、单一顶栏、唯一 H1、课程路径、本课目录、LessonHero、学习目标和前置知识。"
+      "evidenceFile": "src/data/catalog.json",
+      "note": "首页、AI 分类页与五个 completed 专题的 ID、slug、路径、order 和 prerequisite 一致；分类弹层含 5 条课程链接。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/browser-report.json",
-      "note": "五页在桌面与手机下保持一致的刊头、章节留白、表格、代码面板、语义色和深色主题；10 个表格按内容密度使用加权列宽。"
+      "note": "SVG、React 岛和静态图统一使用站点 token、墨色外框、红色强调、等宽标签与编辑出版式排版；浅色、深色、手机和打印截图均通过视觉复核。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "deploy/nginx.conf.example",
-      "note": "npm run verify 通过，静态构建生成 17 个页面，其中包含 6 个专题页。"
+      "evidenceFile": "qa/browser-report.json",
+      "note": "npm ci 与 npm run verify 通过，构建生成 21 个 HTML 页面、Pagefind 索引和 sitemap；部署配置继续通过结构门禁。"
+    },
+    {
+      "id": "layout-self-audit",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "qa/browser-report.json",
+      "note": "逐页检查 37 个图与交互实例的边界框、标签、响应式、深浅色、交互和打印；页面级横向溢出为 0，已确认的 SVG 裁切和文本重叠全部修复。"
+    },
+    {
+      "id": "demo-on-page",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
+      "note": "检索 Top-2、LoRA 形状关系、蒸馏软分布与请求旅程直接显示在页面；所有交互均附固定结果账本。"
+    },
+    {
+      "id": "claim-semantic-fit",
+      "level": "must",
+      "status": "pass",
+      "evidenceFile": "src/data/lessons/neural-network-foundations.json",
+      "note": "XOR 明确使用教学阶跃激活，蒸馏比例明确为教学示意，训练规模统一 token 单位；phi-4、Dropout、KV cache、RNN Jacobian 与 ReLU 零梯度表述均按原始来源和数学定义修正。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/sql-injection.mdx",
-      "note": "各专题以引导问题开场。"
+      "evidenceFile": "src/content/docs/lessons/machine-learning-foundations.mdx",
+      "note": "五课分别从可见困境进入机制：直线与泛化、手写数字表示、语言生成、Prompt 扩成系统、生产名词膨胀。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/rce.mdx",
-      "note": "使用表格、对照代码与流程时间线表达机制，而非装饰图。"
+      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
+      "note": "过程、空间和结构关系优先转为图示；L4 表格降到 10 张，L5 用检索平面、LoRA 窄矩阵、教师学生和全链路图减少理解步骤。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "examples/sql-injection-demo.mjs",
-      "note": "可运行示例已和正文预期输出逐项核对；CVE 事实同时引用项目、厂商或 NVD 等可核验记录。"
+      "evidenceFile": "src/content/docs/lessons/agent-harness-engineering.mdx",
+      "note": "发布简报贯穿 L4 七层与窗口演化；客服请求贯穿 L5 网关、护栏、检索、工具、轨迹和评测回流。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/xss.mdx",
-      "note": "每课保留单个 KeyTakeaway。"
+      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
+      "note": "每课仅保留一个 KeyTakeaway；L5 明确指向请求旅程这幅图和五层定位问题。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/xss.json",
-      "note": "ScrollReveal 与主要交互数量受 motionBudget 约束。"
+      "evidenceFile": "src/components/retrieval-sandbox.tsx",
+      "note": "交互响应由用户点击、range 或单步控制触发；GSAP 只用于状态切换提示，计时器离开视口后暂停，无装饰循环。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ssrf.mdx",
-      "note": "刊头、目标区、机制与防御表格形成固定阅读路径。"
+      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
+      "note": "每课一个主视觉对象：损失面、梯度计算图、注意力矩阵、上下文窗口、二维检索平面。"
+    },
+    {
+      "id": "reference-coverage",
+      "level": "should",
+      "status": "pass",
+      "evidenceFile": ".zcode/plans/plan-sess_3e9320de-d5ab-440a-88fb-b10cb4c438cd.md",
+      "note": "Zcode 六阶段计划逐项落地：阶段 1–5 的组件、正文、manifest 和样式完成，阶段 6 的 verify、浏览器矩阵和 QA 报告完成。"
     }
   ]
 }

@@ -1,0 +1,54 @@
+---
+// MCP 架构图：替换原 ASCII 树。Host 统一管理与安全，每个 Server 一条 JSON-RPC 连接
+const SERVERS = [
+  { client: 'MCP Client A', server: 'Git Server', note: '读取提交' },
+  { client: 'MCP Client B', server: 'Issue Server', note: '查询阻断项' },
+  { client: 'MCP Client C', server: '文档 Server', note: '版本说明模板' },
+];
+const HOST_Y = 66;
+const CLIENT_X = 150;
+const SERVER_X = 470;
+const ROW_GAP = 76;
+---
+
+<section class="mcp-architecture lesson-diagram not-content" aria-label="MCP 架构示意">
+  <header>
+    <p class="lesson-diagram__eyebrow">MCP / 能力交换的标准协议</p>
+    <h3 class="lesson-diagram__title">Host 管理一切，Server 提供能力</h3>
+  </header>
+  <div class="mcp-architecture__body">
+    <svg viewBox="0 0 660 370" role="img" aria-label="用户在上方连接 Host；Host 内负责对话、权限、上下文与用户确认，并向三个 MCP Client 各建立一条 JSON-RPC 连接，分别对接 Git、Issue 与文档三个 Server">
+      <title>MCP 架构</title>
+
+      <text class="diagram-label" x="330" y="20" text-anchor="middle">用户</text>
+      <line class="diagram-arrow" x1="330" y1="28" x2="330" y2={HOST_Y - 2} />
+
+      <rect class="ma-host" x="70" y={HOST_Y} width="520" height="54" rx="8" />
+      <text class="ma-host__title" x="330" y={HOST_Y + 23} text-anchor="middle">Host（模型应用）</text>
+      <text class="ma-host__note" x="330" y={HOST_Y + 42} text-anchor="middle">对话 · 权限 · 上下文 · 用户确认</text>
+
+      {SERVERS.map((s, i) => {
+        const y = HOST_Y + 92 + i * ROW_GAP;
+        return (
+          <g>
+            <line class="diagram-arrow ma-link ma-link--down" x1={CLIENT_X + 60} y1={HOST_Y + 54} x2={CLIENT_X + 60} y2={y - 2} />
+            <rect class="ma-client" x={CLIENT_X - 60} y={y} width="120" height="40" rx="6" />
+            <text class="ma-box__label" x={CLIENT_X} y={y + 25} text-anchor="middle">{s.client}</text>
+
+            <line class="ma-rpc ma-rpc--right" x1={CLIENT_X + 62} y1={y + 12} x2={SERVER_X - 62} y2={y + 12} />
+            <line class="ma-rpc ma-rpc--left" x1={SERVER_X - 62} y1={y + 28} x2={CLIENT_X + 62} y2={y + 28} />
+            <text class="ma-rpc-label" x={(CLIENT_X + SERVER_X) / 2} y={y + 7} text-anchor="middle">JSON-RPC</text>
+
+            <rect class="ma-server" x={SERVER_X - 60} y={y} width="120" height="40" rx="6" />
+            <text class="ma-box__label" x={SERVER_X} y={y + 17} text-anchor="middle">{s.server}</text>
+            <text class="ma-box__note" x={SERVER_X} y={y + 32} text-anchor="middle">{s.note}</text>
+          </g>
+        );
+      })}
+    </svg>
+  </div>
+  <p class="lesson-diagram__note mcp-architecture__note">
+    一个 Host 管理用户体验与安全策略，为每个 MCP Server 建立独立 Client 连接；能力发现与调用都是 JSON-RPC 消息。
+    协议不替 Host 决定「谁可以调用什么」——授权、审批和审计仍在 Host 与目标系统。
+  </p>
+</section>

@@ -1,0 +1,323 @@
+---
+title: 神经网络：从神经元到架构
+description: 从神经元、激活函数、参数形状与容量讲到反向传播、四类架构与部署监控，理解多层网络怎样学习表示
+pageType: lesson
+template: splash
+lessonId: neural-network-foundations
+categoryId: ai-ml
+sources: ["threeblueonebrown-neural-networks", "pytorch-autograd", "pytorch-optimization", "stanford-cs231n-backprop", "d2l-mlp", "d2l-dropout", "d2l-image-augmentation", "d2l-index", "d2l-cnn", "d2l-rnn", "vaswani-2017", "tensorflow-playground", "google-production-monitoring"]
+motionLevel: explanatory
+safetyScope: not-applicable
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import IntuitionBox from '../../../components/intuition-box.astro';
+import StepList from '../../../components/step-list.astro';
+import XorExplorer from '../../../components/xor-explorer';
+import NeuronPlayground from '../../../components/neuron-playground';
+import NetworkDiagram from '../../../components/network-diagram.astro';
+import DigitThreeVariants from '../../../components/digit-three-variants.astro';
+import MatrixSteps from '../../../components/matrix-steps.astro';
+import ActivationFlow from '../../../components/activation-flow';
+import BackpropPlayground from '../../../components/backprop-playground';
+import ConvSlidingWindow from '../../../components/conv-sliding-window.astro';
+import RnnUnfold from '../../../components/rnn-unfold.astro';
+import manifest from '../../../data/lessons/neural-network-foundations.json';
+
+export const learningLoopSteps = [
+  { title: '准备批次', detail: '读取样本，把原始字段转换为模型需要的张量。' },
+  { title: '前向传播', detail: '模型用当前参数计算中间表示与预测。' },
+  { title: '计算目标', detail: '损失函数衡量预测与标签的差异，并加入适用的正则化项。' },
+  { title: '反向传播', detail: '自动微分沿计算图反向应用链式法则，得到参数梯度。' },
+  { title: '更新参数', detail: '优化器依据梯度、学习率和内部状态改变参数。' },
+  { title: '验证泛化', detail: '独立数据、业务指标和切片分析共同判断模型能否用于目标环境。' },
+];
+
+<LessonHero
+  series="AI FOUNDATIONS"
+  unit="REPRESENTATION / UNIT 02"
+  kicker="Neurons, Layers, Backprop, Architectures"
+  lines={[
+    { text: "神经网络" },
+    { text: "从神经元到架构", accent: true },
+  ]}
+  summary="深度学习沿用损失、梯度和独立评估的训练闭环，把单层变换换成多层非线性变换。反向传播把损失传回每个参数，连接方式构成 MLP、CNN、RNN 与 Transformer 的主要差异。"
+/>
+
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：表达能力从哪里来
+
+先看一个具体任务：识别手写数字。一张 28×28 像素的手写「3」，在计算机眼里是 784 个亮度数字（0 全白、1 全黑）。要让程序说出「这是 3」，需要一条从 784 个数字到 10 个类别的映射规则。这条规则没法用 if-else 写出来：每个人的「3」写法都不同，你无法枚举所有情况。下面四张图就是四种写法的「3」在像素里的样子。
+
+<DigitThreeVariants />
+
+上一课学到的模型核心仍是一条直线：线性回归用 `wx + b` 预测数值，逻辑回归用 `wᵀx + b` 加 sigmoid 输出概率。直线把输入空间切成两半，而 XOR 四个点、图像中的数字笔画、句子里相隔很远的指代关系，都不服从这种划分。
+
+训练闭环本身不需要更换。数据、损失、梯度、优化器和独立评估继续工作，改变的是模型内部的结构：把单层变换换成多层非线性变换，让网络在训练中组合出有用的中间表示。本课沿四个问题展开：多层结构为什么能表达更复杂的关系，参数量怎样计算与控制，梯度怎样到达每一层参数，四类架构分别适合什么数据。
+
+## 一、一个神经元完成加权、偏置和激活
+
+上一课的模型里，`wx + b` 已经是一次「加权打分」：`w` 是每个输入的权重，`b` 是基础分。神经元只是把这个想法推广到多个输入：每个输入有自己的权重，全部加权求和，再加上偏置，然后经过一个激活函数决定输出。先说清一件事：「神经元」这个名字是从脑科学借来的，相似处仅止于「收多个信号、出一个信号」，它只是一个算加权分的函数，不是在模拟大脑。
+
+<NeuronPlayground client:visible motionLevel="explanatory" />
+
+亲手调过之后再看公式，每一项都有了着落：
+
+```text
+z = w₁x₁ + w₂x₂ + … + wₙxₙ + b
+a = φ(z)
+```
+
+<MatrixSteps />
+
+第一行是线性变换，第二行的 `φ` 是激活函数。只剩一个问题：如果 `φ` 是线性的，多层叠起来仍然等价于一层线性变换，弯曲的决策边界还是画不出来；非线性激活把这道门打开，让网络表达弯曲决策边界。D2L 的多层感知机章节用隐藏层和激活函数建立这一关系。（来源：[Multilayer Perceptrons](#source-d2l-mlp)）
+
+<DataTable
+  caption="常见激活与输出函数"
+  headers={["函数", "形式或范围", "常见位置", "训练边界"]}
+  rows={[
+    ["ReLU", "max(0, z)", "隐藏层", "负区间梯度为 0；输出没有上界"],
+    ["Sigmoid", "0 到 1", "二分类输出或门控", "绝对值较大时梯度趋近 0"],
+    ["Tanh", "-1 到 1", "传统 RNN 状态", "饱和区梯度趋近 0"],
+    ["Softmax", "类别概率和为 1", "互斥多分类输出", "表达相对概率，仍需校准与阈值设计"],
+  ]}
+/>
+
+## 二、隐藏层能重新组合输入表示
+
+夹在输入和输出之间的层叫**隐藏层**：「隐藏」表示这些层的输出没有直接对应任何人给定的含义，它们是训练过程自己造出来的中间表示。
+
+### 1. 层在算什么：把 3 再看一遍
+
+一个直观的假设：手写数字是部件组成的——上弧、下弧、横杠。让隐藏层的每个神经元盯住一个部件，输出层再看部件的组合判断数字。3Blue1Brown 系列正是用这种「激活即亮度」的画法把整个网络变成一张可以眼看懂动的图。（来源：[Neural networks](#source-threeblueonebrown-neural-networks)）
+
+<ActivationFlow client:visible motionLevel="explanatory" />
+
+这个教学网络的检测器和权重是手工摆好的；真实网络没有人事先告诉它要检测什么，这些权重全部由梯度下降在数据上自动学出（第四节），学到的特征也未必符合人的部件直觉，要靠激活可视化逐一检验。但它回答了核心问题：隐藏层的每一层都在对上一层的数值做加权重组，一层层把「像素」变成「部件」再变成「答案」。
+
+### 2. 为什么非要隐藏层：XOR 的三步演示
+
+XOR 四个点无法用一条直线分开：
+
+```text
+x₁  x₂  y
+0   0   0
+0   1   1
+1   0   1
+1   1   0
+```
+
+带隐藏层和非线性激活的 MLP 可以先把输入映射到新的表示空间，再由输出层完成线性分类。下面的演示分三步走：先确认一条直线分不开这四个点，再看两个隐藏神经元怎样给每个点换一组坐标，最后在新坐标里用一条普通直线完成分类。TensorFlow Playground 用同样的思路展示网络结构如何改变可分性。（来源：[A Neural Network Playground](#source-tensorflow-playground)）
+
+<XorExplorer client:visible motionLevel="explanatory" />
+
+<IntuitionBox>
+每一层重新组合上一层的数值表示。图像模型的早期层可能对局部边缘敏感，后续层再组合纹理与形状。具体含义需要通过激活可视化、探针和消融分析验证。
+</IntuitionBox>
+
+## 三、张量形状决定参数数量和计算量
+
+把这些节点和连线画出来，参数数量就能直接数出来：
+
+<NetworkDiagram />
+
+输入维度为 `4`、隐藏层宽度为 `3`、输出维度为 `2` 的全连接网络：
+
+```text
+第一层参数：(4 × 3) + 3 个偏置 = 15
+第二层参数：(3 × 2) + 2 个偏置 = 8
+总参数量：23
+```
+
+数连线就是数权重：每条连线一个权重，每个神经元一个偏置。把这个网络放大到手写数字任务，输入层变成 784、输出层变成 10，一个隐藏层取 100 个神经元，参数量就是 (784×100 + 100) + (100×10 + 10) = 78,510。参数越多能表达的规律越复杂，同时也越需要数据来约束它们，这是下一节容量问题的起点。
+
+批量大小为 `B` 时，第一层输入形状为 `[B, 4]`，权重形状为 `[4, 3]`，输出形状为 `[B, 3]`。检查张量形状是定位神经网络实现错误的基础方法。
+
+## 四、容量和正则化共同影响拟合程度
+
+上一节末尾留了一个问题：识别数字的网络有 78,510 个参数，而训练集可能只有几百张图。参数比样本还多几百倍，会发生什么？——模型有足够的自由度把训练样本「背」下来，包括它们的噪声。这就是**容量**问题的入口：**深度**表示计算层数量，**宽度**表示一层的单元或通道数，**容量**描述模型能够表达的函数范围。容量增加通常提高训练集拟合能力，同时提高数据、优化和评估要求。
+
+<DataTable
+  caption="常见容量控制手段"
+  headers={["手段", "训练时发生什么", "主要作用", "检查信号"]}
+  rows={[
+    ["L2 / 权重衰减", "惩罚较大的权重", "限制参数幅度", "训练损失略升、验证表现可能改善"],
+    ["Dropout", "训练时随机屏蔽部分激活", "降低单元之间的共适应", "训练与推理模式需要正确切换"],
+    ["早停", "验证指标停止改善后结束训练", "限制有效训练步数", "最佳检查点位于过拟合前"],
+    ["数据增强", "生成保持标签语义的输入变化", "扩大观察到的有效分布", "增强规则需要符合任务不变性"],
+  ]}
+/>
+
+Dropout 与数据增强的机制和适用条件在 D2L 有专门章节展开。（来源：[Dropout](#source-d2l-dropout)、[Image Augmentation](#source-d2l-image-augmentation)）
+
+## 五、反向传播怎样计算每个参数的梯度
+
+先看困境：训练损失 L 算出来了，要更新的是 78,510 个参数。每个参数对这次误差「贡献」了多少？逐个试探是试不起的——改一个参数就要把 784 个像素重新算一遍。反向传播用一条聪明的路径把这件事变成一次额外的前向量大小的计算：从损失出发，把责任沿着计算图逐级往回传。
+
+### 1. 前向传播、反向传播和优化器分工明确
+
+<StepList title="一次训练闭环" steps={learningLoopSteps} />
+
+**前向传播**计算中间表示与损失。**反向传播**从损失出发，沿计算图应用链式法则。**自动微分**记录实际运算并计算导数。**优化器**读取梯度并更新参数。（来源：[PyTorch Autograd mechanics](#source-pytorch-autograd)、[CS231n Lecture 4](#source-stanford-cs231n-backprop)）
+
+```text
+前向：x → z₁ → a₁ → z₂ → ŷ → L
+反向：L → ∂L/∂ŷ → ∂L/∂z₂ → ∂L/∂a₁ → ∂L/∂z₁
+更新：∂L/∂θ → optimizer → 新参数 θ′
+```
+
+### 2. 链式法则把局部导数组合起来
+
+反向传播要回答的问题是追责：最终误差 L 出现了，每个参数各承担多少责任？影响是逐级传导的：`w` 先影响 `a`，`a` 再影响 `ŷ`，`ŷ` 最后影响 `L`。想知道 `w` 的责任，就把这条链上每一段的影响率相乘，这就是链式法则。
+
+沿用上一课的单参数例子，把它扩展成两层网络：
+
+```text
+a = wx
+ŷ = va
+L = (ŷ - y)²
+```
+
+取 `x = 2`、`w = 0.5`、`v = 1`、`y = 4`：
+
+```text
+前向：a = 1，ŷ = 1，L = 9
+
+输出层：dL/dŷ = 2(ŷ-y) = -6
+v 的梯度：dL/dv = (dL/dŷ)(dŷ/dv) = -6 × a = -6
+w 的梯度：dL/dw = (dL/dŷ)(dŷ/da)(da/dw)
+                    = -6 × v × x = -12
+```
+
+每个节点只计算自己的局部导数，反向传播把路径上的导数相乘，并在分支汇合处相加。自动微分把同一原则扩展到矩阵、卷积和复杂控制流。
+
+### 3. 把责任流回每一个参数：完整走一遍
+
+两个参数的链条学会了，真实网络多了两件事：**分支**（一个隐藏单元的输出既影响参数 v，也继续往前传）和**闸门**（ReLU 在负区间直接把责任拦成 0）。下面的演示就是第一节手算过的那个 2-2-1 网络：前向的数字你已经逐个验算过，现在从损失 L 出发，逐步把责任送回每个参数。重点盯住 h₂：责任明明走到了门口，却被关着的 ReLU 门拦下——那一刻你就亲眼看到了「梯度消失」的最小案例。
+
+<BackpropPlayground client:visible motionLevel="explanatory" />
+
+把这张图记成一句话：**前向是亮度从输入流向损失，反向是责任从损失流回参数；每个节点只算自己的局部导数，路径相乘、分支相加，ReLU 负区间一票否决。**（来源：[Autograd mechanics](#source-pytorch-autograd)、[CS231n Lecture 4](#source-stanford-cs231n-backprop)）
+
+### 4. Batch、step 与 epoch 描述不同尺度
+
+<DataTable
+  caption="训练进度术语"
+  headers={["术语", "含义", "参数变化"]}
+  rows={[
+    ["Batch / mini-batch", "一次前向与反向使用的一组样本", "产生一组梯度；梯度累积时暂缓更新"],
+    ["Step / iteration", "优化器完成一次参数更新", "参数更新一次"],
+    ["Epoch", "训练数据被完整遍历一遍", "通常包含多个 step"],
+  ]}
+/>
+
+### 5. 深层网络还要管理梯度尺度和数值稳定性
+
+刚才演示里 h₂ 的梯度被 ReLU 拦成 0，是梯度消失的最小案例。真实网络动辄几十层，这样的连乘每层都在发生，梯度尺度和数值稳定性必须当作工程问题管理：
+
+<DataTable
+  caption="深层训练的常见问题"
+  headers={["问题", "可观察信号", "常见原因", "处理方向"]}
+  rows={[
+    ["梯度消失", "早期层梯度接近 0", "饱和激活、长链式乘法", "ReLU 类激活、残差连接、归一化、合适初始化"],
+    ["梯度爆炸", "梯度或损失突然变大", "重复乘上大于 1 的局部导数", "梯度裁剪、学习率调整、初始化和归一化"],
+    ["激活失稳", "层输出持续放大、缩小或出现 NaN", "输入尺度、初始化或混合精度范围", "监控激活统计、归一化、数值检查"],
+    ["训练推理差异", "离线与推理输出不一致", "Dropout、归一化状态或预处理不一致", "显式切换模式并复用同一数据管线"],
+  ]}
+/>
+
+## 六、常见神经网络架构使用不同连接方式
+
+四种架构的差别不在「学不学」（训练闭环完全一样），而在**连接方式**：全连接层假设任意两个特征都可能有关系，卷积假设模式有局部性和平移不变性，循环假设数据有先后顺序，注意力假设任意两个位置都可能相关。这些假设叫归纳偏置，它们决定模型擅长什么数据。
+
+<DataTable
+  caption="四类架构的计算结构"
+  headers={["架构", "核心计算", "归纳偏置", "典型任务"]}
+  rows={[
+    ["MLP", "全连接层逐层变换", "固定长度特征可以任意组合", "表格数据、通用预测头"],
+    ["CNN", "局部卷积与权重共享", "空间局部性与平移等变", "图像、音频局部模式"],
+    ["RNN", "隐藏状态按时间递归", "顺序与历史状态", "时间序列、流式序列"],
+    ["Transformer", "自注意力跨位置聚合", "全局内容相关交互", "文本、视觉、语音、多模态"],
+  ]}
+/>
+
+### 1. CNN 用局部连接和共享权重处理空间结构
+
+一个 3×3 的卷积核就是一张 9 格的小模板。它在图像上滑动，每个位置计算一次「这一小块和模板有多匹配」。检测竖向笔画的模板，无论笔画出现在图片左上角还是右下角，都由同一个模板负责，这就是权重共享。
+
+二维卷积在每个位置复用同一个小核：
+
+```text
+H[i,j] = b + ΣₐΣᵦ K[a,b] · X[i+a, j+b]
+```
+
+公式落到图上，就是同一张小模板扫过所有位置：
+
+<ConvSlidingWindow />
+
+局部连接减少参数，共享权重让同一模式能够在不同位置被检测。卷积层具有平移等变性；池化和全局聚合可以增加一定程度的位置不敏感性。（来源：[From Fully Connected Layers to Convolutions](#source-d2l-cnn)）
+
+### 2. RNN 用隐藏状态携带顺序信息
+
+读句子时你会逐词往下读，记住前文再理解新词。RNN 把这个过程做成公式：每读一个输入，就把「至今为止的摘要」更新一次，这个摘要就是隐藏状态 `h`。
+
+```text
+hₜ = φ(Wₓxₜ + Wₕhₜ₋₁ + b)
+```
+
+这行公式「卷起来」只有一个单元，沿时间展开才能看清它的真面目——一张随序列变深的计算图：
+
+<RnnUnfold />
+
+当前状态由当前输入和前一状态共同决定。反向传播需要沿时间展开计算图（就是上图里那串逐级变弱的虚线），长序列容易出现梯度消失或爆炸。门控 RNN、梯度裁剪和截断反向传播用于管理这些问题。（来源：[Recurrent Neural Networks](#source-d2l-rnn)）
+
+### 3. Transformer 用注意力直接连接不同位置
+
+RNN 读第 100 个词时要先读完前 99 个，无法并行；注意力让第 100 个词直接和任何位置建立联系，所有位置可以同时计算。代价是任意两词都要两两配对，序列越长计算量增长越快，这正是下一课会展开的 n² 问题。
+
+Transformer 用查询、键和值计算位置之间的相关性，并允许序列位置并行计算。原始架构还包含多头注意力、逐位置前馈层、残差连接、归一化和位置编码。（来源：[Attention Is All You Need](#source-vaswani-2017)）
+
+本课把 Transformer 放在架构地图中。下一课继续解释 token、embedding、Q/K/V、自注意力、因果遮罩、预训练和对齐。
+
+## 七、部署后仍要验证数据和模型
+
+离线测试通过只说明模型在当前评估集上的表现。部署系统还会面对数据格式变化、特征管线差异、标签延迟和分布漂移。
+
+<DataTable
+  caption="从训练到部署的持续检查"
+  headers={["对象", "训练前", "发布前", "运行中"]}
+  rows={[
+    ["数据", "schema、缺失率、分布和标签质量", "训练与服务特征一致性", "异常值、类别变化、分布漂移"],
+    ["模型", "基线、容量和目标函数", "独立测试、切片、稳定性和延迟", "版本、预测分布、线上质量"],
+    ["系统", "可复现数据与配置", "模型和服务依赖兼容", "延迟、吞吐、资源和错误率"],
+    ["反馈", "标签产生流程", "人工审查与申诉路径", "反馈循环、标签延迟与再训练触发"],
+  ]}
+/>
+
+Google 的生产 ML 监控指南要求分别检查原始数据、特征工程结果、标签泄漏、训练与服务偏差、数值稳定性和线上质量。（来源：[Production ML systems: Monitoring pipelines](#source-google-production-monitoring)）
+
+模型版本需要关联代码、数据、预处理器、超参数和评估报告。数据变化时，旧测试集会逐渐失去代表性；更新评估集需要保留稳定基准，才能区分模型变化和评估集变化。
+
+## 常见误解与能力边界
+
+- **反向传播和优化器：** 反向传播计算梯度，优化器使用梯度更新参数。
+- **模型容量和实际效果：** 数据质量、目标函数、优化过程、目标分布和评估共同决定结果。
+- **相关表示和因果结论：** 中间表示的相关性需要解释性分析，因果主张需要干预设计或明确识别假设。
+
+四类架构中，Transformer 直接支撑了当前的大语言模型。下一课《大模型原理：从 Token 到对齐》进入 token、自注意力、预训练与对齐，观察这套架构怎样生成语言。
+
+<KeyTakeaway>
+记住本课的两幅画：**前向是亮度从输入逐层流向损失**（数字穿过网络，激活即亮度），**反向是责任从损失逐级流回每个参数**（路径相乘、分支相加，ReLU 负区间把责任拦成 0）。容量决定这幅画能画多复杂，连接方式决定它擅长什么数据：全连接任意组合、卷积局部共享、循环沿时间展开、注意力全局直连。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />

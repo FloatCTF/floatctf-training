@@ -1,0 +1,345 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "neural-network-foundations",
+    "slug": "neural-network-foundations",
+    "categoryId": "ai-ml",
+    "title": "神经网络：从神经元到架构",
+    "audience": "已完成机器学习训练闭环、刚进入计算机专业的大一新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "concept",
+      "comparison"
+    ],
+    "evidenceProfiles": [
+      "academic"
+    ],
+    "assessments": [
+      "none"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "亮度流动是全课主线：前向「数字穿过网络」（激活即亮度），反向「梯度追责演示」主交互把责任从损失逐步送回每个参数并展示 ReLU 门拦下梯度；神经元交互、XOR 三步演示为辅助；手算矩阵、卷积滑动窗口、RNN 展开图静态锚定数值",
+    "learningObjectives": [
+      "解释神经元、激活函数与多层非线性怎样扩展模型可表达的函数范围",
+      "计算全连接网络的参数量，并说明张量形状检查怎样定位实现错误",
+      "说明深度、宽度与容量的关系，以及 L2、Dropout、早停和数据增强各自的控制位置",
+      "沿计算图说明前向传播、链式法则、反向传播、自动微分与优化器的分工",
+      "比较 MLP、CNN、RNN 与 Transformer 的连接方式、归纳偏置和适用结构",
+      "说明部署后需要持续监控数据、特征、模型、系统与反馈"
+    ],
+    "prerequisites": [
+      "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-08-22",
+    "supportingInteractions": 3
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-08-22",
+    "queries": [
+      "PyTorch autograd optimization batch epoch gradient",
+      "D2L MLP CNN RNN Transformer numerical stability",
+      "Google production machine learning monitoring training serving skew"
+    ],
+    "notes": "本课由原 machine-learning-foundations 单课拆分而来：神经元、表示、容量、反向传播、架构与部署章节移入本课，正文事实与来源沿用原核验（2026-08-02），2026-08-22 拆分时复核页面。Transformer 保留架构导览，token、自注意力、预训练与对齐由《大模型原理》展开。"
+  },
+  "sources": [
+    {
+      "id": "pytorch-autograd",
+      "kind": "official-doc",
+      "title": "Autograd mechanics",
+      "publisher": "PyTorch",
+      "url": "https://docs.pytorch.org/docs/main/notes/autograd.html",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新的 main 文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-backprop-autograd",
+        "evidence-backprop-mechanics"
+      ]
+    },
+    {
+      "id": "pytorch-optimization",
+      "kind": "official-doc",
+      "title": "Optimizing Model Parameters",
+      "publisher": "PyTorch Tutorials",
+      "url": "https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新教程；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-training-loop"
+      ]
+    },
+    {
+      "id": "stanford-cs231n-backprop",
+      "kind": "university-course",
+      "title": "CS231n Lecture 4: Backpropagation and Neural Networks",
+      "publisher": "Stanford University",
+      "url": "https://cs231n.stanford.edu/slides/2025/lecture_4.pdf",
+      "publishedAt": "2025-04-01",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-backprop-autograd",
+        "evidence-backprop-mechanics"
+      ]
+    },
+    {
+      "id": "d2l-mlp",
+      "kind": "textbook",
+      "title": "Dive into Deep Learning — Multilayer Perceptrons",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/chapter_multilayer-perceptrons/mlp.html",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；当前页面版本为 1.0.3。",
+      "supports": [
+        "claim-mlp-nonlinearity"
+      ]
+    },
+    {
+      "id": "d2l-dropout",
+      "kind": "textbook",
+      "title": "Dropout",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/chapter_multilayer-perceptrons/dropout.html",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；当前页面版本为 1.0.3。",
+      "supports": [
+        "claim-regularization-techniques"
+      ]
+    },
+    {
+      "id": "d2l-image-augmentation",
+      "kind": "textbook",
+      "title": "Image Augmentation",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/chapter_computer-vision/image-augmentation.html",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；当前页面版本为 1.0.3。",
+      "supports": [
+        "claim-regularization-techniques"
+      ]
+    },
+    {
+      "id": "d2l-index",
+      "kind": "textbook",
+      "title": "Dive into Deep Learning",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；目录覆盖 MLP、CNN、RNN、Transformer、优化与强化学习。",
+      "supports": [
+        "claim-architecture-map",
+        "evidence-neural-architectures"
+      ]
+    },
+    {
+      "id": "d2l-cnn",
+      "kind": "textbook",
+      "title": "From Fully Connected Layers to Convolutions",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/chapter_convolutional-neural-networks/why-conv.html",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；当前页面版本为 1.0.3。",
+      "supports": [
+        "claim-cnn-structure",
+        "evidence-neural-architectures"
+      ]
+    },
+    {
+      "id": "d2l-rnn",
+      "kind": "textbook",
+      "title": "Recurrent Neural Networks",
+      "publisher": "Dive into Deep Learning",
+      "url": "https://d2l.ai/chapter_recurrent-neural-networks/rnn.html",
+      "publishedAt": "2023-02-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开放教材持续更新；当前页面版本为 1.0.3。",
+      "supports": [
+        "claim-rnn-structure",
+        "evidence-neural-architectures"
+      ]
+    },
+    {
+      "id": "vaswani-2017",
+      "kind": "paper",
+      "title": "Attention Is All You Need",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/1706.03762",
+      "publishedAt": "2017-06-12",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-transformer-structure",
+        "claim-architecture-map",
+        "evidence-neural-architectures"
+      ]
+    },
+    {
+      "id": "tensorflow-playground",
+      "kind": "official-doc",
+      "title": "A Neural Network Playground",
+      "publisher": "TensorFlow Playground",
+      "url": "https://playground.tensorflow.org/",
+      "publishedAt": "2016-03-01",
+      "accessedAt": "2026-08-02",
+      "notes": "开源神经网络教学可视化；用于核验表示与决策边界的教学方式。",
+      "supports": [
+        "evidence-representation-visual"
+      ]
+    },
+    {
+      "id": "google-production-monitoring",
+      "kind": "official-doc",
+      "title": "Production ML systems: Monitoring pipelines",
+      "publisher": "Google for Developers",
+      "url": "https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring",
+      "publishedAt": "2025-11-01",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新页面；日期记录当前版本的最近更新月份。",
+      "supports": [
+        "claim-production-monitoring"
+      ]
+    },
+    {
+      "id": "threeblueonebrown-neural-networks",
+      "kind": "official-doc",
+      "title": "Neural Networks",
+      "publisher": "3Blue1Brown",
+      "url": "https://www.3blue1brown.com/topics/neural-networks",
+      "publishedAt": "2017-10-05",
+      "accessedAt": "2026-08-02",
+      "notes": "专题持续扩展；手写数字 28×28 输入的讲解框架参考该系列。",
+      "supports": [
+        "claim-mnist-input-size"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-backprop-mechanics",
+      "kind": "official-course",
+      "identifier": "PyTorch Autograd + CS231n Lecture 4",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "pytorch-autograd",
+        "stanford-cs231n-backprop"
+      ],
+      "summary": "计算图在前向阶段产生结果，在反向阶段应用链式法则计算梯度；优化器随后更新参数。"
+    },
+    {
+      "id": "evidence-neural-architectures",
+      "kind": "textbook-and-paper",
+      "identifier": "D2L + arXiv:1706.03762",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "d2l-index",
+        "d2l-cnn",
+        "d2l-rnn",
+        "vaswani-2017"
+      ],
+      "summary": "MLP、CNN、RNN 与 Transformer 使用不同连接方式表达固定特征、空间、顺序和全局位置交互。"
+    },
+    {
+      "id": "evidence-representation-visual",
+      "kind": "teaching-reference",
+      "identifier": "TensorFlow Playground",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "tensorflow-playground"
+      ],
+      "summary": "隐藏单元与决策边界的可见呈现适合解释表示空间重排怎样改变可分性。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-mlp-nonlinearity",
+      "text": "多层感知机通过隐藏层和非线性激活表达单个线性变换无法表示的关系。",
+      "sourceIds": [
+        "d2l-mlp"
+      ]
+    },
+    {
+      "id": "claim-regularization-techniques",
+      "text": "Dropout、数据增强、权重约束和早停从不同环节控制过拟合风险。",
+      "sourceIds": [
+        "d2l-dropout",
+        "d2l-image-augmentation"
+      ]
+    },
+    {
+      "id": "claim-backprop-autograd",
+      "text": "反向传播沿计算图应用链式法则计算梯度，自动微分框架根据实际运算执行这套计算。",
+      "sourceIds": [
+        "pytorch-autograd",
+        "stanford-cs231n-backprop"
+      ]
+    },
+    {
+      "id": "claim-training-loop",
+      "text": "神经网络训练循环依次执行预测、损失计算、梯度计算和优化器更新，batch、step 与 epoch 描述不同尺度。",
+      "sourceIds": [
+        "pytorch-optimization"
+      ]
+    },
+    {
+      "id": "claim-cnn-structure",
+      "text": "卷积层通过局部连接和共享权重利用空间局部性，并显著减少相对全连接层的参数。",
+      "sourceIds": [
+        "d2l-cnn"
+      ]
+    },
+    {
+      "id": "claim-rnn-structure",
+      "text": "循环神经网络使用当前输入和前一隐藏状态计算当前隐藏状态。",
+      "sourceIds": [
+        "d2l-rnn"
+      ]
+    },
+    {
+      "id": "claim-transformer-structure",
+      "text": "Transformer 使用多头自注意力、位置编码、前馈层、残差连接和归一化构建序列模型。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "claim-architecture-map",
+      "text": "MLP、CNN、RNN 与 Transformer 共享基于损失和梯度的训练闭环，连接方式与归纳偏置形成主要差异。",
+      "sourceIds": [
+        "d2l-index",
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "claim-production-monitoring",
+      "text": "生产机器学习系统需要分别监控原始数据、特征工程、标签泄漏、数值稳定性、训练服务偏差和线上质量。",
+      "sourceIds": [
+        "google-production-monitoring"
+      ]
+    },
+    {
+      "id": "claim-mnist-input-size",
+      "text": "28×28 像素的手写数字图片可表示为 784 个亮度数值，作为网络的输入特征。",
+      "sourceIds": [
+        "threeblueonebrown-neural-networks"
+      ]
+    }
+  ],
+  "assessments": [
+    "none"
+  ],
+  "visualNarrative": {
+    "kind": "digit-network-backprop",
+    "primaryAnimations": 1,
+    "supportingInteractions": 3,
+    "scrollReveals": 0
+  },
+  "visualStory": "一条视觉主线贯穿全课：亮度在网络里的流动。前向是「数字穿过网络」（激活即亮度，四种 3 与一个 8），反向是主交互「反向传播追责演示」——2-2-1 网络计算图上，梯度波从损失逐步流回每个参数，ReLU 门把 h₂ 的责任拦成 0，数值与手算矩阵图严格同源。辅助交互：神经元（滑权重看连线粗细）、XOR 三步演示；静态锚点：手写 3 像素图、手算矩阵、全连接网络图与 Dropout 对照、卷积滑动窗口（真实位图上现场计算响应）、RNN 沿时间展开与梯度衰减"
+}

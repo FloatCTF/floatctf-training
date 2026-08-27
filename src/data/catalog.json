@@ -18,7 +18,7 @@
     {
       "id": "ai-ml",
       "name": "AI 与机器学习",
-      "summary": "从模型机制、训练过程与安全边界理解机器学习系统。",
+      "summary": "从机器学习训练闭环与神经网络表示学习出发，逐步理解大语言模型、AI Agent 工程方法与生产级 AI 工程全景。",
       "order": 3,
       "pagePath": "/categories/ai-ml/"
     },
@@ -122,16 +122,72 @@
       "order": 5
     },
     {
+      "id": "machine-learning-foundations",
+      "slug": "machine-learning-foundations",
+      "categoryId": "ai-ml",
+      "title": "AI 如何学习：从任务到泛化",
+      "summary": "从任务定义、数据表示、损失与优化讲到数据切分、泄漏检查与多指标评估，建立经典机器学习的训练与评估闭环。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/machine-learning-foundations/",
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "neural-network-foundations",
+      "slug": "neural-network-foundations",
+      "categoryId": "ai-ml",
+      "title": "神经网络：从神经元到架构",
+      "summary": "从神经元、参数形状与容量讲到反向传播、四类架构与部署监控，理解多层网络怎样学习表示。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/neural-network-foundations/",
+      "prerequisites": [
+        "machine-learning-foundations"
+      ],
+      "order": 2
+    },
+    {
       "id": "ai-literacy",
       "slug": "ai-literacy",
       "categoryId": "ai-ml",
-      "title": "理解大模型，用好 AI Coding",
-      "summary": "从机器学习与 Transformer 到上下文工程、Harness 与 Claude Code 工作流。",
+      "title": "大模型原理：从 Token 到对齐",
+      "summary": "沿 token、向量、自注意力与概率分布理解语言模型的训练、对齐和生成。",
       "difficulty": "beginner",
       "status": "completed",
       "pagePath": "/lessons/ai-literacy/",
-      "prerequisites": [],
-      "order": 1
+      "prerequisites": [
+        "neural-network-foundations"
+      ],
+      "order": 3
+    },
+    {
+      "id": "agent-harness-engineering",
+      "slug": "agent-harness-engineering",
+      "categoryId": "ai-ml",
+      "title": "AI Agent 工程方法：从 Prompt 到执行图",
+      "summary": "从 Prompt、MCP、Skills、上下文、Harness、Loop 到 Graph，理解一次模型调用怎样扩展为可验证的执行系统。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/agent-harness-engineering/",
+      "prerequisites": [
+        "ai-literacy"
+      ],
+      "order": 4
+    },
+    {
+      "id": "ai-engineering-landscape",
+      "slug": "ai-engineering-landscape",
+      "categoryId": "ai-ml",
+      "title": "AI 工程全景：从一次调用到生产系统",
+      "summary": "沿能力接入、知识与记忆、模型定制、质量与安全、运行与成本五层，把 2026 年的 AI 工程名词收进一张地图。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/ai-engineering-landscape/",
+      "prerequisites": [
+        "agent-harness-engineering"
+      ],
+      "order": 5
     }
   ]
 }

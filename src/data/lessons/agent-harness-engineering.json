@@ -1,0 +1,443 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "agent-harness-engineering",
+    "slug": "agent-harness-engineering",
+    "categoryId": "ai-ml",
+    "title": "AI Agent 工程方法：从 Prompt 到执行图",
+    "audience": "已经理解大语言模型基本机制，希望系统理解 AI 应用与 Agent 工程方法的本科生和工程师",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "comparison",
+      "case-study"
+    ],
+    "evidenceProfiles": [
+      "academic"
+    ],
+    "assessments": [
+      "none"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "发布简报任务贯穿七层；上下文窗口演化主交互把检索、工具结果、压缩和 Lost in the Middle 位置衰减连成一条动态主线；轨迹回放作为辅助交互呈现 verify 失败与 replan 的证据流动，MCP 架构、Skill 加载与执行图用静态图示收束结构关系",
+    "learningObjectives": [
+      "区分 Prompt、MCP、Skills、Context、Harness、Loop 与 Graph 分别设计什么",
+      "把模糊请求改写成包含依据、边界、输出契约和成功标准的任务规格",
+      "解释 MCP 的 Host、Client、Server 与 Resources、Prompts、Tools，并说明协议和授权的边界",
+      "比较 Skill、MCP、上下文与 Harness 在能力、流程、信息和执行控制上的职责",
+      "用状态、验证、预算、停止和恢复条件描述一个可收敛的 Agent Loop",
+      "用节点、边、共享状态、并行、汇合和人工检查点解释 Agent 执行图，并判断何时不需要图"
+    ],
+    "prerequisites": [
+      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
+      "了解 API、JSON、Git 与自动化测试的基本概念"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-08-23"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-08-23",
+    "queries": [
+      "Anthropic prompt engineering success criteria evaluations",
+      "Model Context Protocol architecture resources prompts tools safety",
+      "Agent Skills specification progressive disclosure MCP versus Skills",
+      "effective context engineering for AI agents compiled context",
+      "agent framework runtime harness definition ambiguity",
+      "Harness engineering Codex repository knowledge feedback loops",
+      "ReAct agent loop observation action verification stop condition",
+      "Loop Engineering verification event driven improvement loops",
+      "LangGraph state nodes edges Google ADK graph workflows AutoGen GraphFlow",
+      "Graph Engineering loops graphs Peter Steinberger July 2026"
+    ],
+    "notes": "课程优先采用原始论文、协议规范、官方文档和官方工程复盘。Graph Engineering 的传播起点使用原帖存档核对，技术含义由 LangGraph、Google ADK、AutoGen 与 Anthropic 多 Agent 官方资料交叉验证。页面把 Harness、Loop 与 Graph Engineering 标为工作定义或新兴说法，不将其写成边界统一的标准学科。2026-08-22 新增轨迹回放交互；2026-08-23 完成上下文窗口演化、MCP 架构和表格降密重构，事实主张与来源关系保持不变。"
+  },
+  "versionInfo": {
+    "targetVersion": "AI Agent 工程术语与官方框架文档，2026-08-02 核验快照",
+    "environment": "模型应用、工具型 Agent、AI Coding Agent 与多 Agent 工作流；正文使用静态案例直接展示机制",
+    "verifiedAt": "2026-08-02",
+    "knownDifferences": "Prompt、Context、Harness、Loop 与 Graph Engineering 的边界在不同团队和框架中存在重叠；Graph Engineering 于 2026 年 7 月集中传播，尚无统一标准；MCP、Skills、LangGraph、ADK 和 AutoGen 的产品接口会继续变化。"
+  },
+  "sources": [
+    {
+      "id": "anthropic-prompt-overview",
+      "kind": "official-doc",
+      "title": "Prompt engineering overview",
+      "publisher": "Anthropic",
+      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-prompt-evaluation"
+      ]
+    },
+    {
+      "id": "mcp-architecture",
+      "kind": "specification",
+      "title": "Model Context Protocol architecture overview",
+      "publisher": "Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/docs/learn/architecture",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新规范说明；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-mcp-architecture"
+      ]
+    },
+    {
+      "id": "mcp-tools-spec",
+      "kind": "specification",
+      "title": "MCP Tools Specification 2025-11-25",
+      "publisher": "Model Context Protocol",
+      "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
+      "publishedAt": "2025-11-25",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-mcp-safety"
+      ]
+    },
+    {
+      "id": "agent-skills-spec",
+      "kind": "specification",
+      "title": "Agent Skills Specification",
+      "publisher": "Agent Skills",
+      "url": "https://agentskills.io/specification",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "开放标准持续更新；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-skill-structure"
+      ]
+    },
+    {
+      "id": "openai-skills",
+      "kind": "official-doc",
+      "title": "Skills",
+      "publisher": "OpenAI Developers",
+      "url": "https://developers.openai.com/plugins/concepts/skills",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-mcp-skill-boundary"
+      ]
+    },
+    {
+      "id": "anthropic-context-engineering",
+      "kind": "official-doc",
+      "title": "Effective context engineering for AI agents",
+      "publisher": "Anthropic",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "publishedAt": "2025-09-29",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-context-scope"
+      ]
+    },
+    {
+      "id": "lost-in-the-middle",
+      "kind": "paper",
+      "title": "Lost in the Middle: How Language Models Use Long Contexts",
+      "publisher": "TACL / arXiv",
+      "url": "https://arxiv.org/abs/2307.03172",
+      "publishedAt": "2023-07-06",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-long-context-position"
+      ]
+    },
+    {
+      "id": "langchain-context-engineering",
+      "kind": "official-doc",
+      "title": "Context Engineering for Agents",
+      "publisher": "LangChain",
+      "url": "https://www.langchain.com/blog/context-engineering-for-agents",
+      "publishedAt": "2025-07-02",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-context-strategies"
+      ]
+    },
+    {
+      "id": "openai-harness-engineering",
+      "kind": "official-doc",
+      "title": "Harness engineering: leveraging Codex in an agent-first world",
+      "publisher": "OpenAI",
+      "url": "https://openai.com/index/harness-engineering/",
+      "publishedAt": "2026-02-11",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-harness-practice"
+      ]
+    },
+    {
+      "id": "langchain-harness-boundaries",
+      "kind": "official-doc",
+      "title": "Agent Frameworks, Runtimes, and Harnesses—oh my!",
+      "publisher": "LangChain",
+      "url": "https://www.langchain.com/blog/agent-frameworks-runtimes-and-harnesses-oh-my",
+      "publishedAt": "2025-10-25",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-harness-boundaries"
+      ]
+    },
+    {
+      "id": "anthropic-agent-evals",
+      "kind": "official-doc",
+      "title": "Demystifying evals for AI agents",
+      "publisher": "Anthropic",
+      "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+      "publishedAt": "2026-01-09",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-agent-evaluation"
+      ]
+    },
+    {
+      "id": "react-paper",
+      "kind": "paper",
+      "title": "ReAct: Synergizing Reasoning and Acting in Language Models",
+      "publisher": "ICLR / arXiv",
+      "url": "https://arxiv.org/abs/2210.03629",
+      "publishedAt": "2022-10-06",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-agent-loop"
+      ]
+    },
+    {
+      "id": "anthropic-effective-agents",
+      "kind": "official-doc",
+      "title": "Building effective agents",
+      "publisher": "Anthropic",
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "publishedAt": "2024-12-19",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-workflow-agent-control"
+      ]
+    },
+    {
+      "id": "langchain-loop-engineering",
+      "kind": "official-doc",
+      "title": "The Art of Loop Engineering",
+      "publisher": "LangChain",
+      "url": "https://www.langchain.com/blog/the-art-of-loop-engineering",
+      "publishedAt": "2026-06-16",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-loop-engineering-framework"
+      ]
+    },
+    {
+      "id": "langgraph-graph-api",
+      "kind": "official-doc",
+      "title": "LangGraph Graph API overview",
+      "publisher": "LangChain",
+      "url": "https://docs.langchain.com/oss/python/langgraph/graph-api",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-graph-structure"
+      ]
+    },
+    {
+      "id": "google-adk-graphs",
+      "kind": "official-doc",
+      "title": "ADK Graph-based workflows",
+      "publisher": "Google",
+      "url": "https://adk.dev/graphs/",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-adk-graphs"
+      ]
+    },
+    {
+      "id": "autogen-graphflow",
+      "kind": "official-doc",
+      "title": "GraphFlow (Workflows)",
+      "publisher": "Microsoft AutoGen",
+      "url": "https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/graph-flow.html",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "supports": [
+        "claim-autogen-graphflow"
+      ]
+    },
+    {
+      "id": "anthropic-multi-agent",
+      "kind": "official-doc",
+      "title": "How we built our multi-agent research system",
+      "publisher": "Anthropic",
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "publishedAt": "2025-06-13",
+      "accessedAt": "2026-08-02",
+      "supports": [
+        "claim-multi-agent-orchestration"
+      ]
+    },
+    {
+      "id": "graph-origin-archive",
+      "kind": "incident",
+      "title": "OpenClaw's Peter Steinberger asks if software shifted from loops to graphs",
+      "publisher": "Digg",
+      "url": "https://digg.com/tech/mcw7wsyq",
+      "publishedAt": "2026-07-17",
+      "accessedAt": "2026-08-02",
+      "notes": "原始 X 帖与公开讨论的聚合存档；仅用于术语传播时间，不用于支撑图编排技术结论。",
+      "supports": [
+        "claim-graph-engineering-emergence"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-prompt-evaluation",
+      "text": "优化模型 Prompt 之前应先定义成功标准和经验测试；模型选择、延迟与成本等问题需要相应的工程手段。",
+      "sourceIds": [
+        "anthropic-prompt-overview"
+      ]
+    },
+    {
+      "id": "claim-mcp-architecture",
+      "text": "MCP 采用 Host、Client、Server 架构，并通过 JSON-RPC 数据层交换 Resources、Prompts、Tools 等能力。",
+      "sourceIds": [
+        "mcp-architecture"
+      ]
+    },
+    {
+      "id": "claim-mcp-safety",
+      "text": "MCP Tools 可能触发任意数据访问或代码执行，Host 需要保留用户控制，并把不可信服务器提供的工具注解视为不可信信息。",
+      "sourceIds": [
+        "mcp-tools-spec"
+      ]
+    },
+    {
+      "id": "claim-skill-structure",
+      "text": "Agent Skill 以带元数据的 SKILL.md 为入口，并可通过 references、assets 和 scripts 支持按需加载。",
+      "sourceIds": [
+        "agent-skills-spec"
+      ]
+    },
+    {
+      "id": "claim-mcp-skill-boundary",
+      "text": "MCP Server 负责实时信息、认证授权和受控操作；Skill 负责工具顺序、决策点、缺失结果处理和输出要求。",
+      "sourceIds": [
+        "openai-skills"
+      ]
+    },
+    {
+      "id": "claim-context-scope",
+      "text": "Prompt Engineering 主要处理指令的编写与组织，Context Engineering 管理模型推理时进入窗口的完整 token 集。",
+      "sourceIds": [
+        "anthropic-context-engineering"
+      ]
+    },
+    {
+      "id": "claim-long-context-position",
+      "text": "在 Lost in the Middle 的多文档问答和键值检索实验中，相关信息位于长上下文中间时，模型表现常低于信息位于开头或末尾。",
+      "sourceIds": [
+        "lost-in-the-middle"
+      ]
+    },
+    {
+      "id": "claim-context-strategies",
+      "text": "Write、Select、Compress 和 Isolate 可以作为组织 Agent Context Engineering 方法的实用分类。",
+      "sourceIds": [
+        "langchain-context-engineering"
+      ]
+    },
+    {
+      "id": "claim-harness-practice",
+      "text": "OpenAI 的 Harness Engineering 实践把环境、结构化仓库知识、机械约束、验证和反馈循环作为提高 Agent 可靠性的主要工程对象。",
+      "sourceIds": [
+        "openai-harness-engineering"
+      ]
+    },
+    {
+      "id": "claim-harness-boundaries",
+      "text": "Agent framework、runtime 和 harness 在当前行业用法中没有统一清晰的定义，职责边界存在重叠。",
+      "sourceIds": [
+        "langchain-harness-boundaries"
+      ]
+    },
+    {
+      "id": "claim-agent-evaluation",
+      "text": "Agent 评测需要区分执行轨迹与环境最终状态，并通过多次 trial 观察随机系统的成功率与波动。",
+      "sourceIds": [
+        "anthropic-agent-evals"
+      ]
+    },
+    {
+      "id": "claim-agent-loop",
+      "text": "ReAct 交错组织推理轨迹、行动和环境观察，使外部观察能够修正模型后续计划并帮助处理例外。",
+      "sourceIds": [
+        "react-paper"
+      ]
+    },
+    {
+      "id": "claim-workflow-agent-control",
+      "text": "Workflow 使用预定义代码路径，Agent 由模型动态选择过程和工具；应从能够满足任务的最简单方案开始。",
+      "sourceIds": [
+        "anthropic-effective-agents"
+      ]
+    },
+    {
+      "id": "claim-loop-engineering-framework",
+      "text": "LangChain 在 2026 年将 Loop Engineering 归纳为 Agent、Verification、Event-driven 与 Hill-climbing 四类反馈循环。",
+      "sourceIds": [
+        "langchain-loop-engineering"
+      ]
+    },
+    {
+      "id": "claim-graph-structure",
+      "text": "LangGraph 使用 State、Nodes 和 Edges 描述可包含固定路由、条件分支与循环的状态化工作流。",
+      "sourceIds": [
+        "langgraph-graph-api"
+      ]
+    },
+    {
+      "id": "claim-adk-graphs",
+      "text": "Google ADK 的 graph-based workflows 可以把 Agent、工具、函数和人工步骤作为节点，并用显式边进行路由。",
+      "sourceIds": [
+        "google-adk-graphs"
+      ]
+    },
+    {
+      "id": "claim-autogen-graphflow",
+      "text": "AutoGen GraphFlow 使用有向图控制 Agent 执行，支持顺序、并行、条件分支和带退出条件的循环，当前仍标记为实验特性。",
+      "sourceIds": [
+        "autogen-graphflow"
+      ]
+    },
+    {
+      "id": "claim-multi-agent-orchestration",
+      "text": "Anthropic 的 Research 系统由 Lead Agent 动态创建并行 Subagents，在独立上下文中搜索后汇总，形成运行时编排结构。",
+      "sourceIds": [
+        "anthropic-multi-agent"
+      ]
+    },
+    {
+      "id": "claim-graph-engineering-emergence",
+      "text": "Graph Engineering 作为 AI Agent 行业说法在 2026 年 7 月中旬因 loops 与 graphs 的公开讨论集中传播。",
+      "sourceIds": [
+        "graph-origin-archive"
+      ]
+    }
+  ],
+  "assessments": [
+    "none"
+  ],
+  "visualNarrative": {
+    "kind": "context-window-evolution",
+    "primaryAnimations": 1,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

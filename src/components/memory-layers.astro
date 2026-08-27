@@ -1,0 +1,31 @@
+---
+const layers = [
+  { y: 66, h: 58, label: '上下文窗口', sub: '本轮直接可见，容量有限，每轮重算', kind: 'window' },
+  { y: 148, h: 58, label: '工作记忆', sub: '近期轮次摘要，随时注入', kind: 'working' },
+  { y: 230, h: 58, label: '长期存储', sub: '用户偏好、历史决定，检索后取回', kind: 'long' },
+];
+---
+<section class="memory-layers lesson-diagram not-content" aria-label="记忆分层图">
+  <p class="lesson-diagram__eyebrow">MEMORY LAYERS / 三层</p>
+  <h3 class="lesson-diagram__title">窗口、工作记忆与长期存储</h3>
+  <svg viewBox="0 0 628 360" role="img" aria-label="记忆分层：上下文窗口在最上层，本轮可见；工作记忆在中间，保存近期摘要；长期存储在最下层，跨会话保存事实。写入与检索在层间流动。">
+    <title>记忆分层图</title>
+    <defs>
+      <marker id="mem-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" class="diagram-arrow-head" />
+      </marker>
+    </defs>
+    <line x1="488" y1="124" x2="488" y2="230" class="diagram-arrow" marker-end="url(#mem-arrow)" />
+    <text x="500" y="158" class="diagram-lane-label">事实写入</text>
+    <line x1="584" y1="230" x2="584" y2="124" class="diagram-arrow" marker-end="url(#mem-arrow)" />
+    <text x="570" y="214" text-anchor="end" class="diagram-lane-label">按需取回</text>
+    {layers.map((l) => (
+      <g>
+        <rect x="24" y={l.y} width="428" height={l.h} rx="10" class={`diagram-box diagram-box--${l.kind}`} />
+        <text x="44" y={l.y + 25} class="diagram-box-label">{l.label}</text>
+        <text x="44" y={l.y + 45} class="diagram-box-sub">{l.sub}</text>
+      </g>
+    ))}
+  </svg>
+  <p class="lesson-diagram__note">类比操作系统的内存与磁盘：放不下的内容换到外层，用到时换回来。写入什么、何时遗忘、检索错了怎样纠正，是这一层的设计对象。</p>
+</section>

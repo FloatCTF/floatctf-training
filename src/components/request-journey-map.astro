@@ -1,0 +1,31 @@
+---
+const STEPS = [
+  { id: '01', label: '网关接入', layer: '运行与成本', kind: 'ops' },
+  { id: '02', label: '输入护栏', layer: '质量与安全', kind: 'quality' },
+  { id: '03', label: '组装上下文', layer: '知识与记忆', kind: 'knowledge' },
+  { id: '04', label: '模型推理', layer: '能力接入', kind: 'access' },
+  { id: '05', label: '工具执行', layer: '执行编排', kind: 'orchestration' },
+  { id: '06', label: '输出护栏', layer: '质量与安全', kind: 'quality' },
+  { id: '07', label: '记录轨迹', layer: '运行与成本', kind: 'ops' },
+  { id: '08', label: '回流评测', layer: '质量与安全', kind: 'quality' },
+];
+---
+
+<section class="request-journey-map lesson-diagram not-content" aria-label="一次 AI 请求的五层全链路">
+  <p class="lesson-diagram__eyebrow">REQUEST JOURNEY / 五层同场</p>
+  <h3 class="lesson-diagram__title">请求在线上走八步，失败样本在线下回流</h3>
+  <div class="request-journey-map__body">
+    <ol>
+      {STEPS.map((step) => (
+        <li class={`request-journey-step request-journey-step--${step.kind}`}>
+          <span>{step.id}</span><strong>{step.label}</strong><small>{step.layer}</small>
+        </li>
+      ))}
+    </ol>
+    <div class="request-offline-loop">
+      <span>离线模型定制</span>
+      <p>第 08 步积累的失败案例进入 Prompt、检索、微调或蒸馏改进，再经过评测门禁回到线上。</p>
+    </div>
+  </div>
+  <p class="lesson-diagram__note">在线路径保持确定的八步清单；模型定制位于离线回路，吸收失败证据后通过评测重新发布。</p>
+</section>

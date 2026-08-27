@@ -1,0 +1,66 @@
+---
+// Token embedding 空间示意：语义相近的 token 距离近（压缩到两维的示意图）
+interface TokenPoint { x: number; y: number; text: string }
+
+const CLUSTERS: { name: string; cx: number; cy: number; rx: number; ry: number; points: TokenPoint[] }[] = [
+  {
+    name: '动物类 token', cx: 160, cy: 100, rx: 78, ry: 56,
+    points: [
+      { x: 132, y: 82, text: '猫' },
+      { x: 178, y: 96, text: '狗' },
+      { x: 150, y: 126, text: '鱼' },
+      { x: 112, y: 118, text: '鸟' },
+    ],
+  },
+  {
+    name: '动作类 token', cx: 492, cy: 96, rx: 80, ry: 54,
+    points: [
+      { x: 468, y: 74, text: '跑' },
+      { x: 512, y: 92, text: '跳' },
+      { x: 494, y: 124, text: '写' },
+      { x: 452, y: 108, text: '吃' },
+    ],
+  },
+  {
+    name: '数字类 token', cx: 320, cy: 250, rx: 88, ry: 48,
+    points: [
+      { x: 288, y: 238, text: '一' },
+      { x: 322, y: 256, text: '二' },
+      { x: 282, y: 264, text: '100' },
+      { x: 352, y: 242, text: '3.14' },
+    ],
+  },
+];
+---
+
+<section class="embedding-space not-content" aria-label="token 向量空间示意图">
+  <figure class="embedding-space__figure">
+    <svg viewBox="0 0 640 330" role="img" aria-label="示意坐标里三个 token 簇：动物、动作、数字，簇内点彼此接近，簇间距离远">
+      <title>embedding 空间示意</title>
+      <line class="es-axis" x1="40" y1="300" x2="610" y2="300" />
+      <line class="es-axis" x1="40" y1="300" x2="40" y2="26" />
+      <text class="es-axis-label" x="596" y="322" text-anchor="end">第一维（示意）</text>
+      <text class="es-axis-label" x="14" y="26">第二维（示意）</text>
+      {CLUSTERS.map((c) => (
+        <ellipse class="es-hull" cx={c.cx} cy={c.cy} rx={c.rx} ry={c.ry} />
+      ))}
+      {CLUSTERS.map((c) => (
+        <text class="es-hull-label" x={c.cx} y={c.cy + c.ry + 20} text-anchor="middle">{c.name}</text>
+      ))}
+      {CLUSTERS.map((c) => c.points.map((p) => (
+        <g>
+          <circle class="es-point" cx={p.x} cy={p.y} r="5" />
+          <text class="es-point-label" x={p.x} y={p.y - 10} text-anchor="middle">{p.text}</text>
+        </g>
+      )))}
+      <line class="es-link es-link--near" x1="138" y1="86" x2="172" y2="94" />
+      <text class="es-link-label es-link-label--near" x="128" y="56">猫和狗：距离近</text>
+      <line class="es-link es-link--far" x1="182" y1="100" x2="446" y2="90" />
+      <text class="es-link-label es-link-label--far" x="300" y="60">猫和跑：距离远</text>
+    </svg>
+    <figcaption>示意坐标，不是任何真实模型的输出：真实 embedding 有几千维，画不出来，这里压成两维只为建立直觉。</figcaption>
+  </figure>
+  <p class="lesson-diagram__note embedding-space__note">
+    训练前的向量是随机数，谈不上远近；训练不断调整向量表，让「用起来相近」的 token（后续网络以相似方式处理它们）在空间里也彼此靠近。相近的用法是结果，不是人为规定的规则。
+  </p>
+</section>

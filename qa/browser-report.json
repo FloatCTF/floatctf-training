@@ -1,8 +1,9 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-07-23",
-  "target": "http://127.0.0.1:4321/",
-  "browser": "Codex in-app Chromium",
+  "testedAt": "2026-08-23",
+  "target": "http://localhost:4321/",
+  "browser": "Playwright CLI Chrome",
+  "scope": "AI 与机器学习五课 3Blue1Brown 风格逐图深度审查：覆盖 37 个图与交互实例，执行桌面/手机、浅色/深色、交互状态、SVG 边界、控制台与 A4 打印矩阵；本轮完整记录见 qa/ai-ml-deep-audit.json。",
   "pages": [
     "/",
     "/categories/",
@@ -18,116 +19,186 @@
     "/lessons/sql-injection/",
     "/lessons/sql-injection-advanced/",
     "/lessons/xss/",
-    "/lessons/rce/"
+    "/lessons/rce/",
+    "/lessons/machine-learning-foundations/",
+    "/lessons/neural-network-foundations/",
+    "/lessons/ai-literacy/",
+    "/lessons/agent-harness-engineering/",
+    "/lessons/ai-engineering-landscape/"
+  ],
+  "topicChecks": [
+    {
+      "topic": "machine-learning-foundations",
+      "result": "7 个图与交互实例逐项通过；概率柱恢复精确比例，损失图标签消除重叠，7 阶训练误差趋零时显示“极大（训练≈0）”。16 个按钮、4 个 range 边界状态通过，桌面和 390px 页面无横向溢出。",
+      "screenshots": [
+        "qa/screenshots/machine-learning-foundations-loss-simulator-desktop-light.png",
+        "qa/screenshots/machine-learning-foundations-generalization-desktop-light.png"
+      ]
+    },
+    {
+      "topic": "neural-network-foundations",
+      "result": "9 个图与交互实例逐项通过；修复矩阵、反向传播、RNN 与 XOR 轴标题裁切，校正 Dropout、RNN Jacobian、ReLU 局部零梯度和 XOR 阶跃构造。11 个按钮、6 个 range 状态通过，移动端公式账本与滚动提示完整。",
+      "screenshots": [
+        "qa/screenshots/neural-network-foundations-backprop-figure-desktop-light.png",
+        "qa/screenshots/neural-network-foundations-backprop-controls-desktop-light.png"
+      ]
+    },
+    {
+      "topic": "ai-literacy",
+      "result": "7 个图与交互实例逐项通过；两处注意力说明恢复因果方向，训练规模统一 token 单位，生成过程补充 KV cache 增量前向。采样条 hydration mismatch 已清除，15 个按钮、2 个 range 状态通过。",
+      "screenshots": [
+        "qa/screenshots/ai-literacy-attention-matrix-desktop-light.png",
+        "qa/screenshots/ai-literacy-sampling-desktop-light.png"
+      ]
+    },
+    {
+      "topic": "agent-harness-engineering",
+      "result": "7 个图与交互实例逐项通过；SkillLoading 与 ChoiceLadder 从重叠 SVG 重构为语义化响应布局。MCP、上下文窗口、轨迹和执行图边界完整，10 个按钮状态通过。",
+      "screenshots": [
+        "qa/screenshots/agent-harness-3b1b-desktop-light.png",
+        "qa/screenshots/agent-harness-context-window-desktop-dark.png",
+        "qa/screenshots/agent-harness-context-window-mobile.png",
+        "qa/screenshots/agent-harness-context-window-no-js.png",
+        "qa/screenshots/agent-harness-context-window-print.png"
+      ]
+    },
+    {
+      "topic": "ai-engineering-landscape",
+      "result": "7 个图与交互实例逐项通过；记忆层箭头连接长期存储且标签不裁切，蒸馏比例明确为教学示意，phi-4 数据配比按报告修正。25 个按钮和 top-k range 状态通过，LoRA、蒸馏与请求旅程在四种视觉状态均可读。",
+      "screenshots": [
+        "qa/screenshots/ai-engineering-landscape-retrieval-desktop.png",
+        "qa/screenshots/ai-engineering-landscape-retrieval-desktop-dark.png",
+        "qa/screenshots/ai-engineering-landscape-retrieval-mobile.png",
+        "qa/screenshots/ai-engineering-landscape-retrieval-reduced-motion.png",
+        "qa/screenshots/ai-engineering-landscape-retrieval-no-js.png",
+        "qa/screenshots/ai-engineering-landscape-retrieval-print.png",
+        "qa/screenshots/ai-engineering-landscape-lora-desktop.png",
+        "qa/screenshots/ai-engineering-landscape-distillation-desktop.png",
+        "qa/screenshots/ai-engineering-landscape-request-journey-desktop.png"
+      ]
+    }
   ],
   "checks": [
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "1440×900 下 5 个 Web 安全专题页的刊头、目标区、正文和 10 个表格均保持完整；页面宽度为 1425px，无页面级横向溢出。",
-      "screenshot": "qa/screenshots/home-desktop-light.png"
+      "evidence": "1440×1000 下五课均只有一个 H1，document 与 viewport 均为 1440px；L4 的 10 张、L5 的 6 张 DataTable 均与 1088px 正文容器等宽。",
+      "screenshot": "qa/screenshots/ai-engineering-landscape-3b1b-desktop-light.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "深色主题下 data-theme=dark、color-scheme=dark，正文、表头和代码区颜色变量生效；10 个表格保持组件内 overflow-x:auto，页面无横向溢出。",
-      "screenshot": "qa/screenshots/rce-desktop-dark.png"
+      "evidence": "L4 上下文窗口与 L5 检索沙盒在深色主题下保持网格、语义色、标签、结果侧栏和固定账本对比度；页面宽度保持 1440px。",
+      "screenshot": "qa/screenshots/ai-engineering-landscape-3b1b-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "SSRF、SQL 注入、SQL 注入进阶、XSS、RCE 在 1440×900 下均保留单一顶栏、唯一 H1、完整刊头和一致的章节留白；10 个正文表格的每行均保持 3 个单元格，未出现遮挡、断裂或错位。",
-      "screenshot": "qa/screenshots/desktop-body-contact.png"
+      "evidence": "五课沿用无侧栏教材壳层、课程路径、本课目录、LessonHero、宽表和单一视觉主线；L4 表格降密后图文节奏连续。",
+      "screenshot": "qa/screenshots/agent-harness-3b1b-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390×844 下首页和专题页回落为单栏，浏览器内容宽度为 375px。",
-      "screenshot": "qa/screenshots/home-mobile-light.png"
+      "evidence": "390×844 下五课 document、body 与 viewport 宽度均为 390px；检索图与结果侧栏纵向堆叠，LoRA 横向关系留在组件内部滚动。",
+      "screenshot": "qa/screenshots/ai-engineering-landscape-3b1b-mobile-light.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "5 个专题页在 390×844 下的标题、摘要和学习目标均位于 375px 内容宽度内；表格使用 340px 可聚焦滚动区承载 576px 内容网格，长文本保持自然换行，页面宽度稳定为 375px。",
-      "screenshot": "qa/screenshots/mobile-body-contact.png"
+      "evidence": "L1–L5 逐页在 390px 检查无页面级横向溢出；宽账本和 DataTable 只在自身容器滚动，课程顶栏与目录保持可用。",
+      "screenshot": "qa/screenshots/agent-harness-3b1b-mobile-light.png"
     },
     {
       "id": "category-page",
       "status": "pass",
-      "evidence": "Web 安全分类页无侧栏和自引用入口，显示 5 个已完成专题。"
+      "evidence": "AI 与机器学习分类页按 order 展示 5 门 completed 课程，包含 L1 经典 ML、L2 神经网络、L3 大模型、L4 Agent 工程与 L5 工程全景；页面只有一个 H1。",
+      "screenshot": "qa/screenshots/ai-ml-category-3b1b.png"
     },
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "首页显示 8 个真实分类链接、1 个分类弹层和“8 分类、6 专题、6 可进入”统计；弹层关闭时不占布局空间。清掉从正文流继承的 margin-block-start 后，弹层静止位置由偏下 16px 修正为视口正中（y 128.7，视口 900），遮罩顶部不再漏出 16px 未覆盖条带。"
+      "evidence": "首页 AI 分类弹层包含 5 条课程链接；Esc 关闭后焦点返回 href=/categories/ai-ml/ 的分类卡。禁用 JavaScript 时 8 张分类卡均保留真实分类页链接。"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "5 个专题页在打印媒介下隐藏站点顶栏，使用浅色背景；面试 details、summary 和答案均显示；表格取消最小宽度、完整铺满纸面，并通过 break-inside: avoid 避免跨页断裂。",
-      "screenshot": "qa/screenshots/rce-print.png"
+      "evidence": "A4 打印媒介下五课全部图与固定账本可见，隐藏视觉组件为 0；生成页数依次为 25/24/18/16/23，抽样目检 12 个关键图页，矩阵标题与主体保持同页。",
+      "screenshot": "qa/screenshots/ai-engineering-landscape-3b1b-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "5 个专题页在 prefers-reduced-motion: reduce 下均命中减少动态媒介；ScrollReveal 的 opacity 为 1、transform 为 none。首页分类弹层在该模式下跳过卡片放大，直接居中显示与消失，收起后源卡片 opacity 恢复为 1，焦点回到触发卡片。"
+      "evidence": "prefers-reduced-motion: reduce 下 L1–L5 的主交互控制区均为 0；L1/L2/L3/L4/L5 固定账本分别保留 7、12、4、4、4 行，L4 位置曲线可见。"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "禁用脚本后，5 个专题页均保留唯一 H1、完整正文和 8 组原生面试 details；390px 视口下页面宽度仍为 375px。",
-      "screenshot": "qa/screenshots/ssrf-mobile-no-javascript.png"
+      "evidence": "禁用 JavaScript 的 390×844 页面中 L1–L5 控制区均不渲染，固定账本与静态图完整；L4/L5 document 与 viewport 均为 390px。",
+      "screenshot": "qa/screenshots/ai-engineering-landscape-3b1b-mobile-no-js.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "5 个专题路由与 Web 安全分类路由均返回 HTTP 200；每页 20 至 23 个页内锚点全部存在，未发现重复 ID。"
+      "evidence": "L4/L5 页内锚点全部存在；首页、AI 分类、相邻三课与编程分类共 6 条内部路由返回 HTTP 200，失败列表为空。"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "本课目录和面试题均使用原生 summary，tabIndex 为 0；焦点实测进入 summary，显示 3.2px 实线焦点环。"
+      "evidence": "L4 单步按钮用 Enter 推进到 Select 并保持焦点；L5 query 按钮为原生 button 且带 aria-pressed，top-k range 按 End 到 4 并保持 INPUT:range 焦点。"
     },
     {
       "id": "deployment-csp-pagefind",
       "status": "pass",
-      "evidence": "生产构建生成 Pagefind 索引；nginx CSP、MIME 和缓存配置通过结构门禁。"
+      "evidence": "npm run verify 通过，Astro 静态构建生成 21 个 HTML 页面与 Pagefind 索引，nginx 静态路径、CSP、MIME 和缓存配置通过内容门禁。"
     },
     {
       "id": "console",
       "status": "pass",
-      "evidence": "5 个专题页逐页加载后未记录来自站点脚本或资源的 error、warn、warning；浏览器外壳记录了 Electron 开发环境 CSP 警告，与静态站点资源无关。"
+      "evidence": "五课逐页触发 client:visible 水合并遍历交互后，Playwright 捕获 0 console error、0 warning；React SVG 属性错误和采样 hydration mismatch 已修复。"
     },
     {
       "id": "performance",
       "status": "pass",
-      "evidence": "5 个专题页在 1440px 和 390px 视口下均无页面级横向溢出；桌面 document scrollWidth 为 1425px，手机为 375px，表格横向滚动被限制在组件内部。"
-    },
-    {
-      "id": "category-panel-morph",
-      "status": "pass",
-      "evidence": "桌面且未开启减少动效时走 View Transition：卡片与面板各取一张快照，浏览器按各自宽高比缩放并在 110ms 内交叉淡化，两端都不会出现无文字的空白面板。面板头部改用与分类卡片相同的版式（罗马数字居左、标题摘要成列），各项尺寸按面板与卡片的宽度比 1.2893 换算，交叠期间两套文字基本落在一处，逐帧核对展开与收起的 55/110/200/400ms 未见重影或空白帧。键盘回车打开、Esc 关闭后焦点回到源卡片；连开关三次、以及展开途中打断再开另一张卡片，均无 view-transition-name 残留、无滚动锁残留，控制台无 error 或 warning。不支持 View Transition 时回落到 transform 行进：起点与源卡片偏差不超过 0.02px，落点不超过 0.27px，逐帧采样无空档帧。820px 下头部高 161.2px、390px 下把换算比例还原为 1（抽屉不走变形），头部高 146.8px，标题与关闭按钮无重叠，两种宽度均无页面级横向溢出。",
-      "screenshot": "qa/screenshots/home-category-panel-morph.png"
+      "evidence": "七个目标页均返回 HTTP 200，单页浏览器实测 wall time 267–416ms、domComplete 83–230ms、long task 0；所有页 1440px 无横向溢出，带计时器交互离开视口后暂停。"
     }
   ],
   "screenshots": [
-    "qa/screenshots/home-desktop-light.png",
-    "qa/screenshots/home-desktop-dark.png",
-    "qa/screenshots/home-mobile-light.png",
-    "qa/screenshots/home-print.png",
-    "qa/screenshots/home-no-javascript.png",
-    "qa/screenshots/desktop-contact.png",
-    "qa/screenshots/desktop-body-contact.png",
-    "qa/screenshots/mobile-contact.png",
-    "qa/screenshots/mobile-body-contact.png",
-    "qa/screenshots/rce-desktop-dark.png",
-    "qa/screenshots/rce-print.png",
-    "qa/screenshots/ssrf-mobile-no-javascript.png",
-    "qa/screenshots/home-category-panel-light.png",
-    "qa/screenshots/home-category-panel-dark.png",
-    "qa/screenshots/home-category-panel-morph.png"
-  ],
-  "revalidatedAt": "2026-07-26",
-  "revalidatedScope": "仅重跑首页分类弹层相关项：category-panel-morph、directory-semantics、reduced-motion。其余检查仍为 2026-07-23 全量结果，本次改动未触及其范围。",
-  "revalidatedBrowser": "Playwright Chromium 1228"
+    "qa/screenshots/machine-learning-foundations-loss-simulator-desktop-light.png",
+    "qa/screenshots/machine-learning-foundations-generalization-desktop-light.png",
+    "qa/screenshots/neural-network-foundations-backprop-figure-desktop-light.png",
+    "qa/screenshots/neural-network-foundations-backprop-controls-desktop-light.png",
+    "qa/screenshots/ai-literacy-attention-matrix-desktop-light.png",
+    "qa/screenshots/ai-literacy-sampling-desktop-light.png",
+    "qa/screenshots/agent-harness-3b1b-desktop-light.png",
+    "qa/screenshots/agent-harness-3b1b-desktop-dark.png",
+    "qa/screenshots/agent-harness-3b1b-mobile-light.png",
+    "qa/screenshots/agent-harness-3b1b-mobile-no-js.png",
+    "qa/screenshots/agent-harness-3b1b-print.png",
+    "qa/screenshots/agent-harness-context-window-desktop-dark.png",
+    "qa/screenshots/agent-harness-context-window-mobile.png",
+    "qa/screenshots/agent-harness-context-window-no-js.png",
+    "qa/screenshots/agent-harness-context-window-print.png",
+    "qa/screenshots/ai-engineering-landscape-3b1b-desktop-light.png",
+    "qa/screenshots/ai-engineering-landscape-3b1b-desktop-dark.png",
+    "qa/screenshots/ai-engineering-landscape-3b1b-mobile-light.png",
+    "qa/screenshots/ai-engineering-landscape-3b1b-mobile-no-js.png",
+    "qa/screenshots/ai-engineering-landscape-3b1b-print.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-desktop.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-desktop-dark.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-mobile.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-reduced-motion.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-no-js.png",
+    "qa/screenshots/ai-engineering-landscape-retrieval-print.png",
+    "qa/screenshots/ai-engineering-landscape-lora-desktop.png",
+    "qa/screenshots/ai-engineering-landscape-distillation-desktop.png",
+    "qa/screenshots/ai-engineering-landscape-request-journey-desktop.png",
+    "qa/screenshots/ai-ml-category-3b1b.png",
+    "qa/screenshots/ai-ml-deep-audit-skill-loading.png",
+    "qa/screenshots/ai-ml-deep-audit-choice-ladder.png",
+    "qa/screenshots/ai-ml-deep-audit-memory-layers.png",
+    "qa/screenshots/ai-ml-deep-audit-distillation.png",
+    "qa/screenshots/ai-ml-deep-audit-matrix-mobile.png",
+    "qa/screenshots/ai-ml-deep-audit-print-contact.png"
+  ]
 }

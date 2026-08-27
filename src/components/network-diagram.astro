@@ -1,0 +1,85 @@
+---
+// 4-3-2 全连接网络：连线粗细示意权重大小，节点填充深浅示意激活强度
+type Node = { x: number; y: number; active?: boolean; dropped?: boolean; label?: string };
+type Wire = { from: [number, number]; to: [number, number]; width: number; cut?: boolean };
+
+const inputYs = [40, 100, 160, 220];
+const hiddenYs = [70, 130, 190];
+const outputYs = [100, 160];
+const inX = 60, hidX = 210, outX = 360;
+
+const inputNodes: Node[] = inputYs.map((y, i) => ({ x: inX, y, active: [true, false, true, false][i] === true, label: `x${i + 1}` }));
+const hiddenNodes: Node[] = hiddenYs.map((y, i) => ({ x: hidX, y, active: [true, true, false][i] === true }));
+const outputNodes: Node[] = outputYs.map((y) => ({ x: outX, y, active: true }));
+
+const wireWidths = [2.6, 1.2, 2.0, 1.0, 0.8, 2.4, 1.6, 2.2, 0.9, 1.4, 2.1, 0.7];
+let wi = 0;
+const wires: Wire[] = [];
+for (const a of inputNodes) {
+  for (const h of hiddenNodes) {
+    wires.push({ from: [a.x, a.y], to: [h.x, h.y], width: wireWidths[wi % wireWidths.length] });
+    wi += 1;
+  }
+}
+for (const h of hiddenNodes) {
+  for (const o of outputNodes) {
+    wires.push({ from: [h.x, h.y], to: [o.x, o.y], width: wireWidths[wi % wireWidths.length] });
+    wi += 1;
+  }
+}
+
+// Dropout 对照：训练时第 2 个隐藏节点被随机关闭
+const droppedHidden = 1;
+const trainWires = wires.map((w) => (w.to[0] === hidX && w.to[1] === hiddenYs[droppedHidden] ? { ...w, cut: true } : w));
+const trainHidden = hiddenNodes.map((n, i) => (i === droppedHidden ? { ...n, dropped: true, active: false } : n));
+const trainOutWires = trainWires.map((w) => (w.from[0] === hidX && w.from[1] === hiddenYs[droppedHidden] ? { ...w, cut: true } : w));
+---
+<section class="lesson-diagram network-diagram not-content" aria-label="全连接网络与 Dropout 对照">
+  <p class="lesson-diagram__eyebrow">NETWORK / 4 → 3 → 2</p>
+  <h3 class="lesson-diagram__title">一个全连接网络长什么样</h3>
+  <svg viewBox="0 0 420 260" role="img" aria-label="全连接网络：4 个输入节点连向 3 个隐藏节点再连向 2 个输出节点，每条连线都带权重，粗细示意权重大小，节点颜色深浅示意激活强度。">
+    <title>全连接网络示意图</title>
+    {wires.map((w) => (
+      <line x1={w.from[0]} y1={w.from[1]} x2={w.to[0]} y2={w.to[1]} class="net-wire" style={`--wire-width: ${w.width};`} />
+    ))}
+    {[...inputNodes, ...hiddenNodes, ...outputNodes].map((n) => (
+      <circle cx={n.x} cy={n.y} r="17" class={n.active ? 'net-node net-node--active' : 'net-node'} />
+    ))}
+    {inputNodes.map((n) => (
+      <text x={n.x} y={n.y + 5} text-anchor="middle" class="net-node-label">{n.label}</text>
+    ))}
+    <text x={inX + 12} y="252" text-anchor="middle" class="diagram-lane-label">输入层（4 个特征）</text>
+    <text x={hidX} y="252" text-anchor="middle" class="diagram-lane-label">隐藏层（3 个神经元）</text>
+    <text x={outX} y="252" text-anchor="middle" class="diagram-lane-label">输出层（2 类）</text>
+  </svg>
+  <p class="lesson-diagram__note">每条连线都是一个权重参数：粗线影响大，细线影响小。节点颜色深浅示意激活强弱。按正文 §三 的数法，这个网络共有 (4×3 + 3) + (3×2 + 2) = 23 个参数。</p>
+
+  <div class="network-diagram__row">
+    <figure>
+      <svg viewBox="0 0 420 260" role="img" aria-label="训练时 Dropout 随机关闭一个隐藏神经元，相关连线断开">
+        <title>训练时：Dropout 关闭部分神经元</title>
+        {trainOutWires.map((w) => (
+          <line x1={w.from[0]} y1={w.from[1]} x2={w.to[0]} y2={w.to[1]} class={w.cut ? 'net-wire net-wire--cut' : 'net-wire'} style={`--wire-width: ${w.width};`} />
+        ))}
+        {[...inputNodes, ...trainHidden, ...outputNodes].map((n) => (
+          <circle cx={n.x} cy={n.y} r="17" class={n.dropped ? 'net-node net-node--dropped' : n.active ? 'net-node net-node--active' : 'net-node'} />
+        ))}
+        <text x={hidX} y="252" text-anchor="middle" class="diagram-lane-label">训练时：随机关闭</text>
+      </svg>
+      <figcaption>训练时每个批次随机关闭一部分神经元（虚线节点），逼着其他神经元学会独立完成任务，不过度依赖某个同伴。</figcaption>
+    </figure>
+    <figure>
+      <svg viewBox="0 0 420 260" role="img" aria-label="推理时全部神经元启用，Dropout 关闭">
+        <title>推理时：全部神经元启用</title>
+        {wires.map((w) => (
+          <line x1={w.from[0]} y1={w.from[1]} x2={w.to[0]} y2={w.to[1]} class="net-wire" style={`--wire-width: ${w.width};`} />
+        ))}
+        {[...inputNodes, ...hiddenNodes, ...outputNodes].map((n) => (
+          <circle cx={n.x} cy={n.y} r="17" class={n.active ? 'net-node net-node--active' : 'net-node'} />
+        ))}
+        <text x={hidX} y="252" text-anchor="middle" class="diagram-lane-label">推理时：全部启用</text>
+      </svg>
+      <figcaption>常见的 inverted dropout 在训练时把保留激活除以保留概率；推理时全部神经元启用并直接传值。训练与推理模式若配错，同一模型会给出不同结果。</figcaption>
+    </figure>
+  </div>
+</section>

@@ -4,47 +4,48 @@
     "id": "ai-literacy",
     "slug": "ai-literacy",
     "categoryId": "ai-ml",
-    "title": "理解大模型，用好 AI Coding",
-    "audience": "希望建立 AI 通识、并把大模型用于编程协作的本科生与工程师",
-    "durationMinutes": 100,
+    "title": "大模型原理：从 Token 到对齐",
+    "audience": "已经掌握机器学习训练闭环，希望理解大语言模型核心机制与输出边界的本科生和工程师",
+    "durationMinutes": 90,
     "primaryMode": "concept",
     "supportingModes": [
-      "mechanism",
-      "tool"
+      "mechanism"
     ],
     "evidenceProfiles": [
-      "academic",
-      "stable-technical"
+      "academic"
     ],
     "assessments": [
-      "exercise"
+      "none"
     ],
-    "motionLevel": "static",
-    "visualStory": "从规则系统到 Transformer 的能力跃迁，再到 Agent Harness 与上下文工程的约束闭环",
+    "motionLevel": "simulation",
+    "visualStory": "两条视觉主线：QKᵀ 注意力热力矩阵（主交互，整句两两配对 + 因果遮罩 + 语义头/位置头切换）与概率分布（采样实验台拖温度与 top-p 亲手落笔）；token 向量空间、自回归循环、因果遮罩矩阵与预训练规模对比图静态锚定；困惑度用 p → −ln(p) → 1/p 验算表落地",
     "learningObjectives": [
-      "说明 AI 从专家系统、机器学习到 Transformer 与基础模型的能力边界变化",
-      "用“预测下一个词”和自注意力解释大模型如何利用上下文",
-      "解释上下文窗口的二次复杂度与长上下文失焦现象",
-      "描述 Harness、Plan Mode、Subagent、Skills 与 Hooks 在 AI Coding 中的分工",
-      "在本地演示中观察上下文如何改变下一词的相对概率"
+      "解释 token、embedding、logit、softmax 与下一 token 概率分布的关系",
+      "用 Query、Key、Value 和因果遮罩说明自注意力如何组合上下文",
+      "区分预训练、监督微调、偏好对齐和推理的目标与参数变化",
+      "计算上下文长度变化对全注意力矩阵规模的影响",
+      "沿完整生成链路说明上下文、采样和外部验证怎样影响输出"
     ],
     "prerequisites": [
-      "会读写简单代码",
-      "了解基本命令行操作"
+      "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》",
+      "已完成 neural-network-foundations《神经网络：从神经元到架构》",
+      "理解向量、概率与函数的基本含义"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-07-21"
+    "verifiedAt": "2026-08-22"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-07-21",
+    "verifiedAt": "2026-08-22",
     "queries": [
-      "Attention Is All You Need Transformer",
-      "Agent Skills progressive disclosure",
-      "Claude Code context window skills MCP",
-      "LLM next token prediction"
+      "Stanford CS336 language modeling from scratch assignments",
+      "Hugging Face LLM Course tokenizers transformers",
+      "Attention Is All You Need self-attention complexity",
+      "FlashAttention tiling exact attention memory IO",
+      "Language Models are Few-Shot Learners autoregressive",
+      "Lost in the Middle long context position"
     ],
-    "notes": "讲义结构对齐本地课程 PDF《理解大模型，用好ai》；机制主张绑定 Transformer 论文与官方 Skills/Claude Code 文档。不设面试模块。"
+    "notes": "课程结构参考 Stanford CS336 与 Hugging Face LLM Course，Transformer、自回归生成、长上下文和分块注意力结论分别绑定原始论文。示例概率与注意力矩阵规模均标明教学用途和适用边界。"
   },
   "sources": [
     {
@@ -54,63 +55,75 @@
       "publisher": "NeurIPS",
       "url": "https://arxiv.org/abs/1706.03762",
       "publishedAt": "2017-06-12",
-      "accessedAt": "2026-07-21",
+      "accessedAt": "2026-08-02",
       "supports": [
-        "claim-attention",
-        "claim-next-token",
+        "claim-transformer-attention",
+        "claim-attention-complexity",
         "evidence-transformer-paper"
       ]
     },
     {
-      "id": "deep-learning-book",
-      "kind": "textbook",
-      "title": "Deep Learning",
-      "publisher": "MIT Press",
-      "url": "https://www.deeplearningbook.org/",
-      "publishedAt": "2016-11-18",
-      "accessedAt": "2026-07-21",
+      "id": "brown-2020",
+      "kind": "paper",
+      "title": "Language Models are Few-Shot Learners",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/2005.14165",
+      "publishedAt": "2020-05-28",
+      "accessedAt": "2026-08-02",
       "supports": [
-        "claim-ml-shift",
-        "claim-network"
+        "claim-autoregressive-model",
+        "claim-in-context-learning",
+        "evidence-autoregressive-paper"
       ]
     },
     {
-      "id": "agent-skills",
-      "kind": "official-doc",
-      "title": "Agent Skills",
-      "publisher": "Agent Skills",
-      "url": "https://agentskills.io/home",
-      "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
-      "notes": "持续更新站点；publishedAt 记录核验快照日期。",
+      "id": "dao-2022-flashattention",
+      "kind": "paper",
+      "title": "FlashAttention: Fast and Memory-Efficient Exact Attention with IO-Awareness",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/2205.14135",
+      "publishedAt": "2022-05-27",
+      "accessedAt": "2026-08-02",
       "supports": [
-        "claim-skills"
+        "claim-memory-efficient-attention"
       ]
     },
     {
-      "id": "claude-code-overview",
-      "kind": "official-doc",
-      "title": "Claude Code overview",
-      "publisher": "Anthropic",
-      "url": "https://docs.anthropic.com/en/docs/claude-code/overview",
-      "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
-      "notes": "持续更新文档；publishedAt 记录核验快照日期。",
+      "id": "liu-2023",
+      "kind": "paper",
+      "title": "Lost in the Middle: How Language Models Use Long Contexts",
+      "publisher": "Transactions of the Association for Computational Linguistics",
+      "url": "https://arxiv.org/abs/2307.03172",
+      "publishedAt": "2023-07-06",
+      "accessedAt": "2026-08-02",
       "supports": [
-        "claim-agent-loop"
+        "claim-long-context-position",
+        "evidence-long-context-paper"
       ]
     },
     {
-      "id": "mcp-intro",
-      "kind": "official-doc",
-      "title": "What is the Model Context Protocol (MCP)?",
-      "publisher": "Model Context Protocol",
-      "url": "https://modelcontextprotocol.io/docs/getting-started/intro",
-      "publishedAt": "2026-07-21",
-      "accessedAt": "2026-07-21",
-      "notes": "持续更新文档；publishedAt 记录核验快照日期。",
+      "id": "stanford-cs336-2025",
+      "kind": "university-course",
+      "title": "CS336: Language Modeling from Scratch",
+      "publisher": "Stanford University",
+      "url": "https://cs336.stanford.edu/spring2025/index.html",
+      "publishedAt": "2025-04-01",
+      "accessedAt": "2026-08-02",
       "supports": [
-        "claim-mcp"
+        "claim-course-structure"
+      ]
+    },
+    {
+      "id": "hf-llm-course",
+      "kind": "official-doc",
+      "title": "Hugging Face LLM Course",
+      "publisher": "Hugging Face",
+      "url": "https://huggingface.co/learn/llm-course/chapter1/1",
+      "publishedAt": "2026-08-02",
+      "accessedAt": "2026-08-02",
+      "notes": "持续更新课程页；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-tokenizer-role"
       ]
     }
   ],
@@ -123,75 +136,94 @@
       "sourceIds": [
         "vaswani-2017"
       ],
-      "summary": "提出基于自注意力的 Transformer 架构，支持并行计算并建模全局依赖。"
+      "summary": "原论文给出 Transformer、自注意力、多头注意力和位置编码的架构。"
+    },
+    {
+      "id": "evidence-autoregressive-paper",
+      "kind": "paper",
+      "identifier": "arXiv:2005.14165",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "brown-2020"
+      ],
+      "summary": "GPT-3 论文描述自回归语言模型及其基于文本示例的上下文学习设置。"
+    },
+    {
+      "id": "evidence-long-context-paper",
+      "kind": "paper",
+      "identifier": "arXiv:2307.03172",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "liu-2023"
+      ],
+      "summary": "位置控制实验显示相关信息位于长上下文中部时，部分模型的任务表现会明显下降。"
     }
   ],
   "claims": [
     {
-      "id": "claim-ml-shift",
-      "text": "机器学习用数据学习规律，替代手工穷举规则的专家系统。",
+      "id": "claim-tokenizer-role",
+      "text": "Tokenizer 在文本和模型使用的整数 token ID 之间转换，模型处理的是数值序列。",
       "sourceIds": [
-        "deep-learning-book"
+        "hf-llm-course"
       ]
     },
     {
-      "id": "claim-network",
-      "text": "深度网络通过多层表示学习自动提取特征，而不是依赖人工特征工程。",
+      "id": "claim-autoregressive-model",
+      "text": "自回归语言模型依据已有 token 序列计算后续 token 的条件概率分布。",
       "sourceIds": [
-        "deep-learning-book"
+        "brown-2020"
       ]
     },
     {
-      "id": "claim-attention",
-      "text": "自注意力让模型在生成时对输入各位置分配权重，从而利用全局上下文关系。",
+      "id": "claim-in-context-learning",
+      "text": "模型可以通过输入中的任务说明和示例完成部分任务，推理时不发生参数更新。",
+      "sourceIds": [
+        "brown-2020"
+      ]
+    },
+    {
+      "id": "claim-transformer-attention",
+      "text": "Transformer 用缩放点积注意力和多头注意力组合序列中不同位置的信息。",
       "sourceIds": [
         "vaswani-2017"
       ]
     },
     {
-      "id": "claim-next-token",
-      "text": "当代大语言模型的核心训练目标是根据已有上下文预测下一个 token。",
+      "id": "claim-attention-complexity",
+      "text": "稠密全自注意力包含 n×n 个位置关系，核心计算量随序列长度平方增长；朴素实现还会显式保存同规模的中间矩阵。",
       "sourceIds": [
         "vaswani-2017"
       ]
     },
     {
-      "id": "claim-skills",
-      "text": "Agent Skills 以按需加载的程序性知识组织工作流，描述符常驻、正文渐进披露。",
+      "id": "claim-long-context-position",
+      "text": "长上下文中的信息位置会影响部分语言模型的检索和问答表现，中部信息可能更难被稳定利用。",
       "sourceIds": [
-        "agent-skills"
+        "liu-2023"
       ]
     },
     {
-      "id": "claim-agent-loop",
-      "text": "编码型 Agent 通过收集上下文、采取行动、验证结果的循环完成任务，而不是只做单次回答。",
+      "id": "claim-memory-efficient-attention",
+      "text": "FlashAttention 通过分块计算减少 GPU 高带宽内存与片上存储之间的读写，同时保持精确注意力结果。",
       "sourceIds": [
-        "claude-code-overview"
+        "dao-2022-flashattention"
       ]
     },
     {
-      "id": "claim-mcp",
-      "text": "MCP 为模型提供统一的工具与上下文接入方式，工具定义会占用上下文预算。",
+      "id": "claim-course-structure",
+      "text": "Stanford CS336 按 tokenizer、模型架构、优化器和训练系统组织语言模型的端到端实现路径。",
       "sourceIds": [
-        "mcp-intro"
+        "stanford-cs336-2025"
       ]
     }
   ],
   "assessments": [
-    "exercise"
+    "none"
   ],
   "visualNarrative": {
-    "kind": "static-diagram",
-    "primaryAnimations": 0,
-    "supportingInteractions": 0,
+    "kind": "attention-matrix",
+    "primaryAnimations": 1,
+    "supportingInteractions": 1,
     "scrollReveals": 0
-  },
-  "runnableExamples": [
-    {
-      "id": "next-token-demo",
-      "path": "examples/next-token-demo.mjs",
-      "command": "node examples/next-token-demo.mjs",
-      "expectedResult": "打印两段上下文下候选下一词的相对概率条形图。"
-    }
-  ]
+  }
 }

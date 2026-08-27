@@ -63,8 +63,12 @@ async function main() {
       TRAINING_SITE: 'http://training.local',
     });
     const subpathHtml = await readFile(path.join(temporary, 'dist', 'index.html'), 'utf8');
-    if (!subpathHtml.includes('href="/campus-training/lessons/ssrf/"') || subpathHtml.includes('href="/lessons/ssrf/"')) {
-      throw new Error('子路径构建没有为 catalog 链接应用 /campus-training/。');
+    const hasSubpathCategoryLink = subpathHtml.includes('href="/campus-training/categories/web-security/"');
+    const hasSubpathTopicData = subpathHtml.includes('"href":"/campus-training/lessons/ssrf/"');
+    const hasRootCategoryLink = subpathHtml.includes('href="/categories/web-security/"');
+    const hasRootTopicData = subpathHtml.includes('"href":"/lessons/ssrf/"');
+    if (!hasSubpathCategoryLink || !hasSubpathTopicData || hasRootCategoryLink || hasRootTopicData) {
+      throw new Error('子路径构建的分类链接或专题数据没有统一应用 /campus-training/。');
     }
     process.stdout.write('子路径构建链接验证通过：/campus-training/。\n');
     const lessonHtml = await readFile(path.join(temporary, 'dist', 'lessons', 'ssrf', 'index.html'), 'utf8');
@@ -108,7 +112,7 @@ async function main() {
     }
     try {
       const qaWithoutBrowser = JSON.parse(originalQa);
-      const browserDependentIds = new Set(['fallback-completeness', 'keyboard-access', 'mobile-overflow', 'print-completeness', 'visual-consistency', 'deployment-integrity', 'visual-focus']);
+      const browserDependentIds = new Set(['fallback-completeness', 'keyboard-access', 'mobile-overflow', 'print-completeness', 'visual-consistency', 'deployment-integrity', 'layout-self-audit', 'visual-focus']);
       qaWithoutBrowser.items = qaWithoutBrowser.items.map((item) => browserDependentIds.has(item.id)
         ? { id: item.id, level: item.level, status: 'not-run', note: '当前环境未提供浏览器能力。' }
         : item);

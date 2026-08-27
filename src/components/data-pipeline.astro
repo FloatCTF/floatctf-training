@@ -1,0 +1,52 @@
+---
+// 数据流水线总览：五个环节 + 一条被禁止的泄漏路径
+const STAGES = [
+  { n: '①', title: '采集与标注', note: '覆盖目标人群、设备、时间与环境' },
+  { n: '②', title: '清洗与校验', note: '缺失、异常、重复与标签错误' },
+  { n: '③', title: '特征表示', note: '编码、缩放、嵌入；只在训练侧 fit' },
+  { n: '④', title: '切分', note: '训练 / 验证 / 测试；时间与分组约束' },
+  { n: '⑤', title: '评估与监控', note: '独立测试；上线后盯漂移' },
+];
+const NODE_W = 104;
+const GAP = 22;
+const START_X = 20;
+const Y = 70;
+---
+
+<section class="data-pipeline lesson-diagram not-content" aria-label="数据流水线与泄漏路径总览">
+  <header>
+    <p class="lesson-diagram__eyebrow">DATA PIPELINE / 环节与红线</p>
+    <h3 class="lesson-diagram__title">数据从现实到评估的一条流水线</h3>
+  </header>
+  <div class="data-pipeline__body">
+    <svg viewBox="0 0 660 200" role="img" aria-label="五个环节依次连接：采集与标注、清洗与校验、特征表示、切分、评估与监控；一条红色虚线从评估绕回特征表示，标注为泄漏路径，被禁止">
+      <title>数据流水线与泄漏路径</title>
+      {STAGES.map((s, i) => {
+        const x = START_X + i * (NODE_W + GAP);
+        return (
+          <g>
+            <rect class="dp-node" x={x} y={Y} width={NODE_W} height="46" rx="7" />
+            <text class="dp-node__n" x={x + 10} y={Y + 19}>{s.n}</text>
+            <text class="dp-node__title" x={x + NODE_W / 2 + 4} y={Y + 29} text-anchor="middle">{s.title}</text>
+            <foreignObject x={x - 4} y={Y + 56} width={NODE_W + 8} height="46">
+              <div class="dp-node__note">{s.note}</div>
+            </foreignObject>
+            {i < STAGES.length - 1 && (
+              <line class="diagram-arrow dp-arrow" x1={x + NODE_W} y1={Y + 23} x2={x + NODE_W + GAP} y2={Y + 23} />
+            )}
+          </g>
+        );
+      })}
+      <path
+        class="dp-leak"
+        d={`M ${START_X + 4 * (NODE_W + GAP) + NODE_W / 2} ${Y + 50} C ${START_X + 4 * (NODE_W + GAP) + NODE_W / 2} 168, ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} 168, ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} ${Y + 50}`}
+      />
+      <path class="dp-leak dp-leak--head" d={`M ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2 - 7} ${Y + 58} L ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} ${Y + 48} L ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2 + 7} ${Y + 58} Z`} />
+      <text class="dp-leak-label" x={START_X + 3 * (NODE_W + GAP) + NODE_W / 2} y="180" text-anchor="middle">泄漏：测试侧信息绕回训练侧 → 分数虚高（禁止）</text>
+    </svg>
+  </div>
+  <p class="lesson-diagram__note data-pipeline__note">
+    本节的各项说明分别挂在这条流水线的不同环节上：样本与特征在 ①③，特征处理与状态保存在 ③，
+    学习范式由 ① 的答案来源决定，任务类型在末端决定目标函数。红线提醒：任何让 ⑤④ 的信息流回 ③① 的捷径都是泄漏。
+  </p>
+</section>

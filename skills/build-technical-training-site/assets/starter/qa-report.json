@@ -19,11 +19,15 @@
     { "id": "page-structure", "level": "must", "status": "pass", "evidenceFile": "src/components/lesson-navigation.astro", "note": "首页、分类页与专题页使用独立结构；专题页移除固定侧栏，并从 catalog 与标题层级生成课程路径和本课目录。" },
     { "id": "visual-consistency", "level": "must", "status": "pass", "evidenceFile": "config/themes.json", "note": "暖白纸张、墨色正文、橙红强调、重分隔线、方形模块和编号章节均由语义 token 与共享组件实现。" },
     { "id": "deployment-integrity", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "子路径静态构建通过；浏览器在 nginx 等价 CSP 下成功加载 Pagefind WebAssembly 与 Web Worker，并返回 SSRF 检索结果。" },
+    { "id": "layout-self-audit", "level": "must", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "专题页的表格、标题、演示区和交互控件已经过桌面、手机、打印和深色主题检查。" },
+    { "id": "demo-on-page", "level": "must", "status": "pass", "evidenceFile": "src/content/docs/lessons/deep-learning-basics.mdx", "note": "三个可运行示例均在正文展示预期结果，命令用于复现。" },
+    { "id": "claim-semantic-fit", "level": "must", "status": "pass", "evidenceFile": "src/data/lessons/deep-learning-basics.json", "note": "学术、工具与安全主张分别绑定能够直接支撑论断范围的来源。" },
     { "id": "opening-question", "level": "should", "status": "pass", "evidenceFile": "src/content/docs/lessons/deep-learning-basics.mdx", "note": "三页都用可检验的问题引导学习。" },
     { "id": "diagram-value", "level": "should", "status": "pass", "evidenceFile": "src/components/attack-defense-flow.tsx", "note": "图示突出因果、数据流和状态变化。" },
     { "id": "authentic-example", "level": "should", "status": "pass", "evidenceFile": "examples/ssrf-local-lab.mjs", "note": "示例对应本地安全实验、单步训练与临时 Git 仓库。" },
     { "id": "review-card", "level": "should", "status": "pass", "evidenceFile": "src/content/docs/lessons/git-branch-merge.mdx", "note": "每个专题保留一个重点结论卡。" },
     { "id": "motion-rhythm", "level": "should", "status": "pass", "evidenceFile": "config/training-policy.json", "note": "步骤与揭示时长由统一策略提供。" },
-    { "id": "visual-focus", "level": "should", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "专题页的顶部课程路径占用一行，主视觉保留给大字号分行刊头；正文从学习目标直接进入编号章节、演示台和复习模块。" }
+    { "id": "visual-focus", "level": "should", "status": "pass", "evidenceFile": "qa/browser-report.json", "note": "专题页的顶部课程路径占用一行，主视觉保留给大字号分行刊头；正文从学习目标直接进入编号章节、演示台和复习模块。" },
+    { "id": "reference-coverage", "level": "should", "status": "pass", "evidenceFile": "src/content/docs/lessons/deep-learning-basics.mdx", "note": "课程正文覆盖参考材料中的核心机制、实验和边界，删除图示时提供等价表格或流程。" }
   ]
 }

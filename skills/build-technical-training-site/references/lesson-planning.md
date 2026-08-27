@@ -58,6 +58,7 @@
 - `supportingModes`：从相同枚举选择，数量遵循 policy，且不重复主要模式。
 - `evidenceProfiles`：从 policy 的 `evidenceProfiles` 选择，可组合。
 - `assessments`：从 policy 的 `assessments` 选择。
+- 用户明确要求直接讲解或排除练习、实验、作业和项目时，使用 `assessments: ["none"]`，学习目标与正文同步去除提交物和验收要求。
 - `motionLevel`：从 policy 的 `motionLevels` 选择。
 - `visualStory`：描述需要展示的知识关系和变量，避免只写视觉风格。
 - `learningObjectives`：使用可观察动词，说明学习后能解释、实现、诊断或验证什么。
@@ -92,12 +93,14 @@ Catalog 保存分类和专题索引，manifest 保存专题的 lesson plan、来
 写正文前逐项确认：
 
 - 学习目标能够在设定时长内完成。
+- 单课时长落在 policy 默认范围；目标跨越完整理论机制与完整工具实践时，拆成具有先修关系的多门课。
 - 主要模式与学习目标一致。
 - 支持模式承担清晰任务。
 - 证据档案覆盖主题的事实风险。
-- 考核能验证学习目标。
+- lesson plan 含考核时，考核能验证学习目标；`assessments: ["none"]` 时，正文不生成考核段落。
 - 视觉叙事表达因果、顺序、数据流、状态、空间或对比关系。
 - 安全范围与实验内容一致。
 - 前置专题形成可解释的学习路径。
+- 拆分后的每门课拥有独立 manifest 与来源；考核和可验收产出按 lesson plan 选择，catalog 使用稳定 ID 和 prerequisites 连接顺序。
 
 Starter 的 `config/routing-fixtures.json` 保存典型路由样例，结构门禁用它验证分类、模式、证据、考核和动效枚举的组合能力。

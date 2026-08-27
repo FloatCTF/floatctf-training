@@ -1,0 +1,84 @@
+---
+// RNN 展开图：左「卷起来」的循环单元，右沿时间展开的深计算图，梯度沿时间倒流逐级衰减
+const STEPS = [
+  { t: 1, x: 'the', y: '这' },
+  { t: 2, x: 'cat', y: '猫' },
+  { t: 3, x: 'sat', y: '坐' },
+  { t: 4, x: 'here', y: '在' },
+];
+const CELL_W = 96;
+const CELL_H = 56;
+const STEP_GAP = 150;
+const START_X = 60;
+const CELL_Y = 150;
+---
+
+<section class="rnn-unfold lesson-diagram not-content" aria-label="循环神经网络展开与沿时间反向传播的示意">
+  <header>
+    <p class="lesson-diagram__eyebrow">顺序结构 / 展开才见深度</p>
+    <h3 class="lesson-diagram__title">RNN：同一套权重，沿时间展开</h3>
+  </header>
+  <div class="rnn-unfold__body">
+    <svg viewBox="0 0 700 330" role="img" aria-label="左侧是带自循环的 RNN 单元，右侧展开成四个时间步，同一套 W_h 权重反复出现，梯度虚线从右往左逐级变弱">
+      <title>RNN 展开与沿时间反向传播</title>
+
+      <text class="diagram-label" x="50" y="34">卷起来：一个单元循环使用</text>
+      <rect class="ru-cell" x="70" y="96" width="110" height={CELL_H} rx="8" />
+      <text class="ru-cell-label" x="125" y="128" text-anchor="middle">hₜ = φ(Wₓxₜ + W_h hₜ₋₁)</text>
+      <path class="ru-loop" d="M 180 110 C 230 110, 230 96, 196 96 L 180 96" />
+      <path class="ru-loop ru-loop--head" d="M 186 90 L 198 96 L 186 102 Z" />
+      <text class="ru-loop-label" x="232" y="92">h 传给下一刻</text>
+
+      <text class="diagram-label" x={START_X} y="70">展开：每个时间步各占一格</text>
+      {STEPS.map((s, i) => {
+        const x = START_X + 60 + i * STEP_GAP;
+        return (
+          <g>
+            {i > 0 && (
+              <line
+                class="ru-recurrent"
+                x1={x - STEP_GAP + CELL_W - 12}
+                y1={CELL_Y + 26}
+                x2={x - 12}
+                y2={CELL_Y + 26}
+              />
+            )}
+            <rect class="ru-cell" x={x} y={CELL_Y} width={CELL_W} height={CELL_H} rx="8" />
+            <text class="ru-cell-label" x={x + CELL_W / 2} y={CELL_Y + 24} text-anchor="middle">cell（同一套）</text>
+            <text class="ru-cell-sub" x={x + CELL_W / 2} y={CELL_Y + 43} text-anchor="middle">h{s.t}</text>
+            <text class="ru-io" x={x + CELL_W / 2} y={CELL_Y - 12} text-anchor="middle">x{s.t} = {s.x}</text>
+            <text class="ru-io ru-io--out" x={x + CELL_W / 2} y={CELL_Y + CELL_H + 24} text-anchor="middle">y{s.t} = {s.y}</text>
+          </g>
+        );
+      })}
+      <!-- 展开图 recurrent 连线中点标注 W_h -->
+      {STEPS.slice(1).map((_step, i) => {
+        const x = START_X + 60 + i * STEP_GAP;
+        return <text class="ru-w-label" x={x + CELL_W - 12 + (STEP_GAP - CELL_W) / 2} y={CELL_Y + 20} text-anchor="middle">W_h</text>;
+      })}
+
+      <text class="ru-bp-title" x={START_X + 300} y="268">沿时间反向传播（BPTT）：梯度从第 4 步往第 1 步倒流</text>
+      {[0, 1, 2].map((i) => {
+        const x1 = START_X + 60 + (3 - i) * STEP_GAP - 12;
+        const x2 = x1 - (STEP_GAP - CELL_W);
+        return (
+          <g>
+            <line
+              class:list={['ru-bp', `ru-bp--${3 - i}`]}
+              x1={x1}
+              y1={CELL_Y - 8}
+              x2={x2}
+              y2={CELL_Y - 8}
+            />
+            <path class:list={['ru-bp ru-bp--head', `ru-bp--${3 - i}`]} d={`M ${x2 + 12} ${CELL_Y - 14} L ${x2} ${CELL_Y - 8} L ${x2 + 12} ${CELL_Y - 2} Z`} />
+          </g>
+        );
+      })}
+      <text class="ru-bp-note" x={START_X + 60} y="296">每过一步都乘一次由 W_h 与激活导数组成的局部 Jacobian：连乘可能让梯度消失或爆炸。</text>
+    </svg>
+  </div>
+  <p class="lesson-diagram__note rnn-unfold__note">
+    「循环」在公式里只有一行，展开后却是一张随序列变深的计算图。上一节的链式法则原封不动地适用，
+    只是要沿时间连乘很多次——这正是长序列难训练、需要门控与梯度裁剪的原因。
+  </p>
+</section>

@@ -1,0 +1,171 @@
+{
+  "schemaVersion": 1,
+  "reviewedAt": "2026-08-23",
+  "reviewer": "Codex",
+  "mode": "validate-site",
+  "scope": {
+    "category": "ai-ml",
+    "lessons": [
+      "machine-learning-foundations",
+      "neural-network-foundations",
+      "ai-literacy",
+      "agent-harness-engineering",
+      "ai-engineering-landscape"
+    ],
+    "visualInstances": 37,
+    "focus": [
+      "数学与数值可验算性",
+      "事实主张与原始来源语义",
+      "3Blue1Brown 式视觉叙事",
+      "SVG 边界、文本重叠与裁切",
+      "交互、移动端、深色主题与打印态"
+    ]
+  },
+  "result": {
+    "status": "pass",
+    "issuesFound": 25,
+    "issuesFixed": 25,
+    "remainingKnownDefects": 0,
+    "summary": "五课逐图、逐状态审查完成。修复数学语义、因果遮罩说明、训练规模单位、来源主张、SVG 裁切、两处结构性错版、移动端可读性、React hydration、控制台和打印分页问题。"
+  },
+  "lessons": [
+    {
+      "slug": "machine-learning-foundations",
+      "visuals": [
+        { "component": "AiMlDlExplorer", "kind": "interactive concept map", "checks": ["集合包含关系", "方法边界", "三按钮状态", "移动与打印回退"], "result": "pass" },
+        { "component": "DataPipeline", "kind": "static process diagram", "checks": ["训练/测试共用变换", "数据泄漏边界", "文案数量语义", "移动端"], "result": "pass" },
+        { "component": "LinearFitPlayground(linear)", "kind": "interactive chart", "checks": ["最小二乘数值", "MSE", "斜率/截距边界", "预设与滑块"], "result": "pass" },
+        { "component": "ProbBars", "kind": "probability bars", "checks": ["概率和", "宽度比例", "极小概率可见性"], "result": "pass" },
+        { "component": "LossLandscape", "kind": "contour diagram", "checks": ["梯度反方向", "学习率步长", "标签与箭头重叠", "深色主题"], "result": "pass" },
+        { "component": "NeuralNetworkSimulator", "kind": "interactive optimization trajectory", "checks": ["梯度更新", "学习率边界", "单步/播放/复位", "固定账本"], "result": "pass" },
+        { "component": "LinearFitPlayground(generalization)", "kind": "interactive chart", "checks": ["训练/考试拆分", "1/3/7 阶趋势", "训练误差趋零读法", "移动与打印"], "result": "pass" }
+      ]
+    },
+    {
+      "slug": "neural-network-foundations",
+      "visuals": [
+        { "component": "DigitThreeVariants", "kind": "pixel examples", "checks": ["28×28 网格", "样本变化语义", "布局"], "result": "pass" },
+        { "component": "NeuronPlayground", "kind": "interactive neuron", "checks": ["z=w·x+b", "ReLU", "五滑块边界", "SVG React 属性"], "result": "pass" },
+        { "component": "MatrixSteps", "kind": "worked diagram", "checks": ["四权重与两偏置", "z1/z2 与 ReLU", "SVG viewBox", "移动滚动提示与公式账本", "打印防断页"], "result": "pass" },
+        { "component": "ActivationFlow", "kind": "interactive activation diagram", "checks": ["五输入状态", "特征检测器解释", "概率输出", "移动端"], "result": "pass" },
+        { "component": "XorExplorer", "kind": "three-stage interactive proof", "checks": ["线性不可分", "阶跃激活", "OR/AND 精确构造", "输出边界", "轴标签裁切"], "result": "pass" },
+        { "component": "NetworkDiagram", "kind": "static architecture diagram", "checks": ["全连接结构", "训练/推理 Dropout", "输入层标题边界", "深浅色"], "result": "pass" },
+        { "component": "BackpropPlayground", "kind": "step animation", "checks": ["2-2-1 前向值", "12 项链式法则", "ReLU 局部零梯度", "SVG viewBox", "控制状态"], "result": "pass" },
+        { "component": "ConvSlidingWindow", "kind": "static convolution diagram", "checks": ["3×3 共享模板", "三个位置响应", "空间布局"], "result": "pass" },
+        { "component": "RnnUnfold", "kind": "static sequence diagram", "checks": ["共享 Wh", "时间展开", "局部 Jacobian", "梯度尺度", "SVG viewBox"], "result": "pass" }
+      ]
+    },
+    {
+      "slug": "ai-literacy",
+      "visuals": [
+        { "component": "AutoregressiveLoop", "kind": "cycle diagram", "checks": ["下一 token 循环", "上下文追加", "终止条件", "KV cache 正文边界"], "result": "pass" },
+        { "component": "EmbeddingSpace", "kind": "2D teaching projection", "checks": ["簇内/簇间关系", "教学投影边界", "SVG 边界"], "result": "pass" },
+        { "component": "ProbBars", "kind": "probability bars", "checks": ["softmax 概率", "比例与标签", "极小宽度"], "result": "pass" },
+        { "component": "AttentionExplorer", "kind": "interactive QK heatmap", "checks": ["11×11 因果遮罩", "语义头", "位置头", "13 按钮状态", "未来 token 说明"], "result": "pass" },
+        { "component": "CausalMask", "kind": "static matrix", "checks": ["下三角可见", "右上三角屏蔽", "Query/Key 轴"], "result": "pass" },
+        { "component": "TrainingScale", "kind": "scale comparison", "checks": ["统一 token 单位", "3000 亿来源", "约 1030 倍换算", "人类能力边界", "移动可读性"], "result": "pass" },
+        { "component": "SamplingPlayground", "kind": "interactive distribution", "checks": ["softmax(z/T)", "top-p 截断与归一化", "两滑块边界", "采样历史", "SSR hydration"], "result": "pass" }
+      ]
+    },
+    {
+      "slug": "agent-harness-engineering",
+      "visuals": [
+        { "component": "McpArchitecture", "kind": "protocol architecture", "checks": ["Host/Client/Server 责任", "JSON-RPC 连接", "三服务器", "SVG 边界"], "result": "pass" },
+        { "component": "SkillLoading", "kind": "progressive disclosure", "checks": ["三层加载时机", "上下文成本", "语义化响应布局", "移动/深色/打印"], "result": "pass" },
+        { "component": "ContextBudget", "kind": "allocation bar", "checks": ["组成项", "总量", "标签可读性"], "result": "pass" },
+        { "component": "ContextWindowEvolution", "kind": "step animation", "checks": ["Select/Act/Compress", "位置利用率", "单步/播放/复位", "固定账本"], "result": "pass" },
+        { "component": "AgentTraceReplay", "kind": "interactive trace", "checks": ["gather/draft/verify/replan/stop", "失败与通过状态", "环境最终状态", "8 按钮"], "result": "pass" },
+        { "component": "ExecutionGraph", "kind": "static DAG/state graph", "checks": ["fan-out/fan-in", "审查失败回路", "人工确认", "SVG 边界"], "result": "pass" },
+        { "component": "ChoiceLadder", "kind": "decision ladder", "checks": ["六级任务结构", "升级信号", "协调成本", "语义化响应布局", "打印"], "result": "pass" }
+      ]
+    },
+    {
+      "slug": "ai-engineering-landscape",
+      "visuals": [
+        { "component": "AiStackExplorer", "kind": "interactive stack map", "checks": ["五层分组", "22 术语按钮", "详情联动", "打印摘要"], "result": "pass" },
+        { "component": "RagPipeline", "kind": "two-lane process diagram", "checks": ["离线入库", "在线检索", "重排与生成", "SVG 边界"], "result": "pass" },
+        { "component": "RetrievalSandbox", "kind": "interactive vector space", "checks": ["余弦相似度", "三 query", "top-k 1–4", "排序与负相似度", "固定账本"], "result": "pass" },
+        { "component": "MemoryLayers", "kind": "layered storage diagram", "checks": ["窗口/工作/长期三层", "写入与取回跨层流动", "标签裁切", "移动/打印"], "result": "pass" },
+        { "component": "LoraDecomposition", "kind": "matrix decomposition", "checks": ["ΔW=BA", "秩与形状", "合并路径", "移动布局"], "result": "pass" },
+        { "component": "DistillationComparison", "kind": "teacher-student diagram", "checks": ["软目标关系", "62/23/10/5 和为 100", "教学示意标记", "部署动机边界"], "result": "pass" },
+        { "component": "RequestJourneyMap", "kind": "request lifecycle", "checks": ["网关到响应链路", "在线/离线闭环", "移动堆叠", "打印"], "result": "pass" }
+      ]
+    }
+  ],
+  "fixedIssues": [
+    { "id": "F01", "severity": "medium", "area": "L1 ProbBars", "fix": "柱宽恢复精确比例，以 2px 最小绘制宽度保持极小概率可见。" },
+    { "id": "F02", "severity": "high", "area": "L3 AttentionExplorer", "fix": "两处焦点说明改为只引用当前位置及之前 token，符合因果遮罩。" },
+    { "id": "F03", "severity": "high", "area": "L2 MatrixSteps", "fix": "扩大 viewBox，消除右侧公式裁切。" },
+    { "id": "F04", "severity": "high", "area": "L2 BackpropPlayground", "fix": "扩大 viewBox，完整容纳损失节点与标签。" },
+    { "id": "F05", "severity": "medium", "area": "L2 BackpropPlayground", "fix": "将 ReLU 负半轴描述为局部零梯度。" },
+    { "id": "F06", "severity": "high", "area": "L2 RnnUnfold", "fix": "扩大 viewBox，消除最右时间步裁切。" },
+    { "id": "F07", "severity": "medium", "area": "L2 RnnUnfold", "fix": "梯度传播文案改为 Wh 与激活导数组成的局部 Jacobian。" },
+    { "id": "F08", "severity": "high", "area": "L2 NetworkDiagram", "fix": "Dropout 推理语义改为 inverted dropout：训练时缩放保留单元，推理时直接通过。" },
+    { "id": "F09", "severity": "medium", "area": "L2 NetworkDiagram", "fix": "输入层标题右移，消除左边界裁切。" },
+    { "id": "F10", "severity": "low", "area": "L1 DataPipeline", "fix": "去除与实际表格数量不一致的“四张表”表述。" },
+    { "id": "F11", "severity": "high", "area": "L2 XorExplorer", "fix": "明确 φ(z)=1[z>0] 的手工阶跃构造，并区分真实 MLP 的可训练激活。" },
+    { "id": "F12", "severity": "medium", "area": "L2 XorExplorer", "fix": "增加 viewBox 高度，完整显示底部轴标题。" },
+    { "id": "F13", "severity": "high", "area": "L4 SkillLoading", "fix": "将重叠 SVG 重构为三层语义卡片，桌面、移动与打印均完整。" },
+    { "id": "F14", "severity": "high", "area": "L4 ChoiceLadder", "fix": "将重叠 SVG 重构为六级响应式决策阶梯。" },
+    { "id": "F15", "severity": "high", "area": "L5 MemoryLayers", "fix": "重排箭头与标签，并让写入/取回连接上下文窗口与长期存储。" },
+    { "id": "F16", "severity": "medium", "area": "L5 DistillationComparison", "fix": "62/23/10/5 明确标注为教学示意和非测量值。" },
+    { "id": "F17", "severity": "high", "area": "L3 TrainingScale", "fix": "统一 token 单位，删除字数与 token 的直接等同，明确纯算术假设边界。" },
+    { "id": "F18", "severity": "medium", "area": "L3 正文", "fix": "逐词完整重算改为逐 token 增量前向，并说明 KV cache 复用。" },
+    { "id": "F19", "severity": "high", "area": "L5 Phi-4 claim", "fix": "按报告表格写为 40% synthetic 加 15% web rewrites，至少 55% 来自合成生成或改写。" },
+    { "id": "F20", "severity": "medium", "area": "L5 LoRA/蒸馏正文", "fix": "删除“大多”和“一个数量级”的无条件泛化，改为来源支持的范围。" },
+    { "id": "F21", "severity": "medium", "area": "React SVG", "fix": "text-anchor/marker-end 改为 React 属性 textAnchor/markerEnd，清零控制台错误。" },
+    { "id": "F22", "severity": "medium", "area": "L3 SamplingPlayground", "fix": "概率宽度预先舍入，消除 SSR hydration mismatch。" },
+    { "id": "F23", "severity": "medium", "area": "L1 泛化实验", "fix": "训练误差趋近 0 时显示“极大（训练≈0）”，避免伪精确比值。" },
+    { "id": "F24", "severity": "low", "area": "L1 LossLandscape", "fix": "移动下一步标签，消除文字与梯度箭头重叠。" },
+    { "id": "F25", "severity": "medium", "area": "打印态", "fix": "可容纳单页的图组件整体防断页，矩阵标题和主体保持同页。" }
+  ],
+  "browserEvidence": {
+    "server": "http://localhost:4321",
+    "desktop": { "viewport": "1280x720", "themes": ["light", "dark"], "pageHorizontalOverflow": 0 },
+    "mobile": { "viewport": "390x844", "pagesChecked": 5, "pageHorizontalOverflow": 0, "smallControlsBelow24px": 0 },
+    "interaction": {
+      "machine-learning-foundations": { "buttons": 16, "ranges": 4, "failures": 0 },
+      "neural-network-foundations": { "buttons": 11, "ranges": 6, "failures": 0 },
+      "ai-literacy": { "buttons": 15, "ranges": 2, "failures": 0 },
+      "agent-harness-engineering": { "buttons": 10, "ranges": 0, "failures": 0 },
+      "ai-engineering-landscape": { "buttons": 25, "ranges": 1, "failures": 0 }
+    },
+    "console": { "pagesChecked": 5, "errors": 0, "warnings": 0 },
+    "print": {
+      "format": "A4",
+      "hiddenVisualComponents": 0,
+      "pages": {
+        "machine-learning-foundations": 25,
+        "neural-network-foundations": 24,
+        "ai-literacy": 18,
+        "agent-harness-engineering": 16,
+        "ai-engineering-landscape": 23
+      },
+      "representativePagesVisuallyInspected": 12
+    }
+  },
+  "buildEvidence": {
+    "command": "npm run verify",
+    "astroFilesChecked": 102,
+    "errors": 0,
+    "warnings": 0,
+    "hints": 0,
+    "staticPagesBuilt": 21
+  },
+  "primarySourcesRechecked": [
+    "https://arxiv.org/abs/1706.03762",
+    "https://d2l.ai/chapter_multilayer-perceptrons/dropout.html",
+    "https://arxiv.org/abs/2412.08905",
+    "https://arxiv.org/abs/2106.09685",
+    "https://arxiv.org/abs/1503.02531",
+    "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http"
+  ],
+  "evidenceFiles": [
+    "qa/screenshots/ai-ml-deep-audit-skill-loading.png",
+    "qa/screenshots/ai-ml-deep-audit-choice-ladder.png",
+    "qa/screenshots/ai-ml-deep-audit-memory-layers.png",
+    "qa/screenshots/ai-ml-deep-audit-distillation.png",
+    "qa/screenshots/ai-ml-deep-audit-matrix-mobile.png",
+    "qa/screenshots/ai-ml-deep-audit-print-contact.png"
+  ]
+}

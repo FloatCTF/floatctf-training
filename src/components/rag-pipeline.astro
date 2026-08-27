@@ -1,0 +1,47 @@
+---
+interface Box { x: number; y: number; w: number; h: number; label: string; sub?: string; kind?: 'doc' | 'proc' | 'store' | 'model' }
+const lane1: Box[] = [
+  { x: 24, y: 78, w: 118, h: 62, label: '文档入库', sub: 'PDF / Wiki / Issue', kind: 'doc' },
+  { x: 178, y: 78, w: 118, h: 62, label: '切分 chunking', sub: '按段落与长度', kind: 'proc' },
+  { x: 332, y: 78, w: 118, h: 62, label: '嵌入 embedding', sub: '文本 → 向量', kind: 'proc' },
+  { x: 486, y: 78, w: 118, h: 62, label: '向量索引', sub: 'ANN（HNSW 等）', kind: 'store' },
+];
+const lane2: Box[] = [
+  { x: 24, y: 238, w: 118, h: 62, label: '用户提问', sub: '查询文本', kind: 'doc' },
+  { x: 178, y: 238, w: 118, h: 62, label: '问题嵌入', sub: '同一嵌入模型', kind: 'proc' },
+  { x: 332, y: 238, w: 118, h: 62, label: '检索 top-k', sub: '近似最近邻', kind: 'proc' },
+  { x: 486, y: 238, w: 118, h: 62, label: '重排 rerank', sub: '精排留证据', kind: 'proc' },
+];
+const gen: Box = { x: 486, y: 356, w: 118, h: 62, label: '生成回答', sub: '证据拼入上下文', kind: 'model' };
+const arrows: [number, number, number, number][] = [
+  [142, 109, 178, 109], [296, 109, 332, 109], [450, 109, 486, 109],
+  [142, 269, 178, 269], [296, 269, 332, 269], [450, 269, 486, 269],
+  [545, 300, 545, 356],
+  [545, 140, 545, 238],
+];
+---
+<section class="lesson-diagram not-content" aria-label="RAG 管线图">
+  <p class="lesson-diagram__eyebrow">RAG PIPELINE / 两条线</p>
+  <h3 class="lesson-diagram__title">入库一条线，查询一条线</h3>
+  <svg viewBox="0 0 628 440" role="img" aria-label="RAG 管线：上行为文档入库（切分、嵌入、写入向量索引），下行为在线查询（问题嵌入、近似检索、重排），最后生成回答。">
+    <title>RAG 管线图</title>
+    <text x="24" y="52" class="diagram-lane-label">入库（离线，替换文档后重跑）</text>
+    <text x="24" y="212" class="diagram-lane-label">查询（在线，每次提问）</text>
+    {arrows.map(([x1, y1, x2, y2]) => (
+      <line x1={x1} y1={y1} x2={x2} y2={y2} class="diagram-arrow" marker-end="url(#rag-arrow)" />
+    ))}
+    <defs>
+      <marker id="rag-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M 0 0 L 10 5 L 0 10 z" class="diagram-arrow-head" />
+      </marker>
+    </defs>
+    {[...lane1, ...lane2, gen].map((b) => (
+      <g>
+        <rect x={b.x} y={b.y} width={b.w} height={b.h} rx="10" class={`diagram-box diagram-box--${b.kind ?? 'proc'}`} />
+        <text x={b.x + b.w / 2} y={b.y + 26} text-anchor="middle" class="diagram-box-label">{b.label}</text>
+        {b.sub && <text x={b.x + b.w / 2} y={b.y + 46} text-anchor="middle" class="diagram-box-sub">{b.sub}</text>}
+      </g>
+    ))}
+  </svg>
+  <p class="lesson-diagram__note">知识更新只需要替换索引内容，不必重训模型；查询线每次把检索到的片段拼进上下文，模型基于证据作答。</p>
+</section>

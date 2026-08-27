@@ -1,0 +1,51 @@
+---
+// 编排选择阶梯：任务结构逐级复杂，每一级都给出适用条件与升级信号
+const STEPS = [
+  { name: '单次调用', fit: '一次转换、一次分类', why: '路径明确、验证简单' },
+  { name: '代码 Workflow', fit: '固定的少量步骤', why: '控制流可预测' },
+  { name: 'Agent Loop', fit: '一个主体反复行动', why: '共享目标和上下文' },
+  { name: 'DAG', fit: '明确依赖与并行', why: '适合 fan-out、fan-in 和调度' },
+  { name: 'State graph', fit: '条件、循环、恢复并存', why: '状态转移显式' },
+  { name: '多 Agent graph', fit: '多种专业职责和权限', why: '隔离上下文、工具和所有权' },
+];
+const SIGNALS = [
+  '需要外部数据或动作',
+  '出现动态搜索和恢复',
+  '依赖关系需要并行调度',
+  '需要根据状态回到旧节点',
+  '需要多个独立责任主体',
+];
+---
+
+<section class="choice-ladder lesson-diagram not-content" aria-labelledby="choice-ladder-title">
+  <header>
+    <p class="lesson-diagram__eyebrow">ORCHESTRATION / 复杂度阶梯</p>
+    <h3 id="choice-ladder-title" class="lesson-diagram__title">从最简单的方案开始，沿任务结构逐级升级</h3>
+  </header>
+  <ol class="choice-ladder__steps" aria-label="六级编排复杂度阶梯">
+    {STEPS.map((step, i) => (
+      <li class="choice-ladder__item" style={`--choice-level:${i}`}>
+        <article class="cl-step">
+          <div class="cl-step__name">
+            <span aria-hidden="true">0{i + 1}</span>
+            <h4>{step.name}</h4>
+          </div>
+          <p class="cl-step__fit"><span>适合</span>{step.fit}</p>
+          <p class="cl-step__why"><span>原因</span>{step.why}</p>
+        </article>
+        {i < SIGNALS.length && (
+          <p class="choice-ladder__signal">
+            <span aria-hidden="true">↳</span><strong>升级信号</strong>{SIGNALS[i]}
+          </p>
+        )}
+      </li>
+    ))}
+  </ol>
+  <div class="choice-ladder__axis" aria-hidden="true">
+    <span>简单 · 先从这里验证</span>
+    <span>复杂 · 协调成本递增</span>
+  </div>
+  <p class="lesson-diagram__note choice-ladder__note">
+    每张卡片给出任务结构、适用条件与采用理由；卡片之间标出升级信号。先选能满足任务的最低一级，再用可测量的并行收益、恢复需求和责任边界支持升级。
+  </p>
+</section>

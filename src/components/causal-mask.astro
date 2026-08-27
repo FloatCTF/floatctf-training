@@ -1,0 +1,49 @@
+---
+const tokens = ['服务器', '读取', '配置文件', '因为'];
+const CELL = 92;
+const GAP = 6;
+const ORIGIN_X = 118;
+const ORIGIN_Y = 96;
+const cells = tokens.flatMap((_, row) => tokens.map((_, col) => ({
+  row,
+  col,
+  visible: col <= row,
+  x: ORIGIN_X + col * (CELL + GAP),
+  y: ORIGIN_Y + row * (CELL + GAP),
+  label: col <= row ? `位置 ${row + 1} 可以看到「${tokens[col]}」` : `位置 ${row + 1} 看不到「${tokens[col]}」（在未来）`,
+})));
+---
+<section class="lesson-diagram not-content" aria-label="因果遮罩矩阵">
+  <p class="lesson-diagram__eyebrow">CAUSAL MASK / 谁能看到谁</p>
+  <h3 class="lesson-diagram__title">四个位置的因果注意力可见范围</h3>
+  <svg viewBox="0 0 560 500" role="img" aria-label="因果遮罩矩阵：行为当前位置，列为全部位置；当前位置及其之前可见，之后被屏蔽。">
+    <title>因果遮罩矩阵</title>
+    {tokens.map((t, col) => (
+      <text x={ORIGIN_X + col * (CELL + GAP) + CELL / 2} y={ORIGIN_Y - 14} text-anchor="middle" class="diagram-label">{t}</text>
+    ))}
+    {tokens.map((rowToken, row) => (
+      <text x={ORIGIN_X - 12} y={ORIGIN_Y + row * (CELL + GAP) + CELL / 2 + 5} text-anchor="end" class="diagram-label">{rowToken}</text>
+    ))}
+    {cells.map((cell) => (
+      <g>
+        <rect
+          x={cell.x}
+          y={cell.y}
+          width={CELL}
+          height={CELL}
+          rx="10"
+          class={cell.visible ? 'mask-cell mask-cell--visible' : 'mask-cell mask-cell--blocked'}
+        >
+          <title>{cell.label}</title>
+        </rect>
+        <text
+          x={cell.x + CELL / 2}
+          y={cell.y + CELL / 2 + 6}
+          text-anchor="middle"
+          class={cell.visible ? 'mask-cell-text' : 'mask-cell-text mask-cell-text--blocked'}
+        >{cell.visible ? '可见' : '屏蔽'}</text>
+      </g>
+    ))}
+  </svg>
+  <p class="lesson-diagram__note">深色格是当前位置及其之前（训练目标是预测下一个 token，输入里允许出现）；浅色格在未来，被因果遮罩屏蔽。每行从左到右数：可见格数量随位置递增。</p>
+</section>

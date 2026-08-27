@@ -1,0 +1,41 @@
+---
+const LARGE_CELLS = Array.from({ length: 64 });
+const B_CELLS = Array.from({ length: 16 });
+const A_CELLS = Array.from({ length: 16 });
+---
+
+<section class="lora-decomposition lesson-diagram not-content" aria-label="LoRA 低秩分解示意">
+  <p class="lesson-diagram__eyebrow">LORA / 只训练窄矩阵</p>
+  <h3 class="lesson-diagram__title">冻结大矩阵 W，用 B × A 表示参数更新 ΔW</h3>
+  <div class="lora-decomposition__body" role="img" aria-label="左侧是冻结的八乘八权重矩阵 W；右侧只训练八乘二矩阵 B 和二乘八矩阵 A，相乘得到同形状的更新矩阵 Delta W，再与 W 相加">
+    <div class="lora-matrix-group">
+      <span class="lora-matrix-label">冻结</span>
+      <strong>W</strong>
+      <div class="lora-matrix lora-matrix--large">{LARGE_CELLS.map(() => <i></i>)}</div>
+      <small>d × d</small>
+    </div>
+    <span class="lora-operator">+</span>
+    <div class="lora-adapter">
+      <span class="lora-matrix-label lora-matrix-label--train">训练</span>
+      <div class="lora-matrix-group">
+        <strong>B</strong>
+        <div class="lora-matrix lora-matrix--tall">{B_CELLS.map(() => <i></i>)}</div>
+        <small>d × r</small>
+      </div>
+      <span class="lora-operator">×</span>
+      <div class="lora-matrix-group">
+        <strong>A</strong>
+        <div class="lora-matrix lora-matrix--wide">{A_CELLS.map(() => <i></i>)}</div>
+        <small>r × d</small>
+      </div>
+    </div>
+    <span class="lora-operator">=</span>
+    <div class="lora-matrix-group">
+      <span class="lora-matrix-label lora-matrix-label--merge">合并</span>
+      <strong>W + ΔW</strong>
+      <div class="lora-matrix lora-matrix--large lora-matrix--merged">{LARGE_CELLS.map(() => <i></i>)}</div>
+      <small>d × d</small>
+    </div>
+  </div>
+  <p class="lesson-diagram__note">秩 r 远小于维度 d，训练集中在两条窄矩阵；部署时把 BA 合并进 W。图中 8 × 8 与 r = 2 只用于展示形状关系。</p>
+</section>

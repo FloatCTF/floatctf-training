@@ -1,10 +1,10 @@
 ---
 interface Candidate { token: string; percent: number }
 interface Scenario { context: string; candidates: Candidate[] }
-interface Props { scenarios: Scenario[] }
-const { scenarios } = Astro.props;
+interface Props { scenarios: Scenario[]; note?: string }
+const { scenarios, note = '示意：固定权重，用来理解“上下文改变下一词分布”。真实模型会在全词表上计算概率。' } = Astro.props;
 ---
-<section class="prob-bars not-content" aria-label="下一词概率示意">
+<section class="prob-bars not-content" aria-label="概率分布示意">
   {scenarios.map((scenario) => (
     <div class="prob-bars-block">
       <p class="prob-bars-context">{scenario.context}</p>
@@ -13,7 +13,7 @@ const { scenarios } = Astro.props;
           <li class="prob-bars-row">
             <span class="prob-bars-token">{item.token}</span>
             <span class="prob-bars-track" aria-hidden="true">
-              <span class="prob-bars-fill" style={`width: ${Math.max(item.percent, 2)}%`}></span>
+              <span class="prob-bars-fill" style={`width: ${item.percent}%`}></span>
             </span>
             <span class="prob-bars-percent">{item.percent.toFixed(1)}%</span>
           </li>
@@ -21,5 +21,5 @@ const { scenarios } = Astro.props;
       </ul>
     </div>
   ))}
-  <p class="prob-bars-note">示意：固定权重，用来理解“上下文改变下一词分布”。真实模型会在全词表上计算概率。</p>
+  <p class="prob-bars-note">{note}</p>
 </section>

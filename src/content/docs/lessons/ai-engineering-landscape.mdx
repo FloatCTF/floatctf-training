@@ -1,0 +1,354 @@
+---
+title: AI 工程全景：从一次调用到生产系统
+description: 沿能力接入、知识与记忆、模型定制、质量与安全、运行与成本五层，把 2026 年的 AI 工程名词收进一张可导航的地图
+pageType: lesson
+template: splash
+lessonId: ai-engineering-landscape
+categoryId: ai-ml
+sources: ["openai-chatgpt-launch", "rag-paper", "rag2-contextual", "hnsw-paper", "memgpt-paper", "openai-accuracy-guide", "openai-sft-guide", "lora-paper", "distillation-paper", "phi4-report", "model-collapse-nature", "anthropic-agent-evals", "llm-judge-paper", "nemo-guardrails-docs", "owasp-llm-top10", "otel-genai-repo", "cloudflare-ai-gateway", "anthropic-prompt-caching", "openai-function-calling", "mcp-streamable-http"]
+motionLevel: simulation
+safetyScope: not-applicable
+researchStatus: complete
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import IntuitionBox from '../../../components/intuition-box.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import StepList from '../../../components/step-list.astro';
+import AiStackExplorer from '../../../components/ai-stack-explorer';
+import RagPipeline from '../../../components/rag-pipeline.astro';
+import RetrievalSandbox from '../../../components/retrieval-sandbox';
+import MemoryLayers from '../../../components/memory-layers.astro';
+import LoraDecomposition from '../../../components/lora-decomposition.astro';
+import DistillationComparison from '../../../components/distillation-comparison.astro';
+import RequestJourneyMap from '../../../components/request-journey-map.astro';
+import manifest from '../../../data/lessons/ai-engineering-landscape.json';
+
+export const requestJourneySteps = [
+  { title: '网关接入', detail: '统一入口完成鉴权、限流和模型路由，请求进入日志与用量统计。' },
+  { title: '输入护栏', detail: 'Input rails 检查提示注入、敏感数据和话题边界，拒绝或改写可疑输入。' },
+  { title: '组装上下文', detail: '读取分层记忆、检索知识库，把稳定前缀与缓存边界对齐。' },
+  { title: '模型推理', detail: '命中缓存的前缀按低倍率计费，模型给出回答或工具调用意图。' },
+  { title: '工具执行', detail: '应用解析结构化调用，经 MCP 或内部函数执行后把结果回传模型。' },
+  { title: '输出护栏', detail: 'Output rails 校验格式、事实边界和敏感内容，不合格输出被拦截。' },
+  { title: '记录轨迹', detail: 'Trace 记下每个 span 的耗时、token 用量与成本，构成可回放的执行证据。' },
+  { title: '回流评测', detail: '线上失败案例进入评测集，驱动下一轮 Prompt、检索或微调改动。' },
+];
+
+<LessonHero
+  series="AI ENGINEERING"
+  unit="LANDSCAPE / UNIT 05"
+  kicker="RAG, Memory, Fine-tuning, Evals, Guardrails, Observability, Gateways, Cost"
+  lines={[
+    { text: "AI 工程全景" },
+    { text: "从一次调用到生产系统", accent: true },
+  ]}
+  summary="2022 年入门 AI 应用只需要三样东西，2026 年同类岗位的清单已经列到二十多项。本课把这份清单整理成五个工程层，逐层解释每个名词管什么、怎么工作、边界在哪里，并与前四课的内容拼成完整地图。"
+/>
+
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+## 引导问题：为什么 2022 年只要三样，2026 年要背二十多项
+
+ChatGPT 于 2022 年 11 月 30 日发布。（来源：[Introducing ChatGPT](#source-openai-chatgpt-launch)）那一年入门 AI 应用的清单很短：会用对话模型，会写 Prompt。到 2026 年，同类岗位的要求已经展开成一长串名词：Harness、RAG 2.0、Guardrails、AI Gateway、Distillation。工程师社群用两个身高悬殊的剪影调侃这种膨胀。
+
+名词为什么变多，值得认真回答。模型能力增强后，应用把更多环节交给模型，每个环节的可靠性、知识、质量、安全和成本问题就都变成了工程对象。下面的对照图重建了这份清单，每一项都可以点开看定义和它在课程路径中的位置。
+
+<AiStackExplorer client:visible motionLevel="subtle" />
+
+## 一、怎样阅读这张地图：五个工程层
+
+二十多个名词按解决的问题分成五层。执行编排层的七个名词已经在《AI Agent 工程方法：从 Prompt 到执行图》里详细讲过，本课补齐其余四层，并在最后把五层串成一次请求的完整旅程。
+
+<DataTable
+  caption="五个工程层与本课的分工"
+  headers={["层", "回答的问题", "包含名词", "详讲位置"]}
+  rows={[
+    ["能力接入", "模型怎样调用外部能力", "Function Calling、Tool Use、MCP、Stateless MCP", "本课第二节；MCP 协议见前课"],
+    ["执行编排", "多步任务怎样可控执行", "Prompt Optimization、Context、Agentic AI、Harness、Loop、Graph、Multi-Agent", "《AI Agent 工程方法》全课"],
+    ["知识与记忆", "模型怎样获得窗口之外的信息", "RAG 2.0、Vector DBs、Memory Layers", "本课第三节"],
+    ["模型定制", "什么时候需要改模型参数", "Fine-Tuning、Distillation、Synthetic Data", "本课第四节"],
+    ["质量与安全", "怎样兜住质量和安全下限", "Evaluation Frameworks、Guardrails", "本课第五节"],
+    ["运行与成本", "生产系统怎样运营", "Observability、AI Gateways、Cost Optimization", "本课第六节"],
+  ]}
+/>
+
+<Callout variant="note" title="名词并存，没有年代更替">
+五层是同一个系统里的分工，长清单反映分工细化。一个生产系统同时需要清晰的 Prompt、可靠的检索、上线前的评测和运行中的护栏；后出现的名词没有淘汰先出现的名词。
+</Callout>
+
+## 二、能力接入层：模型怎样调用外部能力
+
+### 1. Function Calling 的调用契约
+
+Function Calling（也称 Tool Calling）让模型与外部系统交互：开发者用 JSON Schema 声明函数的名称、用途和参数结构，模型判断需要时输出一个结构化调用意图。（来源：[Function calling](#source-openai-function-calling)）
+
+```json
+{
+  "type": "function",
+  "name": "get_order_status",
+  "description": "按订单号查询当前物流状态",
+  "parameters": {
+    "type": "object",
+    "properties": {
+      "order_id": { "type": "string", "description": "订单号，例如 SO-2049" }
+    },
+    "required": ["order_id"],
+    "additionalProperties": false
+  },
+  "strict": true
+}
+```
+
+用户问“我的订单 SO-2049 到哪了”，模型输出的调用意图长这样：
+
+```json
+{
+  "type": "function_call",
+  "call_id": "call_8f2a",
+  "name": "get_order_status",
+  "arguments": "{\"order_id\":\"SO-2049\"}"
+}
+```
+
+模型只产出这段 JSON，查询本身由应用代码执行，结果再作为新消息回传给模型生成最终回答。这个责任划分是能力接入层的核心契约：模型负责决定调用什么、参数是什么，应用保留执行权、鉴权和审计。
+
+### 2. Tool Use、Function Calling 与 MCP 的关系
+
+<DataTable
+  caption="三个名词的层次"
+  headers={["名词", "层次", "含义"]}
+  rows={[
+    ["Tool Use", "行为", "模型在推理中使用外部工具获取信息或执行动作的统称"],
+    ["Function Calling", "API 机制", "单个模型接口层面声明函数与输出调用意图的具体机制"],
+    ["MCP", "协议", "跨应用、跨供应商标准化能力发现与调用的开放协议"],
+  ]}
+/>
+
+Tool Use 描述“模型会用工具”这件事本身；Function Calling 是它在模型 API 上的实现机制；MCP 把能力交换提升为标准协议，让同一个工具服务器可以被不同的模型应用复用。MCP 的 Host、Client、Server 架构与信任边界在《AI Agent 工程方法》第二节已经详细展开。
+
+### 3. Stateless MCP：把会话从协议里拿掉
+
+MCP 的远程传输经历了两次演进：Streamable HTTP 传输在 2025-03-26 版规范中引入，取代早期的 HTTP+SSE 设计；2026-07-28 修订进一步移除了协议级会话，无状态服务器成为默认形态。（来源：[MCP Streamable HTTP transport](#source-mcp-streamable-http)）
+
+```text
+带会话的部署                          无状态部署
+────────────────                      ────────────────
+请求携带 Mcp-Session-Id               每个请求自包含
+会话固定在某个实例                     任何实例可处理任何请求
+负载均衡需要粘性路由                   普通轮询即可
+实例下线丢失会话状态                   实例随时增减、滚动发布
+```
+
+会话曾经把一个客户端绑定到一台服务器实例，水平扩展需要粘性路由或共享会话存储。移除协议级会话后，MCP 服务器可以像普通无状态 Web 服务一样放在负载均衡后面伸缩。需要跨请求连续性的场景，状态外置到共享存储或放进请求本身。“Stateless MCP”作为名词流行，背后就是这条规范演进线。
+
+## 三、知识与记忆工程：模型怎样获得窗口之外的信息
+
+### 1. RAG：用检索增强生成
+
+模型参数里的知识在训练截止后固定，更新知识、提供出处都很困难。RAG（Retrieval-Augmented Generation）由 Lewis 等人在 2020 年提出：预训练 seq2seq 模型充当参数化记忆，外部向量索引充当非参数化记忆，检索到的文档作为生成条件；替换索引就能更新模型可用的知识。（来源：[Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](#source-rag-paper)）
+
+生产中的 RAG 管线通常包含两线五步：
+
+<RagPipeline />
+
+管线图解释两条生产路径，检索沙盒把最关键的一瞬间放大：query 进入 embedding 空间，按余弦相似度找邻居，再由 top-k 决定哪些文档进入模型上下文。
+
+<RetrievalSandbox client:visible motionLevel="simulation" />
+
+每一步都有可调参数：切分粒度决定召回单位，嵌入模型决定语义空间，top-k 与重排决定进入窗口的证据质量。检索质量差时，模型会在错误证据上流畅地给出错误答案，这类失败要在检索侧修，改 Prompt 无效。
+
+### 2. RAG 2.0：从拼装到端到端
+
+<Callout variant="info" title="术语成熟度">
+RAG 2.0 是 Contextual AI 在 2024 年 3 月提出的厂商说法，指把检索器与语言模型作为一个系统端到端联合训练，区别于把冻结的嵌入模型、向量库和黑盒模型拼在一起的传统管线。（来源：[Introducing RAG 2.0](#source-rag2-contextual)）社区语境中这个词也被泛化用来指代混合检索、重排和 Agentic 检索等增强管线，使用时先确认对方指哪一种。
+</Callout>
+
+无论采用哪种定义，它指向的工程问题是一致的：拼装式 RAG 的各组件独立优化，误差沿管线累积；把检索与生成当成一个整体来评测和调优，才能解决“检索的东西模型用不好”这类跨组件失败。
+
+### 3. 向量数据库：语义检索的索引
+
+RAG 的检索建立在向量相似度上：文本经嵌入模型映射成高维向量，语义相近的文本向量距离更近。向量数据库存储这些向量，并解决规模问题：在数亿向量里做精确最近邻搜索需要逐一比较，代价随规模线性增长。
+
+主流方案使用近似最近邻（ANN）索引。HNSW 用分层近邻图组织向量：想象高速公路网，上层是跨城快线（稀疏、跨得远），下层是城市街道（稠密、走得准）。查询从顶层入口逐层下降，先粗定位再精确逼近，复杂度对数级；代价是结果是近似的，可能漏掉个别真实最近邻。（来源：[Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs](#source-hnsw-paper)）
+
+<DataTable
+  caption="向量检索与传统数据库检索"
+  headers={["维度", "传统 B-tree / 倒排索引", "向量 ANN 索引"]}
+  rows={[
+    ["匹配依据", "精确值、前缀或关键词", "嵌入空间中的距离"],
+    ["典型查询", "WHERE id = 42、关键词命中", "与查询向量最近的 top-k"],
+    ["结果性质", "确定、可复现", "近似，召回率与速度可调"],
+    ["适用场景", "结构化字段、精确过滤", "语义相似、跨措辞检索"],
+  ]}
+/>
+
+生产检索常把两者组合：先用结构化条件过滤，再在候选集内做向量相似度排序；纯关键词与纯语义检索的混合（hybrid search）也很常见。
+
+### 4. Memory Layers：跨会话的分层记忆
+
+上下文窗口是模型唯一直接可见的信息面，容量有限且每轮重算。要让应用记住跨会话的事实，需要把记忆放到窗口之外并按需取回。MemGPT 给出了被广泛引用的设计：把上下文窗口类比操作系统主存，外部存储类比磁盘，模型通过函数调用在两级之间分页，把重要事实写入外部记忆，需要时再检索回窗口。（来源：[MemGPT: Towards LLMs as Operating Systems](#source-memgpt-paper)）
+
+<IntuitionBox>
+操作系统用分页让程序以为内存无限大；分层记忆让模型以为上下文无限长。两者的共同点是把“放不下”变成“按需换入换出”，代价都是访问外层更慢，且换入策略决定质量。
+</IntuitionBox>
+
+工程上记忆通常分层管理：本轮对话在窗口内；近期轮次的摘要作为工作记忆随时注入；长期事实（用户偏好、历史决定）写入外部存储，靠检索或显式读取返回。记忆写入什么、何时遗忘、检索错了怎么纠正，都是这一层的设计对象。
+
+<MemoryLayers />
+
+## 四、模型定制工程：什么时候需要动参数
+
+### 1. 三种优化手段的分工
+
+OpenAI 的官方优化指南给出明确顺序：先用 Prompt Engineering 建立评测基线；模型缺上下文时用 RAG 补知识；行为不一致时用微调固化模式；两种手段可以叠加使用。（来源：[Optimizing LLM Accuracy](#source-openai-accuracy-guide)）
+
+<DataTable
+  caption="按失败类型选择优化手段"
+  headers={["失败类型", "典型症状", "对策", "原因"]}
+  rows={[
+    ["指令问题", "格式漂移、理解偏差", "Prompt", "任务规格不清，改规格成本最低"],
+    ["知识缺失", "编造事实、信息过期", "RAG", "事实应放在可更新的检索层，进权重难以更新"],
+    ["行为不稳", "风格不一致、复杂格式偶发出错", "微调", "用训练样本把模式固化进参数"],
+    ["两者兼有", "既缺知识又不稳定", "微调 + RAG", "微调管行为，检索管事实，互补叠加"],
+  ]}
+/>
+
+常见的方向性错误是用微调注入事实。事实会过期，检索层换个索引就能更新；写进参数的内容更新一次要重训一次。
+
+### 2. 微调与 LoRA
+
+监督微调（SFT）用标注样本继续训练模型。OpenAI 的官方流程把评测放在最前面：先有可靠的评测，再构建训练数据集、创建微调任务、对照基线验证效果。（来源：[Supervised fine-tuning](#source-openai-sft-guide)）没有评测就无法回答“微调后是否更好”。
+
+全参数微调在大模型上代价高。LoRA 冻结预训练权重 W，把权重更新量表示为低秩分解 ΔW = BA，只训练小矩阵 B 和 A。在 GPT-3 175B 上，LoRA 把可训练参数量降低约一万倍；部署时 BA 可以合并回 W，推理不增加延迟。（来源：[LoRA: Low-Rank Adaptation of Large Language Models](#source-lora-paper)）LoRA 是常见的参数高效定制方法，训练产物是体积很小的适配器文件。
+
+<LoraDecomposition />
+
+### 3. 蒸馏：把大模型压进小模型
+
+知识蒸馏由 Hinton 等人在 2015 年提出：用大模型或模型集成（教师）的软化输出分布训练小模型（学生），软标签携带类别间的相对关系，比硬标签的信息更多，能把教师的知识压缩进更容易部署的学生模型。（来源：[Distilling the Knowledge in a Neural Network](#source-distillation-paper)）
+
+在 LLM 生产中，蒸馏的动机主要是成本与延迟：让小模型在一个收窄的任务上逼近大模型质量，并显著降低部署成本。它与微调常常组合出现：用大模型生成带有软目标或偏好信息的任务数据，再训练小模型，是常见的蒸馏路径。
+
+<DistillationComparison />
+
+### 4. 合成数据：飞轮与坍缩
+
+合成数据指用模型生成或改写训练数据。phi-4 的预训练配方把 40% token 列为 synthetic，另有 15% 列为 web rewrites；技术报告把 web rewrites 明确归入合成数据子类，因此至少 55% token 来自合成生成或改写流程。报告还描述了多智能体提示、自修订和指令反转等生成方法。（来源：[Phi-4 Technical Report](#source-phi4-report)）
+
+合成数据同时有被证明的失败模式。Nature 2024 的研究表明：无差别地用模型生成数据递归训练，会引发模型坍缩，原始分布的尾部信息不可逆地消失，模型逐代收敛到低方差的失真分布；真实人类数据的价值因此上升。（来源：[AI models collapse when trained on recursively generated data](#source-model-collapse-nature)）工程含义直接：合成数据要经过筛选、配比并混合真实数据，生成数据的来源要可追踪。
+
+## 五、质量与安全工程：上线前与运行中的两道闸
+
+### 1. 评测框架：把“感觉变好了”变成回归门禁
+
+评测框架由三部分组成：代表真实任务的数据集、给输出打分的评分器、把分数变成放行或阻断决定的门禁。改动 Prompt、检索或模型版本后跑同一套评测，才能区分改进与倒退。
+
+Agent 类系统的评测还要区分两个对象：执行轨迹（过程是否合理）与环境最终状态（结果是否正确），并且因为系统随机，需要多次 trial 观察成功率与波动，单次通过不构成证据。（来源：[Demystifying evals for AI agents](#source-anthropic-agent-evals)）
+
+### 2. LLM-as-a-judge：用模型给模型打分
+
+开放式输出难以用规则打分，人工评审贵而慢。Zheng 等人在 MT-Bench 与 Chatbot Arena 上验证了折中方案：GPT-4 作为评审与人类偏好的一致率超过 80%，与人类互相之间的一致率相当。同一研究也量化了偏差：位置偏差（偏向先出现的答案）、冗长偏差（偏向更长的答案）、自我增强偏差（偏向自己生成的答案），需要用交换顺序等手段缓解。（来源：[Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](#source-llm-judge-paper)）
+
+<Callout variant="warning" title="评审模型也要被评测">
+LLM 评审是带偏差的测量仪器。上线一个自动评分器之前，先在人工标注的子集上核对它与人类判断的一致率，再决定信任范围。
+</Callout>
+
+### 3. Guardrails：运行时的输入输出防线
+
+评测在上线前度量质量，Guardrails 在运行中兜住每一次请求。NeMo Guardrails 把可编程护栏分为五类轨道：输入、检索、对话、执行、输出，分别在一次交互的对应阶段拦截、改写或拒绝内容。（来源：[NVIDIA NeMo Guardrails Library Overview](#source-nemo-guardrails-docs)）
+
+护栏针对的头号威胁有明确排名：OWASP 把提示注入列为 LLM 应用十大风险之首（LLM01:2025），分为直接注入（攻击者直接输入恶意指令）与间接注入（恶意指令藏在模型读取的网页、文档里）；RAG 与微调都不能完全缓解提示注入。（来源：[OWASP Top 10 for LLM Applications 2025](#source-owasp-llm-top10)）
+
+<DataTable
+  caption="评测与护栏的分工"
+  headers={["维度", "评测框架", "Guardrails"]}
+  rows={[
+    ["作用时机", "改动上线前", "每次请求运行中"],
+    ["度量对象", "整体质量分布", "单次输入与输出"],
+    ["失败后果", "阻断发布", "拦截该次请求"],
+    ["典型工具", "评测集 + 评分器 + CI 门禁", "输入/输出轨道 + 分类器"],
+  ]}
+/>
+
+两道闸互相补位：评测挡不住上线后的新型注入，护栏也不能证明系统整体变好了。提示注入的攻击构造与防御纵深在 Web 安全分类的课程里有更完整的展开。
+
+## 六、运行与成本治理：把系统当生产服务运营
+
+### 1. 可观测性：还原每一次请求的执行路径
+
+一次 Agent 请求可能跨越网关、多轮模型调用、若干工具执行。出问题时需要回答：哪一步慢、哪一步错、token 花在哪。分布式追踪的做法是给每个环节建 span，串成一条 trace。
+
+OpenTelemetry 正在为生成式 AI 制定 gen_ai 语义约定，统一模型调用、Agent 与工具调用的 span 命名和 token 用量属性；这套约定已迁入独立仓库维护，整体仍处于 Development 状态，字段可能继续变化。（来源：[OpenTelemetry GenAI semantic conventions repository](#source-otel-genai-repo)）选型时优先支持该约定的框架与平台，但要预期属性名会随版本迁移。
+
+```text
+trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
+├── span: gateway.route          120ms
+├── span: guardrails.input        80ms
+├── span: retrieval.search       340ms   top-k=8
+├── span: gen_ai.chat  (第 1 轮)  2.1s    input 18,200 / output 240
+├── span: tool.get_order_status  610ms
+├── span: gen_ai.chat  (第 2 轮)  1.9s    input 2,300 / output 490
+└── span: guardrails.output       90ms
+```
+
+这条 trace 直接回答成本问题：第 1 轮输入 18,200 token，其中稳定前缀值得进缓存；检索只取 8 条却贡献了大半输入量，说明切分过粗。
+
+### 2. AI 网关：多模型时代的统一入口
+
+应用同时使用多个模型供应商后，鉴权、限流、日志、失败切换在每个调用点重复出现。AI 网关把这些横切关注点收进统一入口。Cloudflare AI Gateway 的能力清单有代表性：请求分析与日志、缓存、限流、请求重试与模型回退。（来源：[Cloudflare AI Gateway overview](#source-cloudflare-ai-gateway)）
+
+网关层的路由能力也承担成本策略：简单请求路由到便宜的小模型，复杂请求升级到旗舰模型，供应商故障时自动切换备选。应用代码面对一个稳定端点，模型选择变成配置。
+
+### 3. 成本优化：一笔可以算清的账
+
+推理成本按 token 计费，优化手段都围绕减少重复计算：提示缓存复用稳定前缀，模型分级把任务路由到够用的最小模型，批处理接口用延迟换折扣。提示缓存的收益可以直接计算。Anthropic 的官方倍率：5 分钟缓存写入为基础输入价的 1.25 倍，1 小时写入为 2 倍，缓存读取为 0.1 倍。（来源：[Prompt caching](#source-anthropic-prompt-caching)）
+
+设一个 20,000 token 的稳定前缀（系统提示 + 工具定义），5 分钟内被调用 100 次，基础输入价记为每 token 1 单位：
+
+<DataTable
+  caption="提示缓存收支计算（前缀 20,000 token × 100 次调用）"
+  headers={["方案", "计算", "前缀总成本", "相对成本"]}
+  rows={[
+    ["不用缓存", "100 × 20,000 × 1.0", "2,000,000 单位", "100%"],
+    ["5 分钟缓存", "1 次写 20,000 × 1.25 + 99 次读 20,000 × 0.1", "25,000 + 198,000 = 223,000 单位", "约 11%"],
+  ]}
+/>
+
+第 2 次调用就越过收支平衡点：写入多付的 25%，一次 0.1 倍的读取就赚回来了。前提是前缀逐字节稳定。把时间戳、用户 ID 放进前缀会让缓存永远无法命中，这是最常见的实现错误。
+
+## 七、一次请求的完整旅程
+
+五层名词在一次真实请求里同时出场。沿时间线走一遍，五层框架就落到了具体的执行环节：
+
+<RequestJourneyMap />
+
+<StepList title="一次客服请求穿过全部工程层" steps={requestJourneySteps} />
+
+八步对应五层：第 1 步是运行与成本治理的入口，第 2、6 步是质量与安全，第 3 步是知识与记忆，第 4、5 步是能力接入与执行编排，第 7、8 步把运行数据送回评测，闭环回到质量层。模型定制层不在请求路径上，它在离线一侧消化第 8 步积累的失败案例。
+
+## 常见误区与工程边界
+
+- **名词数量增长反映分工细化：** 每个名词对应一类可单独设计和验证的失败模式，学习时先问“它解决什么失败”。
+- **RAG 优先于微调处理知识问题：** 事实放检索层可随时更新；微调固化行为模式，注入事实是方向性错误。
+- **RAG 2.0 与 Stateless MCP 是新说法：** 前者出自厂商定义，后者出自协议修订；使用前先对齐所指。
+- **向量检索是近似检索：** ANN 索引用召回率换速度，关键场景要度量召回率并考虑混合检索。
+- **合成数据需要治理：** 有 phi-4 式的成功配方，也有模型坍缩的失败证明，差别在筛选、配比和真实数据混合。
+- **单次通过不是评测证据：** 随机系统要看多次 trial 的成功率与波动，轨迹与最终状态分开评。
+- **LLM 评审自身带偏差：** 位置、冗长、自我增强三类偏差需要换序与人工校准对照。
+- **护栏挡不住全部注入：** OWASP 明确 RAG 与微调不能完全缓解提示注入，防线要叠加权限收敛与人工确认。
+- **可观测性约定仍在变化：** gen_ai 语义约定处于 Development 状态，选型时保留属性迁移的余地。
+- **缓存收益依赖前缀稳定：** 动态内容混入前缀会让写入费白付，先分离稳定段再开缓存。
+
+<KeyTakeaway>
+记住请求旅程这幅图：能力接入负责调用外部世界，知识与记忆负责窗口之外的信息，模型定制在离线回路固化或压缩行为，质量与安全在上线前后设闸，运行与成本让整条链可观察、可路由、可核算。新名词出现时，先定位它解决哪一层的哪种失败。
+</KeyTakeaway>
+
+<SourceList sources={manifest.sources} />

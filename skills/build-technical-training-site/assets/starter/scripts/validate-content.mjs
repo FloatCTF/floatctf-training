@@ -43,6 +43,9 @@ const requiredQaMustIds = [
   'page-structure',
   'visual-consistency',
   'deployment-integrity',
+  'layout-self-audit',
+  'demo-on-page',
+  'claim-semantic-fit',
 ];
 const requiredQaShouldIds = [
   'opening-question',
@@ -51,6 +54,7 @@ const requiredQaShouldIds = [
   'review-card',
   'motion-rhythm',
   'visual-focus',
+  'reference-coverage',
 ];
 const requiredBrowserCheckIds = [
   'desktop-light',
@@ -85,6 +89,7 @@ const browserDependentQaIds = new Set([
   'print-completeness',
   'visual-consistency',
   'deployment-integrity',
+  'layout-self-audit',
 ]);
 
 function report(file, lessonId, field, message, suggestion) {

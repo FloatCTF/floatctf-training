@@ -1,0 +1,79 @@
+---
+// 手算一遍两层之间的加权求和：2 个输入 → 2 个隐藏神经元，数字全部可验算
+const INPUTS = [
+  { label: 'x₁', value: '1.0', y: 90 },
+  { label: 'x₂', value: '0.5', y: 210 },
+];
+
+const HIDDEN = [
+  {
+    label: 'h₁', bias: '+0.1', y: 90,
+    calc: 'z₁ = 0.5×1.0 + (−0.8)×0.5 + 0.1 = 0.2',
+    act: 'a₁ = ReLU(0.2) = 0.2',
+  },
+  {
+    label: 'h₂', bias: '−0.3', y: 210,
+    calc: 'z₂ = −0.4×1.0 + 0.6×0.5 + (−0.3) = −0.4',
+    act: 'a₂ = ReLU(−0.4) = 0（负数被拦下）',
+  },
+];
+
+const WIRES = [
+  { from: 90, to: 90, weight: '0.5', positive: true },
+  { from: 210, to: 90, weight: '−0.8', positive: false },
+  { from: 90, to: 210, weight: '−0.4', positive: false },
+  { from: 210, to: 210, weight: '0.6', positive: true },
+];
+---
+
+<section class="matrix-steps not-content" aria-label="手算两层之间的加权求和">
+  <header class="matrix-steps__header">
+    <p class="lesson-diagram__eyebrow">手算 / 公式落到数字</p>
+    <h3 class="lesson-diagram__title">把 z = w₁x₁ + w₂x₂ + b 完整算一遍</h3>
+    <p class="matrix-steps__intro">取 x₁ = 1.0、x₂ = 0.5，两层各两个单元。连线上的数字是权重，圆圈里的是偏置。</p>
+  </header>
+  <p class="matrix-steps__scroll-hint">横向滑动可查看完整节点与计算式 <span aria-hidden="true">→</span></p>
+  <div class="matrix-steps__body" tabindex="0" aria-label="可横向滚动的加权求和完整示意图">
+    <svg viewBox="0 0 820 300" role="img" aria-label="两个输入经加权连线汇入两个隐藏神经元，权重与偏置标在图上">
+      <title>加权求和示意图</title>
+      {WIRES.map((w) => (
+        <line
+          class:list={['ms-wire', w.positive ? 'ms-wire--pos' : 'ms-wire--neg']}
+          x1="130" y1={w.from} x2="400" y2={w.to}
+        />
+      ))}
+      <text class="ms-weight" x="230" y="76">0.5</text>
+      <text class="ms-weight" x="230" y="162">−0.8</text>
+      <text class="ms-weight" x="230" y="216">−0.4</text>
+      <text class="ms-weight" x="230" y="252">0.6</text>
+      {INPUTS.map((n) => (
+        <g>
+          <circle class="ms-node" cx="90" cy={n.y} r="34" />
+          <text class="ms-node-label" x="90" y={n.y - 6} text-anchor="middle">{n.label}</text>
+          <text class="ms-node-value" x="90" y={n.y + 16} text-anchor="middle">{n.value}</text>
+        </g>
+      ))}
+      {HIDDEN.map((n) => (
+        <g>
+          <circle class="ms-node ms-node--hidden" cx="440" cy={n.y} r="34" />
+          <text class="ms-node-label" x="440" y={n.y - 6} text-anchor="middle">{n.label}</text>
+          <text class="ms-node-value" x="440" y={n.y + 16} text-anchor="middle">b {n.bias}</text>
+          <text class="ms-calc" x="500" y={n.y - 8}>{n.calc}</text>
+          <text class="ms-act" x="500" y={n.y + 14}>{n.act}</text>
+        </g>
+      ))}
+    </svg>
+  </div>
+  <div class="matrix-steps__mobile-ledger" aria-label="两个隐藏单元的计算明细">
+    {HIDDEN.map((n) => (
+      <article>
+        <strong>{n.label}</strong>
+        <code>{n.calc}</code>
+        <span>{n.act}</span>
+      </article>
+    ))}
+  </div>
+  <p class="lesson-diagram__note matrix-steps__note">
+    同一张权重表对 1000 个样本各做一次这样的求和，写在一起就是矩阵乘法 W·x + b。矩阵不是新知识，只是「同一套加权打分批量执行」的记账方式，GPU 一遍算完。
+  </p>
+</section>

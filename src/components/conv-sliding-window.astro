@@ -1,0 +1,123 @@
+---
+// 卷积 = 同一张小模板扫过所有位置。窗口位置与响应值全部由真实位图现场计算。
+import { DIGIT_BITMAPS } from '../data/handwritten-digits';
+
+const digit = DIGIT_BITMAPS.find((d) => d.key === 'round3')!;
+const N = digit.rows.length;
+const px: number[][] = digit.rows.map((row) =>
+  row.split('').map((ch) => Number.parseInt(ch, 16) / 15),
+);
+
+// 竖笔画模板：只有中列为 +1，左右两列为 0 —— 只统计窗口中列的墨量
+const response = (r: number, c: number) =>
+  px[r][c + 1] + px[r + 1][c + 1] + px[r + 2][c + 1];
+
+// 三个观察窗口：空白角、上弧、右竖笔画（在右半区域扫描取响应最强的位置）
+const emptyWin = { r: 2, c: 2, label: '①', name: '空白角落' };
+const arcWin = { r: 3, c: 13, label: '②', name: '上弧' };
+let strokeWin = { r: 12, c: 22, label: '③', name: '右竖笔画' };
+let best = -1;
+for (let r = 8; r <= 17; r += 1) {
+  for (let c = 20; c <= 24; c += 1) {
+    const score = response(r, c);
+    if (score > best) {
+      best = score;
+      strokeWin = { ...strokeWin, r, c };
+    }
+  }
+}
+
+const windows = [
+  { ...emptyWin, value: response(emptyWin.r, emptyWin.c), note: '中列三格全是白，响应为 0' },
+  { ...arcWin, value: response(arcWin.r, arcWin.c), note: '中列只蹭到一点墨，响应中等' },
+  { ...strokeWin, value: response(strokeWin.r, strokeWin.c), note: '中列三格全中，响应最强' },
+];
+
+const CELL = 9;
+const GRID_X = 24;
+const GRID_Y = 34;
+const KERNEL_X = 330;
+const KERNEL_Y = 60;
+const KERNEL_CELL = 34;
+---
+
+<section class="conv-window lesson-diagram not-content" aria-label="卷积核在手写数字上滑动的示意">
+  <header>
+    <p class="lesson-diagram__eyebrow">权重共享 / 同一张模板扫全图</p>
+    <h3 class="lesson-diagram__title">3×3 卷积核在「3」上滑动</h3>
+    <p class="conv-window__intro">
+      左边还是那张 28×28 的手写「3」。一张只有 9 个参数的小模板（右上图，中列 +1、两侧 0，
+      专门盯竖笔画）从左到右、从上到下扫过每个位置：每个位置只回答一个问题——「窗口中列有多少墨」。
+    </p>
+  </header>
+  <div class="conv-window__body">
+    <svg viewBox="0 0 660 330" role="img" aria-label="手写 3 的位图上画出三个观察窗口，右侧是 3×3 模板与三个位置的响应值">
+      <title>卷积滑动窗口</title>
+      <text class="diagram-label" x={GRID_X} y="22">输入：28×28 = 784 个亮度</text>
+      <rect class="cw-paper" x={GRID_X} y={GRID_Y} width={N * CELL} height={N * CELL} />
+      {px.map((row, r) =>
+        row.map((v, c) =>
+          v > 0 ? (
+            <rect
+              class="cw-ink"
+              x={GRID_X + c * CELL + 0.5}
+              y={GRID_Y + r * CELL + 0.5}
+              width={CELL - 1}
+              height={CELL - 1}
+              style={`--ink: ${v.toFixed(3)}`}
+            />
+          ) : null,
+        )
+      )}
+      {windows.map((w) => (
+        <g>
+          <rect
+            class:list={['cw-frame', w.value > 1.2 && 'cw-frame--hit']}
+            x={GRID_X + w.c * CELL}
+            y={GRID_Y + w.r * CELL}
+            width={CELL * 3}
+            height={CELL * 3}
+          />
+          <text class="cw-frame-label" x={GRID_X + w.c * CELL - 2} y={GRID_Y + w.r * CELL - 4}>{w.label}</text>
+        </g>
+      ))}
+
+      <text class="diagram-label" x={KERNEL_X - 6} y={KERNEL_Y - 18}>模板：3×3 = 9 个参数</text>
+      {[0, 1, 2].map((r) =>
+        [0, 1, 2].map((c) => (
+          <rect
+            class:list={['cw-kernel', c === 1 && 'cw-kernel--on']}
+            x={KERNEL_X + c * KERNEL_CELL}
+            y={KERNEL_Y + r * KERNEL_CELL}
+            width={KERNEL_CELL}
+            height={KERNEL_CELL}
+          />
+        )),
+      )}
+      {[0, 1, 2].map((r) => (
+        <text class="cw-kernel-value" x={KERNEL_X + KERNEL_CELL * 1.5} y={KERNEL_Y + r * KERNEL_CELL + 22} text-anchor="middle">+1</text>
+      ))}
+      <text class="cw-kernel-note" x={KERNEL_X + KERNEL_CELL * 1.5} y={KERNEL_Y + KERNEL_CELL * 3 + 24} text-anchor="middle">中列 +1，两侧 0</text>
+
+      {windows.map((w, i) => (
+        <g>
+          <text class="cw-res-label" x={KERNEL_X + 130} y={86 + i * 44}>{w.label} {w.name}</text>
+          <rect class="cw-res-track" x={KERNEL_X + 130} y={94 + i * 44} width={150} height={14} />
+          <rect
+            class:list={['cw-res-fill', w.value > 1.2 && 'cw-res-fill--hit']}
+            x={KERNEL_X + 130}
+            y={94 + i * 44}
+            width={Math.max(2, Math.min(1, w.value / 3) * 150)}
+            height={14}
+          />
+          <text class="cw-res-value" x={KERNEL_X + 292} y={106 + i * 44}>{w.value.toFixed(2)}</text>
+        </g>
+      ))}
+      <text class="cw-res-note" x={KERNEL_X + 130} y={86 + 3 * 44 + 6}>每格响应 = 窗口中列三格墨量之和</text>
+    </svg>
+  </div>
+  <p class="lesson-diagram__note conv-window__note">
+    模板扫过全部 26×26 个位置，得到一张「竖笔画响应图」——这就是特征图。无论 3 写在左上角还是右下角，
+    都由同一组 9 个参数负责：全连接要 784×N 条连线，卷积只要 9 个数，这就是局部连接与权重共享省下的量。
+  </p>
+</section>
