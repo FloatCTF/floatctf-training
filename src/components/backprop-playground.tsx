@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { gsap } from 'gsap';
 import {
-  installMotion,
+  useInView,
+  useMotionPresentation,
+  useSimulatorStage,
   type MotionLevel,
-  type MotionPresentation,
+  type SimulatorStage,
 } from './motion-utils';
 
 interface Props {
@@ -142,65 +144,23 @@ function wireWidth(weight: number) {
 export default function BackpropPlayground({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const [stage, setStage] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
+  const simRef = useRef<SimulatorStage | null>(null);
+  const visible = useInView(root, () => simRef.current?.stop());
+  const presentation = useMotionPresentation(root, motionLevel, (next) => {
+    if (next === 'static') simRef.current?.reset();
+  });
+  const sim = useSimulatorStage(MAX_STAGE, 900, {
+    interactive: presentation === 'interactive',
+    visible,
+  });
+  simRef.current = sim;
+  const { stage, running, advance, reset, toggleRunning } = sim;
 
   const settled = presentation !== 'interactive';
   const at = (key: (typeof STAGES)[number]['key']) => {
     if (settled) return true;
     return STAGES.findIndex((s) => s.key === key) <= stage;
   };
-
-  const reset = useCallback(() => {
-    setRunning(false);
-    setStage(0);
-  }, []);
-
-  const advance = useCallback(() => {
-    setStage((current) => {
-      if (current >= MAX_STAGE) {
-        setRunning(false);
-        return current;
-      }
-      const next = current + 1;
-      if (next >= MAX_STAGE) setRunning(false);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') {
-          setRunning(false);
-          setStage(0);
-        }
-      },
-    );
-  }, [motionLevel]);
-
-  useEffect(() => {
-    if (!root.current || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      setVisible(entry.isIntersecting);
-      if (!entry.isIntersecting) setRunning(false);
-    }, { threshold: 0.08 });
-    observer.observe(root.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!running || !visible || settled || stage >= MAX_STAGE) return undefined;
-    const timer = window.setTimeout(advance, 900);
-    return () => window.clearTimeout(timer);
-  }, [advance, running, settled, stage, visible]);
 
   useEffect(() => {
     if (!root.current || settled) return undefined;
@@ -320,7 +280,7 @@ export default function BackpropPlayground({ motionLevel = 'explanatory' }: Prop
             <button type="button" onClick={advance} disabled={running || stage >= MAX_STAGE}>单步追责</button>
             <button
               type="button"
-              onClick={() => setRunning((current) => !current)}
+              onClick={toggleRunning}
               disabled={stage >= MAX_STAGE}
               aria-pressed={running}
             >

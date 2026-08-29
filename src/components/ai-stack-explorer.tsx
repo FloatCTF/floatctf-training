@@ -1,8 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -20,6 +19,7 @@ interface StackLayer {
   id: string;
   name: string;
   english: string;
+  question: string;
   items: StackItem[];
 }
 
@@ -28,6 +28,7 @@ const layers: StackLayer[] = [
     id: 'access',
     name: '能力接入',
     english: 'CAPABILITY ACCESS',
+    question: '模型怎样调用外部能力',
     items: [
       { id: 'function-calling', label: 'Function Calling', definition: '开发者用 JSON Schema 声明函数，模型输出结构化调用意图，实际执行留在应用侧。', covered: '本课 · 二、能力接入层' },
       { id: 'tool-use', label: 'Tool Use', definition: '模型在推理过程中调用外部工具获取信息或执行动作的统称。', covered: '本课 · 二、能力接入层' },
@@ -39,6 +40,7 @@ const layers: StackLayer[] = [
     id: 'orchestration',
     name: '执行编排',
     english: 'ORCHESTRATION',
+    question: '多步任务怎样可控执行',
     items: [
       { id: 'prompt-optimization', label: 'Prompt Optimization', definition: '以评测为依据迭代指令、示例与输出契约，收敛模型行为。', covered: '《AI Agent 工程方法》· 一、Prompt Engineering' },
       { id: 'context-engineering', label: 'Context Engineering', definition: '为每一轮调用选择、压缩、隔离进入上下文窗口的信息。', covered: '《AI Agent 工程方法》· 四、Context Engineering' },
@@ -53,6 +55,7 @@ const layers: StackLayer[] = [
     id: 'knowledge',
     name: '知识与记忆',
     english: 'KNOWLEDGE & MEMORY',
+    question: '模型怎样获得窗口之外的信息',
     items: [
       { id: 'rag2', label: 'RAG 2.0', definition: '检索增强生成，以及把检索器与模型端到端联合优化的新说法。', covered: '本课 · 三、知识与记忆工程' },
       { id: 'vector-dbs', label: 'Vector DBs', definition: '存储嵌入向量并用近似最近邻索引支持语义检索的数据库。', covered: '本课 · 三、知识与记忆工程' },
@@ -63,6 +66,7 @@ const layers: StackLayer[] = [
     id: 'customize',
     name: '模型定制',
     english: 'MODEL CUSTOMIZATION',
+    question: '什么时候需要改模型参数',
     items: [
       { id: 'fine-tuning', label: 'Fine-Tuning', definition: '用标注样本继续训练模型参数，固化风格、格式与任务行为。', covered: '本课 · 四、模型定制工程' },
       { id: 'distillation', label: 'Distillation', definition: '用教师模型的输出分布训练更小、更便宜的学生模型。', covered: '本课 · 四、模型定制工程' },
@@ -73,6 +77,7 @@ const layers: StackLayer[] = [
     id: 'quality',
     name: '质量与安全',
     english: 'QUALITY & SAFETY',
+    question: '怎样兜住质量和安全下限',
     items: [
       { id: 'evaluation-frameworks', label: 'Evaluation Frameworks', definition: '用数据集、评分器与回归门禁在改动上线前度量质量。', covered: '本课 · 五、质量与安全工程' },
       { id: 'guardrails', label: 'Guardrails', definition: '在输入与输出两侧拦截注入、越权与违规内容的运行时防线。', covered: '本课 · 五、质量与安全工程' },
@@ -82,6 +87,7 @@ const layers: StackLayer[] = [
     id: 'ops',
     name: '运行与成本',
     english: 'OPERATIONS & COST',
+    question: '生产系统怎样运营',
     items: [
       { id: 'observability', label: 'Observability', definition: '用 trace 与指标还原每次请求的执行路径、token 用量与成本。', covered: '本课 · 六、运行与成本治理' },
       { id: 'ai-gateways', label: 'AI Gateways', definition: '应用与多个模型提供商之间的统一入口与控制面。', covered: '本课 · 六、运行与成本治理' },
@@ -93,32 +99,31 @@ const layers: StackLayer[] = [
 const itemCount = layers.reduce((total, layer) => total + layer.items.length, 0);
 const itemById = new Map(layers.flatMap((layer) => layer.items.map((item) => [item.id, { item, layer }] as const)));
 
+// 2022 三项到 2026 的去向：谱系文字标注与右侧地图中的 chip 一一对应，只讲演化方向不断言年份归属。
+const pastStack = [
+  { label: 'ChatGPT', became: '长出调用契约 → Function Calling · Tool Use' },
+  { label: 'Claude', became: '长出开放协议 → MCP' },
+  { label: 'Prompts', became: '细分为 → Prompt Optimization · Context Engineering' },
+] as const;
+
+const growthTimes = Math.round(itemCount / pastStack.length);
+
 const overview = {
   eyebrow: 'MAP / OVERVIEW',
-  title: `两份入门清单，相差 ${itemCount - 3} 项`,
+  title: `两份入门清单，相差 ${itemCount - pastStack.length} 项`,
   covered: '',
-  definition: `2022 年入门只需要会用对话模型和编写 Prompt；2026 年同一份岗位清单展开成 ${itemCount} 个工程名词。选择右侧任意一项，查看它的定义和在课程路径中的位置。`,
+  definition: `2022 年入门只需要会用对话模型和编写 Prompt；2026 年同一份岗位清单展开成 ${itemCount} 个工程名词，按解决的失败分成六层。选择右侧任意一项，查看它的定义和在课程路径中的位置。`,
 };
 
 export default function AiStackExplorer({ motionLevel = 'subtle' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
   const detailId = useId();
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
+  const [activeId, setActiveId] = useState<string | null>('harness');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setActiveId(null);
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') setActiveId(null);
+  });
 
   const active = activeId ? itemById.get(activeId) : null;
   const detail = active
@@ -142,22 +147,34 @@ export default function AiStackExplorer({ motionLevel = 'subtle' }: Props) {
           <p>SKILL STACK / 2022 → 2026</p>
           <h3 id={titleId}>AI 工程技能栈四年扩张对照</h3>
         </div>
-        <p>左列是 2022 年的入门清单，右列是 2026 年同类岗位的名词清单。选择右列任意名词，查看定义与它在课程路径中的去处。</p>
+        <p>2022 年的入门清单与 2026 年的名词清单对照，后者按六个工程层分组。选择任意名词，查看定义与它在课程路径中的去处。</p>
       </header>
 
       <div className="stack-explorer__body">
         <div className="stack-explorer__columns">
-          <div className="stack-column stack-column--past">
-            <header>
-              <strong>2022</strong>
-              <span>3 项</span>
-            </header>
-            <ul>
-              {['ChatGPT', 'Claude', 'Prompts'].map((label) => (
-                <li key={label}>{label}</li>
-              ))}
-            </ul>
-            <p>会用对话模型、会写 Prompt，就可以开始构建应用。</p>
+          <div className="stack-past-cell">
+            <p className="stack-past-growth">
+              <b>×{growthTimes}</b>
+              <span>
+                同一份入门清单，四年膨胀约 {growthTimes} 倍（{pastStack.length} 项 → {itemCount} 项）。
+                膨胀不是名词替换，是按失败模式分工。
+              </span>
+            </p>
+            <div className="stack-column stack-column--past">
+              <header>
+                <strong>2022</strong>
+                <span>{pastStack.length} 项</span>
+              </header>
+              <ul>
+                {pastStack.map((entry) => (
+                  <li key={entry.label}>
+                    <span className="stack-past-item">{entry.label}</span>
+                    <small className="stack-lineage">{entry.became}</small>
+                  </li>
+                ))}
+              </ul>
+              <p>会用对话模型、会写 Prompt，就可以开始构建应用。</p>
+            </div>
           </div>
 
           <div className="stack-column stack-column--present">
@@ -166,11 +183,13 @@ export default function AiStackExplorer({ motionLevel = 'subtle' }: Props) {
               <span>{itemCount} 项</span>
             </header>
             {layers.map((layer) => (
-              <div key={layer.id} className="stack-layer" data-layer={layer.id}>
+              <div key={layer.id} className="stack-layer">
                 <p className="stack-layer__name">
                   <span>{layer.name}</span>
                   <small>{layer.english}</small>
+                  <span className="stack-layer__count">{layer.items.length}</span>
                 </p>
+                <p className="stack-layer__question">{layer.question}</p>
                 <div className="stack-layer__items" role="list">
                   {layer.items.map((item) =>
                     presentation === 'interactive' ? (

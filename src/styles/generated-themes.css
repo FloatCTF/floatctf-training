@@ -9,6 +9,8 @@
   --training-border: #817867;
   --training-accent: #A63D2C;
   --training-link: #8B2E23;
+  --training-danger: #B3261E;
+  --training-safe: #1B7F3B;
   --training-info-bg: #F2E8C9;
   --training-info-text: #694D16;
   --training-warning-bg: #F5E2B8;
@@ -34,6 +36,8 @@
   --training-border: #70685A;
   --training-accent: #D36A4D;
   --training-link: #E4896D;
+  --training-danger: #E0705A;
+  --training-safe: #8CC79C;
   --training-info-bg: #2A251D;
   --training-info-text: #E5C98B;
   --training-warning-bg: #342817;
@@ -62,6 +66,8 @@
     --training-border: #707070;
     --training-accent: #8B2E23;
     --training-link: #8B2E23;
+    --training-danger: #6F1D23;
+    --training-safe: #174A29;
     --training-info-bg: #F1F5FA;
     --training-info-text: #17375E;
     --training-warning-bg: #FFF6D8;

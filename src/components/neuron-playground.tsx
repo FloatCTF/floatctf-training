@@ -1,9 +1,8 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   keyboardRangeValue,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -35,22 +34,12 @@ export default function NeuronPlayground({ motionLevel = 'explanatory' }: Props)
   const [values, setValues] = useState<Record<Dial['id'], number>>(() =>
     Object.fromEntries(DIALS.map((d) => [d.id, d.initial])) as Record<Dial['id'], number>,
   );
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') {
-          setValues(Object.fromEntries(DIALS.map((d) => [d.id, d.initial])) as Record<Dial['id'], number>);
-        }
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') {
+      setValues(Object.fromEntries(DIALS.map((d) => [d.id, d.initial])) as Record<Dial['id'], number>);
+    }
+  });
 
   const { x1, x2, w1, w2, b } = values;
   const z = w1 * x1 + w2 * x2 + b;

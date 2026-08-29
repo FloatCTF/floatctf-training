@@ -13,7 +13,6 @@ researchStatus: complete
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
 import LessonHero from '../../../components/lesson-hero.astro';
-import Callout from '../../../components/callout.astro';
 import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
@@ -122,7 +121,7 @@ x₁  x₂  y
 <XorExplorer client:visible motionLevel="explanatory" />
 
 <IntuitionBox>
-每一层重新组合上一层的数值表示。图像模型的早期层可能对局部边缘敏感，后续层再组合纹理与形状。具体含义需要通过激活可视化、探针和消融分析验证。
+每一层重新组合上一层的数值表示。图像模型的早期层可能对局部边缘敏感，后续层再组合纹理与形状。具体含义需要通过激活可视化、探针和消融分析验证——探针指在冻结的表示上训练简单分类器，检验某类信息是否被编码；消融指移除某个组件再观察性能变化。
 </IntuitionBox>
 
 ## 三、张量形状决定参数数量和计算量
@@ -152,7 +151,7 @@ x₁  x₂  y
   headers={["手段", "训练时发生什么", "主要作用", "检查信号"]}
   rows={[
     ["L2 / 权重衰减", "惩罚较大的权重", "限制参数幅度", "训练损失略升、验证表现可能改善"],
-    ["Dropout", "训练时随机屏蔽部分激活", "降低单元之间的共适应", "训练与推理模式需要正确切换"],
+    ["Dropout", "训练时随机屏蔽部分激活", "降低单元之间的共适应（两个单元互相补偿对方错误的依赖）", "训练与推理模式需要正确切换"],
     ["早停", "验证指标停止改善后结束训练", "限制有效训练步数", "最佳检查点位于过拟合前"],
     ["数据增强", "生成保持标签语义的输入变化", "扩大观察到的有效分布", "增强规则需要符合任务不变性"],
   ]}
@@ -235,6 +234,8 @@ w 的梯度：dL/dw = (dL/dŷ)(dŷ/da)(da/dw)
     ["训练推理差异", "离线与推理输出不一致", "Dropout、归一化状态或预处理不一致", "显式切换模式并复用同一数据管线"],
   ]}
 />
+
+表中反复出现的两个词先给一句定义：**残差连接**把子层输出与输入相加（输出 = 输入 + 子层(输入)），给梯度提供一条跨层的短路；**归一化**在层内把数值重新缩放到稳定尺度。两者的机制细节会在《大模型原理》的 Transformer Block 组件表中展开。
 
 ## 六、常见神经网络架构使用不同连接方式
 

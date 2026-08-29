@@ -1,8 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -49,21 +48,11 @@ const statusLabel: Record<TraceStep['status'], string> = {
 export default function AgentTraceReplay({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setActiveIndex(0);
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') setActiveIndex(0);
+  });
 
   const interactive = presentation === 'interactive';
   const current = traceSteps[activeIndex];

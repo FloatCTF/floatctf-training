@@ -19,7 +19,7 @@
       "none"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "亮度流动是全课主线：前向「数字穿过网络」（激活即亮度），反向「梯度追责演示」主交互把责任从损失逐步送回每个参数并展示 ReLU 门拦下梯度；神经元交互、XOR 三步演示为辅助；手算矩阵、卷积滑动窗口、RNN 展开图静态锚定数值",
+    "visualStory": "一条视觉主线贯穿全课：亮度在网络里的流动。前向是「数字穿过网络」（激活即亮度，四种 3 与一个 8），反向是主交互「反向传播追责演示」——2-2-1 网络计算图上，梯度波从损失逐步流回每个参数，ReLU 门把 h₂ 的责任拦成 0，数值与手算矩阵图严格同源。辅助交互：神经元（滑权重看连线粗细）、XOR 三步演示；静态锚点：手写 3 像素图、手算矩阵、全连接网络图与 Dropout 对照、卷积滑动窗口（真实位图上现场计算响应）、RNN 沿时间展开与梯度衰减",
     "learningObjectives": [
       "解释神经元、激活函数与多层非线性怎样扩展模型可表达的函数范围",
       "计算全连接网络的参数量，并说明张量形状检查怎样定位实现错误",
@@ -32,12 +32,11 @@
       "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-22",
-    "supportingInteractions": 3
+    "verifiedAt": "2026-08-28"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-22",
+    "verifiedAt": "2026-08-28",
     "queries": [
       "PyTorch autograd optimization batch epoch gradient",
       "D2L MLP CNN RNN Transformer numerical stability",

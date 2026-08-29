@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: ai-literacy
 categoryId: ai-ml
-sources: ["vaswani-2017", "dao-2022-flashattention", "brown-2020", "liu-2023", "stanford-cs336-2025", "hf-llm-course"]
+sources: ["vaswani-2017", "dao-2022-flashattention", "brown-2020", "liu-2023", "stanford-cs336-2025", "hf-llm-course", "instructgpt-2022", "dpo-2023", "hallucination-survey-2022"]
 motionLevel: simulation
 safetyScope: not-applicable
 researchStatus: complete
@@ -39,9 +39,9 @@ export const trainingSteps = [
 
 export const alignmentSteps = [
   { title: '预训练', detail: '从大规模文本中学习语言规律、知识模式和通用表示。' },
-  { title: '监督微调', detail: '用输入与目标答案示例训练模型遵循指令和回答格式。' },
-  { title: '偏好对齐', detail: '利用人类或模型偏好信号调整回答的有用性、安全性和风格。' },
-  { title: '部署评测', detail: '用任务集、失败样例和线上反馈持续检查能力边界。' },
+  { title: '监督微调（SFT）', detail: '用输入与目标答案示例训练模型遵循指令和回答格式。' },
+  { title: '偏好对齐（RLHF 或 DPO）', detail: '用人类或模型偏好数据调整回答的有用性、安全性和风格：RLHF 走奖励模型加强化学习，DPO 直接在偏好对上做分类损失。' },
+  { title: '部署评测', detail: '用任务集、失败样例和线上反馈持续检查能力边界，包括幻觉率。' },
 ];
 
 <LessonHero
@@ -250,6 +250,8 @@ Query 表示当前位置用于发起匹配的表示，Key 表示每个位置用�
 
 ## 三、模型怎样训练、对齐和生成
 
+现代大模型课程（如 Stanford CS336）通常按 tokenizer、模型架构、优化与训练系统四个模块组织内容；本课第一、二节覆盖前两块，本节进入后两块的机制。（来源：[CS336: Language Modeling from Scratch](#source-stanford-cs336-2025)）
+
 ### 1. 预训练闭环
 
 预训练的规模值得先建立一个直觉：GPT-3 的训练数据约 3,000 亿 token（来源：[Language Models are Few-Shot Learners](#source-brown-2020)）。为了统一单位，下面假设每天机械处理 1 万 token，只做数量级换算：
@@ -289,7 +291,30 @@ Query 表示当前位置用于发起匹配的表示，Key 表示每个位置用�
 
 GPT-3 论文展示了模型根据输入中的任务说明和少量示例完成多类任务的设置；这个过程发生在推理阶段，不需要梯度更新。（来源：[Language Models are Few-Shot Learners](#source-brown-2020)）
 
-### 3. Temperature 和 top-p 改变采样
+### 3. RLHF 与 DPO：偏好信号怎样进参数
+
+「偏好对齐」在工程上有两条主流路径。
+
+**RLHF**（Reinforcement Learning from Human Feedback，基于人类反馈的强化学习）由 InstructGPT 流程确立，分三步：先用人工示范完成监督微调；再让标注员对同一提示的多条输出排序，用排序数据训练**奖励模型**——一个给回答打分的模型；最后用强化学习算法 PPO 优化语言模型，使输出在奖励模型处得到高分。人类偏好经由「奖励模型 → 强化学习」两个中间环节进入参数。（来源：[Training language models to follow instructions with human feedback](#source-instructgpt-2022)）
+
+这条流水线的效果有直接证据：在人类评估中，13 亿参数的 InstructGPT 输出被偏好于 1,750 亿参数的 GPT-3，对齐带来的收益抵得上两个数量级的参数差距。（来源：[Training language models to follow instructions with human feedback](#source-instructgpt-2022)）
+
+**DPO**（Direct Preference Optimization，直接偏好优化）省掉这两个中间环节：它把奖励函数重新表达为策略自身的函数，直接拿「同一提示下回答 A 被偏好于回答 B」的数据对，用一个分类损失更新模型。训练不需要从模型采样，也不需要单独的奖励模型，实现接近普通监督训练，是与 RLHF 并列的主流选择。（来源：[Direct Preference Optimization: Your Language Model is Secretly a Reward Model](#source-dpo-2023)）
+
+<DataTable
+  caption="两条偏好对齐路径的对照"
+  headers={["维度", "RLHF", "DPO"]}
+  rows={[
+    ["训练信号", "奖励模型打分 + 强化学习", "偏好数据对上的分类损失"],
+    ["中间产物", "显式奖励模型", "无，奖励隐含在模型自身概率里"],
+    ["实现要点", "在线采样与 RL 稳定性处理", "接近普通监督训练"],
+    ["偏好标注", "回答之间的比较或排序", "同一提示下的偏好对"],
+  ]}
+/>
+
+两条路径的共同点：对齐不是向模型写规则，而是用偏好数据重塑概率分布的形状——被偏好的回答获得更高概率。
+
+### 4. Temperature 和 top-p 改变采样
 
 模型每步给出一组概率，但落笔写哪个 token 还要看采样策略。**Temperature** 调整概率的集中程度：
 
@@ -306,6 +331,24 @@ p_i = softmax(z_i / T)
 - `top-p` 从累计概率达到阈值的最小候选集合中采样，先砍掉长尾再抽。
 
 采样参数只改变从现有概率分布中选取 token 的方式。事实与逻辑仍需外部证据、测试或人工审查验证。
+
+### 5. 幻觉：概率训练的副产品
+
+**幻觉**（hallucination）指模型生成的内容与事实或输入不符，却以流畅、自信的口吻呈现。它不是「模型在撒谎」，而是下一 token 概率训练的直接后果：训练目标是「让合理的续写获得高概率」，损失函数里没有任何一条要求「续写必须为真」。综述文献把幻觉分为**内在**（与输入内容矛盾）与**外在**（生成输入无法验证的内容）两类，并指出该现象在深度生成模型中普遍存在。（来源：[Survey of Hallucination in Natural Language Generation](#source-hallucination-survey-2022)）
+
+与本课前面各节对应起来，幻觉可以从三个位置理解：
+
+<DataTable
+  caption="幻觉的三个机制入口"
+  headers={["入口", "机制", "本课对应概念"]}
+  rows={[
+    ["训练目标", "交叉熵只奖励「高概率的续写」，不校验事实真伪", "第一节：交叉熵损失"],
+    ["知识来源", "参数把训练语料的统计规律压缩进来，截止日期之外的事实缺失", "第三节：预训练闭环"],
+    ["采样", "低温采样会选出「统计上合理但事实上错误」的 token", "第三节：Temperature 与 top-p"],
+  ]}
+/>
+
+这解释了一个工程事实：prompt 里写「不要编造」只能压制部分表面症状，改变不了概率分布本身。可靠的做法是把外部证据接进上下文（下一课的检索与工具）、对关键输出做独立验证——本课第五节的「外部验证」一环，正是为此存在。
 
 ## 四、上下文窗口的成本与边界
 
@@ -361,6 +404,8 @@ p_i = softmax(z_i / T)
 
 - **Token 与自然语言词：** 代码、中文和 URL 的切分经常跨越自然语言词界。
 - **概率与事实：** 最高概率表示模型在当前输入下的预测，事实需要外部证据验证。
+- **幻觉不是提示词问题：** 训练目标只奖励高概率续写，不校验真伪；「不要编造」改不了分布，外部证据与独立验证才行。
+- **对齐改变分布形状：** RLHF 与 DPO 用偏好数据重塑概率，它们提升有用性与安全性，不消除幻觉。
 - **训练损失与综合能力：** 验证集、任务评测、安全性和数据泄漏需要分别检查。
 - **窗口容量与信息利用：** 信息位置、噪声和检索方式都会影响长上下文表现。
 - **单次输出与稳定评测：** 采样具有随机性，可靠评测需要固定数据、参数并重复运行。

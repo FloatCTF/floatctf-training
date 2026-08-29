@@ -1,9 +1,8 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import {
-  installMotion,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -82,23 +81,13 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
   const titleId = useId();
   const [headId, setHeadId] = useState<string>('semantic');
   const [focus, setFocus] = useState(5);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') {
-          setHeadId('semantic');
-          setFocus(5);
-        }
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') {
+      setHeadId('semantic');
+      setFocus(5);
+    }
+  });
 
   const interactive = presentation === 'interactive';
   const head = HEADS.find((h) => h.id === headId) ?? HEADS[0];

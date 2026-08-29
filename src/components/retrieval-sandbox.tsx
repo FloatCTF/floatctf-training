@@ -1,10 +1,10 @@
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import { gsap } from 'gsap';
 import {
-  installMotion,
   keyboardRangeValue,
+  useInView,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -64,8 +64,7 @@ export default function RetrievalSandbox({ motionLevel = 'simulation' }: Props) 
   const titleId = useId();
   const [queryId, setQueryId] = useState(QUERIES[0].id);
   const [topK, setTopK] = useState(2);
-  const [visible, setVisible] = useState(true);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
+  const visible = useInView(root);
 
   const query = QUERIES.find((item) => item.id === queryId) ?? QUERIES[0];
   const ranking = useMemo(() => rankFor(query), [query]);
@@ -73,17 +72,7 @@ export default function RetrievalSandbox({ motionLevel = 'simulation' }: Props) 
   const queryX = pointX(query.x * 1.12);
   const queryY = pointY(query.y * 1.12);
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(root.current, motionLevel, () => undefined, setPresentation);
-  }, [motionLevel]);
-
-  useEffect(() => {
-    if (!root.current || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(([entry]) => setVisible(entry.isIntersecting), { threshold: 0.08 });
-    observer.observe(root.current);
-    return () => observer.disconnect();
-  }, []);
+  const presentation = useMotionPresentation(root, motionLevel);
 
   useEffect(() => {
     if (!root.current || !visible || presentation !== 'interactive') return undefined;

@@ -22,8 +22,13 @@ export default function FlowSimulator({ title, steps, motionLevel = 'simulation'
 
   useEffect(() => {
     if (!root.current) return undefined;
-    return installMotion(root.current, motionLevel, () => {
-      gsap.fromTo('.flow-node', { y: 10 }, { y: 0, duration: 0.42, stagger: 0.08, ease: 'power2.out' });
+    const el = root.current;
+    if (!el) return undefined;
+    return installMotion(motionLevel, () => {
+      const context = gsap.context(() => {
+        gsap.fromTo('.flow-node', { y: 10 }, { y: 0, duration: 0.42, stagger: 0.08, ease: 'power2.out' });
+      }, el);
+      return () => context.revert();
     }, (presentation) => {
       const nextInteractive = presentation === 'interactive';
       setInteractive(nextInteractive);

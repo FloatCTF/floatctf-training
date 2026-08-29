@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { gsap } from 'gsap';
 import {
-  installMotion,
+  useInView,
+  useMotionPresentation,
+  useSimulatorStage,
   type MotionLevel,
-  type MotionPresentation,
+  type SimulatorStage,
 } from './motion-utils';
 
 interface Props {
@@ -115,60 +117,21 @@ function Segment({
 export default function ContextWindowEvolution({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const [stage, setStage] = useState(0);
-  const [running, setRunning] = useState(false);
-  const [visible, setVisible] = useState(true);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
+  const simRef = useRef<SimulatorStage | null>(null);
+  const visible = useInView(root, () => simRef.current?.stop());
+  const presentation = useMotionPresentation(root, motionLevel, (next) => {
+    if (next === 'static') simRef.current?.stop();
+  });
+  const sim = useSimulatorStage(MAX_STAGE, 1100, {
+    interactive: presentation === 'interactive',
+    visible,
+  });
+  simRef.current = sim;
+  const { stage, running, advance, reset, toggleRunning } = sim;
 
   const settled = presentation !== 'interactive';
   const current = settled ? STAGES[MAX_STAGE - 1] : STAGES[stage];
   const showCurve = settled || stage >= MAX_STAGE;
-
-  const reset = useCallback(() => {
-    setRunning(false);
-    setStage(0);
-  }, []);
-
-  const advance = useCallback(() => {
-    setStage((value) => {
-      if (value >= MAX_STAGE) {
-        setRunning(false);
-        return value;
-      }
-      const next = value + 1;
-      if (next >= MAX_STAGE) setRunning(false);
-      return next;
-    });
-  }, []);
-
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setRunning(false);
-      },
-    );
-  }, [motionLevel]);
-
-  useEffect(() => {
-    if (!root.current || typeof IntersectionObserver === 'undefined') return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      setVisible(entry.isIntersecting);
-      if (!entry.isIntersecting) setRunning(false);
-    }, { threshold: 0.08 });
-    observer.observe(root.current);
-    return () => observer.disconnect();
-  }, []);
-
-  useEffect(() => {
-    if (!running || !visible || settled || stage >= MAX_STAGE) return undefined;
-    const timer = window.setTimeout(advance, 1100);
-    return () => window.clearTimeout(timer);
-  }, [advance, running, settled, stage, visible]);
 
   useEffect(() => {
     if (!root.current || !showCurve) return undefined;
@@ -234,7 +197,7 @@ export default function ContextWindowEvolution({ motionLevel = 'explanatory' }: 
             <button type="button" onClick={advance} disabled={running || stage >= MAX_STAGE}>单步</button>
             <button
               type="button"
-              onClick={() => setRunning((value) => !value)}
+              onClick={toggleRunning}
               disabled={stage >= MAX_STAGE}
               aria-pressed={running}
             >

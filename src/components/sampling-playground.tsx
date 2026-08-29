@@ -1,9 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   keyboardRangeValue,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -55,20 +54,10 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
   const [temperature, setTemperature] = useState(1);
   const [topP, setTopP] = useState(1);
   const [history, setHistory] = useState<string[]>([]);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setHistory([]);
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') setHistory([]);
+  });
 
   const interactive = presentation === 'interactive';
   const probs = useMemo(() => softmaxAtTemperature(temperature), [temperature]);

@@ -22,7 +22,8 @@
     "learningObjectives": [
       "解释 token、embedding、logit、softmax 与下一 token 概率分布的关系",
       "用 Query、Key、Value 和因果遮罩说明自注意力如何组合上下文",
-      "区分预训练、监督微调、偏好对齐和推理的目标与参数变化",
+      "区分预训练、监督微调、偏好对齐和推理的目标与参数变化，并比较 RLHF 与 DPO 的路径差异",
+      "从训练目标、知识来源与采样三个位置解释幻觉的产生机制",
       "计算上下文长度变化对全注意力矩阵规模的影响",
       "沿完整生成链路说明上下文、采样和外部验证怎样影响输出"
     ],
@@ -32,20 +33,23 @@
       "理解向量、概率与函数的基本含义"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-22"
+    "verifiedAt": "2026-08-28"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-22",
+    "verifiedAt": "2026-08-28",
     "queries": [
       "Stanford CS336 language modeling from scratch assignments",
       "Hugging Face LLM Course tokenizers transformers",
       "Attention Is All You Need self-attention complexity",
       "FlashAttention tiling exact attention memory IO",
       "Language Models are Few-Shot Learners autoregressive",
-      "Lost in the Middle long context position"
+      "Lost in the Middle long context position",
+      "InstructGPT RLHF three steps reward model PPO",
+      "DPO direct preference optimization classification loss",
+      "survey hallucination natural language generation intrinsic extrinsic"
     ],
-    "notes": "课程结构参考 Stanford CS336 与 Hugging Face LLM Course，Transformer、自回归生成、长上下文和分块注意力结论分别绑定原始论文。示例概率与注意力矩阵规模均标明教学用途和适用边界。"
+    "notes": "课程结构参考 Stanford CS336 与 Hugging Face LLM Course（正文第三节有结构落点）；Transformer、自回归生成、长上下文、分块注意力、RLHF、DPO 与幻觉分类结论分别绑定原始论文。示例概率与注意力矩阵规模均标明教学用途和适用边界。"
   },
   "sources": [
     {
@@ -124,6 +128,42 @@
       "notes": "持续更新课程页；publishedAt 记录核验快照日期。",
       "supports": [
         "claim-tokenizer-role"
+      ]
+    },
+    {
+      "id": "instructgpt-2022",
+      "kind": "paper",
+      "title": "Training language models to follow instructions with human feedback",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/2203.02155",
+      "publishedAt": "2022-03-04",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-rlhf-pipeline"
+      ]
+    },
+    {
+      "id": "dpo-2023",
+      "kind": "paper",
+      "title": "Direct Preference Optimization: Your Language Model is Secretly a Reward Model",
+      "publisher": "NeurIPS",
+      "url": "https://arxiv.org/abs/2305.18290",
+      "publishedAt": "2023-05-25",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-dpo-method"
+      ]
+    },
+    {
+      "id": "hallucination-survey-2022",
+      "kind": "paper",
+      "title": "Survey of Hallucination in Natural Language Generation",
+      "publisher": "ACM Computing Surveys",
+      "url": "https://arxiv.org/abs/2202.03629",
+      "publishedAt": "2022-02-08",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-hallucination-taxonomy"
       ]
     }
   ],
@@ -211,9 +251,30 @@
     },
     {
       "id": "claim-course-structure",
-      "text": "Stanford CS336 按 tokenizer、模型架构、优化器和训练系统组织语言模型的端到端实现路径。",
+      "text": "现代大模型课程（如 Stanford CS336）按 tokenizer、模型架构、优化器与训练系统等模块组织语言模型的端到端实现路径。",
       "sourceIds": [
         "stanford-cs336-2025"
+      ]
+    },
+    {
+      "id": "claim-rlhf-pipeline",
+      "text": "InstructGPT 的对齐流程分三步：监督微调、用人类排序数据训练奖励模型、用 PPO 强化学习优化语言模型；1.3B 参数的对齐模型输出在人类评估中被偏好于 175B 的 GPT-3。",
+      "sourceIds": [
+        "instructgpt-2022"
+      ]
+    },
+    {
+      "id": "claim-dpo-method",
+      "text": "DPO 把奖励函数重新表达为策略自身的函数，直接用偏好数据对上的分类损失更新语言模型，不需要独立奖励模型与强化学习采样。",
+      "sourceIds": [
+        "dpo-2023"
+      ]
+    },
+    {
+      "id": "claim-hallucination-taxonomy",
+      "text": "幻觉指生成内容与事实或输入不符却流畅呈现，分为与输入矛盾的内在幻觉和输入无法验证的外在幻觉，在深度生成模型中普遍存在。",
+      "sourceIds": [
+        "hallucination-survey-2022"
       ]
     }
   ],

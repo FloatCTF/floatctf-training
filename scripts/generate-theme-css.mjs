@@ -14,6 +14,8 @@ const keyMap = {
   border: '--training-border',
   accent: '--training-accent',
   link: '--training-link',
+  danger: '--training-danger',
+  safe: '--training-safe',
   infoBackground: '--training-info-bg',
   infoText: '--training-info-text',
   warningBackground: '--training-warning-bg',

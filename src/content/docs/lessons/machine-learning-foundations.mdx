@@ -5,7 +5,7 @@ pageType: lesson
 template: splash
 lessonId: machine-learning-foundations
 categoryId: ai-ml
-sources: ["google-intro-ml", "google-ml-glossary", "google-mlcc", "stanford-cs229-2017", "cs229-bias-variance", "google-linear-loss", "google-linear-gradient", "google-logistic-sigmoid", "google-logistic-loss", "d2l-softmax", "google-normalization", "google-categorical", "google-overfitting", "google-loss-curves", "google-l2-regularization", "google-classification-metrics", "sklearn-data-leakage", "sklearn-cross-validation", "sklearn-model-evaluation", "sklearn-calibration", "aws-splits-leakage", "pytorch-optimization", "pytorch-optim", "d2l-dropout", "d2l-image-augmentation", "d2l-index", "threeblueonebrown-neural-networks"]
+sources: ["google-intro-ml", "google-ml-glossary", "google-mlcc", "stanford-cs229-2017", "cs229-bias-variance", "google-linear-loss", "google-linear-gradient", "google-logistic-sigmoid", "google-logistic-loss", "d2l-softmax", "google-normalization", "google-categorical", "google-overfitting", "google-loss-curves", "google-l2-regularization", "google-classification-metrics", "sklearn-data-leakage", "sklearn-cross-validation", "sklearn-model-evaluation", "sklearn-calibration", "aws-splits-leakage", "pytorch-optimization", "pytorch-optim", "d2l-dropout", "d2l-image-augmentation", "d2l-index", "threeblueonebrown-neural-networks", "sklearn-ensemble", "sklearn-class-weight"]
 motionLevel: simulation
 safetyScope: not-applicable
 researchStatus: complete
@@ -13,11 +13,9 @@ researchStatus: complete
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
 import LessonHero from '../../../components/lesson-hero.astro';
-import Callout from '../../../components/callout.astro';
 import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
-import IntuitionBox from '../../../components/intuition-box.astro';
 import AiMlDlExplorer from '../../../components/ai-ml-dl-explorer';
 import NeuralNetworkSimulator from '../../../components/neural-network-simulator';
 import LinearFitPlayground from '../../../components/linear-fit-playground';
@@ -325,7 +323,26 @@ CE = -log(p(真实类别))
 
 《大模型原理》一课会把这里的交叉熵具体化为语言模型的下一 token 训练。（来源：[Softmax Regression](#source-d2l-softmax)）
 
-### 4. 损失、指标和业务目标不在一层
+### 4. 树模型与集成：表格数据的另一条主线
+
+前面三种模型都把输入写成函数、用梯度下降拟合。决策树走的是另一条路：对特征提一系列问题（「金额 > 1000 吗」），把样本递归划进更纯的子组，叶子的多数类别就是预测。树的学习目标不是损失函数的梯度，而是每次划分带来的不纯度下降，因此能直接处理数值与类别特征混合的表格，也更容易向非技术人员解释每一次判断。
+
+单棵树容易过拟合，集成学习把多棵树组合起来。scikit-learn 把两类组合方式讲得很直接：**随机森林**并行训练多棵深树——每棵树用有放回抽样的数据子集、每次分裂只看随机特征子集，让各棵树的预测误差彼此解耦，最后取平均，方差随之下降；**梯度提升树（GBDT）**串行添加浅树——每棵新树拟合此前全部树的负梯度，等价于在函数空间里做梯度下降，逐步降低偏差。（来源：[Ensembles: Gradient boosting, random forests, bagging, voting, stacking](#source-sklearn-ensemble)）
+
+<DataTable
+  caption="两条集成路线的分工"
+  headers={["维度", "随机森林", "梯度提升树"]}
+  rows={[
+    ["训练方式", "多棵树独立并行", "一棵接一棵串行累加"],
+    ["每棵树拟合什么", "随机子集上的完整目标", "此前集成的残差（负梯度）"],
+    ["组合方式", "平均各棵树的概率预测", "加权求和（学习率控制步长）"],
+    ["主要收益", "降低方差", "降低偏差"],
+  ]}
+/>
+
+在结构化表格任务上，树模型及其集成通常是首选基线：特征无需归一化、对单调变换不敏感、天然建模非线性切分。本课的垃圾邮件、欺诈检测示例都属于这一类场景；图像、文本这类原始信号则仍以神经网络为主。
+
+### 5. 损失、指标和业务目标不在一层
 
 损失是训练时自动优化用的，但它本身不是业务目标。垃圾邮件系统的损失下降了，用户关心的是漏拦截和误拦截；两者之间需要明确的换算。
 
@@ -342,7 +359,7 @@ CE = -log(p(真实类别))
 
 损失函数需要可计算、通常还需要可微。业务目标可能含人工判断、延迟结果和多个冲突指标。工程系统通过损失设计、样本权重、阈值、规则和上线评估共同连接两者。
 
-### 5. 拟合误差的同时还要控制复杂度
+### 6. 拟合误差的同时还要控制复杂度
 
 训练常写成：
 
@@ -508,6 +525,14 @@ scikit-learn 要求预处理器只在训练集上 `fit`，测试数据只使用�
 />
 
 scikit-learn 的评估指南按任务提供多种指标，并支持交叉验证中的多指标评估；概率校准需要独立数据或交叉验证避免偏置。（来源：[Metrics and scoring](#source-sklearn-model-evaluation)、[Probability calibration](#source-sklearn-calibration)）
+
+发现少数类被掩盖后，有三类对症手段，可以叠加使用：
+
+1. **类别权重：** 训练时给少数类的损失乘上更大权重。scikit-learn 的 `class_weight='balanced'` 直接按频率反比设定权重 `n_samples / (n_classes × 各类样本数)`，让模型不再偏向多数类。（来源：[LogisticRegression class_weight](#source-sklearn-class-weight)）
+2. **重采样：** 对少数类过采样或对多数类欠采样，改变训练分布；重采样只作用于训练集，验证与测试集必须保持真实分布，否则指标再次失真。
+3. **阈值调整：** 分类阈值不必是 0.5。欺诈场景宁可多花人力复查，把阈值向提高 Recall 的方向移动，用 PR 曲线按业务代价选点。
+
+三者的共同前提是先换指标：类别失衡时用 PR-AUC 与分场景 Recall 代替 Accuracy 做主指标，否则任何手段的效果都看不出来。
 
 可信报告至少包含简单基线、数据版本、切分方法、样本量、指标与阈值、关键切片和多次运行波动。测试集分数的有效数字需要与样本量和不确定性匹配。
 

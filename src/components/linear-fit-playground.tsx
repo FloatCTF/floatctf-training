@@ -1,9 +1,8 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { useId, useMemo, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   keyboardRangeValue,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -140,25 +139,15 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
   const [b, setB] = useState(Number(BEST.b.toFixed(1)));
   const [mode, setMode] = useState<'linear' | 'generalization'>(initialMode);
   const [degree, setDegree] = useState(1);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') {
-          setW(Number(BEST.w.toFixed(2)));
-          setB(Number(BEST.b.toFixed(1)));
-          setMode(initialMode);
-          setDegree(initialMode === 'generalization' ? 1 : degree);
-        }
-      },
-    );
-  }, [motionLevel, initialMode]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') {
+      setW(Number(BEST.w.toFixed(2)));
+      setB(Number(BEST.b.toFixed(1)));
+      setMode(initialMode);
+      setDegree(1);
+    }
+  });
 
   const interactive = presentation === 'interactive';
   const mse = useMemo(() => meanSquaredError(w, b), [w, b]);

@@ -91,7 +91,7 @@ export const agentLoopSteps = [
   kicker="Prompt, MCP, Skills, Context, Harness, Loops, Graphs"
   lines={[
     { text: "AI Agent 工程方法" },
-    { text: "从一次调用到执行图", accent: true },
+    { text: "从 Prompt 到执行图", accent: true },
   ]}
   summary="这条路线描述工程关注点怎样从一段指令扩展到能力连接、流程复用、上下文管理、执行控制、反馈循环和多节点编排。七层会同时存在，不构成相互替代的技术年代。"
 />
@@ -197,7 +197,7 @@ Model Context Protocol（MCP）是连接模型应用与外部数据源、工具�
   ]}
 />
 
-Tools 只是 MCP 的一部分。协议还定义连接生命周期、能力协商、通知、日志，以及客户端可选提供的 sampling、roots 和 elicitation 等能力。
+Tools 只是 MCP 的一部分。协议还定义连接生命周期、能力协商、通知、日志，以及客户端可选提供的三项反向能力：sampling（客户端代替服务器向模型发起补全）、roots（客户端告知服务器允许访问的目录边界）和 elicitation（服务器在执行中向用户征求输入）。
 
 ### 2. 工具描述本身就是接口设计
 
@@ -333,7 +333,7 @@ LangChain 对 Agent framework、runtime 和 harness 的讨论明确承认这些�
     ["工具", "描述、校验和分发行动", "调用参数、返回码、输出大小", "工具重叠、参数无效"],
     ["状态", "记录阶段、尝试和产物", "checkpoint 与状态版本", "重复步骤、恢复错误"],
     ["权限", "允许、拒绝和审批", "主体、目标、作用域与决定", "越权写入或授权混淆"],
-    ["验证", "检查过程和最终环境状态", "grader、测试、业务状态", "把模型自述当完成证据"],
+    ["验证", "检查过程和最终环境状态", "grader（给输出打分的评分器，可以是测试脚本、规则或模型）、测试、业务状态", "把模型自述当完成证据"],
     ["预算", "限制时间、token、费用和轮数", "消耗量与剩余额度", "无限重试或成本失控"],
     ["可观测性", "记录模型、工具、路由和结果", "trace、耗时、错误与停止原因", "失败无法复现"],
   ]}
@@ -386,7 +386,7 @@ LangChain 在 2026 年提出 Agent、Verification、Event-driven 和 Hill-climbi
   caption="Loop 的控制状态"
   headers={["状态", "触发信号", "处置", "保留的证据"]}
   rows={[
-    ["成功", "外部成功谓词成立", "输出结果和来源", "grader、最终环境状态"],
+    ["成功", "外部成功谓词（可独立客观检查的完成条件）成立", "输出结果和来源", "grader、最终环境状态"],
     ["Retry", "瞬时工具错误", "有界退避后重试", "请求、错误码、次数"],
     ["Replan", "当前方案验证失败", "带新证据更换路径", "失败差异与新假设"],
     ["Resume", "等待输入或进程中断", "从 checkpoint 继续", "状态版本和待办"],
@@ -455,7 +455,9 @@ LangGraph 的 Graph API 使用三个核心部分描述工作流：State 保存�
 
 Google ADK 把图中的节点扩展到 Agent、工具、函数和人工步骤；AutoGen GraphFlow 支持顺序、并行、条件和带安全退出的循环，并建议简单协作优先使用更简单的 Team。（来源：[ADK graph-based workflows](#source-google-adk-graphs)、[AutoGen GraphFlow](#source-autogen-graphflow)）
 
-Anthropic 的多 Agent Research 系统采用动态 orchestrator-worker：Lead Agent 规划并创建并行 Subagents，各子任务在独立上下文中搜索，Lead Agent 汇总后决定是否继续。这种结构属于运行时生成的工作图；预先固定的 DAG 则在运行前确定主要节点与边。（来源：[How we built our multi-agent research system](#source-anthropic-multi-agent)）
+Anthropic 的多 Agent Research 系统采用动态 orchestrator-worker：Lead Agent 规划并创建并行 Subagents，各子任务在独立上下文中搜索，Lead Agent 汇总后决定是否继续。这种结构属于运行时生成的工作图；预先固定的 DAG（Directed Acyclic Graph，有向无环图，节点与边在运行前确定且不带环）则在运行前确定主要节点与边。（来源：[How we built our multi-agent research system](#source-anthropic-multi-agent)）
+
+Subagent 的工程价值在于**上下文隔离**：每个子任务在自己的窗口里读文档、试查询，只把结论回传 Lead Agent，避免中间噪音挤占主上下文——这正是第三节 Context 层 Isolate 操作的落地形态。代价是交接契约必须显式：子代理拿到什么输入、允许用哪些工具、回传什么格式，都需要在创建时写清，否则隔离反而制造信息断层。
 
 ### 5. 只有关系复杂到值得显式管理时才使用图
 

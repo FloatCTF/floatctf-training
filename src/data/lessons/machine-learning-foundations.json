@@ -27,24 +27,28 @@
       "说明数值归一化、类别编码、缺失值处理和时间窗口怎样影响模型输入",
       "计算线性回归的平方损失、逻辑回归的 sigmoid 概率和二元交叉熵",
       "解释梯度、mini-batch、学习率、SGD、Momentum 与 Adam 的职责和边界",
-      "使用训练曲线、数据切分、交叉验证、泄漏检查和多指标评估判断泛化"
+      "使用训练曲线、数据切分、交叉验证、泄漏检查和多指标评估判断泛化",
+      "比较树模型与线性模型的学习方式，并区分随机森林与梯度提升树的集成分工",
+      "针对类别失衡选择类别权重、重采样或阈值调整，并说明为何先换指标"
     ],
     "prerequisites": [
       "高中数学：函数、平均数、指数与对数",
       "会阅读简单公式和数据表；不需要微积分基础，梯度与推导在课内现场建立"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-22"
+    "verifiedAt": "2026-08-28"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-22",
+    "verifiedAt": "2026-08-28",
     "queries": [
       "Google Machine Learning Crash Course linear logistic regression loss gradient data normalization generalization",
       "Stanford CS229 empirical risk minimization bias variance error analysis",
-      "scikit-learn cross validation metrics probability calibration data leakage"
+      "scikit-learn cross validation metrics probability calibration data leakage",
+      "sklearn ensemble random forest gradient boosting averaging",
+      "sklearn class_weight balanced inverse frequency"
     ],
-    "notes": "课程结构参考 Google MLCC、Stanford CS229 与 scikit-learn。2026-08-22 由原 90 分钟单课拆分：任务定义、数据、损失、优化与泛化留在本课，神经元、反向传播、架构与部署移入 neural-network-foundations；正文事实与来源沿用原核验。主动画吸收 3Blue1Brown 和 TensorFlow Playground 的可视化思路，用仓库内确定性公式生成状态；所有数值结果同时以静态记录呈现。"
+    "notes": "课程结构参考 Google MLCC、Stanford CS229 与 scikit-learn。2026-08-22 由原 90 分钟单课拆分：任务定义、数据、损失、优化与泛化留在本课，神经元、反向传播、架构与部署移入 neural-network-foundations；正文事实与来源沿用原核验。主动画吸收 3Blue1Brown 和 TensorFlow Playground 的可视化思路，用仓库内确定性公式生成状态；所有数值结果同时以静态记录呈现。 树模型与集成、类别权重对策分别绑定 scikit-learn 官方文档。"
   },
   "sources": [
     {
@@ -403,6 +407,32 @@
       "supports": [
         "evidence-visual-teaching"
       ]
+    },
+    {
+      "id": "sklearn-ensemble",
+      "kind": "official-doc",
+      "title": "Ensembles: Gradient boosting, random forests, bagging, voting, stacking",
+      "publisher": "scikit-learn",
+      "url": "https://scikit-learn.org/stable/modules/ensemble.html",
+      "publishedAt": "2026-08-28",
+      "accessedAt": "2026-08-28",
+      "notes": "持续更新文档页；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-tree-ensembles"
+      ]
+    },
+    {
+      "id": "sklearn-class-weight",
+      "kind": "official-doc",
+      "title": "sklearn.linear_model.LogisticRegression",
+      "publisher": "scikit-learn",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
+      "publishedAt": "2026-08-28",
+      "accessedAt": "2026-08-28",
+      "notes": "持续更新文档页；publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-class-weights"
+      ]
     }
   ],
   "evidence": [
@@ -610,6 +640,20 @@
       "text": "概率校准检查预测概率与实际发生频率是否一致，并需要独立数据或交叉验证。",
       "sourceIds": [
         "sklearn-calibration"
+      ]
+    },
+    {
+      "id": "claim-tree-ensembles",
+      "text": "随机森林并行训练多棵随机化的深树并平均其概率预测以降低方差；梯度提升树串行添加拟合此前集成负梯度的浅树以降低偏差。",
+      "sourceIds": [
+        "sklearn-ensemble"
+      ]
+    },
+    {
+      "id": "claim-class-weights",
+      "text": "scikit-learn 的 class_weight='balanced' 按各类频率反比设定权重 n_samples / (n_classes × 各类样本数)，缓解类别失衡对训练的偏置。",
+      "sourceIds": [
+        "sklearn-class-weight"
       ]
     }
   ],

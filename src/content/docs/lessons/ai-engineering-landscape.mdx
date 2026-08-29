@@ -1,6 +1,6 @@
 ---
 title: AI 工程全景：从一次调用到生产系统
-description: 沿能力接入、知识与记忆、模型定制、质量与安全、运行与成本五层，把 2026 年的 AI 工程名词收进一张可导航的地图
+description: 沿能力接入、执行编排、知识与记忆、模型定制、质量与安全、运行与成本六层，把 2026 年的 AI 工程名词收进一张可导航的地图
 pageType: lesson
 template: splash
 lessonId: ai-engineering-landscape
@@ -57,18 +57,18 @@ export const requestJourneySteps = [
 
 ## 引导问题：为什么 2022 年只要三样，2026 年要背二十多项
 
-ChatGPT 于 2022 年 11 月 30 日发布。（来源：[Introducing ChatGPT](#source-openai-chatgpt-launch)）那一年入门 AI 应用的清单很短：会用对话模型，会写 Prompt。到 2026 年，同类岗位的要求已经展开成一长串名词：Harness、RAG 2.0、Guardrails、AI Gateway、Distillation。工程师社群用两个身高悬殊的剪影调侃这种膨胀。
+ChatGPT 于 2022 年 11 月 30 日发布。（来源：[Introducing ChatGPT](#source-openai-chatgpt-launch)）那一年入门 AI 应用的清单很短：会用对话模型，会写 Prompt，会调一套 API。到 2026 年，同类岗位的要求已经展开成一长串名词：Harness、RAG 2.0、Guardrails、AI Gateway、Distillation。
 
-名词为什么变多，值得认真回答。模型能力增强后，应用把更多环节交给模型，每个环节的可靠性、知识、质量、安全和成本问题就都变成了工程对象。下面的对照图重建了这份清单，每一项都可以点开看定义和它在课程路径中的位置。
+名词变多有确定的原因：模型能力增强后，应用把更多环节交给模型，每个环节的可靠性、知识、质量、安全和成本问题就都变成了工程对象。下面的对照图重建了这份清单，每一项都可以点开看定义和它在课程路径中的位置。
 
 <AiStackExplorer client:visible motionLevel="subtle" />
 
 ## 一、怎样阅读这张地图：五个工程层
 
-二十多个名词按解决的问题分成五层。执行编排层的七个名词已经在《AI Agent 工程方法：从 Prompt 到执行图》里详细讲过，本课补齐其余四层，并在最后把五层串成一次请求的完整旅程。
+二十多个名词按解决的问题分成六层。执行编排层的七个名词已经在《AI Agent 工程方法：从 Prompt 到执行图》里详细讲过，本课补齐其余五层，并在最后把六层串成一次请求的完整旅程。
 
 <DataTable
-  caption="五个工程层与本课的分工"
+  caption="六个工程层与本课的分工"
   headers={["层", "回答的问题", "包含名词", "详讲位置"]}
   rows={[
     ["能力接入", "模型怎样调用外部能力", "Function Calling、Tool Use、MCP、Stateless MCP", "本课第二节；MCP 协议见前课"],
@@ -136,7 +136,7 @@ Tool Use 描述“模型会用工具”这件事本身；Function Calling 是它
 
 ### 3. Stateless MCP：把会话从协议里拿掉
 
-MCP 的远程传输经历了两次演进：Streamable HTTP 传输在 2025-03-26 版规范中引入，取代早期的 HTTP+SSE 设计；2026-07-28 修订进一步移除了协议级会话，无状态服务器成为默认形态。（来源：[MCP Streamable HTTP transport](#source-mcp-streamable-http)）
+MCP 的远程传输经历了两次演进：Streamable HTTP 传输在 2025-03-26 版规范中引入，取代早期的 HTTP+SSE 设计；2026-07-28 修订进一步移除了 GET 流端点与协议级会话，服务器不再需要维护会话状态，可以按普通无状态 Web 服务部署。（来源：[MCP Streamable HTTP transport](#source-mcp-streamable-http)，核验于 2026-08-27）
 
 ```text
 带会话的部署                          无状态部署
@@ -153,7 +153,7 @@ MCP 的远程传输经历了两次演进：Streamable HTTP 传输在 2025-03-26 
 
 ### 1. RAG：用检索增强生成
 
-模型参数里的知识在训练截止后固定，更新知识、提供出处都很困难。RAG（Retrieval-Augmented Generation）由 Lewis 等人在 2020 年提出：预训练 seq2seq 模型充当参数化记忆，外部向量索引充当非参数化记忆，检索到的文档作为生成条件；替换索引就能更新模型可用的知识。（来源：[Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](#source-rag-paper)）
+模型参数里的知识在训练截止后固定，更新知识、提供出处都很困难。RAG（Retrieval-Augmented Generation）由 Lewis 等人在 2020 年提出：预训练 seq2seq 模型（输入序列到输出序列的生成模型）充当参数化记忆，外部向量索引充当非参数化记忆，检索到的文档作为生成条件；替换索引就能更新模型可用的知识。（来源：[Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks](#source-rag-paper)）
 
 生产中的 RAG 管线通常包含两线五步：
 
@@ -251,11 +251,11 @@ OpenAI 的官方优化指南给出明确顺序：先用 Prompt Engineering 建�
 
 评测框架由三部分组成：代表真实任务的数据集、给输出打分的评分器、把分数变成放行或阻断决定的门禁。改动 Prompt、检索或模型版本后跑同一套评测，才能区分改进与倒退。
 
-Agent 类系统的评测还要区分两个对象：执行轨迹（过程是否合理）与环境最终状态（结果是否正确），并且因为系统随机，需要多次 trial 观察成功率与波动，单次通过不构成证据。（来源：[Demystifying evals for AI agents](#source-anthropic-agent-evals)）
+Agent 类系统的评测还要区分两个对象：执行轨迹（过程是否合理）与环境最终状态（结果是否正确），并且因为系统随机，需要多次 trial 观察成功率与波动，单次通过不构成证据——这组概念在《AI Agent 工程方法》的 Loop 层已经建立，这里从生产评测的角度复用。（来源：[Demystifying evals for AI agents](#source-anthropic-agent-evals)）
 
 ### 2. LLM-as-a-judge：用模型给模型打分
 
-开放式输出难以用规则打分，人工评审贵而慢。Zheng 等人在 MT-Bench 与 Chatbot Arena 上验证了折中方案：GPT-4 作为评审与人类偏好的一致率超过 80%，与人类互相之间的一致率相当。同一研究也量化了偏差：位置偏差（偏向先出现的答案）、冗长偏差（偏向更长的答案）、自我增强偏差（偏向自己生成的答案），需要用交换顺序等手段缓解。（来源：[Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](#source-llm-judge-paper)）
+开放式输出难以用规则打分，人工评审贵而慢。Zheng 等人在 MT-Bench（多轮问题评测集）与 Chatbot Arena（众包匿名对战的偏好平台）上验证了折中方案：GPT-4 作为评审与人类偏好的一致率超过 80%，与人类互相之间的一致率相当。同一研究也量化了偏差：位置偏差（偏向先出现的答案）、冗长偏差（偏向更长的答案）、自我增强偏差（偏向自己生成的答案），需要用交换顺序等手段缓解。（来源：[Judging LLM-as-a-Judge with MT-Bench and Chatbot Arena](#source-llm-judge-paper)）
 
 <Callout variant="warning" title="评审模型也要被评测">
 LLM 评审是带偏差的测量仪器。上线一个自动评分器之前，先在人工标注的子集上核对它与人类判断的一致率，再决定信任范围。
@@ -278,7 +278,7 @@ LLM 评审是带偏差的测量仪器。上线一个自动评分器之前，先�
   ]}
 />
 
-两道闸互相补位：评测挡不住上线后的新型注入，护栏也不能证明系统整体变好了。提示注入的攻击构造与防御纵深在 Web 安全分类的课程里有更完整的展开。
+两道闸互相补位：评测挡不住上线后的新型注入，护栏也不能证明系统整体变好了。提示注入的攻击构造与防御纵深在下一课《AI 安全：从提示注入到对抗样本》里完整展开。
 
 ## 六、运行与成本治理：把系统当生产服务运营
 
@@ -286,7 +286,7 @@ LLM 评审是带偏差的测量仪器。上线一个自动评分器之前，先�
 
 一次 Agent 请求可能跨越网关、多轮模型调用、若干工具执行。出问题时需要回答：哪一步慢、哪一步错、token 花在哪。分布式追踪的做法是给每个环节建 span，串成一条 trace。
 
-OpenTelemetry 正在为生成式 AI 制定 gen_ai 语义约定，统一模型调用、Agent 与工具调用的 span 命名和 token 用量属性；这套约定已迁入独立仓库维护，整体仍处于 Development 状态，字段可能继续变化。（来源：[OpenTelemetry GenAI semantic conventions repository](#source-otel-genai-repo)）选型时优先支持该约定的框架与平台，但要预期属性名会随版本迁移。
+OpenTelemetry 正在为生成式 AI 制定 gen_ai 语义约定，统一模型调用、Agent 与工具调用的 span 命名和 token 用量属性；这套约定已迁入独立仓库维护，属性仍在快速演进、字段可能继续变化。（来源：[OpenTelemetry GenAI semantic conventions repository](#source-otel-genai-repo)，核验于 2026-08-27）选型时优先支持该约定的框架与平台，但要预期属性名会随版本迁移。
 
 ```text
 trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
@@ -309,7 +309,7 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 
 ### 3. 成本优化：一笔可以算清的账
 
-推理成本按 token 计费，优化手段都围绕减少重复计算：提示缓存复用稳定前缀，模型分级把任务路由到够用的最小模型，批处理接口用延迟换折扣。提示缓存的收益可以直接计算。Anthropic 的官方倍率：5 分钟缓存写入为基础输入价的 1.25 倍，1 小时写入为 2 倍，缓存读取为 0.1 倍。（来源：[Prompt caching](#source-anthropic-prompt-caching)）
+推理成本按 token 计费，优化手段都围绕减少重复计算：提示缓存复用稳定前缀，模型分级把任务路由到够用的最小模型，批处理接口用延迟换折扣。提示缓存的收益可以直接计算。Anthropic 的官方倍率：5 分钟缓存写入为基础输入价的 1.25 倍，1 小时写入为 2 倍，缓存读取为 0.1 倍。（来源：[Prompt caching](#source-anthropic-prompt-caching)，核验于 2026-08-27）
 
 设一个 20,000 token 的稳定前缀（系统提示 + 工具定义），5 分钟内被调用 100 次，基础输入价记为每 token 1 单位：
 
@@ -326,13 +326,13 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 
 ## 七、一次请求的完整旅程
 
-五层名词在一次真实请求里同时出场。沿时间线走一遍，五层框架就落到了具体的执行环节：
+六层名词在一次真实请求里同时出场。沿时间线走一遍，六层框架就落到了具体的执行环节：
 
 <RequestJourneyMap />
 
 <StepList title="一次客服请求穿过全部工程层" steps={requestJourneySteps} />
 
-八步对应五层：第 1 步是运行与成本治理的入口，第 2、6 步是质量与安全，第 3 步是知识与记忆，第 4、5 步是能力接入与执行编排，第 7、8 步把运行数据送回评测，闭环回到质量层。模型定制层不在请求路径上，它在离线一侧消化第 8 步积累的失败案例。
+八步对应六层：第 1 步是运行与成本治理的入口，第 2、6 步是质量与安全，第 3 步是知识与记忆，第 4、5 步是能力接入与执行编排，第 7、8 步把运行数据送回评测，闭环回到质量层。模型定制层不在请求路径上，它在离线一侧消化第 8 步积累的失败案例。
 
 ## 常见误区与工程边界
 
@@ -348,7 +348,9 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 - **缓存收益依赖前缀稳定：** 动态内容混入前缀会让写入费白付，先分离稳定段再开缓存。
 
 <KeyTakeaway>
-记住请求旅程这幅图：能力接入负责调用外部世界，知识与记忆负责窗口之外的信息，模型定制在离线回路固化或压缩行为，质量与安全在上线前后设闸，运行与成本让整条链可观察、可路由、可核算。新名词出现时，先定位它解决哪一层的哪种失败。
+记住请求旅程这幅图：能力接入负责调用外部世界，执行编排把多步任务管成可控执行，知识与记忆负责窗口之外的信息，模型定制在离线回路固化或压缩行为，质量与安全在上线前后设闸，运行与成本让整条链可观察、可路由、可核算。新名词出现时，先定位它解决哪一层的哪种失败。
 </KeyTakeaway>
+
+下一课《AI 安全：从提示注入到对抗样本》把质量与安全层单独放大：沿 LLM 应用和经典 ML 模型两条线拆解提示注入、越狱、对抗样本、数据投毒与模型提取，收束到 CTF AI 题型的分析框架。
 
 <SourceList sources={manifest.sources} />

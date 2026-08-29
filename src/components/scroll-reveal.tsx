@@ -8,8 +8,13 @@ export default function ScrollReveal({ children, motionLevel = 'explanatory', la
   const root = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!root.current) return undefined;
-    return installMotion(root.current, motionLevel, () => {
-      gsap.fromTo(root.current, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.52, ease: 'power2.out' });
+    return installMotion(motionLevel, () => {
+      const el = root.current;
+      if (!el) return undefined;
+      const context = gsap.context(() => {
+        gsap.fromTo(el, { y: 12, opacity: 0 }, { y: 0, opacity: 1, duration: 0.52, ease: 'power2.out' });
+      }, el);
+      return () => context.revert();
     });
   }, [motionLevel]);
   return <div ref={root} className="scroll-reveal" data-motion-level={motionLevel} aria-label={label}>{children}</div>;

@@ -42,8 +42,6 @@
   }
 
   .flow-node { min-height: auto; }
-  .timeline-controls label { grid-column: 1 / -1; }
-  .timeline-controls { grid-template-columns: 1fr 1fr; }
   .code-compare { grid-template-columns: 1fr; }
   .data-table-grid { min-width: var(--data-table-min-width, 36rem); }
   .data-table-cell { padding: 0.78rem 0.85rem; }
@@ -414,6 +412,11 @@
     padding: 0.9rem;
   }
 
+  .stack-past-growth {
+    margin-block-end: 0;
+    padding: 0.2rem 0.4rem 0;
+  }
+
   .stack-detail {
     border-block-start: var(--training-rule-heavy);
     border-inline-start: 0;
@@ -482,15 +485,6 @@
 
   .budget-segment::after {
     display: none;
-  }
-
-  .timeline-item {
-    gap: 0.35rem;
-    grid-template-columns: 1fr;
-  }
-
-  .dag-canvas {
-    min-width: 35rem;
   }
 
   .interview-answer {
@@ -703,8 +697,6 @@
 
 @media (prefers-reduced-motion: reduce) {
   .flow-node,
-  .timeline-item,
-  .commit-node,
   .scroll-reveal { opacity: 1 !important; transform: none !important; }
   *,
   *::before,

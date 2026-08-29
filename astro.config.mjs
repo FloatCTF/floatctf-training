@@ -35,6 +35,7 @@ export default defineConfig({
   base,
   output: 'static',
   trailingSlash: 'always',
+  prefetch: true,
   devToolbar: {
     enabled: false,
   },
@@ -56,6 +57,7 @@ export default defineConfig({
         PageFrame: './src/components/training-page-frame.astro',
         Sidebar: './src/components/training-sidebar.astro',
         TwoColumnContent: './src/components/training-two-column-content.astro',
+        Head: './src/components/training-head.astro',
       },
       sidebar,
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },

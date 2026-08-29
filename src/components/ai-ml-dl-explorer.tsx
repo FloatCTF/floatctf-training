@@ -1,8 +1,7 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -55,21 +54,11 @@ export default function AiMlDlExplorer({ motionLevel = 'subtle' }: Props) {
   const titleId = useId();
   const detailId = useId();
   const [activeLayer, setActiveLayer] = useState<LayerId>('overview');
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
   const detail = layerDetails[activeLayer];
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setActiveLayer('overview');
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') setActiveLayer('overview');
+  });
 
   const layerLabel = (id: Exclude<LayerId, 'overview'>, index: string, name: string, english: string) => {
     if (presentation === 'interactive') {

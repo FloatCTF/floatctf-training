@@ -76,7 +76,6 @@
   header.header,
   .sidebar-pane,
   .right-sidebar,
-  .timeline-controls,
   .simulator-control { display: none !important; }
   :root { color-scheme: light; }
   @page {
@@ -293,20 +292,16 @@
 
   .dark-code pre,
   .code-panel pre,
-  .simulator-control,
-  .timeline-controls {
+  .simulator-control {
     background: var(--training-code-bg) !important;
     color: var(--training-code-text) !important;
   }
 
-  .simulator-control,
-  .timeline-controls {
+  .simulator-control {
     display: none !important;
   }
 
   .flow-node,
-  .timeline-item,
-  .commit-node,
   .scroll-reveal {
     opacity: 1 !important;
     transform: none !important;

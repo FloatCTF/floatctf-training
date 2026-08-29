@@ -1,190 +1,191 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-23",
+  "reviewedAt": "2026-08-28",
   "reviewer": "agent",
   "mode": "validate-site",
-  "summary": "AI 与机器学习五课逐图深度审查完成：共核对 37 个图与交互实例，发现并修复 25 项数学语义、来源语义、裁切重叠、移动端、hydration、控制台和打印分页问题。五课在桌面浅色/深色、390×844、交互和 A4 打印态通过复验；npm run verify 通过，102 个 Astro 文件为 0 错误、0 警告、0 提示，静态构建生成 21 个页面。完整记录见 qa/ai-ml-deep-audit.json。",
+  "summary": "AI 分类全面优化轮：修复 danger/safe 未定义主题 token（32 处硬编码 fallback）与全站 941KB 阻塞 CSS（字体移出打包管线，主 CSS 降至 195KB），GSAP 与动效检测解耦并抽出三个公共 hooks，删除 2 个死代码组件与对应死样式；五课完成内容与档案修订（RLHF/DPO 与幻觉小节、树模型与失衡对策、术语定义、子代理机制、三处高时效事实内联核验日期、claim 与正文对齐）；新增第六课《AI 安全：从提示注入到对抗样本》（security+academic 双证据档案，两起真实事件证据，无考核）。npm run verify 通过（结构门禁、astro check 0 错误、22 页构建），浏览器矩阵与 judge 整页视觉评审全部通过，QA 新鲜度与原生 table 回归已纳入自动门禁。 后续按用户反馈重设计 AiStackExplorer（层头问题句+计数徽标、中性 chip 色、×7 标注、谱系去向、默认选中），设计中发现 subtle 动效等级被误报为 static 呈现的回归并修复，AiStackExplorer/AiMlDlExplorer 交互经浏览器实测与 judge 复审通过。 曾进一步实现 SVG 谱系连线并经 judge 两轮通过，按用户偏好撤除连线、保留文字谱系标注，撤除后组件交互复验通过。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
-      "note": "五课继续使用 mechanism/concept 主模式；L1/L3/L5 的 simulation 与 L2/L4 的 explanatory 对应可拖参数和可逐步机制。"
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课 mechanism 主模式配 case-study/comparison 支持；五门既有课模式未变。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
       "evidenceFile": "src/data/catalog.json",
-      "note": "L1 经典训练闭环→L2 表示学习→L3 大模型→L4 Agent 工程→L5 生产全景的 prerequisite 链完整，五课正文各自收束后承接下一课。"
+      "note": "先修链延伸为六课：ML→NN→LLM→Agent→全景→安全；新课前置登记 ai-engineering-landscape，分类页主线同步。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
-      "note": "检索空间、分页记忆、教师学生和请求旅程均直接连接对应技术定义；二维平面明确标注为高维 embedding 的教学压缩。"
+      "evidenceFile": "src/content/docs/lessons/ai-literacy.mdx",
+      "note": "RLHF 作文类比沿用既有边界声明；新课注入流程与「指令即数据」机制直接对应，无空比喻。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/agent-harness-engineering.mdx",
-      "note": "Prompt、MCP、Skill、Context、Harness、Loop 与 Graph 首次出现均给出工作定义、产物和责任边界。"
+      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
+      "note": "提示注入、越狱、直接/间接注入、对抗样本、后门、成员推断、模型提取、FGSM 首现即定义；前课补齐 grader、DAG、成功谓词、sampling/roots/elicitation、探针/消融、共适应、seq2seq、MT-Bench/Arena。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
-      "note": "按原始论文和官方规范复核关键主张；phi-4 数据配比修正为 40% synthetic 加 15% web rewrites，Dropout、LoRA、蒸馏、RAG 与 MCP 语义保持来源支持的适用范围。"
+      "evidenceFile": "src/data/lessons/ai-literacy.json",
+      "note": "本轮新增 12 个来源全部核验（InstructGPT、DPO、幻觉综述、Greshake、Rehberger、AIID-622、FGSM、BadNets、Shokri、Tramèr、sklearn 集成/类权重），claims 双向绑定；MCP/OTel/缓存倍率三处高时效句加内联核验日期。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/components/retrieval-sandbox.tsx",
-      "note": "Astro check 为 0 错误、0 警告、0 提示；浏览器验证 query 切换、余弦排序、top-k range、L4 单步控制和 L1–L3 交互水合。"
+      "evidenceFile": "src/components/prompt-injection-flow.tsx",
+      "note": "astro check 0 错误 0 警告 0 提示；新课流程模拟器与注意力头交互实测通过；重设计后发现并修复 subtle 等级误报 static 的呈现回归（AiStackExplorer 22 chip、AiMlDlExplorer 3 按钮恢复交互）。"
     },
     {
       "id": "security-scope",
       "level": "must",
-      "status": "not-applicable",
-      "note": "五课 safetyScope 均为 not-applicable，本轮不包含安全实验或外部目标操作。"
+      "status": "pass",
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课 safetyScope=authorized-lab，页面含标准免责声明并明确「只针对自建靶场练习」；其余五课仍为 not-applicable。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/components/context-window-evolution.tsx",
-      "note": "每课主交互只解释一个高理解成本关系：优化轨迹、梯度回传、注意力/采样、窗口演化或向量检索。"
+      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
+      "note": "新课主交互解释间接注入的攻防数据流；技能栈组件以层头问题句、计数徽标与文字谱系标注承载「名词分工细化」的关系，无装饰性动效。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/agent-harness-engineering.json",
-      "note": "L4 仅把 ContextWindowEvolution 计为 primary、TraceReplay 计为 supporting；L5 仅把检索沙盒计为 primary、技能栈计为 supporting；请求旅程继续使用静态 StepList。"
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课 primaryAnimations=1、supportingInteractions=1、scrollReveals=0，与页面实际一致；全站动效预算未超。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "减少动态、打印和无 JavaScript 下五课控制区均停用，固定账本、静态图、公式、结果和来源完整保留。"
+      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png",
+      "note": "无 JS 态新课整页内容完整；技能栈组件的文字谱系标注在无 JS/打印/移动单栏完整保留。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/browser-report.json",
-      "note": "L4 单步按钮接受 Enter 并保持焦点；L5 query 使用原生 button，top-k 使用原生 range，End 键将值设为 4并保持焦点；首页 Esc 关闭弹层后焦点返回分类卡。"
+      "note": "新课流程 range 聚焦按 End 值至 4 并保持焦点；ai-literacy 注意力头按钮 aria-pressed 状态正确；公共 hooks 重构未改变键盘行为。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "五课、首页和 AI 分类页在 390×844 下 document、body 与 viewport 同宽；宽表和固定账本只在组件内部滚动。"
+      "evidenceFile": "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png",
+      "note": "390×844 下首页、AI 分类页与六课页面级横向溢出为 0（滚动条基线内）。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/styles/print.css",
-      "note": "A4 打印状态隐藏控制区并保留全部静态图和固定账本；五课共 106 页，抽样目检 12 个关键图页，矩阵组件修复为标题与主体同页。"
+      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-print.pdf",
+      "note": "新课 A4 打印 PDF 生成成功：控制区隐藏、静态内容/表格/来源完整；打印样式未受 hooks 重构影响。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
       "evidenceFile": "src/data/catalog.json",
-      "note": "首页、AI 分类页与五个 completed 专题的 ID、slug、路径、order 和 prerequisite 一致；分类弹层含 5 条课程链接。"
+      "note": "六门 completed 专题 ID/slug/路径/先修一致；首页目录与 AI 分类页自动收录新课；22 页构建成功。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "SVG、React 岛和静态图统一使用站点 token、墨色外框、红色强调、等宽标签与编辑出版式排版；浅色、深色、手机和打印截图均通过视觉复核。"
+      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-dark.png",
+      "note": "danger/safe token 三套主题生效；技能栈组件移除非安全红绿语义色后 judge 复审通过（默认态/选中态/深色/移动端）。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "npm ci 与 npm run verify 通过，构建生成 21 个 HTML 页面、Pagefind 索引和 sitemap；部署配置继续通过结构门禁。"
+      "evidenceFile": "deploy/nginx.conf.example",
+      "note": "字体分片由既有静态资源规则覆盖（woff2 MIME 与 30 天缓存已映射），异步字体样式表走 font-src 'self'，CSP 未放宽；nginx 结构门禁通过。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "逐页检查 37 个图与交互实例的边界框、标签、响应式、深浅色、交互和打印；页面级横向溢出为 0，已确认的 SVG 裁切和文本重叠全部修复。"
+      "evidenceFile": "qa/screenshots/qa0828-ai-literacy-full-light.png",
+      "note": "六课整页 judge 视觉评审通过：表格全宽、编号连续、无重叠裁切；发现过的深色/无 JS 取证范围问题已补拍全页并复审通过。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
-      "note": "检索 Top-2、LoRA 形状关系、蒸馏软分布与请求旅程直接显示在页面；所有交互均附固定结果账本。"
+      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
+      "note": "新课脆弱/防御代码对照、五步流程、OWASP 十项映射与 CTF 四步全部在页内呈现；RLHF/DPO 效果数据（1.3B 优于 175B）直接给出。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/neural-network-foundations.json",
-      "note": "XOR 明确使用教学阶跃激活，蒸馏比例明确为教学示意，训练规模统一 token 单位；phi-4、Dropout、KV cache、RNN Jacobian 与 ReLU 零梯度表述均按原始来源和数学定义修正。"
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课 11 条 claim 全部绑定原始论文/事件记录/OWASP；ai-literacy 的 CS336 claim 在正文获得落点；LAND 与 AGENT 的重复评测 claim 建立跨课引用语义。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/machine-learning-foundations.mdx",
-      "note": "五课分别从可见困境进入机制：直线与泛化、手写数字表示、语言生成、Prompt 扩成系统、生产名词膨胀。"
+      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
+      "note": "新课以「骗的是模型还是权重」建立两类攻击面的学习动机；LAND 开头矛盾修复后引导问题完整。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
-      "note": "过程、空间和结构关系优先转为图示；L4 表格降到 10 张，L5 用检索平面、LoRA 窄矩阵、教师学生和全链路图减少理解步骤。"
+      "evidenceFile": "qa/screenshots/qa0828-machine-learning-foundations-full-light.png",
+      "note": "树模型对照表与失衡对策将高理解成本关系落为表格；新课攻防流程图与机制地图减少名词理解步骤。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/agent-harness-engineering.mdx",
-      "note": "发布简报贯穿 L4 七层与窗口演化；客服请求贯穿 L5 网关、护栏、检索、工具、轨迹和评测回流。"
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课两个真实事件（AIID-622、markdown 外泄）与两段生产风格代码对照贴合真实任务。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-engineering-landscape.mdx",
-      "note": "每课仅保留一个 KeyTakeaway；L5 明确指向请求旅程这幅图和五层定位问题。"
+      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-light.png",
+      "note": "新课 KeyTakeaway 收束两条攻击线；各课仍保持单一结论卡。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/components/retrieval-sandbox.tsx",
-      "note": "交互响应由用户点击、range 或单步控制触发；GSAP 只用于状态切换提示，计时器离开视口后暂停，无装饰循环。"
+      "evidenceFile": "src/components/motion-utils.ts",
+      "note": "公共 hooks 统一播放节奏与离屏停止；新课交互由用户输入驱动，无装饰循环。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-engineering-landscape.json",
-      "note": "每课一个主视觉对象：损失面、梯度计算图、注意力矩阵、上下文窗口、二维检索平面。"
+      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
+      "note": "新课主视觉对象为注入攻防数据流；各课每课一个主视觉的约定保持。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "pass",
-      "evidenceFile": ".zcode/plans/plan-sess_3e9320de-d5ab-440a-88fb-b10cb4c438cd.md",
-      "note": "Zcode 六阶段计划逐项落地：阶段 1–5 的组件、正文、manifest 和样式完成，阶段 6 的 verify、浏览器矩阵和 QA 报告完成。"
+      "evidenceFile": "qa/ai-ml-deep-audit.json",
+      "note": "本轮用户请求的优化清单逐项落地：性能、正确性、组件复用、门禁自动化、五课内容缺口、新课与分类闭环；既有 37 个视觉实例回归无破坏。"
     }
   ]
 }

@@ -33,11 +33,11 @@
       "了解 HTTP API、JSON 与数据库的基本概念"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-23"
+    "verifiedAt": "2026-08-28"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-23",
+    "verifiedAt": "2026-08-28",
     "queries": [
       "Lewis retrieval-augmented generation knowledge-intensive NLP 2005.11401",
       "Contextual AI introducing RAG 2.0 end-to-end optimization",
@@ -62,7 +62,7 @@
   "versionInfo": {
     "targetVersion": "AI 生产工程术语与官方文档，2026-08-13 核验快照",
     "environment": "模型 API 应用、RAG 系统、Agent 系统与多模型生产部署；正文使用静态案例与计费数字直接展示机制",
-    "verifiedAt": "2026-08-13",
+    "verifiedAt": "2026-08-28",
     "knownDifferences": "RAG 2.0 与 Stateless MCP 属于厂商或规范新说法，行业边界未统一；OTel GenAI 语义约定处于 Development 状态且字段仍在变化；各家模型价格、缓存倍率与网关能力会持续调整。"
   },
   "sources": [
@@ -87,7 +87,8 @@
       "publishedAt": "2020-05-22",
       "accessedAt": "2026-08-13",
       "supports": [
-        "claim-rag-origin"
+        "claim-rag-origin",
+        "evidence-rag-paper"
       ]
     },
     {
@@ -161,7 +162,8 @@
       "publishedAt": "2021-06-17",
       "accessedAt": "2026-08-13",
       "supports": [
-        "claim-lora-adapter"
+        "claim-lora-adapter",
+        "evidence-lora-paper"
       ]
     },
     {
@@ -197,7 +199,8 @@
       "publishedAt": "2024-07-24",
       "accessedAt": "2026-08-13",
       "supports": [
-        "claim-model-collapse"
+        "claim-model-collapse",
+        "evidence-model-collapse-paper"
       ]
     },
     {
@@ -256,7 +259,7 @@
       "publisher": "OpenTelemetry",
       "url": "https://github.com/open-telemetry/semantic-conventions-genai",
       "publishedAt": "2026-08-13",
-      "accessedAt": "2026-08-13",
+      "accessedAt": "2026-08-28",
       "notes": "持续更新仓库；publishedAt 记录本次核验快照日期。GenAI 语义约定于 2026 年 6 月从主仓库迁入该独立仓库。",
       "supports": [
         "claim-otel-genai-development"
@@ -280,10 +283,10 @@
       "kind": "official-doc",
       "title": "Prompt caching",
       "publisher": "Anthropic",
-      "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-caching",
+      "url": "https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching",
       "publishedAt": "2026-08-13",
-      "accessedAt": "2026-08-13",
-      "notes": "持续更新文档；publishedAt 记录本次核验快照日期。",
+      "accessedAt": "2026-08-28",
+      "notes": "官方文档 2026-08 迁移至 platform.claude.com 域名；倍率 1.25x/2x/0.1x 于 2026-08-27 复核未变。",
       "supports": [
         "claim-cache-multipliers"
       ]
@@ -308,7 +311,7 @@
       "publisher": "Model Context Protocol",
       "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
       "publishedAt": "2026-07-28",
-      "accessedAt": "2026-08-13",
+      "accessedAt": "2026-08-28",
       "supports": [
         "claim-stateless-mcp"
       ]
@@ -394,7 +397,7 @@
     },
     {
       "id": "claim-agent-evals",
-      "text": "Agent 评测需要区分执行轨迹与环境最终状态，并通过多次 trial 观察随机系统的成功率与波动。",
+      "text": "Agent 评测需要区分执行轨迹与环境最终状态，并通过多次 trial 观察随机系统的成功率与波动。 机制推导与《AI Agent 工程方法》验证层同源，本课在生产评测语境下复用该结论。",
       "sourceIds": [
         "anthropic-agent-evals"
       ]
@@ -464,5 +467,37 @@
     "primaryAnimations": 1,
     "supportingInteractions": 1,
     "scrollReveals": 0
-  }
+  },
+  "evidence": [
+    {
+      "id": "evidence-rag-paper",
+      "kind": "paper",
+      "identifier": "arXiv:2005.11401",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "rag-paper"
+      ],
+      "summary": "RAG 原论文定义参数化与非参数化记忆的分工，支撑知识与记忆层的机制讲解。"
+    },
+    {
+      "id": "evidence-lora-paper",
+      "kind": "paper",
+      "identifier": "arXiv:2106.09685",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "lora-paper"
+      ],
+      "summary": "LoRA 原论文给出低秩分解、可训练参数下降与合并回权重不增推理延迟的依据。"
+    },
+    {
+      "id": "evidence-model-collapse-paper",
+      "kind": "paper",
+      "identifier": "Nature 2024, AI models collapse...",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "model-collapse-nature"
+      ],
+      "summary": "Nature 论文证明递归训练引发模型坍缩，支撑合成数据治理的边界结论。"
+    }
+  ]
 }

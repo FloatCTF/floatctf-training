@@ -1,8 +1,7 @@
-import { useEffect, useId, useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import {
-  installMotion,
+  useMotionPresentation,
   type MotionLevel,
-  type MotionPresentation,
 } from './motion-utils';
 
 interface Props {
@@ -231,23 +230,13 @@ export default function XorExplorer({ motionLevel = 'explanatory' }: Props) {
   const titleId = useId();
   const [step, setStep] = useState(1);
   const [angle, setAngle] = useState(35);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') {
-          setStep(1);
-          setAngle(35);
-        }
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') {
+      setStep(1);
+      setAngle(35);
+    }
+  });
 
   const interactive = presentation === 'interactive';
   const { sideA, sideB, onLine } = classify(angle);

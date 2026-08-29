@@ -18,7 +18,7 @@
     {
       "id": "ai-ml",
       "name": "AI 与机器学习",
-      "summary": "从机器学习训练闭环与神经网络表示学习出发，逐步理解大语言模型、AI Agent 工程方法与生产级 AI 工程全景。",
+      "summary": "从机器学习训练闭环与神经网络表示学习出发，经大语言模型、AI Agent 工程与生产全景，收束到 AI 系统的攻击面与防御。",
       "order": 3,
       "pagePath": "/categories/ai-ml/"
     },
@@ -180,7 +180,7 @@
       "slug": "ai-engineering-landscape",
       "categoryId": "ai-ml",
       "title": "AI 工程全景：从一次调用到生产系统",
-      "summary": "沿能力接入、知识与记忆、模型定制、质量与安全、运行与成本五层，把 2026 年的 AI 工程名词收进一张地图。",
+      "summary": "沿能力接入、执行编排、知识与记忆、模型定制、质量与安全、运行与成本六层，把 2026 年的 AI 工程名词收进一张地图。",
       "difficulty": "intermediate",
       "status": "completed",
       "pagePath": "/lessons/ai-engineering-landscape/",
@@ -188,6 +188,20 @@
         "agent-harness-engineering"
       ],
       "order": 5
+    },
+    {
+      "id": "ai-security-essentials",
+      "slug": "ai-security-essentials",
+      "categoryId": "ai-ml",
+      "title": "AI 安全：从提示注入到对抗样本",
+      "summary": "沿提示注入、真实事件与对抗样本、投毒、隐私推断、模型提取四类经典攻击，认识 AI 系统的攻击面并收束到 CTF 分析框架。",
+      "difficulty": "intermediate",
+      "status": "completed",
+      "pagePath": "/lessons/ai-security-essentials/",
+      "prerequisites": [
+        "ai-engineering-landscape"
+      ],
+      "order": 6
     }
   ]
 }

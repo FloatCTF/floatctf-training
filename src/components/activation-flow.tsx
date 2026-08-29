@@ -1,5 +1,5 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { installMotion, type MotionLevel, type MotionPresentation } from './motion-utils';
+import { useId, useRef, useState } from 'react';
+import { useMotionPresentation, type MotionLevel } from './motion-utils';
 import { DIGIT_BITMAPS } from '../data/handwritten-digits';
 
 interface Props {
@@ -213,20 +213,10 @@ export default function ActivationFlow({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
   const [idx, setIdx] = useState(0);
-  const [presentation, setPresentation] = useState<MotionPresentation>('static');
 
-  useEffect(() => {
-    if (!root.current) return undefined;
-    return installMotion(
-      root.current,
-      motionLevel,
-      () => undefined,
-      (nextPresentation) => {
-        setPresentation(nextPresentation);
-        if (nextPresentation === 'static') setIdx(0);
-      },
-    );
-  }, [motionLevel]);
+  const presentation = useMotionPresentation(root, motionLevel, (nextPresentation) => {
+    if (nextPresentation === 'static') setIdx(0);
+  });
 
   const interactive = presentation === 'interactive';
   const digit = DIGIT_BITMAPS[idx];

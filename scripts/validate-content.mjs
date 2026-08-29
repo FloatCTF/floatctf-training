@@ -490,9 +490,10 @@ function validateLesson(topic) {
   ]) {
     if (!page.text.includes(`<${component}`)) report(pagePath, lessonId, component, message, `在正文中加入 ${component}。`);
   }
+  if (/<table[\s>]/i.test(page.text)) report(pagePath, lessonId, 'table', '正文使用了原生 <table>。', 'Starlight 会把 table 设为 display:block 导致半宽表；教学表统一使用 DataTable 组件。');
   if (keyTakeaways === 0) report(pagePath, lessonId, 'KeyTakeaway', '专题页缺少可复习的结论区域。', '加入一个重点结论卡。');
   if (!/(常见|边界|局限|排错|故障)/.test(page.text)) report(pagePath, lessonId, 'limitations', '专题页缺少常见错误、边界、局限或排错内容。', '增加与主题匹配的边界说明。');
-  if (!(manifest.runnableExamples || []).length && !/<(?:FlowSimulator|AttackDefenseFlow|ProcessTimeline|NeuralNetworkSimulator|GitDagSimulator)\b/.test(page.text) && !/```[a-z0-9-]+/i.test(page.text)) {
+  if (!(manifest.runnableExamples || []).length && !/<(?:FlowSimulator|AttackDefenseFlow|NeuralNetworkSimulator|RetrievalSandbox|BackpropPlayground|ContextWindowEvolution|AgentTraceReplay|XorExplorer|LinearFitPlayground|NeuronPlayground|ActivationFlow|AttentionExplorer|SamplingPlayground|AiStackExplorer|AiMlDlExplorer)\b/.test(page.text) && !/```[a-z0-9-]+/i.test(page.text)) {
     report(pagePath, lessonId, 'example', '专题页缺少具体例子、可运行代码、实验或交互演示。', '加入至少一种可验证实践内容。');
   }
   if (keyTakeaways > policy.content.maxKeyTakeaways) report(pagePath, lessonId, 'KeyTakeaway', `重点结论卡数量为 ${keyTakeaways}。`, `最多保留 ${policy.content.maxKeyTakeaways} 个。`);
@@ -607,6 +608,10 @@ function validateThemes() {
       ['codeText', 'codeBackground', policy.contrast.normalText],
       ['link', 'pageBackground', policy.contrast.normalText],
       ['link', 'surfaceBackground', policy.contrast.normalText],
+      ['danger', 'pageBackground', policy.contrast.ui],
+      ['danger', 'surfaceBackground', policy.contrast.ui],
+      ['safe', 'pageBackground', policy.contrast.ui],
+      ['safe', 'surfaceBackground', policy.contrast.ui],
       ['focusRing', 'pageBackground', policy.contrast.ui],
       ['focusRing', 'surfaceBackground', policy.contrast.ui],
       ['border', 'pageBackground', policy.contrast.ui],
@@ -719,6 +724,23 @@ function validateQa() {
     if (item.level === 'must' && item.status === 'not-run' && !browserDependentQaIds.has(item.id)) report(qaPath, null, `items.${item.id}.status`, '该必须项需要完成结构、内容或构建检查。', '执行检查并记录 pass、fail 或 not-applicable。');
   }
 
+  // QA 新鲜度：自审与浏览器证据不得早于任何已完成专题的事实核验日期。
+  if (isIsoDate(qa.reviewedAt)) {
+    for (const topic of catalog.topics.filter((item) => item.status === 'completed')) {
+      const manifestPath = join(lessonDir, `${topic.id}.json`);
+      if (!existsSync(manifestPath)) continue;
+      let verifiedAt;
+      try {
+        verifiedAt = readJson(manifestPath).researchStatus?.verifiedAt;
+      } catch {
+        continue;
+      }
+      if (isIsoDate(verifiedAt) && qa.reviewedAt < verifiedAt) {
+        report(qaPath, null, 'reviewedAt', `自审日期 ${qa.reviewedAt} 早于专题 ${topic.id} 的核验日期 ${verifiedAt}。`, '内容或事实更新后重新执行定性自审并刷新 reviewedAt。');
+      }
+    }
+  }
+
   if (!existsSync(browserQaPath)) {
     advise(browserQaPath, 'browserQa', '浏览器验证未执行；核心验证继续。');
     return;
@@ -736,6 +758,9 @@ function validateQa() {
     if (value == null || value === '' || emptyArray || emptyObject) advise(browserQaPath, field, message);
   };
   requireBrowserValue(browserQa.testedAt, 'testedAt', '浏览器报告缺少验证日期。');
+  if (isIsoDate(browserQa.testedAt) && isIsoDate(qa.reviewedAt) && browserQa.testedAt < qa.reviewedAt) {
+    advise(browserQaPath, 'testedAt', `浏览器验证日期 ${browserQa.testedAt} 早于自审日期 ${qa.reviewedAt}，浏览器证据可能未覆盖最新改动。`);
+  }
   requireBrowserValue(browserQa.target, 'target', '浏览器报告缺少验证目标。');
   requireBrowserValue(browserQa.browser, 'browser', '浏览器报告缺少浏览器信息。');
   if (!Array.isArray(browserQa.pages)) advise(browserQaPath, 'pages', '浏览器页面记录应为数组。');
@@ -772,6 +797,18 @@ function validateQa() {
   }
 }
 
+function validateDataTableCss() {
+  const cssPath = join(root, 'src', 'styles', 'components.css');
+  if (!existsSync(cssPath)) {
+    report(cssPath, null, 'components.css', '缺少组件样式文件。');
+    return;
+  }
+  const css = readFileSync(cssPath, 'utf8');
+  if (!/\.data-table-grid\s*\{[^}]*display:\s*grid/s.test(css)) {
+    report(cssPath, null, 'data-table-grid', 'DataTable 的 CSS Grid 全宽布局规则缺失。', '恢复 .data-table-grid 的 display:grid 实现，防止 Starlight table display:block 半宽回归。');
+  }
+}
+
 try {
   validateLessonShell();
   validateCatalog();
@@ -779,6 +816,7 @@ try {
   validateThemes();
   validateDeploymentConfig();
   validateRoutingFixtures();
+  validateDataTableCss();
   validateQa();
 } catch (error) {
   console.error(`内容门禁异常：${error.stack || error.message}`);

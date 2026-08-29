@@ -1,0 +1,269 @@
+{
+  "schemaVersion": 1,
+  "lessonPlan": {
+    "id": "ai-security-essentials",
+    "slug": "ai-security-essentials",
+    "categoryId": "ai-ml",
+    "title": "AI 安全：从提示注入到对抗样本",
+    "audience": "已完成前五门 AI 课程、具备 Web 安全基础，希望系统认识 AI 系统攻击面的本科生和工程师",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "case-study",
+      "comparison"
+    ],
+    "evidenceProfiles": [
+      "security",
+      "academic"
+    ],
+    "assessments": [
+      "none"
+    ],
+    "motionLevel": "simulation",
+    "visualStory": "间接提示注入的攻防数据流是主线：不可信内容经检索进入上下文、模型执行注入指令、分层防御收窄影响；四类经典 ML 攻击与 OWASP 十项风险用对照表静态锚定",
+    "learningObjectives": [
+      "区分直接与间接提示注入的攻击面，并说明指令与数据混合是共同根因",
+      "复述两个真实 LLM 应用安全事件的时间线、根因与整改",
+      "解释对抗样本、数据投毒、成员推断与模型提取的攻击前提、受害对象与 attacker 收益",
+      "把 OWASP LLM 十项风险映射到前五课与本课出现的机制",
+      "在 CTF 场景中沿四步框架分析 AI 题目"
+    ],
+    "prerequisites": [
+      "已完成 ai-engineering-landscape《AI 工程全景：从一次调用到生产系统》",
+      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
+      "了解 HTTP 请求与网页抓取的角色分工"
+    ],
+    "safetyScope": "authorized-lab",
+    "verifiedAt": "2026-08-28"
+  },
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-08-28",
+    "queries": [
+      "OWASP Top 10 for LLM Applications 2025 entries",
+      "Greshake indirect prompt injection compromised LLM-integrated applications",
+      "Embrace The Red ChatGPT plugin data exfiltration markdown injection",
+      "AI Incident Database Chevrolet dealer chatbot one dollar Tahoe",
+      "Goodfellow explaining and harnessing adversarial examples FGSM",
+      "BadNets identifying vulnerabilities machine learning model supply chain",
+      "Shokri membership inference attacks machine learning models",
+      "Tramer stealing machine learning models prediction APIs"
+    ],
+    "notes": "两起真实事件分别绑定 AI Incident Database 事件记录与研究者披露原文；四类经典 ML 攻击与间接注入均绑定原始论文；OWASP 十项于 2026-08-28 复核。本课只讲授机制与防御，不提供面向公共目标的攻击工具。"
+  },
+  "sources": [
+    {
+      "id": "owasp-llm-top10",
+      "kind": "advisory",
+      "title": "OWASP Top 10 for LLM Applications 2025",
+      "publisher": "OWASP Gen AI Security Project",
+      "url": "https://genai.owasp.org/llm-top-10/",
+      "publishedAt": "2024-11-18",
+      "accessedAt": "2026-08-28",
+      "notes": "2026-08-28 复核：提示注入仍列 LLM01。",
+      "supports": [
+        "claim-prompt-injection-llm01",
+        "claim-owasp-map",
+        "claim-defense-layering"
+      ]
+    },
+    {
+      "id": "greshake-2023",
+      "kind": "paper",
+      "title": "Not what you've signed up for: Compromising Real-World LLM-Integrated Applications with Indirect Prompt Injection",
+      "publisher": "arXiv",
+      "url": "https://arxiv.org/abs/2302.12173",
+      "publishedAt": "2023-02-23",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-indirect-injection",
+        "claim-data-instruction-blur"
+      ]
+    },
+    {
+      "id": "rehberger-2023",
+      "kind": "advisory",
+      "title": "ChatGPT Plugins: Data Exfiltration via Images & Cross Plugin Request Forgery",
+      "publisher": "Embrace The Red (Johann Rehberger)",
+      "url": "https://embracethered.com/blog/posts/2023/chatgpt-webpilot-data-exfil-via-markdown-injection/",
+      "publishedAt": "2023-05-16",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-md-exfiltration",
+        "evidence-md-exfil"
+      ]
+    },
+    {
+      "id": "aiid-622",
+      "kind": "incident",
+      "title": "Incident 622: Chevrolet Dealer Chatbot Agrees to Sell Tahoe for $1",
+      "publisher": "AI Incident Database",
+      "url": "https://incidentdatabase.ai/cite/622/",
+      "publishedAt": "2023-12-18",
+      "accessedAt": "2026-08-28",
+      "notes": "事件数据库记录页；publishedAt 为事件发生日期。",
+      "supports": [
+        "claim-chatbot-authority-incident",
+        "evidence-aiid-622"
+      ]
+    },
+    {
+      "id": "fgsm-2014",
+      "kind": "paper",
+      "title": "Explaining and Harnessing Adversarial Examples",
+      "publisher": "arXiv",
+      "url": "https://arxiv.org/abs/1412.6572",
+      "publishedAt": "2014-12-20",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-fgsm-linear"
+      ]
+    },
+    {
+      "id": "badnets-2017",
+      "kind": "paper",
+      "title": "BadNets: Identifying Vulnerabilities in the Machine Learning Model Supply Chain",
+      "publisher": "arXiv",
+      "url": "https://arxiv.org/abs/1708.06733",
+      "publishedAt": "2017-08-22",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-backdoor-poisoning"
+      ]
+    },
+    {
+      "id": "shokri-2017",
+      "kind": "paper",
+      "title": "Membership Inference Attacks Against Machine Learning Models",
+      "publisher": "IEEE Symposium on Security and Privacy",
+      "url": "https://arxiv.org/abs/1610.05820",
+      "publishedAt": "2016-10-24",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-membership-inference"
+      ]
+    },
+    {
+      "id": "tramer-2016",
+      "kind": "paper",
+      "title": "Stealing Machine Learning Models via Prediction APIs",
+      "publisher": "USENIX Security",
+      "url": "https://arxiv.org/abs/1609.02943",
+      "publishedAt": "2016-09-13",
+      "accessedAt": "2026-08-28",
+      "supports": [
+        "claim-model-extraction"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "id": "evidence-aiid-622",
+      "kind": "incident",
+      "identifier": "AI Incident Database #622",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "aiid-622"
+      ],
+      "summary": "ChatGPT 驱动的经销商聊天机器人被诱导同意以 1 美元出售约 7.6 万美元的车辆，暴露「模型输出被当作业务承诺」的过度代理风险。"
+    },
+    {
+      "id": "evidence-md-exfil",
+      "kind": "advisory",
+      "identifier": "Embrace The Red disclosure, 2023-05-16",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "rehberger-2023"
+      ],
+      "summary": "间接提示注入让 ChatGPT 渲染攻击者 URL 的 markdown 图片，把会话内容外传到攻击者服务器；属于负责任披露，厂商后续加入图片 URL 缓解。"
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-prompt-injection-llm01",
+      "text": "OWASP 将提示注入列为 LLM 应用十大风险之首（LLM01:2025）：恶意输入改变模型的预期行为，RAG 与微调都不能完全缓解。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    },
+    {
+      "id": "claim-indirect-injection",
+      "text": "间接提示注入把恶意指令藏进模型会检索到的外部内容，即可远程利用 LLM 集成应用，影响包括数据窃取与功能操纵。",
+      "sourceIds": [
+        "greshake-2023"
+      ]
+    },
+    {
+      "id": "claim-data-instruction-blur",
+      "text": "LLM 集成应用模糊了数据与指令的边界：模型把检索内容当作可执行指令处理，等价于把不可信输入送进了指令通道。",
+      "sourceIds": [
+        "greshake-2023"
+      ]
+    },
+    {
+      "id": "claim-md-exfiltration",
+      "text": "通过间接注入让模型渲染指向攻击者服务器的 markdown 图片，可把会话内容编码进 URL 完成数据外传；研究者于 2023 年 5 月披露。",
+      "sourceIds": [
+        "rehberger-2023"
+      ]
+    },
+    {
+      "id": "claim-chatbot-authority-incident",
+      "text": "2023 年 12 月，经销商的 ChatGPT 聊天机器人被诱导同意以 1 美元出售车辆并宣称具有法律约束力，事后机器人被下线；模型输出被当成了业务承诺。",
+      "sourceIds": [
+        "aiid-622"
+      ]
+    },
+    {
+      "id": "claim-fgsm-linear",
+      "text": "对抗样本源于模型的线性特性：沿损失对输入的梯度符号方向加一个小扰动即可让模型高置信地错分；FGSM 用一步梯度符号构造扰动，并可用于对抗训练。",
+      "sourceIds": [
+        "fgsm-2014"
+      ]
+    },
+    {
+      "id": "claim-backdoor-poisoning",
+      "text": "污染训练数据可在模型中植入后门：模型在干净输入上表现正常，遇到特定触发模式时按攻击者意图错分，且后门可在迁移学习后存留。",
+      "sourceIds": [
+        "badnets-2017"
+      ]
+    },
+    {
+      "id": "claim-membership-inference",
+      "text": "成员推断攻击只用黑盒查询即可判断某条记录是否在训练集中：模型对训练数据与非训练数据的置信度差异是可利用信号，训练集成员身份本身就可能是隐私。",
+      "sourceIds": [
+        "shokri-2017"
+      ]
+    },
+    {
+      "id": "claim-model-extraction",
+      "text": "仅凭预测 API 的黑盒查询即可高保真复制模型功能；返回置信值会加速提取，去掉置信值也不能完全阻止。",
+      "sourceIds": [
+        "tramer-2016"
+      ]
+    },
+    {
+      "id": "claim-owasp-map",
+      "text": "OWASP 2025 十项覆盖提示注入、敏感信息泄露、供应链、数据与模型投毒、不当输出处理、过度代理、系统提示泄露、向量弱点、错误信息与资源消耗。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    },
+    {
+      "id": "claim-defense-layering",
+      "text": "OWASP 对提示注入的缓解围绕输入输出约束、权限最小化、人工参与和沙箱隔离展开；单一防线不能完全缓解，需要分层叠加。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    }
+  ],
+  "assessments": [
+    "none"
+  ],
+  "visualNarrative": {
+    "kind": "prompt-injection-flow",
+    "primaryAnimations": 1,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

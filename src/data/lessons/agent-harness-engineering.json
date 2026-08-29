@@ -33,11 +33,11 @@
       "了解 API、JSON、Git 与自动化测试的基本概念"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-23"
+    "verifiedAt": "2026-08-28"
   },
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-23",
+    "verifiedAt": "2026-08-28",
     "queries": [
       "Anthropic prompt engineering success criteria evaluations",
       "Model Context Protocol architecture resources prompts tools safety",
@@ -82,7 +82,8 @@
       "accessedAt": "2026-08-02",
       "notes": "持续更新规范说明；publishedAt 记录本次核验快照日期。",
       "supports": [
-        "claim-mcp-architecture"
+        "claim-mcp-architecture",
+        "evidence-mcp-spec"
       ]
     },
     {
@@ -94,7 +95,8 @@
       "publishedAt": "2025-11-25",
       "accessedAt": "2026-08-02",
       "supports": [
-        "claim-mcp-safety"
+        "claim-mcp-safety",
+        "evidence-mcp-spec"
       ]
     },
     {
@@ -204,7 +206,8 @@
       "publishedAt": "2022-10-06",
       "accessedAt": "2026-08-02",
       "supports": [
-        "claim-agent-loop"
+        "claim-agent-loop",
+        "evidence-react-paper"
       ]
     },
     {
@@ -279,7 +282,8 @@
       "publishedAt": "2025-06-13",
       "accessedAt": "2026-08-02",
       "supports": [
-        "claim-multi-agent-orchestration"
+        "claim-multi-agent-orchestration",
+        "evidence-multi-agent-report"
       ]
     },
     {
@@ -439,5 +443,38 @@
     "primaryAnimations": 1,
     "supportingInteractions": 1,
     "scrollReveals": 0
-  }
+  },
+  "evidence": [
+    {
+      "id": "evidence-react-paper",
+      "kind": "paper",
+      "identifier": "arXiv:2210.03629",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "react-paper"
+      ],
+      "summary": "ReAct 原论文给出推理与行动交替的 Agent 循环依据，支撑 Loop 层的机制讲解。"
+    },
+    {
+      "id": "evidence-mcp-spec",
+      "kind": "specification",
+      "identifier": "MCP specification (tools / architecture)",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "mcp-architecture",
+        "mcp-tools-spec"
+      ],
+      "summary": "MCP 官方规范定义 Host/Client/Server 架构与三原语，支撑 MCP 层的职责与信任边界。"
+    },
+    {
+      "id": "evidence-multi-agent-report",
+      "kind": "official-doc",
+      "identifier": "Anthropic engineering: multi-agent research system",
+      "topicRelation": "direct",
+      "sourceIds": [
+        "anthropic-multi-agent"
+      ],
+      "summary": "Anthropic 工程报告描述 orchestrator-worker 的上下文隔离与交接实践，支撑子代理机制段。"
+    }
+  ]
 }
