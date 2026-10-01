@@ -1,0 +1,390 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-pointers/walk.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "",
+  "int main(void) {",
+  "    int ports[3] = {22, 80, 443};",
+  "    int *p = ports;",
+  "    printf(\"%d %d\\n\", ports[1], *(p + 1));",
+  "    p = p + 2;",
+  "    printf(\"%d\\n\", *p);",
+  "    *p = 8443;",
+  "    printf(\"%d\\n\", ports[2]);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "443"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "ports 是三个 int，连着放，每个 4 字节。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec0c",
+       "target": "main 的 ports"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "数组名用在这里，就是第 0 个元素的地址。p 指向 ports 的开头。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec0c",
+       "target": "main 的 ports"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n",
+   "note": "ports[1] 和 *(p + 1) 是一回事：从开头往后数 1 个 int，取出来都是 80。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec14",
+       "target": "main 的 ports[2]"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n",
+   "note": "p = p + 2。指针加 2 的意思是往后挪 2 个 int，地址实际增加了 8。现在它指向 ports[2]。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec14",
+       "target": "main 的 ports[2]"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n443\n",
+   "note": "*p 取到 443。"
+  },
+  {
+   "line": 9,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "8443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec14",
+       "target": "main 的 ports[2]"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n443\n",
+   "note": "*p = 8443，通过指针改掉了数组的第 2 个元素。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "8443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec14",
+       "target": "main 的 ports[2]"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n443\n8443\n",
+   "note": "用数组的写法读 ports[2]，看到的是改过之后的 8443。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec0c",
+       "size": 12,
+       "name": "ports",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec0c",
+         "size": 4,
+         "value": "22"
+        },
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "80"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "8443"
+        }
+       ]
+      },
+      {
+       "type": "int *",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "p",
+       "value": "…ec14",
+       "target": "main 的 ports[2]"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "80 80\n443\n8443\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

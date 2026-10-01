@@ -1,0 +1,356 @@
+{
+  "lessonPlan": {
+    "audience": "会用指针、结构体和堆内存、写过单文件 C 程序的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "一个程序拆成 main.c、stats.c、stats.h 三个文件：头文件把函数的原型分享给两边，两个源文件各自编译成目标文件，最后链接成一个可执行文件；Makefile 记下这张依赖关系，只重做变过的部分",
+    "learningObjectives": [
+      "用 fopen、fgets、fprintf、fclose 读写文本文件，并处理打开失败",
+      "把程序拆成多个源文件和头文件，说出头文件里该放什么",
+      "分开编译每个源文件再链接，解释这样做省了什么",
+      "读懂并写出最小的 Makefile：目标、依赖、命令",
+      "解释 make 怎样判断哪些文件需要重新编译"
+    ],
+    "prerequisites": [
+      "c-structs-and-heap",
+      "c-compile-and-run",
+      "python-files-and-exceptions"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-make-decides",
+      "kind": "mechanism",
+      "title": "make 怎么知道该重做哪些",
+      "question": "执行 touch stats.c 之后再 make，它只重新编译了 stats.c 并重新链接，没有碰 main.c。它是怎么判断的？如果改的是 stats.h，会重新编译哪些文件？为什么？",
+      "answer": "make 比较文件的修改时间。Makefile 里写着 stats.o 依赖 stats.c 和 stats.h。touch 之后 stats.c 比 stats.o 新，说明 stats.o 过时了，于是执行它那一条规则的命令重新编译。main.o 依赖的 main.c 和 stats.h 都没有比它新，所以不动。接着 report 依赖 main.o 和 stats.o，stats.o 刚刚更新过，比 report 新，于是重新链接。如果改的是 stats.h，main.o 和 stats.o 的依赖里都有它，两个都过时了，两个源文件都会重新编译，然后重新链接。头文件被哪些源文件包含，就要写进哪些目标文件的依赖里，否则改了头文件 make 会以为什么都不用做。",
+      "sourceIds": [
+        "make-how",
+        "make-rules"
+      ]
+    },
+    {
+      "id": "check-predict-make",
+      "kind": "prediction",
+      "title": "预测 make 执行哪些命令",
+      "question": "在一个只有源文件、没有任何编译产物的目录里，依次执行下面四步，预测每一步 make 打印什么。一、make。二、紧接着再 make。三、touch main.c 之后 make。四、make clean。",
+      "answer": "一、三行：gcc -Wall -c main.c、gcc -Wall -c stats.c、gcc main.o stats.o -o report。所有目标都不存在，全部要做。二、一行：make: 'report' is up to date.。没有任何文件比它的目标新。三、两行：gcc -Wall -c main.c 和 gcc main.o stats.o -o report。只有 main.o 过时了；stats.o 不用动；report 因为 main.o 更新了而需要重新链接。四、一行：rm -f report main.o stats.o。clean 不是一个文件，它是一个动作的名字，每次执行 make clean 都会运行它的命令。",
+      "sourceIds": [
+        "make-how",
+        "man-make"
+      ]
+    },
+    {
+      "id": "check-add-smallest",
+      "kind": "practice",
+      "title": "给工程加一个函数",
+      "question": "在这个三文件工程里加一个函数 int smallest(const int *values, int count)，返回数组里最小的数，并在 main 里多打印一行 smallest。需要改哪几个文件？改完后用 make 构建。",
+      "answer": "改三个文件。stats.h 里加一行原型 int smallest(const int *values, int count);。stats.c 里加上函数的定义，写法和 largest 相同，只是把比较换成小于。main.c 里加一行 printf(\"smallest %d\\n\", smallest(sizes, 5));。Makefile 不用改。自查标准：make 打印三条 gcc 命令（改了 stats.h，两个源文件都要重新编译），没有警告；./report 打印三行，total 7808、largest 4096、smallest 128。",
+      "sourceIds": [
+        "beej-multifile",
+        "make-rules"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "读写文件",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "count404 打印 20 lines, 5 not found。"
+    },
+    {
+      "kind": "动手",
+      "title": "把程序拆成多个文件",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "分别编译出 main.o 和 stats.o，再链接成 report。"
+    },
+    {
+      "kind": "进阶",
+      "title": "Makefile：只重做变过的部分",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "touch stats.c 之后 make 只重新编译这一个文件。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "fopen(3) NULL is returned; fgets(3); perror(3)",
+      "C11 N1570 7.21.5.3 fopen returns a null pointer",
+      "Beej's Guide to C file input/output FILE*; multifile projects header files prototypes",
+      "GNU make manual rule target prerequisites recipe; how make processes a makefile",
+      "gcc -c compile without linking"
+    ],
+    "notes": "材料在 public/labs/c-files-and-projects/：两个单文件程序、一个三文件工程（main.c、stats.c、stats.h）、Makefile，以及第 3 课那份 access.log 的副本。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0、GNU Make 4.4.1）里实际运行，页面输出取自运行记录。链接报错里编译器临时文件的名字每次不同。常见情况表里 Makefile 用空格代替 Tab 的报错、打开失败后不检查直接使用的段错误，都另在容器里复现后抄录。验收题的预期结果用参考解答在同一环境里运行核对过。"
+  },
+  "sources": [
+    {
+      "id": "man-fopen3",
+      "kind": "official-doc",
+      "title": "fopen(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/fopen.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-fopen"
+      ]
+    },
+    {
+      "id": "man-fgets3",
+      "kind": "official-doc",
+      "title": "fgets(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/fgets.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-fgets-line"
+      ]
+    },
+    {
+      "id": "man-perror3",
+      "kind": "official-doc",
+      "title": "perror(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/perror.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-perror"
+      ]
+    },
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-fopen"
+      ]
+    },
+    {
+      "id": "beej-files",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: File Input/Output",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/file-inputoutput.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-file-pointer"
+      ]
+    },
+    {
+      "id": "beej-multifile",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Multifile Projects",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/multifile-projects.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-header"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-compile-only"
+      ]
+    },
+    {
+      "id": "make-rules",
+      "kind": "official-doc",
+      "title": "GNU make: What a Rule Looks Like",
+      "publisher": "Free Software Foundation",
+      "url": "https://www.gnu.org/software/make/manual/html_node/Rule-Introduction.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-rule"
+      ]
+    },
+    {
+      "id": "make-how",
+      "kind": "official-doc",
+      "title": "GNU make: How make Processes a Makefile",
+      "publisher": "Free Software Foundation",
+      "url": "https://www.gnu.org/software/make/manual/html_node/How-Make-Works.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-make-default"
+      ]
+    },
+    {
+      "id": "man-make",
+      "kind": "official-doc",
+      "title": "make(1) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/make/make.1.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 make。",
+      "supports": [
+        "claim-make-purpose"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-fopen",
+      "text": "fopen 打开指定名字的文件并把一个流与它关联；失败时返回 NULL 并设置 errno。",
+      "sourceIds": [
+        "man-fopen3",
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-file-pointer",
+      "text": "C 里做任何输入输出，都是通过一个 FILE* 类型的数据进行的，它保存着与这个文件打交道所需的信息；fopen 出问题时返回 NULL，应当检查。",
+      "sourceIds": [
+        "beej-files"
+      ]
+    },
+    {
+      "id": "claim-fgets-line",
+      "text": "fgets 最多读入 size 减 1 个字符，读到换行或文件结尾时停止。",
+      "sourceIds": [
+        "man-fgets3"
+      ]
+    },
+    {
+      "id": "claim-perror",
+      "text": "perror 在标准错误上输出一条消息，描述最近一次系统调用或库函数调用遇到的错误：先打印参数字符串，再是冒号，然后是错误的说明。",
+      "sourceIds": [
+        "man-perror3"
+      ]
+    },
+    {
+      "id": "claim-header",
+      "text": "头文件按惯例以 .h 结尾，常常与对应的 .c 文件同名；把函数的原型放在头文件里，让别的源文件包含它。",
+      "sourceIds": [
+        "beej-multifile"
+      ]
+    },
+    {
+      "id": "claim-compile-only",
+      "text": "gcc 的 -c 只编译或汇编源文件，不链接，为每个源文件输出一个目标文件。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-rule",
+      "text": "Makefile 由规则组成，一条规则的样子是：目标、冒号、依赖，下面是命令。目标通常是程序生成的文件的名字，也可以是一个动作的名字，例如 clean；依赖是生成目标时用作输入的文件。",
+      "sourceIds": [
+        "make-rules"
+      ]
+    },
+    {
+      "id": "claim-make-default",
+      "text": "make 默认从第一个目标开始。源文件或任何列为依赖的头文件比目标文件新，或者目标文件不存在时，就必须重新编译。",
+      "sourceIds": [
+        "make-how"
+      ]
+    },
+    {
+      "id": "claim-make-purpose",
+      "text": "make 能自动判断一个大程序的哪些部分需要重新编译，并发出重新编译它们的命令。",
+      "sourceIds": [
+        "man-make"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "count404",
+      "path": "public/labs/c-files-and-projects/count404.c",
+      "command": "gcc -Wall count404.c -o count404 && ./count404",
+      "expectedResult": "同目录下有 access.log 时打印 20 lines, 5 not found；没有时打印 access.log: No such file or directory 并以状态 1 退出。"
+    },
+    {
+      "id": "report",
+      "path": "public/labs/c-files-and-projects/report.c",
+      "command": "gcc -Wall report.c -o report_demo && ./report_demo && cat report.txt",
+      "expectedResult": "report.txt 有两行：404 report 和 count: 5。"
+    },
+    {
+      "id": "stats-main",
+      "path": "public/labs/c-files-and-projects/main.c",
+      "command": "gcc -Wall -c main.c && gcc -Wall -c stats.c && gcc main.o stats.o -o report && ./report",
+      "expectedResult": "两行：total   7808 和 largest 4096。"
+    },
+    {
+      "id": "stats-lib",
+      "path": "public/labs/c-files-and-projects/stats.c",
+      "command": "gcc -Wall -c stats.c",
+      "expectedResult": "没有输出，生成 stats.o。"
+    },
+    {
+      "id": "stats-header",
+      "path": "public/labs/c-files-and-projects/stats.h",
+      "command": "gcc -Wall -c main.c",
+      "expectedResult": "main.c 通过 #include \"stats.h\" 拿到两个函数的原型，编译通过，生成 main.o。"
+    },
+    {
+      "id": "makefile",
+      "path": "public/labs/c-files-and-projects/Makefile",
+      "command": "make",
+      "expectedResult": "第一次执行打印三条 gcc 命令；再执行一次打印 make: 'report' is up to date.。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "build-graph",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

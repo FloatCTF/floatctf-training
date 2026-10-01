@@ -511,8 +511,8 @@
       "title": "C 一：从 hello.c 到可执行文件",
       "summary": "预处理、编译、链接各做了什么，源码怎样变成进程。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-compile-and-run/",
       "prerequisites": [
         "shell-permissions-and-pipes"
       ],
@@ -526,8 +526,8 @@
       "title": "C 二：类型、运算与控制流",
       "summary": "整型有多宽、什么时候溢出，以及分支与循环。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-types-and-control-flow/",
       "prerequisites": [
         "c-compile-and-run",
         "data-representation"
@@ -542,8 +542,8 @@
       "title": "C 三：函数与栈帧",
       "summary": "一次函数调用在栈上留下了什么，局部变量何时消失。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-functions-and-stack/",
       "prerequisites": [
         "c-types-and-control-flow"
       ],
@@ -557,8 +557,8 @@
       "title": "C 四：数组与字符串",
       "summary": "连续内存、结尾的空字符，以及越界时实际发生的事。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-arrays-and-strings/",
       "prerequisites": [
         "c-functions-and-stack"
       ],
@@ -572,8 +572,8 @@
       "title": "C 五：指针",
       "summary": "地址、解引用和指针运算，用图把每一步画出来。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-pointers/",
       "prerequisites": [
         "c-arrays-and-strings"
       ],
@@ -587,8 +587,8 @@
       "title": "C 六：结构体与动态内存",
       "summary": "malloc 和 free，认识泄漏、悬垂指针和重复释放。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-structs-and-heap/",
       "prerequisites": [
         "c-pointers"
       ],
@@ -602,8 +602,8 @@
       "title": "C 七：文件读写与多文件工程",
       "summary": "头文件、分开编译和最小的 Makefile。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-files-and-projects/",
       "prerequisites": [
         "c-structs-and-heap"
       ],
@@ -617,8 +617,8 @@
       "title": "C 八：调试与内存错误",
       "summary": "用 gdb 找到段错误的位置，说清程序为什么会崩。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/c-debugging-memory-errors/",
       "prerequisites": [
         "c-structs-and-heap"
       ],

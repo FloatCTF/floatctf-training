@@ -1,0 +1,343 @@
+---
+title: C 八：调试与内存错误
+description: 用 gdb 找到段错误发生的位置并沿调用栈追到原因，单步执行找出逻辑错误，用 AddressSanitizer 发现不崩溃的内存错误，把常见崩溃信息对应到具体原因
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/c-debugging-memory-errors.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用 AddressSanitizer 找出 copy.c 的错误并改好，改完后运行没有任何报告。' },
+  { title: '用 gdb 重看第 23 课的 null.c', detail: '用 -g 重新编译 null.c，在 gdb 里 run，记下它停在哪一行；再 print p，确认它是 0x0。' },
+  { title: '单步走一遍递归', detail: '用 -g 编译第 21 课的 fact.c，在 gdb 里 break fact、run，然后连续几次 continue，每次停下都执行 bt。记下栈最深时有几帧，和当时逐行执行图里看到的对照。' },
+  { title: '写一张自己的对照表', detail: '把这八课里遇到过的每一种崩溃或报错各写一行：终端显示什么、退出状态是多少、原因是什么、哪一课见过。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 26"
+  kicker="gdb, Backtrace, AddressSanitizer"
+  lines={[
+    { text: "C 八" },
+    { text: "调试与内存错误", accent: true },
+  ]}
+  summary="前几课的每一种错误，最后都只剩一句 segmentation fault，或者干脆什么都不说。这一课学两样工具：gdb 让你在程序崩溃的那一刻停下来四处查看，AddressSanitizer 让不崩溃的错误自己说话。学完它，C 这一段就收尾了。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：只有一句 segmentation fault
+
+<CodeFile file="labs/c-debugging-memory-errors/crash.c" />
+
+<TerminalSession
+  title="打印了两行，然后崩溃"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc -g crash.c -o crash', note: '多了一个 -g，稍后解释。' },
+    { cmd: './crash', out: 'hello, alice (5)\nhello, bob (3)\nzsh: segmentation fault  ./crash' },
+  ]}
+/>
+
+Python 出错时会给一份 Traceback，写明哪个文件、哪一行、经过了哪些函数。C 程序崩溃时，系统只告诉你一个信号的名字。
+
+哪一行崩的？当时各个变量是多少？是谁把错误的值传进来的？二十行的程序还能靠眼睛看，两千行就不行了。这一课让 C 程序也交出它的「Traceback」。
+
+## 一、用 gdb 找到崩溃的位置
+
+### 1. 准备
+
+**gdb** 是调试器：它替你运行程序，可以让程序在任何地方停下，然后查看当时的一切。Kali 默认没有装它：
+
+<TerminalSession
+  replay="skip"
+  title="安装（只需一次）"
+  steps={[
+    { cmd: 'sudo apt install -y gdb', note: '和第 3 课装 htop 的方法一样。' },
+  ]}
+/>
+
+<TerminalSession
+  title="确认装好了"
+  steps={[
+    { cmd: 'gdb --version | head -n 1', out: 'GNU gdb (Debian 17.2-1+b1) 17.2' },
+  ]}
+/>
+
+编译时的 `-g` 让 gcc 在可执行文件里多存一份**调试信息**：每条机器指令对应源文件的哪一行，每个变量叫什么名字、放在哪。有了它，gdb 才能用源码的语言和你说话。从这一课起，写程序时编译命令里都加上 `-g`。（来源：[gcc(1)](#source-man-gcc)）
+
+### 2. 在 gdb 里运行，看调用栈
+
+在终端里输入 `gdb -q ./crash` 进入 gdb，提示符变成 `(gdb)`。`-q` 是不显示开头那一大段版权信息。
+
+<TerminalSession
+  environment="GDB · ./crash"
+  prompt="(gdb)"
+  title="gdb -q ./crash 之后"
+  steps={[
+    {
+      cmd: 'run',
+      out: 'Starting program: /home/kali/lab/c/crash\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".\nhello, alice (5)\nhello, bob (3)\n\nProgram received signal SIGSEGV, Segmentation fault.\n0x00007ffff7f276d9 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6',
+      note: 'run 启动程序。它照常运行，崩溃时没有退出，而是停住了。最后一行说它停在 C 库里的某个地址。',
+    },
+    {
+      cmd: 'bt',
+      out: '#0  0x00007ffff7f276d9 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6\n#1  0x0000555555555161 in name_length (name=0x0) at crash.c:5\n#2  0x000055555555517b in greet (name=0x0) at crash.c:9\n#3  0x00005555555551e0 in main () at crash.c:16',
+      note: 'bt 是 backtrace：此刻的调用栈。这就是 C 程序的 Traceback。',
+    },
+  ]}
+/>
+
+`bt` 的每一行是一个栈帧，就是第 21 课图里的那些方框。最上面的 `#0` 是崩溃发生的地方，往下依次是调用它的函数，最下面是 `main`。
+
+<DataTable
+  caption="读这四帧"
+  headers={["帧", "在哪", "说明"]}
+  rows={[
+    ["#0", "C 库里，没有函数名", "崩溃的精确位置。这是 strlen 的内部，不是你的代码，也没有它的调试信息，所以显示 ??"],
+    ["#1", "name_length，crash.c 第 5 行", "你的代码里离崩溃最近的一层。参数 name=0x0，是空指针"],
+    ["#2", "greet，crash.c 第 9 行", "它调用了 name_length，传进去的 name 也是 0x0"],
+    ["#3", "main，crash.c 第 16 行", "它调用了 greet"],
+  ]}
+  columnRatios={[0.4, 1.4, 3]}
+/>
+
+读法：**从上往下找到第一个属于你自己代码的帧，从那里开始看。** 这里是 `#1`：`strlen(name)` 收到了一个空指针。
+
+### 3. 沿着调用栈往回找原因
+
+`name_length` 只是把参数原样交给 `strlen`，错不在它。空指针是从哪来的？`frame` 命令可以切换到任意一帧，查看那一层的变量：
+
+<TerminalSession
+  environment="GDB · ./crash"
+  prompt="(gdb)"
+  title="切到 main 那一帧看变量"
+  steps={[
+    { cmd: 'run', out: 'Starting program: /home/kali/lab/c/crash\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".\nhello, alice (5)\nhello, bob (3)\n\nProgram received signal SIGSEGV, Segmentation fault.\n0x00007ffff7f276d9 in ?? () from /usr/lib/x86_64-linux-gnu/libc.so.6' },
+    { cmd: 'frame 3', out: '#3  0x00005555555551e0 in main () at crash.c:16\n16\t        greet(names[i]);', note: '切到 #3，也就是 main。它显示了这一帧正停在哪一行。' },
+    { cmd: 'print i', out: '$1 = 2', note: 'print 显示一个变量或表达式的值。崩溃时 i 是 2。' },
+    { cmd: 'print names[i]', out: '$2 = 0x0', note: 'names[2] 是空指针。' },
+    { cmd: 'print names[1]', out: '$3 = 0x55555555601a "bob"', note: '对比一下：names[1] 是一个有效的地址，gdb 顺便把它指向的字符串也显示了出来。' },
+    { cmd: 'quit', out: 'A debugging session is active.\n\n\tInferior 1 [process 547] will be killed.\n\nQuit anyway? (y or n) y', note: '退出。程序还停在那里，gdb 会确认一次，回答 y。' },
+  ]}
+/>
+
+原因找到了：`names` 数组的第三个元素是 `NULL`，而 `main` 的循环把三个元素都当成名字交给了 `greet`。崩溃发生在 C 库里，错误却在三层调用之外的 `main`。**出错的地方和崩溃的地方常常不是同一处**，调用栈就是连接两者的那条线。
+
+（来源：[gdb(1)](#source-man-gdb)、[N1570](#source-n1570)）
+
+## 二、单步执行，找逻辑错误
+
+### 1. 不崩溃，只是算错了
+
+<CodeFile file="labs/c-debugging-memory-errors/average.c" />
+
+<TerminalSession
+  title="四个成绩的平均分"
+  steps={[
+    { cmd: 'gcc -g average.c -o average' },
+    { cmd: './average', out: 'average 65', note: '80、90、70、100 的平均分应当是 85。' },
+  ]}
+/>
+
+程序没有崩溃，没有警告，只是答案不对。这种错误 `bt` 帮不上忙，需要让程序一步一步地走，边走边看变量。
+
+### 2. 断点和单步
+
+<TerminalSession
+  environment="GDB · ./average"
+  prompt="(gdb)"
+  title="gdb -q ./average 之后"
+  steps={[
+    { cmd: 'break average', out: 'Breakpoint 1 at 0x1144: file average.c, line 4.', note: '在函数 average 的开头设一个断点。程序运行到这里会停下。也可以写行号：break 6。' },
+    {
+      cmd: 'run',
+      out: 'Starting program: /home/kali/lab/c/average\n[Thread debugging using libthread_db enabled]\nUsing host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".\n\nBreakpoint 1, average (values=0x7fffffffe240, count=4) at average.c:4\n4\t    int sum = 0;',
+      note: '停在了第 4 行。显示出来的这一行是「接下来要执行的」，还没有执行。栈地址与你的可能略有不同。',
+    },
+    { cmd: 'next', out: '5\t    for (int i = 1; i < count; i++) {', note: 'next 执行一行，然后停在下一行。' },
+    { cmd: 'next', out: '6\t        sum = sum + values[i];' },
+    { cmd: 'next', out: '5\t    for (int i = 1; i < count; i++) {', note: '第 6 行执行完了，回到 for 那一行。现在看看变量。' },
+    { cmd: 'print i', out: '$1 = 1' },
+    { cmd: 'print sum', out: '$2 = 90', note: '循环体只执行了一次，sum 却是 90，而第一个成绩是 80。' },
+    { cmd: 'print values[0]', out: '$3 = 80', note: 'values[0] 是 80，它没有被加进去。' },
+    { cmd: 'info locals', out: 'i = 1\nsum = 90', note: 'info locals 一次列出当前函数的所有局部变量。' },
+    { cmd: 'continue', out: 'Continuing.\naverage 65\n[Inferior 1 (process 3363) exited normally]', note: 'continue 让程序继续运行，直到下一个断点或结束。' },
+    { cmd: 'quit' },
+  ]}
+/>
+
+第一圈循环时 `i` 是 1，不是 0。`values[0]` 被跳过了。回头看第 5 行：`int i = 1`。
+
+把 `1` 改成 `0`，重新编译：
+
+<TerminalSession
+  title="改完再试"
+  steps={[
+    { cmd: 'gcc -g average.c -o average', setup: "sed -i 's/int i = 1/int i = 0/' average.c" },
+    { cmd: './average', out: 'average 85' },
+  ]}
+/>
+
+这个 bug 光看代码也能发现。gdb 的价值在于：你不必猜。怀疑哪里就停在哪里，看变量的实际值和你以为的值差在哪。
+
+<DataTable
+  caption="最常用的八条 gdb 命令"
+  headers={["命令", "简写", "作用"]}
+  rows={[
+    ["run", "r", "启动程序"],
+    ["break 函数名或行号", "b", "设断点"],
+    ["next", "n", "执行一行，遇到函数调用整个跳过"],
+    ["step", "s", "执行一行，遇到函数调用就跟进去"],
+    ["continue", "c", "继续运行到下一个断点"],
+    ["print 表达式", "p", "显示值。可以写 values[2]、*p、sum / count"],
+    ["bt", "", "显示调用栈"],
+    ["quit", "q", "退出"],
+  ]}
+  columnRatios={[1.4, 0.5, 3]}
+/>
+
+（来源：[gdb(1)](#source-man-gdb)）
+
+## 三、不崩溃的错误，和一张对照表
+
+### 1. 多写了一个，程序若无其事
+
+<CodeFile file="labs/c-debugging-memory-errors/fill.c" mark="5-6" note="申请了 4 个 int，循环却写了 5 次。" />
+
+<TerminalSession
+  title="没有任何异常"
+  steps={[
+    { cmd: 'gcc -Wall fill.c -o fill', setup: 'cp ~/lab/python/average.c . && gcc -g average.c -o average', note: '没有警告。' },
+    { cmd: './fill', out: '9', note: '结果正确，没有崩溃。' },
+  ]}
+/>
+
+`squares[4]` 写到了申请的那块内存之外。这次没出事，只是因为那 4 个字节后面碰巧没有别人在用。这是最危险的一种错误：它不崩溃，gdb 无处可停；它也不总是算错，测试发现不了。等程序变大，那几个字节后面住进了别的数据，它才发作，而且发作在离这里很远的地方。
+
+第 22、24 课用过的 AddressSanitizer 就是对付它的：
+
+<TerminalSession
+  title="同一个程序，换个编译选项"
+  steps={[
+    { cmd: 'gcc -g -fsanitize=address fill.c -o fill' },
+    {
+      cmd: './fill',
+      out: '=================================================================\n==3311==ERROR: AddressSanitizer: heap-buffer-overflow on address 0x7bc6af5e0020 at pc 0x56057142322d bp 0x7fff750855d0 sp 0x7fff750855c8\nWRITE of size 4 at 0x7bc6af5e0020 thread T0\n    #0 0x56057142322c in main /home/kali/lab/c/fill.c:7\n…\n0x7bc6af5e0020 is located 0 bytes after 16-byte region [0x7bc6af5e0010,0x7bc6af5e0020)\nallocated by thread T0 here:\n…\n    #1 0x5605714231ca in main /home/kali/lab/c/fill.c:5\n…\nSUMMARY: AddressSanitizer: heap-buffer-overflow /home/kali/lab/c/fill.c:7 in main\n…',
+      note: '越界的那一刻就被拦下。地址和进程号每次不同。',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="怎样读一份 AddressSanitizer 报告"
+  headers={["看哪里", "这份报告里", "含义"]}
+  rows={[
+    ["ERROR 那一行的第一个词组", "heap-buffer-overflow", "错误的类型：堆上的缓冲区越界"],
+    ["下一行", "WRITE of size 4", "是读还是写，多少字节"],
+    ["第一段调用栈里属于你代码的那一帧", "fill.c:7", "出错的那一行"],
+    ["located … 那一行", "0 bytes after 16-byte region", "越过了一块 16 字节的内存，紧挨在它后面"],
+    ["allocated by 下面的调用栈", "fill.c:5", "那块内存是在哪一行申请的"],
+  ]}
+  columnRatios={[1.6, 1.5, 2]}
+/>
+
+（来源：[AddressSanitizer](#source-asan-wiki)、[gcc(1)](#source-man-gcc)）
+
+### 2. 八课的崩溃信息，一张表
+
+<DataTable
+  caption="终端说了什么，对应什么原因"
+  headers={["终端显示", "退出状态", "发生了什么", "先查什么", "哪一课"]}
+  rows={[
+    ["zsh: segmentation fault", "139", "访问了不属于程序的内存", "空指针、悬垂指针、数组越界、栈被写坏、无限递归", "21、22、23"],
+    ["*** stack smashing detected ***", "134", "函数返回前发现栈帧被写坏了", "往局部数组里写的每一处，尤其是 strcpy", "22"],
+    ["free(): double free detected …", "134", "同一块堆内存释放了两次", "每个 free 之后有没有把指针设成 NULL", "24"],
+    ["AddressSanitizer: …", "1", "被检测工具拦下", "报告里的错误类型和行号", "22、24、26"],
+    ["没有任何提示，结果不对或时对时错", "0", "未定义行为，这次没崩", "用 -fsanitize=address 重新编译运行", "20 到 24"],
+  ]}
+  columnRatios={[1.7, 0.6, 1.6, 2.2, 0.7]}
+/>
+
+退出状态 139 是 128 加 11，11 是段错误的信号编号；134 是 128 加 6，6 是中止信号的编号。（来源：[signal(7)](#source-man-signal7)、[Zsh: Shell Grammar](#source-zsh-grammar)）
+
+### 3. 排查的顺序
+
+<DataTable
+  caption="程序不对劲时，按这个顺序来"
+  headers={["步骤", "做什么", "抓得到什么"]}
+  rows={[
+    ["1", "gcc -Wall -g 重新编译，读每一条警告", "格式符不匹配、未初始化的变量、忘了 return、明显的溢出"],
+    ["2", "加上 -fsanitize=address 再编译运行", "越界、释放后使用、重复释放、泄漏，并给出行号"],
+    ["3", "崩溃了：gdb 里 run，然后 bt", "崩溃的位置和调用链"],
+    ["4", "结果不对：gdb 里设断点、单步、print", "变量的实际值和你以为的值差在哪"],
+  ]}
+  columnRatios={[0.5, 2.2, 2.6]}
+/>
+
+## 常见报错与排错
+
+<DataTable
+  caption="用 gdb 时最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["bt 里只有函数名，没有文件名和行号；print 变量时说 No symbol table", "编译时没有加 -g", "加上 -g 重新编译"],
+    ["No symbol \"i\" in current context.", "当前这一帧里没有这个变量", "先用 frame 切到有它的那一帧"],
+    ["bt 的最上面几帧是 ?? ()", "那几帧在 C 库里，没有调试信息", "往下找第一个属于自己代码的帧"],
+    ["The program is not being run.", "还没有 run，或者程序已经结束", "先 run"],
+    ["next 之后显示的行号往回跳", "在循环里，回到了循环的开头", "正常。继续 next"],
+    ["改了代码，gdb 里看到的还是旧的", "没有重新编译，或者没有退出 gdb 重新进入", "重新编译，再重新启动 gdb"],
+  ]}
+  columnRatios={[2, 1.6, 1.5]}
+/>
+
+边界：gdb 只在程序实际运行到的地方有用，AddressSanitizer 只报告实际发生了的越界。一段有问题的代码如果这次没被执行到，两者都不会发现它。它们是帮你定位问题的工具，不能证明程序没有问题。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'gcc -Wall -g 程序.c -o 程序', description: '带调试信息编译。' },
+    { term: 'gdb -q ./程序', description: '进入 gdb。' },
+    { term: 'run', description: '运行。崩溃时会停在出事的地方。' },
+    { term: 'bt', description: '调用栈。从上往下找第一个自己代码的帧。' },
+    { term: 'frame 编号', description: '切换到某一帧。' },
+    { term: 'print 表达式 / info locals', description: '看一个值 / 看当前帧的所有局部变量。' },
+    { term: 'break 函数或行号', description: '设断点。' },
+    { term: 'next / step / continue', description: '执行一行 / 执行一行并进入函数 / 继续运行。' },
+    { term: 'gcc -g -fsanitize=address', description: '运行时报告内存错误。' },
+    { term: '139 / 134', description: '段错误 / 被中止。' },
+  ]}
+/>
+
+<KeyTakeaway>
+用 `-g` 编译之后，gdb 可以把崩溃还原成一条带行号和参数的调用栈：`run` 让程序停在出事的那一刻，`bt` 列出调用链，从上往下找到第一个属于自己代码的帧，再用 `frame` 和 `print` 沿着它往回找到错误的来源。逻辑错误用断点和单步来查。不崩溃的内存错误交给 `-fsanitize=address`。排查的顺序是：先读警告，再开检测，最后上调试器。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

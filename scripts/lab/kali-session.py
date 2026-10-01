@@ -20,6 +20,7 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
   python3 scripts/lab/kali-session.py commands.txt > record.json
   python3 scripts/lab/kali-session.py --python sessions.txt > record.json
   python3 scripts/lab/kali-session.py --sqlite sessions.txt > record.json
+  python3 scripts/lab/kali-session.py --gdb sessions.txt > record.json
 
   commands.txt 每行一条 shell 命令，以 ## 开头的行是注释。程序运行中需要键盘输入时，
   把这一行写成 JSON：{"cmd": "python3 age.py", "stdin": ["18"]}，stdin 里的每一项会在程序等待时依次输入。
@@ -35,6 +36,9 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
 
   --sqlite 模式记录 sqlite3 命令行（sqlite>）里的输入输出，格式同上；「## session shop.db」
   里的文件名是这个会话打开的数据库。每条语句写在一行里。
+
+  --gdb 模式记录 gdb（(gdb) 提示符）里的输入输出，格式同上；「## session ./crash」里的参数是要调试的程序。
+  gdb 询问是否启用 debuginfod 时回答 n，这一问一答记在那条命令的输出里。
 
   交互模式的会话在环境变量 KALI_WORKDIR 指定的目录里启动，默认 ~/lab/python。
 
@@ -226,6 +230,43 @@ def record_sqlite(path):
     return records
 
 
+def record_gdb(path):
+    """gdb：每个会话重新启动一次 gdb，记录每条命令之后打印的内容。"""
+    records = []
+    for program, statements in read_sessions(path):
+        child = spawn_shell()
+        child.sendline(f'cd {WORKDIR} 2>/dev/null; gdb -q {program}')
+        child.expect(r'\(gdb\) ')
+        session = []
+        for statement in statements:
+            child.sendline(statement)
+            if statement.strip() in ('quit', 'q'):
+                # 程序还在运行时 gdb 会再确认一次
+                index = child.expect([r'\(y or n\) ', pexpect.TIMEOUT, pexpect.EOF], timeout=2)
+                if index == 0:
+                    session.append({'cmd': statement, 'out': transcript(child.before + child.after) + ' y'})
+                    child.sendline('y')
+                else:
+                    session.append({'cmd': statement, 'out': ''})
+                break
+            collected = ''
+            while True:
+                index = child.expect([r'\(gdb\) ', r'\(y or \[n\]\) '])
+                collected += child.before
+                if index == 0:
+                    break
+                collected += child.after + 'n\n'
+                child.sendline('n')
+                child.readline()  # 回显的 n
+            session.append({'cmd': statement, 'out': transcript(collected)})
+        else:
+            child.sendline('quit')
+        settle(child, 0.4)
+        child.close()
+        records.append(session)
+    return records
+
+
 def record_python(path):
     """Python 交互模式：每个会话开一个新的解释器，记录每条语句之后打印的内容。"""
     records = []
@@ -253,7 +294,7 @@ def main():
     paths = [arg for arg in args if not arg.startswith('--')]
     if len(paths) != 1:
         sys.exit(__doc__)
-    recorder = record_python if '--python' in args else record_sqlite if '--sqlite' in args else record_shell
+    recorder = record_python if '--python' in args else record_sqlite if '--sqlite' in args else record_gdb if '--gdb' in args else record_shell
     records = recorder(paths[0])
     json.dump(records, sys.stdout, ensure_ascii=False, indent=1)
     sys.stdout.write('\n')

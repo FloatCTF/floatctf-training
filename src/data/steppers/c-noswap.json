@@ -1,0 +1,358 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-functions-and-stack/noswap.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "",
+  "void swap(int a, int b) {",
+  "    int tmp = a;",
+  "    a = b;",
+  "    b = tmp;",
+  "}",
+  "",
+  "int main(void) {",
+  "    int x = 3;",
+  "    int y = 5;",
+  "    swap(x, y);",
+  "    printf(\"%d %d\\n\", x, y);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "main 的栈帧里有了 x。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "又有了 y。"
+  },
+  {
+   "line": 12,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "a",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ebd8",
+       "size": 4,
+       "name": "b",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "调用 swap(x, y)。多出一个新的栈帧，a 和 b 是 swap 自己的变量，里面是 x 和 y 的值的副本。看地址：a、b 和 x、y 不在同一个地方。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "a",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ebd8",
+       "size": 4,
+       "name": "b",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ebec",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "tmp 存下 a 的值 3。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "a",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ebd8",
+       "size": 4,
+       "name": "b",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ebec",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "把 b 的值写进 a。改的是 swap 栈帧里的 a，main 的 x 没有动。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "a",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ebd8",
+       "size": 4,
+       "name": "b",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ebec",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "把 tmp 写进 b。swap 里的 a 和 b 确实交换了。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "swap 返回，它的栈帧连同 a、b、tmp 一起消失。main 的 x 和 y 从头到尾没有变过。"
+  },
+  {
+   "line": 13,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "3 5\n",
+   "note": "打印出来还是 3 5。"
+  },
+  {
+   "line": 14,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec0c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec08",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "3 5\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

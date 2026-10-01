@@ -1,0 +1,360 @@
+{
+  "lessonPlan": {
+    "audience": "写过会崩溃的 C 程序、还只会靠 printf 找错的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "troubleshooting",
+    "supportingModes": [
+      "tool",
+      "mechanism"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "一次崩溃的调用链自下而上排开：main 调用 greet，greet 调用 name_length，name_length 调用 C 库；gdb 的 bt 把这条链原样列出来，每一层都带着当时的参数",
+    "learningObjectives": [
+      "用 -g 编译，在 gdb 里运行程序并用 bt 找到崩溃发生在哪一行",
+      "读懂调用栈：每一帧是什么、从哪一帧开始看",
+      "用 break、next、print、info locals 单步执行，找出逻辑错误",
+      "用 -fsanitize=address 发现不崩溃的内存错误，读懂报告里的三处行号",
+      "把常见的崩溃信息和退出状态对应到具体的原因"
+    ],
+    "prerequisites": [
+      "c-structs-and-heap",
+      "c-functions-and-stack",
+      "shell-permissions-and-pipes"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-read-backtrace",
+      "kind": "mechanism",
+      "title": "从哪一帧开始看",
+      "question": "crash 的调用栈里，#0 是 C 库里的一个地址，连函数名都显示不出来；#1 是 name_length (name=0x0) at crash.c:5。崩溃明明发生在 #0，为什么说问题不在那里？应该从哪一帧开始看，最终要在哪一帧里找到原因？",
+      "answer": "#0 是崩溃发生的精确位置：C 库的 strlen 在读它拿到的那个地址时出了段错误。但 strlen 本身没有错，它被交给了一个它不该收到的东西。调用栈要从上往下，找到第一个属于自己代码的帧，这里是 #1：name_length 在 crash.c 第 5 行调用了 strlen，参数 name 是 0x0，也就是空指针。再往下看是谁把空指针传进来的：#2 的 greet 也是 name=0x0，它只是转手。#3 的 main 在第 16 行调用 greet(names[i])，切到这一帧打印 i 和 names[i]，发现 i 是 2、names[2] 是 NULL。原因在 main：数组的第三个元素是 NULL，循环却把它当成了一个名字。",
+      "sourceIds": [
+        "man-gdb",
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-predict-gdb",
+      "kind": "prediction",
+      "title": "预测 gdb 里看到的值",
+      "question": "对本课有 bug 的 average.c（循环写的是 for (int i = 1; i < count; i++)），在 gdb 里执行 break 6，然后 run，再连续两次 continue。此刻程序第三次停在第 6 行，这一行还没有执行。print i 和 print sum 各显示什么？如果此时再 continue，会发生什么？",
+      "answer": "i 是 3，sum 是 160。断点停下的时刻，那一行还没执行。第一次停下时 i 是 1、sum 是 0；第二次 i 是 2，sum 已经加上了 values[1]，是 90；第三次 i 是 3，sum 又加上了 values[2]，是 160。再 continue，第 6 行执行，sum 变成 260，i 变成 4 不再满足条件，循环结束，程序打印 average 65 并正常退出，gdb 显示 exited normally。整个过程里 i 从来没有等于过 0，这就是 bug：values[0] 被漏掉了。",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "check-find-with-asan",
+      "kind": "practice",
+      "title": "找出一个不崩溃的错误",
+      "question": "copy.c 运行起来一切正常，打印 kali。用 AddressSanitizer 找出它里面的内存错误，说出错在哪一行、为什么，并改好。",
+      "answer": "用 gcc -g -fsanitize=address copy.c -o copy 编译后运行。报告的第一行是 heap-buffer-overflow，WRITE of size 5；调用栈里属于自己代码的第一帧是 duplicate，copy.c 第 7 行，也就是 strcpy；下面还指出这块内存是第 6 行 malloc 的，只有 4 个字节。原因：strlen(\"kali\") 是 4，不包括结尾的空字符，而 strcpy 要写 5 个字节，多出来的那一个写到了申请的内存之外。改法：第 6 行改成 malloc(strlen(text) + 1)。自查标准：改完后用同样的选项编译运行，只打印 kali，没有任何报告。",
+      "sourceIds": [
+        "asan-wiki",
+        "man-strlen3",
+        "man-strcpy3"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "用 gdb 找到崩溃的位置",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能从 bt 的输出里说出崩溃的调用链，以及空指针是从哪一行传进来的。"
+    },
+    {
+      "kind": "动手",
+      "title": "单步执行，找逻辑错误",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "在 gdb 里亲眼看到 i 从 1 开始，并把 average.c 改对。"
+    },
+    {
+      "kind": "进阶",
+      "title": "不崩溃的错误，和一张对照表",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能说出 139 和 134 两个退出状态各对应什么。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "gdb(1) break run bt print next step continue",
+      "gcc -g produce debugging information; -fsanitize=address",
+      "AddressSanitizer heap buffer overflow use after free",
+      "signal(7) SIGSEGV SIGABRT; zsh exit status 128 plus signal number"
+    ],
+    "notes": "四个源文件在 public/labs/c-debugging-memory-errors/。shell 命令和 gdb 里的全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0、GDB 17.2）里实际运行，页面输出取自运行记录；gdb 会话由 scripts/lab/kali-session.py 的 --gdb 模式驱动真实的交互式 gdb 采集。gdb 不在 Kali 的默认安装里，需要 sudo apt install -y gdb，页面给出了这条命令，但安装过程的输出没有上页面。gdb 里显示的栈地址随环境略有不同；进程号每次不同。AddressSanitizer 的报告只保留关键行。验收第 2 题的数值在 gdb 里实际执行核对过。gdb 官方在线手册拒绝抓取，命令含义依据 man7.org 上的 gdb(1) 手册页。"
+  },
+  "versionInfo": {
+    "targetVersion": "GDB 17.2、gcc 16.2.0（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh；gcc 16.2.0、GNU Make 4.4.1、GDB 17.2。容器以 --cap-add=SYS_PTRACE --security-opt seccomp=unconfined 运行，gdb 可以正常关闭地址随机化，与虚拟机里的表现一致。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "gdb 里的栈地址（如 values=0x7fffffffe…）取决于环境变量和所在目录，与页面略有不同。进程号每次不同。没有安装 C 库调试符号时，栈上属于 C 库的帧显示为 ?? ()。较老的 gdb 在 run 时会询问是否启用 debuginfod，回答 n 即可。"
+  },
+  "sources": [
+    {
+      "id": "man-gdb",
+      "kind": "official-doc",
+      "title": "gdb(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gdb.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-gdb-purpose",
+        "claim-gdb-commands",
+        "cmd-gdb-run",
+        "cmd-gdb-bt",
+        "cmd-gdb-break"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-g",
+        "claim-asan",
+        "cmd-compile-g",
+        "cmd-asan"
+      ]
+    },
+    {
+      "id": "asan-wiki",
+      "kind": "official-doc",
+      "title": "AddressSanitizer",
+      "publisher": "Google Sanitizers",
+      "url": "https://github.com/google/sanitizers/wiki/AddressSanitizer",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-asan",
+        "cmd-asan"
+      ]
+    },
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-null-deref"
+      ]
+    },
+    {
+      "id": "man-signal7",
+      "kind": "official-doc",
+      "title": "signal(7) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages/signal.7.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages。",
+      "supports": [
+        "claim-signals"
+      ]
+    },
+    {
+      "id": "zsh-grammar",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Shell Grammar",
+      "publisher": "Zsh",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-signals"
+      ]
+    },
+    {
+      "id": "man-strlen3",
+      "kind": "official-doc",
+      "title": "strlen(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/strlen.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-strlen-plus-one"
+      ]
+    },
+    {
+      "id": "man-strcpy3",
+      "kind": "official-doc",
+      "title": "strcpy(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/strcpy.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-strlen-plus-one"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-gdb-purpose",
+      "text": "gdb 主要能做四类事来帮你抓住错误：启动程序并指定可能影响它行为的东西；让程序在指定的条件下停住；程序停住时查看发生了什么；改动程序里的东西。",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "claim-gdb-commands",
+      "text": "gdb 的常用命令：break 在函数或行上设断点；run 启动程序；bt 显示程序的调用栈；print 显示表达式的值；c 继续运行；next 执行下一行，跳过其中的函数调用；step 执行下一行，进入其中的函数调用。",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "claim-g",
+      "text": "gcc 的 -g 生成调试信息，gdb 可以使用这些信息。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-asan",
+      "text": "AddressSanitizer 是内存错误检测器，能发现堆缓冲区溢出、栈缓冲区溢出、释放后使用和内存泄漏；用 -fsanitize=address 启用。",
+      "sourceIds": [
+        "asan-wiki",
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-null-deref",
+      "text": "指针里是无效的值时，对它解引用的行为是未定义的。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-signals",
+      "text": "SIGSEGV 表示无效的内存访问，SIGABRT 是 abort 发出的中止信号。在 zsh 里，被信号终止的命令的值是 128 加上信号编号。",
+      "sourceIds": [
+        "man-signal7",
+        "zsh-grammar"
+      ]
+    },
+    {
+      "id": "claim-strlen-plus-one",
+      "text": "strlen 给出的长度不包括结尾的空字节；用 strcpy 复制时，目标缓冲区至少要有 strlen(src) + 1 个字节。",
+      "sourceIds": [
+        "man-strlen3",
+        "man-strcpy3"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-compile-g",
+      "command": "gcc -g crash.c -o crash",
+      "expectedResult": "没有输出；生成带调试信息的可执行文件。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "cmd-gdb-run",
+      "command": "run",
+      "expectedResult": "程序在 gdb 里启动，打印两行问候之后停下，显示 Program received signal SIGSEGV, Segmentation fault.",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "cmd-gdb-bt",
+      "command": "bt",
+      "expectedResult": "四帧：#0 在 C 库里，#1 name_length (name=0x0) at crash.c:5，#2 greet (name=0x0) at crash.c:9，#3 main () at crash.c:16。",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "cmd-gdb-break",
+      "command": "break average",
+      "expectedResult": "Breakpoint 1 at …: file average.c, line 4.",
+      "sourceIds": [
+        "man-gdb"
+      ]
+    },
+    {
+      "id": "cmd-asan",
+      "command": "gcc -g -fsanitize=address fill.c -o fill",
+      "expectedResult": "没有输出；运行 ./fill 时报告 heap-buffer-overflow，位置是 fill.c 第 7 行。",
+      "sourceIds": [
+        "man-gcc",
+        "asan-wiki"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "crash",
+      "path": "public/labs/c-debugging-memory-errors/crash.c",
+      "command": "gcc -g crash.c -o crash && ./crash",
+      "expectedResult": "打印 hello, alice (5) 和 hello, bob (3) 之后以段错误结束。"
+    },
+    {
+      "id": "average",
+      "path": "public/labs/c-debugging-memory-errors/average.c",
+      "command": "gcc -g average.c -o average && ./average",
+      "expectedResult": "average 65（正确结果应当是 85）。"
+    },
+    {
+      "id": "fill-overflow",
+      "path": "public/labs/c-debugging-memory-errors/fill.c",
+      "command": "gcc -g -fsanitize=address fill.c -o fill && ./fill",
+      "expectedResult": "AddressSanitizer 报告 heap-buffer-overflow，WRITE of size 4，位置是 fill.c 第 7 行。"
+    },
+    {
+      "id": "copy",
+      "path": "public/labs/c-debugging-memory-errors/copy.c",
+      "command": "gcc -g -fsanitize=address copy.c -o copy && ./copy",
+      "expectedResult": "AddressSanitizer 报告 heap-buffer-overflow，WRITE of size 5，位置是 copy.c 第 7 行的 strcpy。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "call-stack",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

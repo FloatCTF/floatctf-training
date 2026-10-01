@@ -1,0 +1,301 @@
+---
+title: C 五：指针
+description: 弄清地址、指针、取地址与解引用，用指针让函数真正改到调用者的变量，理解数组与指针运算的关系，认识空指针和悬垂指针这几类典型错误
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/c-pointers.json';
+import swapTrace from '../../../data/steppers/c-swap.json';
+import walkTrace from '../../../data/steppers/c-walk.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 minmax.c，输出 128 4096。' },
+  { title: '用指针遍历数组', detail: '写一个函数 int sum(int *values, int count)，不用下标，只用指针和 * 把数组里的数加起来。提示：每加完一个就 values++。对 {22, 53, 80, 443} 应当返回 598。' },
+  { title: '自己实现字符串长度', detail: '把第 22 课作业里的 my_length 改成指针版本：参数是 char *text，循环条件是 *text != \'\\0\'。' },
+  { title: '读命令行参数', detail: '写 greet.c：如果运行时给了一个参数，打印 hello, 加上那个参数；没给参数就打印 usage: ./greet NAME 并返回 1。分别用 ./greet 和 ./greet kali 测试，并用 echo $? 看退出状态。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 23"
+  kicker="Addresses, Dereference, Pointer Arithmetic"
+  lines={[
+    { text: "C 五" },
+    { text: "指针", accent: true },
+  ]}
+  summary="前几课的图里，每个变量旁边都写着一个地址。这一课把地址本身当成数据来用：存进变量、传给函数、拿它去找到另一块内存。这就是指针，C 里最有力也最容易出事的东西。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：怎样让 swap 真的管用
+
+第 21 课的 `swap(x, y)` 没能交换 `main` 的变量，因为函数拿到的是值的副本。
+
+想让一个函数改到调用者的变量，光给它值是不够的。得告诉它：**那个变量在内存的什么位置。** 它拿着位置找过去，才改得到本尊。
+
+「位置」就是前几课图里一直出现的地址。这一课学会把地址传来传去。
+
+## 一、地址和指针
+
+### 1. 三个符号
+
+<CodeFile file="labs/c-pointers/addr.c" />
+
+<TerminalSession
+  title="一个变量，和一个指向它的指针"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc -Wall addr.c -o addr' },
+    { cmd: './addr', out: '3\n0x7ffc325e7fe4\n0x7ffc325e7fe4\n3\n99', note: '第二、三行是同一个地址：x 在内存里的位置。你的地址与这里不同，而且每次运行都不同。' },
+  ]}
+/>
+
+对照源码，这段程序用到了三个符号：
+
+<DataTable
+  caption="和指针有关的三个符号"
+  headers={["写法", "读作", "含义", "这里的值"]}
+  rows={[
+    ["int *p", "p 是指向 int 的指针", "声明：p 这个变量用来存一个 int 的地址", ""],
+    ["&x", "x 的地址", "取出变量 x 在内存里的位置", "0x7ffc325e7fe4"],
+    ["*p", "p 指向的那个东西", "顺着 p 里存的地址找过去。可以读，也可以写", "一开始是 3"],
+  ]}
+  columnRatios={[0.7, 1.3, 2.4, 1.2]}
+/>
+
+**指针**就是一个变量，它里面存的不是普通的数，而是另一个变量的地址。（来源：[CS50x: Lecture 4](#source-cs50-memory)）
+
+最容易混的是星号，它在两个地方意思不同：
+
+- 在**声明**里，`int *p` 的星号说明「p 是指针」。
+- 在**语句**里，`*p` 的星号是一个动作：到 p 指的地方去。这个动作叫**解引用**。
+
+第 10 行 `*p = 99;` 没有碰 `p` 本身。它顺着 `p` 找到了 `x`，把 99 写了进去。所以最后打印 `x` 是 99。（来源：[N1570](#source-n1570)、[Beej's Guide: Pointers](#source-beej-pointers)）
+
+### 2. 指针自己也是变量
+
+指针有自己的地址，也占内存。在这台 64 位的机器上，任何类型的指针都占 8 个字节，因为地址是一个 64 位的数。`int *` 和 `char *` 的区别不在大小，而在于解引用时「到那里取几个字节、当成什么类型」。
+
+## 二、用指针做事
+
+### 1. 把 swap 改对
+
+<CodeFile file="labs/c-pointers/swap.c" mark="3-7,12" />
+
+和第 21 课的版本相比，改了三处：参数的类型从 `int` 变成 `int *`；函数体里每一处 `a`、`b` 前面加了星号；调用时传的是 `&x`、`&y`。
+
+<CodeStepper
+  client:visible
+  trace={swapTrace}
+  view="memory"
+  title="swap(&x, &y)：顺着地址改到 main 的变量"
+  eyebrow="STEP THROUGH / 指针"
+  intro="swap 的栈帧里，a 和 b 的值是地址，后面写着它们指向谁。看第 5、6 步改动的是哪一个栈帧里的变量。"
+/>
+
+<TerminalSession
+  title="这次换过来了"
+  steps={[
+    { cmd: 'gcc -Wall swap.c -o swap' },
+    { cmd: './swap', out: '5 3' },
+  ]}
+/>
+
+参数仍然是按值传递的，这一点没有变。只不过这次传的值是地址：`a` 是 `&x` 的副本。副本和原件是同一个地址，顺着它找到的是同一个 `x`。
+
+现在可以回答第 20 课留下的问题了：`scanf("%d", &score)` 里的 `&`，就是把 `score` 的地址交给 `scanf`，让它能把读到的数写进去。
+
+### 2. 数组和指针
+
+<CodeFile file="labs/c-pointers/walk.c" />
+
+<CodeStepper
+  client:visible
+  trace={walkTrace}
+  view="memory"
+  title="指针在数组上移动"
+  eyebrow="STEP THROUGH / 指针"
+  intro="p 一开始指向 ports 的第 0 个元素。看 p + 2 之后它指向哪一格，地址增加了多少。"
+/>
+
+<TerminalSession
+  title="结果"
+  steps={[
+    { cmd: 'gcc -Wall walk.c -o walk' },
+    { cmd: './walk', out: '80 80\n443\n8443' },
+  ]}
+/>
+
+三条规则：
+
+<DataTable
+  caption="数组和指针的关系"
+  headers={["规则", "例子", "说明"]}
+  rows={[
+    ["数组名用在表达式里，就是第 0 个元素的地址", "int *p = ports;", "不用写 &"],
+    ["指针加 n，是往后挪 n 个元素", "p + 2 的地址比 p 大 8", "不是加 2 个字节。编译器根据指针的类型自动乘上元素的大小"],
+    ["a[i] 和 *(a + i) 完全等价", "ports[1] 和 *(p + 1) 都是 80", "下标只是指针运算的另一种写法"],
+  ]}
+  columnRatios={[1.8, 1.4, 2.2]}
+/>
+
+（来源：[N1570](#source-n1570)）
+
+第三条解释了上一课的越界：`codes[3]` 就是 `*(codes + 3)`，一次指针运算加一次解引用，没有任何环节会去检查 3 是否超出了数组。
+
+第一条解释了为什么把数组传给函数时必须另外传长度：函数收到的只是第 0 个元素的地址，一个指针，里面没有长度信息。
+
+### 3. 用指针走过一个字符串
+
+<CodeFile file="labs/c-pointers/chars.c" mark="6-10" />
+
+<TerminalSession
+  title="一个字符一个字符地走"
+  steps={[
+    { cmd: 'gcc -Wall chars.c -o chars' },
+    { cmd: './chars', out: 'k a l i\n4', note: 's 一开始指向字符 k。每次 s++ 往后挪一个字符，直到指向结尾的空字符。' },
+  ]}
+/>
+
+`char *s = "kali";` 让 `s` 指向一个字符串的第一个字符。C 里说「一个字符串」，传来传去的其实就是这样一个指针。
+
+### 4. main 的参数
+
+你在终端里敲的命令，后面常常带着参数：`ls -l`、`gcc hello.c -o hello`。程序怎样拿到它们？
+
+<CodeFile file="labs/c-pointers/args.c" />
+
+<TerminalSession
+  title="命令行参数"
+  steps={[
+    { cmd: 'gcc -Wall args.c -o args' },
+    { cmd: './args', out: 'argc = 1\nargv[0] = ./args', note: '不带参数时也有一个：程序自己的名字。' },
+    { cmd: './args scan 127.0.0.1 "two words"', out: 'argc = 4\nargv[0] = ./args\nargv[1] = scan\nargv[2] = 127.0.0.1\nargv[3] = two words', note: 'shell 按空格把命令行切开；引号里的内容算一个参数。' },
+  ]}
+/>
+
+`argc` 是参数的个数，`argv` 是一个数组，每个元素是一个 `char *`，指向一个参数字符串。和 Python 的 `sys.argv` 是同一件事。（来源：[N1570](#source-n1570)）
+
+## 三、指针出错的三种样子
+
+指针让你能访问任意地址。地址错了，C 不会拦你。
+
+### 1. 空指针
+
+`NULL` 是一个特殊的指针值，表示「不指向任何东西」。对它解引用：
+
+<CodeFile file="labs/c-pointers/null.c" mark="4,6" />
+
+<TerminalSession
+  title="顺着一个哪也不指的指针去取值"
+  steps={[
+    { cmd: 'gcc -Wall null.c -o null' },
+    { cmd: './null', out: 'before\nzsh: segmentation fault  ./null', note: '第 5 行正常执行了，第 6 行解引用空指针时被系统终止，第 7 行没有机会执行。' },
+    { cmd: 'echo $?', out: '139' },
+  ]}
+/>
+
+`NULL` 的数值是 0。地址 0 附近的内存，系统不允许任何程序访问，一碰就是段错误。这其实是最「友好」的一种指针错误：它立刻崩溃，而且崩在出错的那一行。（来源：[N1570](#source-n1570)、[signal(7)](#source-man-signal7)）
+
+### 2. 指向已经消失的局部变量
+
+<CodeFile file="labs/c-pointers/dangling.c" mark="3-6" note="make 返回了自己局部变量的地址。" />
+
+<TerminalSession
+  title="编译器已经看出来了"
+  steps={[
+    {
+      cmd: 'gcc dangling.c -o dangling',
+      out: 'dangling.c: In function ‘make’:\ndangling.c:5:12: warning: function returns address of local variable [-Wreturn-local-addr]\n    5 |     return &value;\n      |            ^~~~~~',
+      note: '不加 -Wall 也会警告。',
+    },
+    { cmd: './dangling', out: 'zsh: segmentation fault  ./dangling' },
+  ]}
+/>
+
+第 21 课讲过，函数返回时它的栈帧就作废了。`value` 是 `make` 的局部变量，`make` 一返回，`value` 所在的那块内存就不再属于它。把这个地址交出去，调用者拿到的是一个指向「已经不存在的变量」的指针，叫**悬垂指针**。
+
+这个版本的 gcc 发现之后，干脆让函数返回了空指针，所以程序崩得很干脆。在别的编译器上，它可能返回那个旧地址，程序读到的是下一次函数调用留在那里的随便什么东西，不崩溃，只是结果莫名其妙。（来源：[N1570](#source-n1570)）
+
+### 3. 没有初始化的指针
+
+第 21 课说过，局部变量不赋初值时，里面是内存里原来留下的内容。指针也是变量。`int *p;` 之后直接 `*p = 5;`，是往一个随机的地址写数据。运气好是段错误，运气不好是悄悄改掉了程序里别的变量。
+
+<DataTable
+  caption="三种指针错误"
+  headers={["名字", "指针里的值", "解引用时", "怎样避免"]}
+  rows={[
+    ["空指针", "NULL，也就是 0", "立刻段错误", "解引用之前检查 if (p != NULL)"],
+    ["悬垂指针", "曾经有效，但那块内存已经不归你", "未定义：可能崩溃，可能读到垃圾", "不要返回局部变量的地址"],
+    ["野指针", "从未赋值，是随机的", "未定义：可能崩溃，可能改坏别的数据", "声明指针时就赋初值，没有目标就赋 NULL"],
+  ]}
+  columnRatios={[0.8, 1.6, 1.6, 1.8]}
+/>
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答", "原因", "处理"]}
+  rows={[
+    ["error: initialization of ‘int *’ from ‘int’ makes pointer from integer without a cast", "把一个整数当成地址赋给了指针，例如 int *p = x;", "少了 &：int *p = &x;"],
+    ["error: initialization of ‘int’ from ‘int *’ makes integer from pointer without a cast", "把地址赋给了普通变量，例如 int y = &x;", "少了 *，或者变量的类型应当是指针"],
+    ["warning: ‘p’ is used uninitialized", "指针没赋值就解引用", "先让它指向一个有效的变量"],
+    ["warning: function returns address of local variable", "返回了局部变量的地址", "把结果通过参数指针交出去，或者用下一课的 malloc"],
+    ["zsh: segmentation fault", "解引用了空指针、悬垂指针或野指针", "找到崩溃前最后执行的那次解引用。第 26 课会教用 gdb 直接定位"],
+    ["函数里改了指针指向的值，调用者没变化", "调用时忘了 &，或者函数里忘了 *", "对照 swap.c 的三处写法"],
+  ]}
+  columnRatios={[2, 1.6, 1.6]}
+/>
+
+局限：这一课没有讲指向指针的指针、函数指针和 `const`。它们都建立在今天这几条规则之上，遇到时再学不迟。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'int *p;', description: '声明一个指向 int 的指针。' },
+    { term: '&x', description: 'x 的地址。' },
+    { term: '*p', description: '解引用：p 指向的那个东西，可读可写。' },
+    { term: 'printf("%p\\n", (void *)p);', description: '打印一个地址。' },
+    { term: 'void f(int *a) … f(&x);', description: '把地址传进去，函数才能改到调用者的 x。' },
+    { term: 'a[i] 等价于 *(a + i)', description: '下标就是指针运算。' },
+    { term: 'p + 1', description: '往后挪一个元素，地址增加 sizeof(元素类型)。' },
+    { term: 'NULL', description: '不指向任何东西的指针值。解引用它会段错误。' },
+    { term: 'int main(int argc, char *argv[])', description: 'argc 是参数个数，argv[i] 是第 i 个参数字符串。' },
+  ]}
+/>
+
+<KeyTakeaway>
+指针是存着地址的变量。`&x` 取 x 的地址，`*p` 顺着地址找到那块内存。把地址传给函数，函数就能改到调用者的变量，`scanf` 和修好的 `swap` 都是这样工作的。数组名是第 0 个元素的地址，`a[i]` 就是 `*(a + i)`，指针加一往后挪一个元素。C 不检查指针里的地址是否有效：空指针、已消失的局部变量的地址、从未赋值的指针，解引用它们都是未定义行为。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

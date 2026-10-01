@@ -3,12 +3,20 @@
   "testedAt": "2026-10-02",
   "target": "http://localhost:4321/",
   "browser": "Playwright Chromium",
-  "scope": "基础学期第 1 到 4 批十八课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 到 qa/foundations-batch-4-verification.json。本次实测的是第 4 批六课与站点层面的入口，前十二课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
+  "scope": "基础学期第 1 到 5 批二十六课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 到 qa/foundations-batch-5-verification.json。本次实测的是第 5 批八课与站点层面的入口，前十八课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
     "/categories/cs-foundations/",
     "/categories/engineering-tools/",
     "/categories/programming/",
+    "/lessons/c-arrays-and-strings/",
+    "/lessons/c-compile-and-run/",
+    "/lessons/c-debugging-memory-errors/",
+    "/lessons/c-files-and-projects/",
+    "/lessons/c-functions-and-stack/",
+    "/lessons/c-pointers/",
+    "/lessons/c-structs-and-heap/",
+    "/lessons/c-types-and-control-flow/",
     "/lessons/data-representation/",
     "/lessons/git-branches-and-collaboration/",
     "/lessons/git-local-workflow/",
@@ -33,32 +41,32 @@
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口：已上线 18，下一课 19；计算机基础分类 6 条全部可进入",
+      "evidence": "首页入口：已上线 26，下一课 27；编程语言分类 15 条可进入",
       "screenshot": "qa/screenshots/foundations-b3-home-panel.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 17 课深色主题整页，无横向溢出",
-      "screenshot": "qa/screenshots/foundations-b4-lesson17-desktop-dark.png"
+      "evidence": "第 24 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b5-lesson24-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 14 课桌面浅色整页：刊头、终端会话、两个报文拆解图、警示与速查卡",
-      "screenshot": "qa/screenshots/foundations-b4-lesson14-desktop-light.png"
+      "evidence": "第 23 课桌面浅色整页：刊头、代码清单、终端会话、两张内存视图",
+      "screenshot": "qa/screenshots/foundations-b5-lesson23-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下第 4 批六课整页溢出为零；前十二课沿用上一轮读数",
-      "screenshot": "qa/screenshots/foundations-b4-lesson18-mobile.png"
+      "evidence": "390 宽度下 C 八课整页溢出为零；前十八课沿用上一轮读数",
+      "screenshot": "qa/screenshots/foundations-b5-lesson22-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 14 课手机宽度：报文拆解图的请求和响应上下排布，长行在块内滚动",
-      "screenshot": "qa/screenshots/foundations-b4-http-exchange-mobile.png"
+      "evidence": "第 24 课手机宽度：内存视图的代码、栈帧、堆上下排布，数组格子换行",
+      "screenshot": "qa/screenshots/foundations-b5-memory-stepper-mobile.png"
     },
     {
       "id": "category-page",
@@ -69,35 +77,35 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页已上线十八课为链接，规划课为纯文本；「下一课」标在第 19 课"
+      "evidence": "路线页已上线二十六课为链接，规划课为纯文本；「下一课」标在第 27 课"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "打印媒体模拟：第 4 批六课验收答案、终端会话与代码清单可见，报文拆解图转为对照表；纸张分页未验收",
-      "screenshot": "qa/screenshots/foundations-b4-lesson13-print.png"
+      "evidence": "打印媒体模拟：C 八课验收答案、终端会话与代码清单可见，内存视图转为逐步表；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b5-lesson26-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "报文拆解图在减少动态设置下为 static，显示逐项对照表",
-      "screenshot": "qa/screenshots/foundations-b4-http-exchange-nojs.png"
+      "evidence": "内存视图在减少动态设置下为 static，显示终态与逐步表",
+      "screenshot": "qa/screenshots/foundations-b5-memory-stepper-nojs.png"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "关闭 JavaScript 后报文拆解图显示逐项对照表，验收题的原生折叠保留",
-      "screenshot": "qa/screenshots/foundations-b4-http-exchange-nojs.png"
+      "evidence": "关闭 JavaScript 后内存视图显示终态与逐步表，验收题的原生折叠保留",
+      "screenshot": "qa/screenshots/foundations-b5-memory-stepper-nojs.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "第 4 批六课多种环境下页内锚点无断链；翻页链接按路线顺序首尾相接，前置知识链接指向正确"
+      "evidence": "C 八课多种环境下页内锚点无断链；翻页链接按路线顺序首尾相接"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "报文拆解图用 Tab 加回车选中各部分通过；流程图滑杆用方向键步进通过。未做完整 Tab 顺序走查"
+      "evidence": "内存视图滑杆用方向键回退通过。未做完整 Tab 顺序走查"
     },
     {
       "id": "deployment-csp-pagefind",
@@ -107,7 +115,7 @@
     {
       "id": "console",
       "status": "pass",
-      "evidence": "第 4 批全部检查过程中控制台与页面错误为零"
+      "evidence": "第 5 批全部检查过程中控制台与页面错误为零"
     },
     {
       "id": "performance",
@@ -136,6 +144,12 @@
     "qa/screenshots/foundations-b4-lesson13-print.png",
     "qa/screenshots/foundations-b4-lesson14-desktop-light.png",
     "qa/screenshots/foundations-b4-lesson17-desktop-dark.png",
-    "qa/screenshots/foundations-b4-lesson18-mobile.png"
+    "qa/screenshots/foundations-b4-lesson18-mobile.png",
+    "qa/screenshots/foundations-b5-lesson22-mobile.png",
+    "qa/screenshots/foundations-b5-lesson23-desktop-light.png",
+    "qa/screenshots/foundations-b5-lesson24-desktop-dark.png",
+    "qa/screenshots/foundations-b5-lesson26-print.png",
+    "qa/screenshots/foundations-b5-memory-stepper-mobile.png",
+    "qa/screenshots/foundations-b5-memory-stepper-nojs.png"
   ]
 }

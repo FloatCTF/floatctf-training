@@ -1,0 +1,289 @@
+{
+  "lessonPlan": {
+    "audience": "会写带循环和分支的 C 程序、在 Python 里用过函数的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "逐行执行两段程序：调用函数时栈上多出一个栈帧，参数是调用者那边的值的副本；函数返回时栈帧连同里面的变量一起消失；递归时同一个函数的栈帧一层层叠起来再一层层退掉",
+    "learningObjectives": [
+      "定义带参数和返回值的函数，说明为什么函数要先声明再使用",
+      "解释调用一次函数时栈上发生了什么：栈帧出现、参数被复制、返回时消失",
+      "解释为什么在函数里修改参数不会影响调用者的变量",
+      "说出局部变量的生存期，以及没有赋初值的局部变量里是什么",
+      "读懂递归调用时栈帧的叠加，解释无限递归为什么会崩溃"
+    ],
+    "prerequisites": [
+      "c-types-and-control-flow",
+      "python-functions-and-modules"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-pass-by-value",
+      "kind": "mechanism",
+      "title": "交换了个寂寞",
+      "question": "noswap.c 里的 swap(a, b) 明明把 a 和 b 交换了，main 里打印出来 x 和 y 却还是 3 和 5。用栈帧解释：swap 里的 a、b 和 main 里的 x、y 是什么关系？swap 做的交换去了哪里？",
+      "answer": "调用 swap(x, y) 时，栈上多出一个属于 swap 的栈帧，a 和 b 是这个栈帧里的两个新变量，它们各自拿到的是 x 和 y 的值的副本。从逐行执行图里能看到，a、b 的地址和 x、y 不同，是四块互不相干的内存。swap 里的三行确实把 a 和 b 交换了，但改的是 swap 自己栈帧里的副本。swap 一返回，它的栈帧连同 a、b、tmp 一起消失，这次交换也就跟着没了。main 的 x 和 y 自始至终没有被碰过。C 的参数一律按值传递：函数拿到的是值，不是调用者的变量本身。",
+      "sourceIds": [
+        "n1570",
+        "beej-functions"
+      ]
+    },
+    {
+      "id": "check-predict-frames",
+      "kind": "prediction",
+      "title": "预测输出和栈帧数",
+      "question": "第一问：函数 int bump(int n) { n = n + 10; return n; }，main 里依次执行 int a = 5; int b = bump(a); 打印 a 和 b；b = bump(b); 再打印 a 和 b。两次各打印什么？第二问：把 fact.c 里的 fact(3) 改成 fact(4)，递归最深的那一刻，栈上一共有几个栈帧？",
+      "answer": "第一问：第一次打印 5 15，第二次打印 5 25。bump 里改的是自己的参数 n，a 始终是 5；b 变不变，取决于有没有把返回值赋给它。第二问：5 个。main 一个，加上 fact(4)、fact(3)、fact(2)、fact(1) 各一个。每调用一次就多一个栈帧，要等最里面那一层返回，才一个个退掉。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-write-functions",
+      "kind": "practice",
+      "title": "写两个函数",
+      "question": "写 power.c，里面有两个函数。int power(int base, int exp)：用循环算出 base 的 exp 次方。int is_valid_port(int port)：端口号在 1 到 65535 之间返回 1，否则返回 0。main 里打印 power(2, 10)、power(3, 4)，以及 is_valid_port 对 80、0、70000 的结果。",
+      "answer": "参考写法：power 里先 int result = 1;，再 for (int i = 0; i < exp; i++) { result = result * base; }，最后 return result;。is_valid_port 里 if (port >= 1 && port <= 65535) { return 1; } 然后 return 0;。两个函数都写在 main 的前面，或者在前面放原型。自查标准：gcc -Wall 没有警告；输出两行，1024 81 和 1 0 0。",
+      "sourceIds": [
+        "beej-functions"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "定义、声明与调用",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能写出一个函数的原型，并说出它为什么要放在 main 前面。"
+    },
+    {
+      "kind": "动手",
+      "title": "栈帧：一次调用留下的东西",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "能在逐行执行图里指出 swap 的 a 和 main 的 x 是两块不同的内存。"
+    },
+    {
+      "kind": "进阶",
+      "title": "局部变量的一生",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能解释无限递归的程序为什么以段错误结束。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "C11 N1570 6.5.2.2 function calls each parameter is assigned the value of the corresponding argument",
+      "C11 N1570 6.2.4 storage durations automatic lifetime indeterminate",
+      "Beej's Guide to C functions parameter is a copy prototypes",
+      "gcc -Wall return-type implicit declaration infinite recursion"
+    ],
+    "notes": "九个源文件在 public/labs/c-functions-and-stack/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0）里实际运行，页面输出取自运行记录。两张逐行执行图的数据由 scripts/lab/c-trace.py 用 gdb 追踪 noswap.c 和 fact.c 的真实执行生成，栈帧的出现与消失、地址的高低都是实测。uninit.c 这一次打印的是 0，页面说明了这个值不可依赖；noreturn.c 这一次碰巧打印出 7，同样只是巧合。程序崩溃时采集环境的 zsh 会多显示 (core dumped)，页面按不带这几个字的写法呈现并作了说明。验收题的预期输出用参考解答在同一环境里运行核对过。"
+  },
+  "sources": [
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-by-value",
+        "claim-automatic",
+        "claim-outside-lifetime"
+      ]
+    },
+    {
+      "id": "beej-functions",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Functions",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/functions.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-copy",
+        "claim-prototype"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-wall"
+      ]
+    },
+    {
+      "id": "zsh-grammar",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Shell Grammar",
+      "publisher": "Zsh",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-signal-exit"
+      ]
+    },
+    {
+      "id": "man-signal7",
+      "kind": "official-doc",
+      "title": "signal(7) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages/signal.7.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages。",
+      "supports": [
+        "claim-signal-exit"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-by-value",
+      "text": "准备调用函数时，先对实参求值，然后把每个实参的值赋给对应的形参。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-copy",
+      "text": "形参是实参的一份副本，不是实参本身。",
+      "sourceIds": [
+        "beej-functions"
+      ]
+    },
+    {
+      "id": "claim-automatic",
+      "text": "在块里声明、没有 static 的对象具有自动存储期：它的生存期从进入所在的块开始，到这个块的执行结束为止。没有初始化时，它的初始值是不确定的。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-outside-lifetime",
+      "text": "在对象的生存期之外引用它，行为是未定义的；对象的生存期结束时，指向它的指针的值变成不确定的。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-prototype",
+      "text": "函数原型让编译器在见到函数的定义之前，就知道它的参数和返回值是什么类型。",
+      "sourceIds": [
+        "beej-functions"
+      ]
+    },
+    {
+      "id": "claim-wall",
+      "text": "-Wall 打开一批针对可疑写法的警告。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-signal-exit",
+      "text": "在 zsh 里，被信号终止的命令的值是 128 加上信号编号。SIGSEGV 表示无效的内存访问。",
+      "sourceIds": [
+        "zsh-grammar",
+        "man-signal7"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "add",
+      "path": "public/labs/c-functions-and-stack/add.c",
+      "command": "gcc -Wall add.c -o add && ./add",
+      "expectedResult": "7"
+    },
+    {
+      "id": "order",
+      "path": "public/labs/c-functions-and-stack/order.c",
+      "command": "gcc order.c -o order",
+      "expectedResult": "编译失败：error: implicit declaration of function ‘twice’。"
+    },
+    {
+      "id": "proto",
+      "path": "public/labs/c-functions-and-stack/proto.c",
+      "command": "gcc -Wall proto.c -o proto && ./proto",
+      "expectedResult": "42"
+    },
+    {
+      "id": "noswap",
+      "path": "public/labs/c-functions-and-stack/noswap.c",
+      "command": "gcc -Wall noswap.c -o noswap && ./noswap",
+      "expectedResult": "3 5"
+    },
+    {
+      "id": "fact",
+      "path": "public/labs/c-functions-and-stack/fact.c",
+      "command": "gcc -Wall fact.c -o fact && ./fact",
+      "expectedResult": "6"
+    },
+    {
+      "id": "uninit",
+      "path": "public/labs/c-functions-and-stack/uninit.c",
+      "command": "gcc -Wall uninit.c -o uninit",
+      "expectedResult": "警告 ‘n’ is used uninitialized；运行时打印一个不确定的数。"
+    },
+    {
+      "id": "noreturn",
+      "path": "public/labs/c-functions-and-stack/noreturn.c",
+      "command": "gcc -Wall noreturn.c -o noreturn",
+      "expectedResult": "警告 control reaches end of non-void function。"
+    },
+    {
+      "id": "fewargs",
+      "path": "public/labs/c-functions-and-stack/fewargs.c",
+      "command": "gcc -Wall fewargs.c -o fewargs",
+      "expectedResult": "编译失败：error: too few arguments to function ‘add’; expected 2, have 1。"
+    },
+    {
+      "id": "forever",
+      "path": "public/labs/c-functions-and-stack/forever.c",
+      "command": "gcc forever.c -o forever && ./forever; echo $?",
+      "expectedResult": "zsh 报 segmentation fault，退出状态是 139。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "stack-frames",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

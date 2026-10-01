@@ -1,0 +1,316 @@
+{
+  "lessonPlan": {
+    "audience": "学过 Python、还没有写过编译型语言的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一份 hello.c 依次经过预处理、编译、汇编、链接四步变成可执行文件；每一步都用一条 gcc 命令停下来，看这一步的产物长什么样",
+    "learningObjectives": [
+      "说出编译型语言和解释型语言在运行方式上的区别",
+      "用 gcc 把 C 源文件编译成可执行文件并运行",
+      "说出预处理、编译、汇编、链接四步各自的输入和输出",
+      "读懂 main 函数的结构，用 echo $? 查看程序的退出状态",
+      "根据报错判断问题出在编译阶段还是链接阶段，并读懂 gcc 指出的行号"
+    ],
+    "prerequisites": [
+      "shell-permissions-and-pipes",
+      "python-functions-and-modules",
+      "会用 mousepad 新建并保存文件"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-compile-vs-interpret",
+      "kind": "mechanism",
+      "title": "改了源码，为什么输出没变",
+      "question": "你把 hello.c 里的 Hello, C! 改成了 Hello again!，保存，然后直接执行 ./hello，屏幕上还是 Hello, C!。同样的事在 Python 里不会发生：改了 hello.py 再 python3 hello.py，马上就是新的输出。解释这个差别，并说出要多做哪一步。",
+      "answer": "运行 Python 脚本时，解释器每次都去读源文件，所以改了就生效。C 不一样：./hello 运行的是可执行文件 hello，它是上一次执行 gcc 时由当时的 hello.c 生成的，里面是机器指令，和源文件已经没有联系了。源文件改了之后，可执行文件不会自己更新。要多做的一步是重新编译：gcc hello.c -o hello，然后再 ./hello。",
+      "sourceIds": [
+        "man-gcc",
+        "cs50-c"
+      ]
+    },
+    {
+      "id": "check-predict-stage",
+      "kind": "prediction",
+      "title": "哪一步会出错",
+      "question": "预测下面三种情况各会发生什么，并说出问题出在四步中的哪一步。一、hello.c 里 printf 那一行末尾漏了分号，执行 gcc hello.c -o hello。二、hello.c 声明并调用了函数 greet()，但整个程序里没有 greet 的定义，执行 gcc hello.c -o hello。三、程序正确，main 最后写的是 return 7;，先 ./hello 再 echo $?。",
+      "answer": "一、编译这一步出错。gcc 报 error: expected ‘;’ before ‘return’，并指出文件名、行号和列号，不会生成可执行文件。二、编译能通过，链接这一步出错：报 undefined reference to `greet'，最后一行是 collect2: error: ld returned 1 exit status。ld 是链接器，它要把所有用到的函数接到一起，却找不到 greet 的机器码。三、程序正常运行，echo $? 显示 7。main 的返回值就是程序的退出状态，0 表示成功，非 0 由程序自己规定含义。",
+      "sourceIds": [
+        "man-gcc",
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-first-program",
+      "kind": "practice",
+      "title": "写一个自己的程序",
+      "question": "新建 me.c：打印两行，第一行是你名字的拼音，第二行是 I am learning C.，main 返回 3。编译时加上 -Wall，生成的可执行文件叫 me。运行它并查看退出状态。",
+      "answer": "参考写法：第一行 #include <stdio.h>，然后 int main(void) { printf(\"zhangsan\\n\"); printf(\"I am learning C.\\n\"); return 3; }。编译：gcc -Wall me.c -o me。运行：./me，再 echo $?。自查标准：编译时没有任何 warning 或 error；运行时打印两行；echo $? 显示 3；ls 能同时看到 me.c 和 me 两个文件。",
+      "sourceIds": [
+        "man-gcc",
+        "man-printf3"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "编译：先翻译，再运行",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出 hello.c 和 hello 各是什么文件。"
+    },
+    {
+      "kind": "动手",
+      "title": "把四步拆开看",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "依次得到 hello.s、hello.o 和 hello，并用 file 看过它们的类型。"
+    },
+    {
+      "kind": "进阶",
+      "title": "退出状态与读报错",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能分清一条报错是编译器给的还是链接器给的。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "gcc man page -E -S -c -o -Wall four stages preprocessing compilation assembly linking",
+      "C11 N1570 5.1.2.2.1 program startup main return exit",
+      "Beej's Guide to C hello world preprocessor",
+      "CS50 lecture 1 C source code machine code compiler",
+      "printf(3) file(1)",
+      "zsh simple command exit status"
+    ],
+    "notes": "六个源文件在 public/labs/c-compile-and-run/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0）里以 kali 用户、交互式 zsh 实际运行，页面输出取自运行记录。gcc、make、libc6-dev 是 Kali 默认桌面安装自带的（kali-linux-default 的依赖），已用 apt 的模拟安装核对。链接报错里编译器临时文件的名字每次不同；file 输出里的 BuildID 取决于编译结果，页面已注明。gcc 官方在线手册拒绝抓取，选项含义依据 man7.org 上的 gcc(1) 手册页（取自 GCC 9.5.0），所引用的 -E、-S、-c、-o、-Wall 在各版本中含义一致。"
+  },
+  "sources": [
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-four-stages",
+        "claim-gcc-stops",
+        "claim-wall"
+      ]
+    },
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-main"
+      ]
+    },
+    {
+      "id": "beej-hello",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Hello, World!",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/hello-world.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-preprocessor"
+      ]
+    },
+    {
+      "id": "cs50-c",
+      "kind": "university-course",
+      "title": "CS50x: Lecture 1 - C",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/x/notes/1/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其「先讲源码怎样变成机器码」的顺序。",
+      "supports": [
+        "claim-compiler"
+      ]
+    },
+    {
+      "id": "man-printf3",
+      "kind": "official-doc",
+      "title": "printf(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/printf.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-printf"
+      ]
+    },
+    {
+      "id": "man-file",
+      "kind": "official-doc",
+      "title": "file(1) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/file/file.1.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 file。",
+      "supports": [
+        "claim-file"
+      ]
+    },
+    {
+      "id": "zsh-grammar",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Shell Grammar",
+      "publisher": "Zsh",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-exit-status"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-compiler",
+      "text": "人写的是源代码，机器只懂机器码；编译器是把一种语言的源代码转换成机器码的软件。",
+      "sourceIds": [
+        "cs50-c"
+      ]
+    },
+    {
+      "id": "claim-four-stages",
+      "text": "编译最多包含四个阶段，顺序固定：预处理、编译本身、汇编、链接。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-gcc-stops",
+      "text": "gcc 的 -E 在预处理之后停下，输出预处理过的源码；-S 在编译本身之后停下，输出汇编代码文件，默认把后缀换成 .s；-c 编译或汇编但不链接，输出目标文件，默认把后缀换成 .o；-o 指定输出文件，不指定时可执行文件默认叫 a.out。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-wall",
+      "text": "-Wall 打开一批警告，针对的是有些人认为可疑、而且容易避免的写法。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-preprocessor",
+      "text": "以井号开头的行由预处理器处理，它在编译器开始工作之前运行；#include 是常见的预处理指令。",
+      "sourceIds": [
+        "beej-hello"
+      ]
+    },
+    {
+      "id": "claim-main",
+      "text": "程序启动时被调用的函数叫 main，它的返回类型是 int。从 main 返回，等价于以这个返回值调用 exit；执行到 main 结尾的右花括号时返回 0。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-exit-status",
+      "text": "在 zsh 里，一条简单命令的值是它的退出状态；被信号终止时是 128 加上信号编号。",
+      "sourceIds": [
+        "zsh-grammar"
+      ]
+    },
+    {
+      "id": "claim-printf",
+      "text": "printf 按照格式字符串生成输出，写到标准输出。",
+      "sourceIds": [
+        "man-printf3"
+      ]
+    },
+    {
+      "id": "claim-file",
+      "text": "file 对每个参数做一系列测试，判断它是什么类型的文件。",
+      "sourceIds": [
+        "man-file"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "hello",
+      "path": "public/labs/c-compile-and-run/hello.c",
+      "command": "gcc hello.c -o hello && ./hello",
+      "expectedResult": "打印 Hello, C!，echo $? 显示 0。"
+    },
+    {
+      "id": "status",
+      "path": "public/labs/c-compile-and-run/status.c",
+      "command": "gcc status.c -o status && ./status; echo $?",
+      "expectedResult": "打印 about to return 42，随后 echo $? 显示 42。"
+    },
+    {
+      "id": "bad-semicolon",
+      "path": "public/labs/c-compile-and-run/bad_semicolon.c",
+      "command": "gcc bad_semicolon.c -o bad",
+      "expectedResult": "编译失败：bad_semicolon.c:4:26: error: expected ‘;’ before ‘return’。"
+    },
+    {
+      "id": "bad-include",
+      "path": "public/labs/c-compile-and-run/bad_include.c",
+      "command": "gcc bad_include.c -o bad",
+      "expectedResult": "编译失败：error: implicit declaration of function ‘printf’，并提示 include ‘<stdio.h>’。"
+    },
+    {
+      "id": "bad-link",
+      "path": "public/labs/c-compile-and-run/bad_link.c",
+      "command": "gcc bad_link.c -o bad",
+      "expectedResult": "链接失败：undefined reference to `greet'，最后一行是 collect2: error: ld returned 1 exit status。"
+    },
+    {
+      "id": "warn",
+      "path": "public/labs/c-compile-and-run/warn.c",
+      "command": "gcc -Wall warn.c -o warn && ./warn",
+      "expectedResult": "给出 warning: unused variable ‘unused’，但仍然生成可执行文件，运行打印 done。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "compile-pipeline",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

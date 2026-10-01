@@ -1,0 +1,3 @@
+# C 课都在 ~/lab/c 里做。每次重放从空目录开始，把这一课的材料放进去（模拟学员用编辑器保存好了源文件）。
+rm -rf ~/lab/c; mkdir -p ~/lab/c; cp ~/lab/python/* ~/lab/c/
+@workdir /home/kali/lab/c

@@ -1,0 +1,297 @@
+---
+title: C 二：类型、运算与控制流
+description: 认识 C 的固定大小类型与 printf 格式符，弄清整数除法、char 的本质和无符号整数回绕，用 if、for、while 写出分支与循环
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/c-types-and-control-flow.json';
+import varsTrace from '../../../data/steppers/c-vars.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 fizz.c，-Wall 编译无警告，输出 15 行，最后一行是 FizzBuzz。' },
+  { title: '算一算范围', detail: '不运行程序，先算出：unsigned char 存 256、257、511 各是多少。再写一个程序验证。' },
+  { title: '把 Collatz 改成读输入', detail: '把 sum.c 里的 n = 27 改成用 scanf 读入。输入 6 应当打印 8，输入 27 应当打印 111。' },
+  { title: '修好 mistakes.c', detail: '改掉三处错误，直到 gcc -Wall 一条警告都不报。运行后输入 100 应当打印 perfect。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 20"
+  kicker="Types, Arithmetic, Control Flow"
+  lines={[
+    { text: "C 二" },
+    { text: "类型、运算与控制流", accent: true },
+  ]}
+  summary="Python 的变量只是贴在值上的名字，整数想多大就多大。C 的变量是内存里一块固定大小的地方，装得下多少由类型决定。这一课先看清这个差别，再把分支和循环的写法搬过来。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：一个整数能有多大
+
+在 Python 里算 `2 ** 100`，得到一个 31 位的数，没有任何问题。Python 的整数需要多少空间就占多少空间。
+
+C 不是这样。在 C 里声明一个整数，要先说清楚它是哪一种，而每一种的大小是固定的。超出了它装得下的范围会怎样？
+
+这个问题不是抬杠。「装不下」是真实程序里一类错误的来源，下学期会专门讲。今天先把它的原理看明白。
+
+## 一、类型：每个变量占固定大小
+
+### 1. 声明变量要写类型
+
+C 的变量在使用之前必须先**声明**，声明时写出它的类型，之后类型不能再变。（来源：[Beej's Guide: Variables and Statements](#source-beej-variables)）
+
+```c
+int count = 3;
+```
+
+`int` 是类型，`count` 是名字，`3` 是初始值。Python 里写 `count = 3` 就行，类型由值决定；C 里类型由你决定，并且决定了这个变量占多少内存。
+
+<CodeFile file="labs/c-types-and-control-flow/sizes.c" note="保存到 ~/lab/c。sizeof 给出一个类型或变量占几个字节，%zu 是打印它用的格式符。" />
+
+<TerminalSession
+  title="四种基本类型各占多少"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc -Wall sizes.c -o sizes' },
+    { cmd: './sizes', out: 'char   1\nint    4\nlong   8\ndouble 8' },
+  ]}
+/>
+
+<DataTable
+  caption="本课用到的类型（x86-64 的 Linux 上）"
+  headers={["类型", "字节数", "放什么", "范围", "printf 格式符"]}
+  rows={[
+    ["char", "1", "一个字符，其实是一个小整数", "-128 到 127", "%c 按字符，%d 按数字"],
+    ["unsigned char", "1", "一个字节", "0 到 255", "%d"],
+    ["int", "4", "整数", "约负 21 亿到正 21 亿", "%d"],
+    ["unsigned int", "4", "非负整数", "0 到约 42 亿", "%u"],
+    ["long", "8", "大整数", "约正负 9.2 × 10 的 18 次方", "%ld"],
+    ["double", "8", "小数", "约 15 位有效数字", "%f"],
+  ]}
+  columnRatios={[1.1, 0.6, 1.5, 1.6, 1.4]}
+/>
+
+这些字节数是你这台机器上的结果。C 标准只规定了每种类型最少要有多大，不同的系统可以不同，所以需要知道时用 `sizeof` 问。（来源：[N1570](#source-n1570)、[printf(3)](#source-man-printf3)）
+
+### 2. 变量在内存里的样子
+
+<CodeFile file="labs/c-types-and-control-flow/vars.c" />
+
+<CodeStepper
+  client:visible
+  trace={varsTrace}
+  view="memory"
+  title="三个变量，三种大小"
+  eyebrow="STEP THROUGH / C 的内存"
+  intro="右边每一行是一个变量：名字、类型、地址的末四位、当前的值。点「下一步」逐行执行。"
+/>
+
+每个变量在内存里有一个**地址**，就是它所在位置的编号。这三个变量的地址是 `…ec1f`、`…ec18`、`…ec10`：`grade` 占 1 个字节，`count` 占 4 个，`big` 占 8 个，它们挨着放。赋值改变的是那块内存里的内容，地址不变。
+
+这张图里的地址来自一次真实的执行。你自己运行时地址会不同，但相互之间的距离是一样的。
+
+### 3. 整数运算的两个特点
+
+<CodeFile file="labs/c-types-and-control-flow/arith.c" />
+
+<TerminalSession
+  title="除法，以及字符就是数字"
+  steps={[
+    { cmd: 'gcc -Wall arith.c -o arith' },
+    { cmd: './arith', out: '3\n1\n3.500000\nA 65\nB 66', note: '对照源码看：7 / 2 是 3，不是 3.5；7 % 2 是余数 1；写成 7.0 / 2 才是小数除法。' },
+  ]}
+/>
+
+- **整数除以整数，结果还是整数**，小数部分直接丢掉。Python 的 `/` 会给出 3.5，C 的 `/` 相当于 Python 的 `//`。只要有一边是小数，结果才是小数。
+- **`char` 里存的是数字**。`'A'` 就是 65，这是第 4 课学的 ASCII 码。所以 `c + 1` 是合法的，得到 66，按 `%c` 打印出来是 `B`。单引号括起来的是一个字符，双引号括起来的是字符串，两者不能混用。
+
+（来源：[N1570](#source-n1570)）
+
+## 二、装不下的时候
+
+### 1. 无符号整数：绕回去
+
+<CodeFile file="labs/c-types-and-control-flow/wrap.c" mark="6,9,14" />
+
+<TerminalSession
+  title="超出范围之后"
+  steps={[
+    {
+      cmd: 'gcc wrap.c -o wrap',
+      out: 'wrap.c: In function ‘main’:\nwrap.c:9:25: warning: unsigned conversion from ‘int’ to ‘unsigned char’ changes value from ‘300’ to ‘44’ [-Woverflow]\n    9 |     unsigned char cut = 300;\n      |                         ^~~',
+      note: '编译器发现第 9 行想把 300 塞进一个字节，直接告诉你它会变成 44。',
+    },
+    { cmd: './wrap', out: '0\n44\n4294967295\n0\n2147483647', note: '255 加 1 得 0；300 变成 44；unsigned int 的最大值加 1 也得 0。最后一行是 int 的最大值。' },
+  ]}
+/>
+
+`unsigned char` 只有 8 个二进制位。255 是八个 1，再加 1 需要第九位，可是没有地方放，留下的八位全是 0。300 的二进制有九位，砍掉最高位剩下 44。
+
+规律是：**无符号整数超出范围时，结果是对「最大值加 1」取余。** 300 对 256 取余是 44。这是 C 标准明确规定的行为，可以依赖。（来源：[N1570](#source-n1570)）
+
+### 2. 有符号整数：不要指望任何结果
+
+`int` 这类有符号整数超出范围，标准的说法是**未定义行为**：标准不规定会发生什么，编译器可以按任何方式处理。在某台机器、某个编译选项下你可能看到一个负数，换个选项可能就不是了。
+
+<Callout variant="warning" title="未定义行为">
+这是 C 里一个重要的概念，之后几课会反复出现：数组越界、使用已经释放的内存，都属于未定义行为。它的意思不是「会报错」，而是「什么都可能发生」，包括看起来一切正常。程序里只要有一处未定义行为，它的结果就不可信。
+</Callout>
+
+写程序时的做法：先想清楚一个数最大会到多少，选一个装得下的类型。拿不准就用 `long`。
+
+## 三、分支与循环
+
+### 1. if 和 scanf
+
+<CodeFile file="labs/c-types-and-control-flow/grade.c" mark="6" />
+
+<TerminalSession
+  title="读一个数，判断等级"
+  steps={[
+    { cmd: 'gcc -Wall grade.c -o grade' },
+    { cmd: './grade', stdin: ['95'], out: 'score: 95\nexcellent', note: '输入 95 回车。' },
+    { cmd: './grade', stdin: ['70'], out: 'score: 70\npass' },
+    { cmd: './grade', stdin: ['30'], out: 'score: 30\nfail' },
+  ]}
+/>
+
+`scanf("%d", &score)` 从键盘读一个整数存进 `score`。`score` 前面的 `&` 不能省：它的意思是「score 的地址」。scanf 需要知道把读到的数放到内存的哪个位置。`&` 在第 23 课会成为主角，现在先记住 scanf 里要写它。（来源：[scanf(3)](#source-man-scanf3)）
+
+### 2. for 和 while
+
+<CodeFile file="labs/c-types-and-control-flow/sum.c" mark="5,11" />
+
+<TerminalSession
+  title="两种循环"
+  steps={[
+    { cmd: 'gcc -Wall sum.c -o sum' },
+    { cmd: './sum', out: '10\n111', note: '1 加到 4 是 10；从 27 开始的 Collatz 序列走了 111 步。第 6 课用 Python 算过同一个数。' },
+  ]}
+/>
+
+`for` 的圆括号里有三段，用分号隔开：
+
+<DataTable
+  caption="for (int i = 1; i <= 4; i++) 拆开看"
+  headers={["部分", "这里的写法", "什么时候执行"]}
+  rows={[
+    ["初始化", "int i = 1", "进入循环之前，一次"],
+    ["条件", "i <= 4", "每一圈开始之前检查，不成立就结束循环"],
+    ["步进", "i++", "每一圈结束之后。i++ 就是 i = i + 1"],
+  ]}
+  columnRatios={[0.8, 1.2, 3]}
+/>
+
+### 3. 和 Python 对照
+
+<DataTable
+  caption="同一件事的两种写法"
+  headers={["", "Python", "C"]}
+  rows={[
+    ["条件", "if score >= 90:", "if (score >= 90) {"],
+    ["否则如果", "elif score >= 60:", "} else if (score >= 60) {"],
+    ["代码块", "缩进", "一对花括号"],
+    ["数 1 到 4", "for i in range(1, 5):", "for (int i = 1; i <= 4; i++) {"],
+    ["条件循环", "while n != 1:", "while (n != 1) {"],
+    ["并且、或者、非", "and、or、not", "&&、||、!"],
+    ["加一", "steps += 1", "steps++"],
+    ["真和假", "True、False", "非 0 的数当真，0 当假"],
+  ]}
+  columnRatios={[1, 1.8, 2.2]}
+/>
+
+条件必须用圆括号括起来。花括号里即使只有一条语句，也建议写上花括号。
+
+## 常见报错与排错
+
+下面这个文件里有三处初学者最常犯的错误：
+
+<CodeFile file="labs/c-types-and-control-flow/mistakes.c" mark="5,8,10" />
+
+<TerminalSession
+  title="-Wall 能抓到的三种错"
+  steps={[
+    {
+      cmd: 'gcc -Wall mistakes.c -o mistakes',
+      out: 'mistakes.c: In function ‘main’:\nmistakes.c:5:14: warning: format ‘%d’ expects argument of type ‘int’, but argument 2 has type ‘long int’ [-Wformat=]\n    5 |     printf("%d\\n", big);\n      |             ~^     ~~~\n      |              |     |\n      |              int   long int\n      |             %ld\nmistakes.c:8:13: warning: format ‘%d’ expects argument of type ‘int *’, but argument 2 has type ‘int’ [-Wformat=]\n    8 |     scanf("%d", score);\n      |            ~^   ~~~~~\n      |             |   |\n      |             |   int\n      |             int *\nmistakes.c:10:9: warning: suggest parentheses around assignment used as truth value [-Wparentheses]\n   10 |     if (score = 100) {\n      |         ^~~~~',
+      note: '三条都只是 warning，可执行文件照样生成。不加 -Wall 时一条都不会显示。',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="三条警告各是什么意思"
+  headers={["行", "警告的关键词", "错在哪", "改法"]}
+  rows={[
+    ["5", "format ‘%d’ expects … ‘int’, but … ‘long int’", "格式符和变量的类型对不上", "照提示改成 %ld"],
+    ["8", "expects … ‘int *’, but … ‘int’", "scanf 的参数漏了 &。运行到这里通常会崩溃", "写成 &score"],
+    ["10", "suggest parentheses around assignment", "把比较 == 写成了赋值 =。条件永远为真，score 还被改成了 100", "写成 score == 100"],
+  ]}
+  columnRatios={[0.4, 2, 2, 1.2]}
+/>
+
+<DataTable
+  caption="其他常见情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["7 / 2 得到 3", "两边都是整数，做的是整数除法", "把其中一个写成小数：7.0 / 2"],
+    ["打印出一个奇怪的大数或负数", "格式符和类型不匹配，或者变量没有赋初值就用了", "加 -Wall 重新编译，看有没有 -Wformat 或 uninitialized 警告"],
+    ["error: ‘i’ undeclared", "变量没有声明，或者在 for 的花括号外面用了循环变量", "先声明再使用；i 只在那个 for 循环里有效"],
+    ["输入字母后程序的行为很奇怪", "scanf 没读到数字，变量里还是原来的值", "给变量一个初值；更稳妥的读法在第 22 课"],
+  ]}
+  columnRatios={[1.6, 2, 1.8]}
+/>
+
+局限：这一课没有讲 `float`、`short`、`long long`、`switch`、`do … while`。它们没有新的道理，遇到时查一下即可。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'int n = 3;', description: '声明变量要写类型。类型决定它占几个字节。' },
+    { term: 'sizeof(int)', description: '一个类型或变量占几个字节，用 %zu 打印。' },
+    { term: '%d / %ld / %u / %c / %f', description: 'int / long / unsigned int / 字符 / 小数。' },
+    { term: '7 / 2 → 3，7 % 2 → 1', description: '整数除法丢掉小数；% 取余。' },
+    { term: "'A' 是 65", description: 'char 是一个字节大小的整数。单引号是字符，双引号是字符串。' },
+    { term: '无符号回绕', description: '超出范围时对「最大值加 1」取余。255 + 1 → 0。' },
+    { term: '有符号溢出', description: '未定义行为，结果不可依赖。' },
+    { term: 'if (条件) { } else if (条件) { } else { }', description: '分支。条件要加圆括号。' },
+    { term: 'for (int i = 0; i < n; i++) { }', description: '计数循环。' },
+    { term: 'while (条件) { }', description: '条件循环。' },
+    { term: 'scanf("%d", &n);', description: '读一个整数。变量前要加 &。' },
+  ]}
+/>
+
+<KeyTakeaway>
+C 的每个变量都有类型，类型决定它在内存里占几个字节、能装多大的数。整数除以整数还是整数；`char` 是一个字节的小整数。无符号整数装不下时绕回去，结果是对「最大值加 1」取余；有符号整数溢出是未定义行为。分支和循环的道理与 Python 相同，写法换成圆括号加花括号。很多错误编译器看得出来，但只在加了 `-Wall` 时才说。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

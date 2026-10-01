@@ -1,6 +1,6 @@
 #!/bin/sh
 # 把一门课的材料放进 Kali 容器，按页面顺序重放各类会话，并与页面比对：
-#   shell 命令、Python 交互模式、sqlite3 命令行、Firefox 控制台。
+#   shell 命令、Python 交互模式、sqlite3 命令行、gdb、Firefox 控制台。
 # 用法：sh scripts/lab/replay-lesson.sh <lesson-id> [容器里的工作目录，默认 /home/kali/lab/python]
 #
 # 工作目录会被清空重建；课程材料 public/labs/<lesson-id>/ 会被复制进去。
@@ -12,7 +12,7 @@
 #   @each <命令>     同普通行，但在每一类会话重放之前都执行一遍（例如重新启动练习服务器）
 #   @root <命令>     以 root 身份在容器里执行一条命令（装采集环境的补丁用，不是课程内容）
 #   @copy <仓库内路径> <容器内路径>   把仓库里的一个文件复制进容器
-# 重放顺序固定为 shell、Python、sqlite3、Firefox；各类会话之间有先后依赖的课，要照这个顺序安排内容。
+# 重放顺序固定为 shell、Python、sqlite3、gdb、Firefox；各类会话之间有先后依赖的课，要照这个顺序安排内容。
 set -eu
 id="$1"
 workdir="${2:-/home/kali/lab/python}"
@@ -43,7 +43,7 @@ docker exec "$container" sh -c "chown -R kali:kali /home/kali/lab"
 node "$root/scripts/lab/terminal-replay.mjs" extract "$id" >> "$tmp/shell.txt"
 python3 "$root/scripts/lab/kali-session.py" "$tmp/shell.txt" > "$tmp/shell.json"
 node "$root/scripts/lab/terminal-replay.mjs" compare "$id" "$tmp/shell.json" || true
-for mode in python sqlite; do
+for mode in python sqlite gdb; do
   node "$root/scripts/lab/terminal-replay.mjs" extract "$id" "--$mode" > "$tmp/$mode.txt"
   if grep -q . "$tmp/$mode.txt"; then
     if [ -s "$tmp/each.txt" ]; then python3 "$root/scripts/lab/kali-session.py" "$tmp/each.txt" > /dev/null; fi

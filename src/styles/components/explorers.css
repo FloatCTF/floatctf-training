@@ -2572,3 +2572,83 @@ button.http-exchange__piece:focus-visible {
 .http-exchange__ledger .code-stepper__ledger-row {
   grid-template-columns: 2.4rem minmax(0, 1fr) minmax(0, 1.5fr);
 }
+
+/* 逐行执行图的内存视图（C）：每个栈帧一块，变量带类型和地址，数组展开成一排格子 */
+.code-stepper__frame--memory li {
+  align-items: stretch;
+  display: block;
+}
+
+.code-stepper__mem-head {
+  align-items: baseline;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.55rem;
+}
+
+.code-stepper__addr {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+}
+
+.code-stepper__pointer small {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  margin-inline-start: 0.4rem;
+}
+
+.code-stepper__cells,
+.page-lesson .sl-markdown-content .code-stepper__cells {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 0.3rem 0 0;
+  padding: 0;
+}
+
+.code-stepper__cells li {
+  align-items: center;
+  border: 0.0625rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  min-width: 2.2rem;
+  padding: 0.15rem 0.35rem;
+}
+
+.code-stepper__cells li.is-changed {
+  background: var(--training-warning-bg);
+}
+
+.code-stepper__cell-index {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.6rem;
+}
+
+.code-stepper__cell-value {
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.code-stepper__fields,
+.page-lesson .sl-markdown-content .code-stepper__fields {
+  border-inline-start: 0.125rem solid var(--training-border);
+  list-style: none;
+  margin: 0.3rem 0 0 0.2rem;
+  padding: 0 0 0 0.6rem;
+}
+
+.code-stepper__frame--memory li.is-freed {
+  opacity: 0.72;
+}
+
+.code-stepper__frame--memory li.is-freed code {
+  text-decoration: line-through;
+}

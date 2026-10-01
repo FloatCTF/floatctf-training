@@ -1,0 +1,763 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-structs-and-heap/make_user.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "#include <stdlib.h>",
+  "#include <string.h>",
+  "",
+  "struct user {",
+  "    char name[8];",
+  "    int level;",
+  "};",
+  "",
+  "struct user *new_user(const char *name) {",
+  "    struct user *u = malloc(sizeof(struct user));",
+  "    strcpy(u->name, name);",
+  "    u->level = 1;",
+  "    return u;",
+  "}",
+  "",
+  "int main(void) {",
+  "    struct user *bob = new_user(\"bob\");",
+  "    printf(\"%s %d\\n\", bob->name, bob->level);",
+  "    free(bob);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 18,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "new_user",
+     "vars": [
+      {
+       "type": "const char *",
+       "addr": "…ebd8",
+       "size": 8,
+       "name": "name",
+       "value": "…6004",
+       "target": "字符串常量 \"bob\""
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "main 调用 new_user。参数 name 指向字符串常量 \"bob\"。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "new_user",
+     "vars": [
+      {
+       "type": "const char *",
+       "addr": "…ebd8",
+       "size": 8,
+       "name": "name",
+       "value": "…6004",
+       "target": "字符串常量 \"bob\""
+      },
+      {
+       "type": "struct user *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "u",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "0"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "malloc 要了 12 个字节，正好是一个 struct user 的大小。u 指向它。"
+  },
+  {
+   "line": 12,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "new_user",
+     "vars": [
+      {
+       "type": "const char *",
+       "addr": "…ebd8",
+       "size": 8,
+       "name": "name",
+       "value": "…6004",
+       "target": "字符串常量 \"bob\""
+      },
+      {
+       "type": "struct user *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "u",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'o'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "0"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "strcpy 把 \"bob\" 复制进堆块里的 name 成员。"
+  },
+  {
+   "line": 13,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "new_user",
+     "vars": [
+      {
+       "type": "const char *",
+       "addr": "…ebd8",
+       "size": 8,
+       "name": "name",
+       "value": "…6004",
+       "target": "字符串常量 \"bob\""
+      },
+      {
+       "type": "struct user *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "u",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'o'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "1"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "u->level = 1。通过指针访问成员用 ->。"
+  },
+  {
+   "line": 14,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "new_user",
+     "vars": [
+      {
+       "type": "const char *",
+       "addr": "…ebd8",
+       "size": 8,
+       "name": "name",
+       "value": "…6004",
+       "target": "字符串常量 \"bob\""
+      },
+      {
+       "type": "struct user *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "u",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'o'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "1"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "return u：把这块内存的地址交回去。"
+  },
+  {
+   "line": 15,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "struct user *",
+       "addr": "…ec08",
+       "size": 8,
+       "name": "bob",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'o'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "1"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "new_user 的栈帧消失了，u 这个变量也没了。但堆块还在，main 的 bob 拿到了它的地址。堆上的内存不随函数返回而消失。"
+  },
+  {
+   "line": 19,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "struct user *",
+       "addr": "…ec08",
+       "size": 8,
+       "name": "bob",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "struct user",
+       "addr": "…9010",
+       "size": 12,
+       "fields": [
+        {
+         "type": "char [8]",
+         "addr": "…9010",
+         "size": 8,
+         "name": "name",
+         "cells": [
+          {
+           "type": "char",
+           "addr": "…9010",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9011",
+           "size": 1,
+           "value": "'o'"
+          },
+          {
+           "type": "char",
+           "addr": "…9012",
+           "size": 1,
+           "value": "'b'"
+          },
+          {
+           "type": "char",
+           "addr": "…9013",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9014",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9015",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9016",
+           "size": 1,
+           "value": "'\\0'"
+          },
+          {
+           "type": "char",
+           "addr": "…9017",
+           "size": 1,
+           "value": "'\\0'"
+          }
+         ]
+        },
+        {
+         "type": "int",
+         "addr": "…9018",
+         "size": 4,
+         "name": "level",
+         "value": "1"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "stdout": "bob 1\n",
+   "note": "通过 bob 读出两个成员。"
+  },
+  {
+   "line": 20,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "struct user *",
+       "addr": "…ec08",
+       "size": 8,
+       "name": "bob",
+       "value": "…9010",
+       "target": "已释放的堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": true,
+     "cells": []
+    }
+   ],
+   "stdout": "bob 1\n",
+   "note": "用完之后 free。谁要来的内存，谁负责还。"
+  },
+  {
+   "line": 21,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "struct user *",
+       "addr": "…ec08",
+       "size": 8,
+       "name": "bob",
+       "value": "…9010",
+       "target": "已释放的堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": true,
+     "cells": []
+    }
+   ],
+   "stdout": "bob 1\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

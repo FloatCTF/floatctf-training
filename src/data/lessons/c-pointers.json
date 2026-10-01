@@ -1,0 +1,305 @@
+{
+  "lessonPlan": {
+    "audience": "理解栈帧、数组和字符串在内存里的样子、还没有用过指针的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "指针画成一个存着地址的变量，旁边写明它指向谁：通过它写入时，被改动的是它指向的那个变量；指针加一时，它指向的格子往后挪一个元素",
+    "learningObjectives": [
+      "说出地址和指针各是什么，区分声明里的 *、取地址的 & 和解引用的 *",
+      "通过指针读写另一个变量，写出能真正交换两个变量的函数",
+      "解释数组名、下标和指针运算之间的关系",
+      "读懂 main 的 argc 和 argv",
+      "认出三种指针错误：空指针、指向已消失的局部变量、未初始化的指针"
+    ],
+    "prerequisites": [
+      "c-arrays-and-strings",
+      "c-functions-and-stack"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-why-ampersand",
+      "kind": "mechanism",
+      "title": "scanf 为什么要 &",
+      "question": "printf(\"%d\", n) 直接写 n，scanf(\"%d\", &n) 却要写 &n。结合「参数按值传递」，解释为什么 scanf 必须拿到 n 的地址。如果漏了 &，写成 scanf(\"%d\", n)，scanf 拿到的是什么？",
+      "answer": "printf 只需要知道 n 的值，把值的副本传给它就够了。scanf 要做的是把读到的数存进 n，也就是修改调用者的变量。参数按值传递，函数拿到的只是副本，改副本没有用；唯一的办法是把 n 的地址传过去，scanf 再通过这个地址把数写到 n 所在的那块内存。这和 swap(&x, &y) 是同一个道理。漏了 & 时，传过去的是 n 当前的值，一个普通的整数。scanf 会把这个整数当成地址，往那里写数据。那个「地址」几乎肯定不是程序可以写的内存，于是段错误。",
+      "sourceIds": [
+        "n1570",
+        "beej-pointers"
+      ]
+    },
+    {
+      "id": "check-predict-pointers",
+      "kind": "prediction",
+      "title": "预测三行输出",
+      "question": "预测三条 printf 的输出。int a = 10; int b = 20; int *p = &a; 接着 *p = *p + 5; 然后 p = &b; 再 *p = a; 打印 a 和 b。然后 int nums[3] = {7, 8, 9}; int *q = nums + 1; 打印 *q 和 q[1]。最后打印 sizeof(p) 和 sizeof(*p)。",
+      "answer": "第一行：15 15。p 先指向 a，*p = *p + 5 把 a 改成 15。然后 p 改为指向 b，*p = a 把 a 的值 15 写进 b。第二行：8 9。q 指向 nums[1]，*q 是 8；q[1] 等同于 *(q + 1)，是从 q 再往后一个元素，也就是 nums[2]，9。第三行：8 4。p 是指针，在这台 64 位机器上占 8 个字节；*p 是它指向的 int，占 4 个字节。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-minmax",
+      "kind": "practice",
+      "title": "一次交回两个结果",
+      "question": "函数只能 return 一个值。写一个函数 void minmax(int values[], int count, int *min, int *max)，通过两个指针参数把数组的最小值和最大值都交给调用者。在 main 里用 {512, 2048, 128, 4096, 1024} 测试。",
+      "answer": "参考写法：函数开头 *min = values[0]; *max = values[0];，然后 for (int i = 1; i < count; i++)，遇到比 *min 小的就 *min = values[i];，遇到比 *max 大的就 *max = values[i];。main 里声明 int low; int high;，调用 minmax(sizes, 5, &low, &high);，再打印 low 和 high。自查标准：-Wall 编译无警告；输出 128 4096；函数里每一处对 min、max 的读写都带着星号。",
+      "sourceIds": [
+        "beej-pointers"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "地址和指针",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出 int *p = &x; 和 *p = 99; 里两个星号的含义有什么不同。"
+    },
+    {
+      "kind": "动手",
+      "title": "用指针做事",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "swap 真正交换了 x 和 y，并能在图上指出是哪一行改了 main 的变量。"
+    },
+    {
+      "kind": "进阶",
+      "title": "指针出错的三种样子",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能说出空指针解引用为什么是段错误。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "C11 N1570 6.5.3.2 address and indirection operators",
+      "C11 N1570 6.3.2.3 null pointer constant",
+      "C11 N1570 6.5.2.1 subscript; 6.5.2.2 arguments; 5.1.2.2.1 argc argv",
+      "C11 N1570 6.2.4 pointer becomes indeterminate when object lifetime ends",
+      "Beej's Guide to C pointers address-of dereference",
+      "CS50 lecture 4 pointer stores address"
+    ],
+    "notes": "七个源文件在 public/labs/c-pointers/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0）里实际运行，页面输出取自运行记录；addr.c 打印的地址每次运行都不同，页面已注明，比对时按形状处理。两张逐行执行图的数据由 scripts/lab/c-trace.py 用 gdb 追踪 swap.c 和 walk.c 的真实执行生成，图里每个指针「指向谁」是用它的值与各变量的地址比对得出的。dangling.c 在这个版本的 gcc 下返回的是空指针，运行时段错误；在别的编译器上可能表现为读到垃圾值，页面已说明。验收题的预期输出用参考解答在同一环境里运行核对过。"
+  },
+  "sources": [
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-address-of",
+        "claim-dereference",
+        "claim-null",
+        "claim-subscript-pointer",
+        "claim-by-value-pointer",
+        "claim-argv",
+        "claim-dangling"
+      ]
+    },
+    {
+      "id": "beej-pointers",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Pointers—Cower In Fear!",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/pointers.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-dereference",
+        "claim-by-value-pointer"
+      ]
+    },
+    {
+      "id": "cs50-memory",
+      "kind": "university-course",
+      "title": "CS50x: Lecture 4 - Memory",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/x/notes/4/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其讲指针与内存的顺序。",
+      "supports": [
+        "claim-pointer"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-wall-pointers"
+      ]
+    },
+    {
+      "id": "man-signal7",
+      "kind": "official-doc",
+      "title": "signal(7) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages/signal.7.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages。",
+      "supports": [
+        "claim-sigsegv"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-pointer",
+      "text": "指针是存放某个东西的地址的变量。",
+      "sourceIds": [
+        "cs50-memory"
+      ]
+    },
+    {
+      "id": "claim-address-of",
+      "text": "一元运算符 & 给出操作数的地址；操作数的类型是 T 时，结果的类型是「指向 T 的指针」。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-dereference",
+      "text": "通过指针访问它指向的变量叫解引用，用一元运算符 *。如果指针里是一个无效的值，对它用 * 的行为是未定义的。",
+      "sourceIds": [
+        "beej-pointers",
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-null",
+      "text": "值为 0 的整数常量表达式，或把它转换成 void * 的结果，叫空指针常量；由它转换得到的空指针保证不等于指向任何对象或函数的指针。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-subscript-pointer",
+      "text": "E1[E2] 等同于 (*((E1)+(E2)))。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-by-value-pointer",
+      "text": "调用函数时每个形参被赋予对应实参的值；要让函数修改调用者的变量，就把那个变量的地址作为实参传过去。",
+      "sourceIds": [
+        "n1570",
+        "beej-pointers"
+      ]
+    },
+    {
+      "id": "claim-argv",
+      "text": "main 可以定义成带两个参数：argc 是参数个数，argv 是指向各个参数字符串的指针数组；argv[0] 代表程序名。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-dangling",
+      "text": "对象的生存期结束后，指向它的指针的值变成不确定的；在生存期之外引用对象是未定义行为。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-sigsegv",
+      "text": "SIGSEGV 是因无效的内存访问而产生的信号。",
+      "sourceIds": [
+        "man-signal7"
+      ]
+    },
+    {
+      "id": "claim-wall-pointers",
+      "text": "-Wall 打开一批针对可疑写法的警告。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "addr",
+      "path": "public/labs/c-pointers/addr.c",
+      "command": "gcc -Wall addr.c -o addr && ./addr",
+      "expectedResult": "五行：3、两个相同的地址、3、99。地址每次运行不同。"
+    },
+    {
+      "id": "swap",
+      "path": "public/labs/c-pointers/swap.c",
+      "command": "gcc -Wall swap.c -o swap && ./swap",
+      "expectedResult": "5 3"
+    },
+    {
+      "id": "walk",
+      "path": "public/labs/c-pointers/walk.c",
+      "command": "gcc -Wall walk.c -o walk && ./walk",
+      "expectedResult": "三行：80 80、443、8443。"
+    },
+    {
+      "id": "chars",
+      "path": "public/labs/c-pointers/chars.c",
+      "command": "gcc -Wall chars.c -o chars && ./chars",
+      "expectedResult": "两行：k a l i 和 4。"
+    },
+    {
+      "id": "args",
+      "path": "public/labs/c-pointers/args.c",
+      "command": "gcc -Wall args.c -o args && ./args scan 127.0.0.1 \"two words\"",
+      "expectedResult": "argc = 4，随后四行依次是 ./args、scan、127.0.0.1、two words。"
+    },
+    {
+      "id": "null",
+      "path": "public/labs/c-pointers/null.c",
+      "command": "gcc -Wall null.c -o null && ./null",
+      "expectedResult": "打印 before 之后以段错误结束，退出状态 139。"
+    },
+    {
+      "id": "dangling",
+      "path": "public/labs/c-pointers/dangling.c",
+      "command": "gcc dangling.c -o dangling && ./dangling",
+      "expectedResult": "编译时警告 function returns address of local variable；运行时段错误。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "pointer-targets",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

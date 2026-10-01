@@ -1,0 +1,747 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-structs-and-heap/heap.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "#include <stdlib.h>",
+  "",
+  "int main(void) {",
+  "    int count = 3;",
+  "    int *scores = malloc(count * sizeof(int));",
+  "    if (scores == NULL) {",
+  "        return 1;",
+  "    }",
+  "    for (int i = 0; i < count; i++) {",
+  "        scores[i] = (i + 1) * 10;",
+  "    }",
+  "    printf(\"%d %d %d\\n\", scores[0], scores[1], scores[2]);",
+  "    free(scores);",
+  "    scores = NULL;",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "count 在 main 的栈帧里。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "malloc 向系统要了 12 个字节。这块内存在堆上，不属于任何栈帧。scores 在栈上，里面存着这块内存的地址。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "检查 malloc 有没有失败，失败时它返回 NULL。这次成功了，跳过。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "i 从 0 开始。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "scores[0] = 10，写进堆块的第 0 格。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "0"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "i 变成 1。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "20"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "scores[1] = 20。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "20"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "i 变成 2。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "20"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "30"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "scores[2] = 30。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "20"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "30"
+      }
+     ]
+    }
+   ],
+   "stdout": "",
+   "note": "i 变成 3，循环结束。"
+  },
+  {
+   "line": 13,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": false,
+     "cells": [
+      {
+       "type": "int",
+       "addr": "…9010",
+       "size": 4,
+       "value": "10"
+      },
+      {
+       "type": "int",
+       "addr": "…9014",
+       "size": 4,
+       "value": "20"
+      },
+      {
+       "type": "int",
+       "addr": "…9018",
+       "size": 4,
+       "value": "30"
+      }
+     ]
+    }
+   ],
+   "stdout": "10 20 30\n",
+   "note": "打印三个数。"
+  },
+  {
+   "line": 14,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "…9010",
+       "target": "已释放的堆块 ①"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": true,
+     "cells": []
+    }
+   ],
+   "stdout": "10 20 30\n",
+   "note": "free 把这块内存还回去。注意 scores 里的地址没有变，它还指着那块已经不属于你的内存。这样的指针叫悬垂指针。"
+  },
+  {
+   "line": 15,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "NULL",
+       "target": "不指向任何东西"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": true,
+     "cells": []
+    }
+   ],
+   "stdout": "10 20 30\n",
+   "note": "把 scores 设成 NULL。以后如果误用它，程序会立刻崩溃，而不是悄悄读到垃圾。"
+  },
+  {
+   "line": 16,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "count",
+       "value": "3"
+      },
+      {
+       "type": "int *",
+       "addr": "…ec10",
+       "size": 8,
+       "name": "scores",
+       "value": "NULL",
+       "target": "不指向任何东西"
+      }
+     ]
+    }
+   ],
+   "heap": [
+    {
+     "id": 1,
+     "addr": "…9010",
+     "size": 12,
+     "freed": true,
+     "cells": []
+    }
+   ],
+   "stdout": "10 20 30\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

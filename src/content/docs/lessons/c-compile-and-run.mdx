@@ -1,0 +1,322 @@
+---
+title: C 一：从 hello.c 到可执行文件
+description: 用 gcc 把 C 源码编译成可执行文件，把预处理、编译、汇编、链接四步逐一拆开看，认识 main 的返回值与退出状态，学会读编译报错和链接报错
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import FlowSimulator from '../../../components/flow-simulator';
+import manifest from '../../../data/lessons/c-compile-and-run.json';
+import pipeline from '../../../data/flows/c-compile-pipeline.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 me.c，用 -Wall 编译没有任何提示，运行后 echo $? 显示 3。' },
+  { title: '再走一遍四步', detail: '对 me.c 依次执行 gcc -E、gcc -S、gcc -c，再把 me.o 链接成可执行文件。用 file 看 me.s、me.o 和最终的可执行文件各是什么类型，抄下来。' },
+  { title: '制造三种报错', detail: '在 me.c 上分别制造：漏分号、去掉 #include 那一行、调用一个不存在的函数 nothing()。记下每种报错的最后一行，并标出它是编译器报的还是链接器报的。' },
+  { title: '改了不重新编译', detail: '把 me.c 里的名字改掉，不重新编译直接运行 ./me，确认输出没变；再重新编译运行，确认变了。用一句话写下原因。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 19"
+  kicker="Compile, Link, Run"
+  lines={[
+    { text: "C 一" },
+    { text: "从 hello.c 到可执行文件", accent: true },
+  ]}
+  summary="Python 把内存、类型、错误检查都替你管了。C 把这些全部交还给你，所以用它才看得见程序在机器上到底怎样运行。这是八课里的第一课：先把一份源码变成能运行的文件，并看清中间经过了什么。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：Kali 里的命令是什么做的
+
+第 2 课你用 `ls`，第 3 课用 `grep`、`sort`，第 13 课用 `curl`。它们不是 Python 脚本。用 `file` 看一眼：
+
+```text
+/usr/bin/ls: ELF 64-bit LSB pie executable, x86-64, …
+```
+
+`ls` 是一个里面全是机器指令的二进制文件。它当初是用 C 写的，然后被**编译**成了这个样子。操作系统本身、Python 解释器、你用的大多数命令，都是这么来的。
+
+下学期要分析的程序，绝大多数也是这种文件。想读懂它们为什么会出问题，得先自己写过、编译过。
+
+## 一、编译：先翻译，再运行
+
+### 1. 第一个程序
+
+新建目录，用 `mousepad` 写出下面这个文件：
+
+<CodeFile file="labs/c-compile-and-run/hello.c" note="保存为 ~/lab/c/hello.c。" />
+
+<TerminalSession
+  title="编译，然后运行"
+  steps={[
+    { cmd: 'mkdir ~/lab/c' },
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc hello.c -o hello', setup: 'cp ~/lab/python/*.c .', note: 'gcc 是编译器。它读 hello.c，生成一个名叫 hello 的可执行文件。没有输出就是成功。' },
+    { cmd: 'ls', out: 'bad_include.c  bad_link.c  bad_semicolon.c  hello  hello.c  status.c  warn.c', note: '多了一个 hello。其余几个 .c 是这一课后面要用的，你的目录里现在只有 hello 和 hello.c。' },
+    { cmd: './hello', out: 'Hello, C!', note: '运行它。和第 3 课的脚本一样，要写 ./ 。' },
+  ]}
+/>
+
+逐行读这个程序：
+
+<DataTable
+  caption="hello.c 的每一行"
+  headers={["行", "内容", "含义"]}
+  rows={[
+    ["1", "#include <stdio.h>", "要用 printf，先把声明它的文件包含进来。相当于 Python 的 import"],
+    ["3", "int main(void) {", "定义一个名叫 main 的函数。int 是它返回值的类型，void 表示不接收参数。程序从 main 开始执行"],
+    ["4", "printf(\"Hello, C!\\n\");", "打印一行。\\n 是换行，C 不会自动加。语句以分号结束"],
+    ["5", "return 0;", "main 返回 0，表示程序正常结束"],
+    ["6", "}", "函数到这里结束。C 用花括号划定代码块，缩进只是为了好读"],
+  ]}
+  columnRatios={[0.4, 1.5, 3]}
+/>
+
+（来源：[N1570](#source-n1570)、[printf(3)](#source-man-printf3)）
+
+### 2. 和 Python 差在哪
+
+<DataTable
+  caption="运行一个程序的两种方式"
+  headers={["", "Python", "C"]}
+  rows={[
+    ["怎样运行", "python3 hello.py：解释器读源文件，一行行执行", "先 gcc 编译出可执行文件，再运行那个文件"],
+    ["运行时需要什么", "源文件和 Python 解释器", "只需要可执行文件。源文件删掉也照样运行"],
+    ["改了源码之后", "下次运行直接生效", "必须重新编译，否则运行的还是旧的"],
+    ["错误什么时候暴露", "执行到出错那一行才报", "语法和类型错误在编译时就报，一行都不会运行"],
+  ]}
+  columnRatios={[1, 2, 2]}
+/>
+
+人写的叫**源代码**，机器能直接执行的叫**机器码**，把前者翻译成后者的程序叫**编译器**。（来源：[CS50x: Lecture 1](#source-cs50-c)）
+
+## 二、把四步拆开看
+
+`gcc hello.c -o hello` 这一条命令，里面其实做了四件事：
+
+<FlowSimulator client:visible title="从源码到可执行文件的四步" steps={pipeline} motionLevel="explanatory" />
+
+（来源：[gcc(1)](#source-man-gcc)）
+
+`gcc` 有三个选项，可以让它做到某一步就停下。下面一步一步来。
+
+### 1. 预处理：-E
+
+<TerminalSession
+  title="只做预处理"
+  steps={[
+    { cmd: 'gcc -E hello.c | wc -l', out: '844', note: '-E 把预处理的结果打印出来。六行的源文件变成了八百多行。' },
+    { cmd: 'gcc -E hello.c | tail -n 6', out: '\n# 3 "hello.c"\nint main(void) {\n    printf("Hello, C!\\n");\n    return 0;\n}', note: '看最后六行：你写的 main 原封不动地在最后。前面那八百多行是 stdio.h 的内容，#include 那一行被它们替换掉了。' },
+  ]}
+/>
+
+以 `#` 开头的行不是 C 语句，是写给**预处理器**的指令。`#include <stdio.h>` 的意思就是「把这个文件的内容粘贴到这里」。（来源：[Beej's Guide: Hello, World!](#source-beej-hello)）
+
+### 2. 编译：-S
+
+<TerminalSession
+  title="翻译成汇编"
+  steps={[
+    { cmd: 'gcc -S hello.c', note: '-S 做到编译这一步为止，生成 hello.s。' },
+    { cmd: 'wc -l hello.s', out: '28 hello.s' },
+    { cmd: "grep -n 'main:\\|call\\|ret' hello.s", out: '9:main:\n19:\tcall\tputs@PLT\n23:\tret', note: '挑三行看：main 从第 9 行开始，第 19 行调用了一个函数，第 23 行返回。' },
+  ]}
+/>
+
+`hello.s` 是**汇编代码**：每一行对应处理器的一条指令，仍然是给人看的文本。现在不需要读懂它，下学期的逆向课会从这里开始。
+
+有一处值得留意：你写的是 `printf`，汇编里调用的却是 `puts`。编译器发现这次只是打印一个固定的字符串，就换成了更简单的函数。**编译器生成的代码不一定和你写的一一对应。**
+
+### 3. 汇编：-c
+
+<TerminalSession
+  title="翻译成机器码"
+  steps={[
+    { cmd: 'gcc -c hello.c', note: '-c 做到汇编这一步为止，生成 hello.o，叫目标文件。' },
+    { cmd: 'file hello.o', out: 'hello.o: ELF 64-bit LSB relocatable, x86-64, version 1 (SYSV), not stripped', note: 'relocatable：里面已经是机器码，但还没有定下来放在内存的什么位置，也还缺 puts 的代码。' },
+  ]}
+/>
+
+### 4. 链接
+
+<TerminalSession
+  title="把目标文件接成可执行文件"
+  steps={[
+    { cmd: 'gcc hello.o -o hello', note: '给 gcc 的是 .o 文件，它就只做最后一步：链接。' },
+    { cmd: 'file hello', out: 'hello: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=7bbf8521f9dffa5d6bfbd12c71bf2d15ace5e88c, for GNU/Linux 3.2.0, not stripped', note: 'executable：可以运行了。和引导问题里 ls 的类型一样。BuildID 那一串与你的可能不同。' },
+    { cmd: './hello', out: 'Hello, C!' },
+  ]}
+/>
+
+你的程序调用了 `puts`，但你没有写过它。它的机器码在系统的 C 库里。**链接**做的就是把你的目标文件和用到的库接在一起，让每一处函数调用都找得到对应的代码。
+
+<DataTable
+  caption="四步的产物"
+  headers={["步骤", "选项", "输入", "输出", "是文本还是二进制"]}
+  rows={[
+    ["预处理", "-E", "hello.c", "展开之后的 C 源码", "文本"],
+    ["编译", "-S", "预处理的结果", "hello.s，汇编代码", "文本"],
+    ["汇编", "-c", "汇编代码", "hello.o，目标文件", "二进制"],
+    ["链接", "不加选项", "hello.o 和 C 库", "hello，可执行文件", "二进制"],
+  ]}
+  columnRatios={[0.7, 0.8, 1.3, 1.6, 1.1]}
+/>
+
+（来源：[gcc(1)](#source-man-gcc)、[file(1)](#source-man-file)）
+
+平时不需要分四步做，一条 `gcc hello.c -o hello` 就够。把它拆开，是为了报错时知道问题出在哪一步。
+
+## 三、退出状态与读报错
+
+### 1. main 的返回值去哪了
+
+<CodeFile file="labs/c-compile-and-run/status.c" note="保存为 ~/lab/c/status.c。" />
+
+<TerminalSession
+  title="程序结束时留下的一个数"
+  steps={[
+    { cmd: 'gcc status.c -o status' },
+    { cmd: './status', out: 'about to return 42' },
+    { cmd: 'echo $?', out: '42', note: '$? 是 shell 里的一个特殊变量：上一条命令的退出状态。它就是 main 返回的那个数。' },
+    { cmd: './hello', out: 'Hello, C!' },
+    { cmd: 'echo $?', out: '0' },
+  ]}
+/>
+
+每个程序结束时都会交给系统一个整数，叫**退出状态**。约定是 0 表示成功，非 0 表示出了某种问题。shell 脚本和其他程序靠它判断一条命令成没成功。（来源：[N1570](#source-n1570)、[Zsh: Shell Grammar](#source-zsh-grammar)）
+
+### 2. 编译阶段的报错
+
+C 的编译器很严格，少一个分号也不行。但它会准确告诉你在哪。
+
+<CodeFile file="labs/c-compile-and-run/bad_semicolon.c" mark="4" note="第 4 行末尾少了分号。" />
+
+<TerminalSession
+  title="漏了分号"
+  steps={[
+    {
+      cmd: 'gcc bad_semicolon.c -o bad',
+      out: 'bad_semicolon.c: In function ‘main’:\nbad_semicolon.c:4:26: error: expected ‘;’ before ‘return’\n    4 |     printf("Hello, C!\\n")\n      |                          ^\n      |                          ;\n    5 |     return 0;\n      |     ~~~~~~',
+      note: '第二行是关键：文件名:行号:列号: error: 说明。下面还画出了那一行，用 ^ 指着出错的位置，并提示该补什么。',
+    },
+  ]}
+/>
+
+<CodeFile file="labs/c-compile-and-run/bad_include.c" note="少了 #include <stdio.h>。" />
+
+<TerminalSession
+  title="忘了 #include"
+  steps={[
+    {
+      cmd: 'gcc bad_include.c -o bad',
+      out: 'bad_include.c: In function ‘main’:\nbad_include.c:2:5: error: implicit declaration of function ‘printf’ [-Wimplicit-function-declaration]\n    2 |     printf("Hello, C!\\n");\n      |     ^~~~~~\nbad_include.c:1:1: note: include ‘<stdio.h>’ or provide a declaration of ‘printf’\n  +++ |+#include <stdio.h>\n    1 | int main(void) {\n…',
+      note: 'implicit declaration：用了一个编译器没见过的函数。note 那一行直接告诉你该加哪个 #include。',
+    },
+  ]}
+/>
+
+### 3. 链接阶段的报错
+
+<CodeFile file="labs/c-compile-and-run/bad_link.c" mark="3" note="第 3 行只是声明「有一个叫 greet 的函数」，但哪里都没有写出它的函数体。" />
+
+<TerminalSession
+  title="声明了，却没有定义"
+  steps={[
+    {
+      cmd: 'gcc bad_link.c -o bad',
+      out: "/usr/bin/x86_64-linux-gnu-ld.bfd: /tmp/ccJFCeuy.o: in function `main':\nbad_link.c:(.text+0x5): undefined reference to `greet'\ncollect2: error: ld returned 1 exit status",
+      note: '这次的样子不同：没有行号和箭头，报错的是 ld，也就是链接器。/tmp/cc… 是临时文件，名字每次不同。',
+    },
+  ]}
+/>
+
+编译这一步通过了，因为第 3 行向编译器保证了「greet 存在」。到链接时要找它的机器码，找不到，于是报 `undefined reference`。
+
+### 4. 警告和 -Wall
+
+<CodeFile file="labs/c-compile-and-run/warn.c" mark="4" note="第 4 行的变量定义了却从来没用过。" />
+
+<TerminalSession
+  title="能编译，但有可疑之处"
+  steps={[
+    { cmd: 'gcc warn.c -o warn', note: '默认情况下什么都不说。' },
+    {
+      cmd: 'gcc -Wall warn.c -o warn',
+      out: 'warn.c: In function ‘main’:\nwarn.c:4:9: warning: unused variable ‘unused’ [-Wunused-variable]\n    4 |     int unused = 5;\n      |         ^~~~~~',
+      note: '-Wall 打开一批常用的警告。warning 不阻止编译，可执行文件照样生成。',
+    },
+    { cmd: './warn', out: 'done' },
+  ]}
+/>
+
+`error` 是编译器无法继续，`warning` 是编译器能继续但觉得你可能写错了。在 C 里，很多真正的错误只会以 warning 的形式出现，之后几课会见到。**从现在起，编译时一律加上 `-Wall`，并把每一条 warning 当作 error 来对待。**
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答", "出在哪一步", "原因与处理"]}
+  rows={[
+    ["error: expected ‘;’ before …", "编译", "上一行末尾漏了分号。看 gcc 指的行号，往前找一行"],
+    ["error: implicit declaration of function ‘printf’", "编译", "漏了 #include <stdio.h>。照 note 的提示补上"],
+    ["undefined reference to `…'", "链接", "调用的函数没有定义：名字拼错了，或者忘了把另一个 .c 文件一起编译"],
+    ["zsh: no such file or directory: ./hello", "运行", "还没编译，或者编译失败没有生成文件。先看 gcc 有没有报 error"],
+    ["zsh: permission denied: ./hello.c", "运行", "运行了源文件。要运行的是编译出来的 hello，不是 hello.c"],
+    ["改了代码，输出没变", "运行", "没有重新编译。每次改完源码都要再执行一次 gcc"],
+    ["目录里出现一个 a.out", "编译", "忘了写 -o 名字。gcc 默认把可执行文件叫 a.out"],
+  ]}
+  columnRatios={[1.7, 0.7, 2.4]}
+/>
+
+边界：gcc 一次报出很多条错误时，只看第一条。后面的常常是第一条引起的连锁反应，改掉第一条再重新编译，其余的往往跟着消失。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'gcc -Wall hello.c -o hello', description: '编译并链接，生成可执行文件 hello，打开常用警告。' },
+    { term: './hello', description: '运行。' },
+    { term: 'echo $?', description: '上一条命令的退出状态，也就是 main 的返回值。' },
+    { term: 'gcc -E / -S / -c', description: '只做到预处理 / 编译（得到 .s）/ 汇编（得到 .o）。' },
+    { term: 'file 文件', description: '看一个文件是什么类型。' },
+    { term: '#include <stdio.h>', description: '预处理指令：把 stdio.h 的内容包含进来，才能用 printf。' },
+    { term: 'int main(void) { … return 0; }', description: '程序的入口。返回 0 表示成功。' },
+    { term: 'printf("…\\n");', description: '打印。换行要自己写 \\n，语句以分号结束。' },
+    { term: '文件:行:列: error: …', description: '编译报错的格式。先看第一条。' },
+    { term: 'undefined reference to …', description: '链接报错：找不到某个函数的定义。' },
+  ]}
+/>
+
+<KeyTakeaway>
+C 程序要先编译再运行。`gcc` 依次做预处理、编译、汇编、链接四步，把文本形式的源码变成二进制的可执行文件；运行的是这个文件，源码改了必须重新编译。程序从 `main` 开始，它的返回值是程序的退出状态，用 `echo $?` 查看。报错带行号和列号的来自编译器，写着 `undefined reference` 和 `ld` 的来自链接器。编译时始终加 `-Wall`。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

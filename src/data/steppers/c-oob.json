@@ -1,0 +1,504 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-arrays-and-strings/oob.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "",
+  "int main(void) {",
+  "    int codes[3] = {200, 404, 500};",
+  "    for (int i = 0; i <= 3; i++) {",
+  "        printf(\"%d\\n\", codes[i]);",
+  "    }",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "codes 有 3 个格子，下标是 0、1、2，一共 12 个字节，地址从 ec10 到 ec1b。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "循环变量 i 从 0 开始。注意它的地址是 ec1c，正好紧挨在 codes 后面。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n",
+   "note": "打印 codes[0]，200。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n",
+   "note": "i 变成 1。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n",
+   "note": "打印 codes[1]，404。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n",
+   "note": "i 变成 2。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n500\n",
+   "note": "打印 codes[2]，500。数组到这里就没有了。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n500\n",
+   "note": "条件写的是 i <= 3，所以 i 变成 3 时循环还在继续。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      },
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "i",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n500\n3\n",
+   "note": "codes[3] 的意思是「从 codes 开头往后数第 3 个 int」，也就是地址 ec1c。那里放的是 i，于是打印出了 i 自己的值 3。C 不检查下标，照读不误。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n500\n3\n",
+   "note": "i 变成 4，条件不成立，循环结束。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int [3]",
+       "addr": "…ec10",
+       "size": 12,
+       "name": "codes",
+       "cells": [
+        {
+         "type": "int",
+         "addr": "…ec10",
+         "size": 4,
+         "value": "200"
+        },
+        {
+         "type": "int",
+         "addr": "…ec14",
+         "size": 4,
+         "value": "404"
+        },
+        {
+         "type": "int",
+         "addr": "…ec18",
+         "size": 4,
+         "value": "500"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "200\n404\n500\n3\n",
+   "note": "main 返回。程序没有报任何错。"
+  }
+ ],
+ "error": null
+}

@@ -1,0 +1,304 @@
+---
+title: C 四：数组与字符串
+description: 把数组看成一排连续的格子，弄清越界时实际读到了什么、字符串为什么要以空字符结尾、strcpy 写过头为什么会崩溃，并学会用 fgets 安全读入
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/c-arrays-and-strings.json';
+import oobTrace from '../../../data/steppers/c-oob.json';
+import fillTrace from '../../../data/steppers/c-fill.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 upper.c。输入 kali linux 应当打印 KALI LINUX 10。' },
+  { title: '数组求最大值', detail: '写一个函数 int largest(int values[], int count)，返回数组里最大的数。数组的长度必须作为第二个参数传进去。用 {512, 2048, 128, 4096, 1024} 测试，应当得到 4096。' },
+  { title: '自己实现 strlen', detail: '写一个函数 int my_length(char text[])，用循环从头数到空字符为止。对 "kali" 应当返回 4，对空字符串 "" 应当返回 0。' },
+  { title: '看一次越界的报告', detail: '用 gcc -g -fsanitize=address 编译 oob.c 并运行，在报告里找到三样东西：错误的类型、出错的行号、是哪个变量被越界访问。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 22"
+  kicker="Arrays, Strings, Bounds"
+  lines={[
+    { text: "C 四" },
+    { text: "数组与字符串", accent: true },
+  ]}
+  summary="Python 的列表知道自己有多长，越界了会报 IndexError。C 的数组只是内存里连着的一排格子，没有人替它守着边界。这一课看清越过边界时到底发生了什么，以及 C 的字符串为什么特别容易出这种事。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：多读了一个，读到的是什么
+
+下面这个程序有一个三个元素的数组，循环却写成了 `i <= 3`，多走了一圈：
+
+<CodeFile file="labs/c-arrays-and-strings/oob.c" mark="5" />
+
+<TerminalSession
+  title="没有报错，多出一个数"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc oob.c -o oob' },
+    { cmd: './oob', out: '200\n404\n500\n3', note: '前三行是数组里的内容。第四行的 3 是哪来的？' },
+  ]}
+/>
+
+同样的错误在 Python 里会得到 `IndexError: list index out of range`，程序停下。C 一声不吭，给了你一个数。
+
+这个 3 不是随机的。这一课会找到它的来历。
+
+## 一、数组：一排连续的格子
+
+### 1. 声明和使用
+
+<CodeFile file="labs/c-arrays-and-strings/array.c" />
+
+<TerminalSession
+  title="数组的基本操作"
+  steps={[
+    { cmd: 'gcc -Wall array.c -o array' },
+    { cmd: './array', out: '598\n16 4\n8080', note: '四个数的和；整个数组占 16 个字节，每个元素 4 个字节；第 1 个元素被改成了 8080。' },
+  ]}
+/>
+
+`int ports[4]` 的意思是：四个 `int`，在内存里紧挨着放。下标从 0 开始，和 Python 一样。
+
+和 Python 的列表有三点不同：
+
+<DataTable
+  caption="C 的数组和 Python 的列表"
+  headers={["", "Python 列表", "C 数组"]}
+  rows={[
+    ["长度", "随时可以 append，len() 能问到", "声明时定死，之后不能变；数组自己不记录长度"],
+    ["元素类型", "可以混放", "全部是同一种类型"],
+    ["越界", "IndexError，程序停下", "不检查。读到或改到的是旁边的内存"],
+  ]}
+  columnRatios={[0.8, 2, 2.4]}
+/>
+
+`sizeof(ports) / sizeof(ports[0])` 是算元素个数的惯用写法：总字节数除以一个元素的字节数。它只在声明数组的那个函数里管用；把数组传给别的函数时，长度要另外作为参数传过去。
+
+### 2. 越界：读到了邻居
+
+回到引导问题。逐行执行，留意 `codes` 和 `i` 的地址：
+
+<CodeStepper
+  client:visible
+  trace={oobTrace}
+  view="memory"
+  title="codes[3] 读到的是谁"
+  eyebrow="STEP THROUGH / C 的内存"
+  intro="codes 的三个格子占着 …ec10 到 …ec1b。再往后 4 个字节是什么？"
+/>
+
+`codes[3]` 对编译器来说只是一道算术题：从 `codes` 的开头往后数 3 个 `int`，取那里的 4 个字节。它不管那里还是不是数组的一部分。在这次运行里，那个位置放的恰好是循环变量 `i`，而此刻 `i` 等于 3。
+
+换一个编译器、换一组编译选项，变量的摆放可能不同，读到的就是别的东西。标准把越界访问定为**未定义行为**，程序此后的任何表现都不可信。（来源：[N1570](#source-n1570)、[Beej's Guide: Arrays](#source-beej-arrays)）
+
+<Callout variant="warning" title="越界写比越界读更糟">
+这个例子是越界读，结果只是多打了一个数。如果是越界写，`codes[3] = 0;`，被悄悄改掉的就是 `i`，循环会因此乱掉。程序往往在很久以后、在毫不相干的地方才出问题，非常难查。
+</Callout>
+
+## 二、字符串：以空字符结尾的 char 数组
+
+### 1. 字符串的真面目
+
+C 没有专门的字符串类型。字符串就是一个 `char` 数组，外加一个约定：**在最后一个字符后面放一个值为 0 的字节，表示到此结束。** 这个字节写作 `'\0'`，叫空字符。（来源：[N1570](#source-n1570)、[CS50x: Lecture 2](#source-cs50-arrays)）
+
+<CodeFile file="labs/c-arrays-and-strings/str.c" />
+
+<TerminalSession
+  title="四个字母，五个字节"
+  steps={[
+    { cmd: 'gcc -Wall str.c -o str' },
+    { cmd: './str', out: 'kali\n5 4\nKali\nK=75 a=97 l=108 i=105', note: '第二行：sizeof 是 5，strlen 是 4。差的那一个就是结尾的空字符。' },
+  ]}
+/>
+
+<DataTable
+  caption="两种「长度」"
+  headers={["写法", "量的是什么", "对 char name[] = \"kali\""]}
+  rows={[
+    ["sizeof(name)", "数组占了多少字节，包括结尾的空字符", "5"],
+    ["strlen(name)", "从头数到空字符之前有几个字符", "4"],
+  ]}
+  columnRatios={[1, 2.6, 1.4]}
+/>
+
+字符串的每个元素是一个 `char`，可以像数组那样用下标读写。第 14 行的循环条件 `name[i] != '\0'` 是处理字符串的标准写法：一直走到空字符为止。（来源：[strlen(3)](#source-man-strlen3)）
+
+### 2. 结尾标记决定一切
+
+<CodeFile file="labs/c-arrays-and-strings/fill.c" />
+
+<CodeStepper
+  client:visible
+  trace={fillTrace}
+  view="memory"
+  title="同一个数组，三种「字符串」"
+  eyebrow="STEP THROUGH / C 的内存"
+  intro="buf 的 8 个格子画成了一排。看 '\0' 的位置怎样决定 printf 打印到哪里为止。"
+/>
+
+<TerminalSession
+  title="结果"
+  steps={[
+    { cmd: 'gcc -Wall fill.c -o fill' },
+    { cmd: './fill', out: 'nc!\nn' },
+  ]}
+/>
+
+`printf("%s", buf)` 并不知道 `buf` 有多大。它只是从第 0 格开始一个个往外打，遇到 `'\0'` 才停。所以：
+
+- 把中间某一格改成 `'\0'`，字符串就在那里结束，后面的内容还在内存里，只是不再被看见。
+- 如果数组里**没有** `'\0'`，`printf` 会一路读过数组的末尾，把后面不相干的内存也打出来。这又是越界。
+
+`strcpy(buf, "nc")` 把一个字符串连同结尾的空字符一起复制进 `buf`。C 里不能用 `=` 给数组整体赋值，也不能用 `==` 比较两个字符串的内容，复制用 `strcpy`，比较用 `strcmp`。这些函数都声明在 `<string.h>` 里。（来源：[Beej's Guide: Strings](#source-beej-strings)）
+
+## 三、写过头的时候
+
+### 1. strcpy 不知道目的地有多大
+
+<CodeFile file="labs/c-arrays-and-strings/smash.c" mark="6" note="buf 只有 8 个字节，要复制进去的字符串连同结尾有 28 个字节。" />
+
+<TerminalSession
+  title="编译器先提醒了一次"
+  steps={[
+    {
+      cmd: 'gcc smash.c -o smash',
+      out: 'smash.c: In function ‘main’:\nsmash.c:6:5: warning: ‘__builtin_memcpy’ writing 28 bytes into a region of size 8 overflows the destination [-Wstringop-overflow=]\n    6 |     strcpy(buf, "this string is far too long");\n      |     ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\nsmash.c:5:10: note: destination object ‘buf’ of size 8\n    5 |     char buf[8];\n      |          ^~~',
+      note: '这次两边的大小在编译时都看得出来，所以 gcc 发现了：要把 28 个字节写进 8 个字节的地方。它只是警告，照样生成了可执行文件。',
+    },
+    { cmd: './smash', out: 'this string is far too long\nzsh: segmentation fault  ./smash', note: '先把整句话打印了出来，然后才崩溃。' },
+  ]}
+/>
+
+`strcpy` 只拿到了 `buf` 的起始地址，不知道它有多大。它从那里开始一个字节一个字节地写，写满 8 个之后继续往后写了 20 个。保证目的地够大，是调用者的责任。（来源：[strcpy(3)](#source-man-strcpy3)）
+
+多出来的 20 个字节写到了哪里？上一课讲过，`buf` 在 `main` 的栈帧里。栈帧里除了局部变量，还存着一些让函数能正常返回的信息，例如「返回之后回到哪里继续执行」。它们就在局部变量的后面，被这 20 个字节盖掉了。
+
+所以程序是这样走的：`strcpy` 写坏了栈帧，但 `buf` 开头的内容是完好的，`printf` 正常打印；等到 `main` 执行 `return`，要用到那份已经被盖掉的信息，程序跳到了一个无效的地方，系统把它终止。**出错的那一行和崩溃的那一行，不是同一行。**
+
+这种错误叫**缓冲区溢出**。下学期会专门研究它，现在只需要知道它是怎么发生的。
+
+### 2. 两道额外的防线
+
+编译时加上 `-fstack-protector-strong`，编译器会在栈帧里放一个哨兵值，函数返回前检查它有没有被改动：
+
+<TerminalSession
+  title="让程序自己发现栈被写坏了"
+  steps={[
+    { cmd: 'gcc -fstack-protector-strong smash.c -o smash', out: '…（和上面相同的警告）\n      |          ^~~' },
+    { cmd: './smash', out: 'this string is far too long\n*** stack smashing detected ***: terminated\nzsh: abort  ./smash', note: '程序在返回之前发现哨兵值变了，主动终止，并说明了原因。' },
+    { cmd: 'echo $?', out: '134', note: '128 加 6。6 是 abort 这个信号的编号。' },
+  ]}
+/>
+
+另一个工具是第 26 课要细讲的 AddressSanitizer。用它重新编译引导问题里的 `oob.c`：
+
+<TerminalSession
+  title="越界的那一刻就报告"
+  steps={[
+    { cmd: 'gcc -g -fsanitize=address oob.c -o oob' },
+    {
+      cmd: './oob',
+      out: "200\n404\n500\n=================================================================\n==2474==ERROR: AddressSanitizer: stack-buffer-overflow on address 0x7ba94f2f002c at pc 0x5581cda23324 bp 0x7ffd5ca0f0f0 sp 0x7ffd5ca0f0e8\nREAD of size 4 at 0x7ba94f2f002c thread T0\n    #0 0x5581cda23323 in main /home/kali/lab/c/oob.c:6\n…\n  This frame has 1 object(s):\n    [32, 44) 'codes' (line 4) <== Memory access at offset 44 overflows this variable\n…\nSUMMARY: AddressSanitizer: stack-buffer-overflow /home/kali/lab/c/oob.c:6 in main\n…",
+      note: '这次没有打印出 3。程序在第四次读取时被拦下，报告指出：oob.c 第 6 行，越界读了变量 codes。地址和进程号每次不同。',
+    },
+  ]}
+/>
+
+（来源：[gcc(1)](#source-man-gcc)、[AddressSanitizer](#source-asan-wiki)）
+
+### 3. 读入一行的正确写法
+
+字符串溢出最常见的来源是读输入：你不知道用户会敲多长。`fgets` 要求你告诉它缓冲区有多大，它绝不多写。
+
+<CodeFile file="labs/c-arrays-and-strings/name.c" mark="7-8" />
+
+<TerminalSession
+  title="输入比缓冲区长也不会出事"
+  steps={[
+    { cmd: 'gcc -Wall name.c -o name' },
+    { cmd: './name', stdin: ['kali'], out: 'name: kali\nhello, kali (4)' },
+    { cmd: './name', stdin: ['administrator'], out: 'name: administrator\nhello, adminis (7)', note: 'name 只有 8 个字节。fgets 最多读 7 个字符，留一个位置放空字符，多出来的部分没有读进来。' },
+  ]}
+/>
+
+第 8 行 `name[strcspn(name, "\n")] = '\0';` 是去掉末尾换行的惯用写法：`fgets` 会把你按的回车也读进来，这一行把它换成空字符。
+
+<Callout variant="danger" title="永远不要用 gets">
+老教程里常见的 `gets(buf)` 不接受缓冲区的大小，用户输入多长它就写多长，必然溢出。它的手册页第一句话就是「永远不要使用这个函数」。读入一行一律用 `fgets`。
+</Callout>
+
+（来源：[fgets(3)](#source-man-fgets3)、[gets(3)](#source-man-gets3)）
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["打印出不属于数组的数，或者每次运行结果不同", "下标越界。常见于循环条件把 < 写成了 <=", "检查循环的上界；用 -fsanitize=address 编译运行来定位"],
+    ["warning: … writing 28 bytes into a region of size 8 overflows the destination", "往数组里复制的内容比数组大", "把数组开大，或者改用带长度限制的写法"],
+    ["zsh: segmentation fault，而且崩在函数返回时", "局部数组被写过头，栈帧被盖坏了", "从后往前找每一处往数组里写的地方"],
+    ["*** stack smashing detected ***: terminated", "同上，只是被栈保护发现了", "同上"],
+    ["字符串后面多出乱码", "字符数组里没有结尾的空字符", "数组要比内容多留一个字节；手工填字符之后记得写上 '\\0'"],
+    ["error: assignment to expression with array type", "用 = 给数组整体赋值", "字符串用 strcpy 复制"],
+    ["warning: comparison with string literal results in unspecified behavior", "用 == 比较字符串，比的其实是两个地址", "用 strcmp(a, b) == 0 判断内容相同"],
+    ["用 fgets 读入的字符串比较时总是不相等", "末尾带着一个换行符", "用 name[strcspn(name, \"\\n\")] = '\\0'; 去掉它"],
+  ]}
+  columnRatios={[1.9, 1.5, 1.7]}
+/>
+
+边界：Kali 上的 gcc 默认不启用栈保护，所以 `smash.c` 默认编译后表现为段错误；有的发行版默认启用，同一份代码在那里会直接看到 stack smashing detected。两种表现的原因相同。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'int a[4] = {1, 2, 3, 4};', description: '四个 int 连着放，下标 0 到 3，长度不能变。' },
+    { term: 'sizeof(a) / sizeof(a[0])', description: '元素个数。只在声明数组的函数里可用。' },
+    { term: '越界', description: 'C 不检查下标。读写到的是相邻的内存，属于未定义行为。' },
+    { term: 'char s[] = "kali";', description: '5 个字节：四个字符加结尾的 \'\\0\'。' },
+    { term: 'strlen(s) / sizeof(s)', description: '字符个数，不含 \'\\0\' / 数组总字节数。' },
+    { term: 'strcpy(dst, src)', description: '复制字符串。dst 够不够大由你负责。' },
+    { term: 'strcmp(a, b) == 0', description: '两个字符串内容相同。' },
+    { term: 'fgets(buf, sizeof(buf), stdin)', description: '安全地读一行，最多写 sizeof(buf) 个字节。' },
+    { term: 'gcc -fstack-protector-strong', description: '函数返回前检查栈帧有没有被写坏。' },
+    { term: 'gcc -g -fsanitize=address', description: '运行时一越界就报告，指出行号和变量。' },
+  ]}
+/>
+
+<KeyTakeaway>
+数组是内存里连着的一排同类型的格子，它不记录自己的长度，C 也不检查下标：越界读到的是旁边的变量，越界写会悄悄改掉它们。字符串是以空字符 `'\0'` 结尾的 `char` 数组，一切处理字符串的函数都靠这个结尾标记判断长度。往数组里写的内容超过它的大小，会盖掉栈帧里的其他东西，程序通常在函数返回时崩溃。读输入用 `fgets` 并给出缓冲区大小。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />
