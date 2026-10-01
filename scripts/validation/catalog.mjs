@@ -35,6 +35,7 @@ export function validateCatalog() {
     for (const field of ['id', 'categoryId', 'title', 'summary', 'difficulty', 'status', 'order']) requireValue(topic[field], paths.catalogPath, topic.id, `topics.${topic.id || 'unknown'}.${field}`, '专题字段缺失。');
     if (!isKebabCase(topic.id)) report(paths.catalogPath, topic.id, 'id', '专题 ID 必须使用 kebab-case。', '使用小写字母、数字和连字符。');
     if (!data.policy.difficultyLevels.includes(topic.difficulty)) report(paths.catalogPath, topic.id, 'difficulty', `未知难度：${topic.difficulty}`, '使用策略定义的难度。');
+    if (topic.series !== undefined && (typeof topic.series !== 'string' || !topic.series.trim())) report(paths.catalogPath, topic.id, 'series', '系列名必须是非空字符串。', '写入系列名，或删除该字段。');
     if (!Array.isArray(topic.prerequisites)) report(paths.catalogPath, topic.id, 'prerequisites', '前置专题必须使用数组。', '使用专题 ID 数组。');
     if (!Number.isInteger(topic.order) || topic.order < 1) report(paths.catalogPath, topic.id, 'order', '专题顺序必须是正整数。', '设置从 1 开始的整数顺序。');
     if (!categorySet.has(topic.categoryId)) report(paths.catalogPath, topic.id, 'categoryId', `未知分类：${topic.categoryId}`, '改为 data.catalog 中存在的分类 ID。');
@@ -53,6 +54,16 @@ export function validateCatalog() {
     if (topic.status === 'planned') {
       if (topic.pagePath !== null) report(paths.catalogPath, topic.id, 'pagePath', '规划中专题必须使用 null 页面路径。', '把 pagePath 设置为 null。');
       if (existsSync(manifestPath)) report(manifestPath, topic.id, 'status', '规划中专题存在可交付 manifest。', '完成正文后同步把 data.catalog 状态改为 completed。');
+    }
+  }
+
+  // 系列分组：一个分类要么全部专题登记 series，要么全部不登记，否则未登记的课在按系列切换的列表里无处可放。
+  for (const category of data.catalog.categories) {
+    const topics = data.catalog.topics.filter((topic) => topic.categoryId === category.id);
+    const withSeries = topics.filter((topic) => topic.series);
+    if (withSeries.length > 0 && withSeries.length < topics.length) {
+      const missing = topics.filter((topic) => !topic.series).map((topic) => topic.id).join('、');
+      report(paths.catalogPath, null, `categories.${category.id}.series`, `分类内只有部分专题登记了系列，缺少：${missing}`, '为该分类的全部专题登记 series，或全部删除。');
     }
   }
 

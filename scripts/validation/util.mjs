@@ -9,6 +9,7 @@ export const paths = {
   themesPath: join(root, 'config', 'themes.json'),
   routesPath: join(root, 'config', 'routing-fixtures.json'),
   catalogPath: join(root, 'src', 'data', 'catalog.json'),
+  learningPathsPath: join(root, 'src', 'data', 'paths.json'),
   lessonDir: join(root, 'src', 'data', 'lessons'),
   docsDir: join(root, 'src', 'content', 'docs'),
   homePagePath: join(root, 'src', 'content', 'docs', 'index.mdx'),

@@ -12,7 +12,7 @@ interface Exercise {
 }
 interface Props { exercises: Exercise[] }
 const { exercises } = Astro.props;
-const labels: Record<string, string> = { mechanism: '机制判断', calculation: '读数与计算', practice: '小型实践' };
+const labels: Record<string, string> = { mechanism: '机制判断', calculation: '读数与计算', prediction: '预测输出', practice: '小型实践' };
 const route = (Astro.locals as unknown as { starlightRoute?: { entry?: { id?: string } } }).starlightRoute;
 const lessonId = String(route?.entry?.id ?? '').replace(/^lessons\//, '');
 const topic = findTopic(lessonId);

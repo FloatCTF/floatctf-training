@@ -1,0 +1,31 @@
+---
+import { findPath, pathLessons } from '../data/paths';
+import { withBase } from '../lib/base-url';
+import { Icon } from '@astrojs/starlight/components';
+
+interface Props { title: string; entryId: string }
+const { title, entryId } = Astro.props;
+const path = findPath(entryId.startsWith('paths/') ? entryId.split('/')[1] : undefined);
+const lessons = path ? pathLessons(path) : [];
+const completed = lessons.filter((lesson) => lesson.topic.status === 'completed').length;
+const percent = lessons.length > 0 ? (completed / lessons.length) * 100 : 0;
+---
+
+<header class="path-hero" aria-labelledby="_top">
+  <nav class="category-path" aria-label="路线路径">
+    <a href={withBase('/')}><Icon name="left-arrow" size="1rem" aria-hidden="true" />课程地图</a>
+    <span aria-hidden="true">/</span>
+    <span aria-current="page">{title}</span>
+  </nav>
+  <div class="path-hero-heading">
+    <p class="path-hero-kicker">SEMESTER PATH</p>
+    <h1 id="_top">{path?.title || title}</h1>
+    {path && (
+      <p class="path-hero-summary">{path.stages.length} 个阶段、{lessons.length} 课。{path.summary}</p>
+      <p class="path-progress">
+        <span>已上线 {completed} / {lessons.length}</span>
+        <span class="path-progress-bar" aria-hidden="true"><i style={`width: ${percent.toFixed(1)}%`}></i></span>
+      </p>
+    )}
+  </div>
+</header>

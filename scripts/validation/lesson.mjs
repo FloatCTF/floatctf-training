@@ -60,7 +60,8 @@ export function validateInterview(manifest, manifestPath, lessonId, sourceIds) {
 
 // manifest 形状 schema：未知字段一律报错，防止死数据再次聚积。
 const manifestShape = {
-  manifest: ['lessonPlan', 'researchStatus', 'sources', 'claims', 'evidence', 'commands', 'runnableExamples', 'interviewQuestions', 'visualNarrative', 'exercises', 'segments'],
+  manifest: ['lessonPlan', 'researchStatus', 'versionInfo', 'sources', 'claims', 'evidence', 'commands', 'runnableExamples', 'interviewQuestions', 'visualNarrative', 'exercises', 'segments'],
+  versionInfo: ['targetVersion', 'environment', 'verifiedAt', 'knownDifferences'],
   exercises: ['id', 'kind', 'title', 'question', 'answer', 'sourceIds'],
   segments: ['kind', 'title', 'heading', 'minutes', 'checkpoint'],
   lessonPlan: ['audience', 'durationMinutes', 'primaryMode', 'supportingModes', 'evidenceProfiles', 'assessments', 'motionLevel', 'visualStory', 'learningObjectives', 'prerequisites', 'safetyScope', 'verifiedAt'],
@@ -74,6 +75,10 @@ const manifestShape = {
   trap: ['text', 'sourceIds'],
   visualNarrative: ['kind', 'primaryAnimations', 'supportingInteractions', 'scrollReveals'],
 };
+
+// 验收题类型槽位：每个槽位至少一题。语言与工具课没有读数计算，用 prediction（预测输出）占同一槽位。
+// 类型标签在 src/components/lesson-exercises.astro 的 labels，新增类型两处同步。
+const exerciseKindSlots = [['mechanism'], ['calculation', 'prediction'], ['practice']];
 
 export function validateManifestShape(manifest, manifestPath, lessonId) {
   const checkObject = (value, allowlistKey, label) => {
@@ -102,6 +107,7 @@ export function validateManifestShape(manifest, manifestPath, lessonId) {
   }
   checkObject(manifest.lessonPlan, 'lessonPlan', 'lessonPlan');
   checkObject(manifest.researchStatus, 'researchStatus', 'researchStatus');
+  checkObject(manifest.versionInfo, 'versionInfo', 'versionInfo');
   checkObject(manifest.visualNarrative, 'visualNarrative', 'visualNarrative');
 }
 
@@ -116,8 +122,12 @@ export function validateLesson(topic) {
   validateManifestShape(manifest, manifestPath, lessonId);
   if ((plan.assessments || []).includes('exercise') && (topic.categoryId === 'ai-ml' || manifest.exercises)) {
     const exercises = manifest.exercises || [];
-    for (const kind of ['mechanism', 'calculation', 'practice']) {
-      if (!exercises.some((item) => item.kind === kind)) report(manifestPath, lessonId, 'exercises', `缺少 ${kind} 验收题。`, '补充机制判断、读数计算和小型实践。');
+    // 三题各验一种能力：机制判断、读数（计算或预测输出，二选一）、动手实践。
+    for (const kinds of exerciseKindSlots) {
+      if (!exercises.some((item) => kinds.includes(item.kind))) report(manifestPath, lessonId, 'exercises', `缺少 ${kinds.join(' 或 ')} 验收题。`, '补充机制判断、读数计算或预测输出、小型实践。');
+    }
+    for (const exercise of exercises) {
+      if (!exerciseKindSlots.flat().includes(exercise.kind)) report(manifestPath, lessonId, `exercises.${exercise.id}.kind`, `未知验收题类型：${exercise.kind}`, `使用 ${exerciseKindSlots.flat().join('、')} 之一。`);
     }
     for (const id of duplicates(exercises.map((item) => item.id))) report(manifestPath, lessonId, 'exercises.id', `重复题目 ID：${id}`, '使用唯一 ID。');
     for (const exercise of exercises) {

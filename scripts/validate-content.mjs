@@ -1,6 +1,7 @@
 import { readJson, issues, advisories, data, paths } from './validation/util.mjs';
 import { validateLessonShell } from './validation/shell.mjs';
 import { validateCatalog } from './validation/catalog.mjs';
+import { validateLearningPaths } from './validation/paths.mjs';
 import { validateLesson } from './validation/lesson.mjs';
 import { validateThemes } from './validation/themes.mjs';
 import { validateDeploymentConfig } from './validation/deploy.mjs';
@@ -16,9 +17,11 @@ try {
   data.themes = readJson(paths.themesPath);
   data.routingFixtures = readJson(paths.routesPath);
   data.catalog = readJson(paths.catalogPath);
+  data.learningPaths = readJson(paths.learningPathsPath);
 
   validateLessonShell();
   validateCatalog();
+  validateLearningPaths();
   for (const topic of data.catalog.topics.filter((item) => item.status === 'completed')) validateLesson(topic);
   validateThemes();
   validateDeploymentConfig();

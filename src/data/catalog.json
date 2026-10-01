@@ -201,6 +201,567 @@
         "ai-engineering-landscape"
       ],
       "order": 6
+    },
+    {
+      "id": "vm-kali-setup",
+      "slug": "vm-kali-setup",
+      "categoryId": "engineering-tools",
+      "series": "环境与命令行",
+      "title": "搭环境：虚拟机与 Kali",
+      "summary": "装好虚拟机，学会快照和网络模式，之后所有课都在这里做。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [],
+      "order": 1
+    },
+    {
+      "id": "shell-files-and-paths",
+      "slug": "shell-files-and-paths",
+      "categoryId": "engineering-tools",
+      "series": "环境与命令行",
+      "title": "命令行一：文件、路径与求助",
+      "summary": "在终端里走动、看文件、查帮助，不再依赖图形界面。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "vm-kali-setup"
+      ],
+      "order": 2
+    },
+    {
+      "id": "shell-permissions-and-pipes",
+      "slug": "shell-permissions-and-pipes",
+      "categoryId": "engineering-tools",
+      "series": "环境与命令行",
+      "title": "命令行二：权限、管道与进程",
+      "summary": "读懂 rwx，用管道把小命令接起来，会装软件、会结束进程。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-files-and-paths"
+      ],
+      "order": 3
+    },
+    {
+      "id": "git-local-workflow",
+      "slug": "git-local-workflow",
+      "categoryId": "engineering-tools",
+      "series": "Git",
+      "title": "Git 一：快照、暂存区与历史",
+      "summary": "提交、查看历史、撤销改动，理解三个区各存了什么。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes"
+      ],
+      "order": 4
+    },
+    {
+      "id": "git-branches-and-collaboration",
+      "slug": "git-branches-and-collaboration",
+      "categoryId": "engineering-tools",
+      "series": "Git",
+      "title": "Git 二：分支、远程与协作",
+      "summary": "开分支、合并、解决冲突，走通社团的 PR 流程。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "git-local-workflow"
+      ],
+      "order": 5
+    },
+    {
+      "id": "docker-images-and-containers",
+      "slug": "docker-images-and-containers",
+      "categoryId": "engineering-tools",
+      "series": "Docker",
+      "title": "Docker 一：镜像、容器、端口与卷",
+      "summary": "跑起别人做好的环境，弄清端口映射和数据放在哪。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes",
+        "network-basics"
+      ],
+      "order": 6
+    },
+    {
+      "id": "docker-compose-labs",
+      "slug": "docker-compose-labs",
+      "categoryId": "engineering-tools",
+      "series": "Docker",
+      "title": "Docker 二：Dockerfile 与 Compose",
+      "summary": "把自己的项目写成镜像，一条命令起一整套服务。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "docker-images-and-containers"
+      ],
+      "order": 7
+    },
+    {
+      "id": "data-representation",
+      "slug": "data-representation",
+      "categoryId": "cs-foundations",
+      "series": "数据与网络",
+      "title": "数据怎样表示：二进制、十六进制与编码",
+      "summary": "同一串字节怎样变成数字、文字、Base64 和 URL 编码。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-files-and-paths"
+      ],
+      "order": 1
+    },
+    {
+      "id": "network-basics",
+      "slug": "network-basics",
+      "categoryId": "cs-foundations",
+      "series": "数据与网络",
+      "title": "网络基础：IP、端口、DNS 与 TCP",
+      "summary": "一台机器怎样找到另一台，并和它上面的某个程序说话。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes"
+      ],
+      "order": 2
+    },
+    {
+      "id": "http-basics",
+      "slug": "http-basics",
+      "categoryId": "cs-foundations",
+      "series": "数据与网络",
+      "title": "HTTP：请求、响应、Cookie 与会话",
+      "summary": "用 curl 和开发者工具逐行读懂一次请求和响应。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "network-basics"
+      ],
+      "order": 3
+    },
+    {
+      "id": "html-css-dom",
+      "slug": "html-css-dom",
+      "categoryId": "cs-foundations",
+      "series": "Web 与数据库",
+      "title": "HTML、CSS 与 DOM 最小集",
+      "summary": "浏览器怎样把一段文本变成一棵可操作的树。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "http-basics"
+      ],
+      "order": 4
+    },
+    {
+      "id": "javascript-in-the-browser",
+      "slug": "javascript-in-the-browser",
+      "categoryId": "cs-foundations",
+      "series": "Web 与数据库",
+      "title": "浏览器里的 JavaScript",
+      "summary": "事件、DOM 操作与 fetch，认识同源策略。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "html-css-dom"
+      ],
+      "order": 5
+    },
+    {
+      "id": "sql-basics",
+      "slug": "sql-basics",
+      "categoryId": "cs-foundations",
+      "series": "Web 与数据库",
+      "title": "SQL 基础：用 SQLite 学查询",
+      "summary": "建表、增删改查、JOIN 和 UNION，在本地数据库里练熟。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-files-and-paths"
+      ],
+      "order": 6
+    },
+    {
+      "id": "python-variables-and-types",
+      "slug": "python-variables-and-types",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 一：运行模型、变量与类型",
+      "summary": "写下第一个脚本，弄清变量名和值之间的关系。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes"
+      ],
+      "order": 1
+    },
+    {
+      "id": "python-control-flow",
+      "slug": "python-control-flow",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 二：条件与循环",
+      "summary": "让程序做判断、重复做事，学会顺着执行流读代码。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-variables-and-types"
+      ],
+      "order": 2
+    },
+    {
+      "id": "python-functions-and-modules",
+      "slug": "python-functions-and-modules",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 三：函数、模块与虚拟环境",
+      "summary": "把代码拆成函数，用 import 复用别人的代码，用 venv 隔离依赖。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-control-flow"
+      ],
+      "order": 3
+    },
+    {
+      "id": "python-collections",
+      "slug": "python-collections",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 四：列表、字典与推导式",
+      "summary": "用合适的容器组织数据，一行写完常见的筛选和变换。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-functions-and-modules"
+      ],
+      "order": 4
+    },
+    {
+      "id": "python-strings-and-bytes",
+      "slug": "python-strings-and-bytes",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 五：字符串、bytes 与编码",
+      "summary": "分清文字和字节，熟练做十六进制、Base64 互转。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-collections",
+        "data-representation"
+      ],
+      "order": 5
+    },
+    {
+      "id": "python-files-and-exceptions",
+      "slug": "python-files-and-exceptions",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 六：文件、异常与读报错",
+      "summary": "读写文件，看懂 Traceback，自己定位出错的那一行。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-strings-and-bytes"
+      ],
+      "order": 6
+    },
+    {
+      "id": "python-network-scripting",
+      "slug": "python-network-scripting",
+      "categoryId": "programming",
+      "series": "Python",
+      "title": "Python 七：用 requests 和 socket 写脚本",
+      "summary": "让脚本代替浏览器发请求，自动化重复操作。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "python-files-and-exceptions",
+        "http-basics"
+      ],
+      "order": 7
+    },
+    {
+      "id": "c-compile-and-run",
+      "slug": "c-compile-and-run",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 一：从 hello.c 到可执行文件",
+      "summary": "预处理、编译、链接各做了什么，源码怎样变成进程。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes"
+      ],
+      "order": 8
+    },
+    {
+      "id": "c-types-and-control-flow",
+      "slug": "c-types-and-control-flow",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 二：类型、运算与控制流",
+      "summary": "整型有多宽、什么时候溢出，以及分支与循环。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-compile-and-run",
+        "data-representation"
+      ],
+      "order": 9
+    },
+    {
+      "id": "c-functions-and-stack",
+      "slug": "c-functions-and-stack",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 三：函数与栈帧",
+      "summary": "一次函数调用在栈上留下了什么，局部变量何时消失。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-types-and-control-flow"
+      ],
+      "order": 10
+    },
+    {
+      "id": "c-arrays-and-strings",
+      "slug": "c-arrays-and-strings",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 四：数组与字符串",
+      "summary": "连续内存、结尾的空字符，以及越界时实际发生的事。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-functions-and-stack"
+      ],
+      "order": 11
+    },
+    {
+      "id": "c-pointers",
+      "slug": "c-pointers",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 五：指针",
+      "summary": "地址、解引用和指针运算，用图把每一步画出来。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-arrays-and-strings"
+      ],
+      "order": 12
+    },
+    {
+      "id": "c-structs-and-heap",
+      "slug": "c-structs-and-heap",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 六：结构体与动态内存",
+      "summary": "malloc 和 free，认识泄漏、悬垂指针和重复释放。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-pointers"
+      ],
+      "order": 13
+    },
+    {
+      "id": "c-files-and-projects",
+      "slug": "c-files-and-projects",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 七：文件读写与多文件工程",
+      "summary": "头文件、分开编译和最小的 Makefile。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-structs-and-heap"
+      ],
+      "order": 14
+    },
+    {
+      "id": "c-debugging-memory-errors",
+      "slug": "c-debugging-memory-errors",
+      "categoryId": "programming",
+      "series": "C",
+      "title": "C 八：调试与内存错误",
+      "summary": "用 gdb 找到段错误的位置，说清程序为什么会崩。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "c-structs-and-heap"
+      ],
+      "order": 15
+    },
+    {
+      "id": "php-request-lifecycle",
+      "slug": "php-request-lifecycle",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 一：请求进来到页面出去",
+      "summary": "用内置服务器跑起第一个页面，看清 PHP 在一次请求里做了什么。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "http-basics",
+        "html-css-dom"
+      ],
+      "order": 16
+    },
+    {
+      "id": "php-types-and-arrays",
+      "slug": "php-types-and-arrays",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 二：类型、比较与数组",
+      "summary": "弱类型怎样自动转换，== 和 === 差在哪。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "php-request-lifecycle"
+      ],
+      "order": 17
+    },
+    {
+      "id": "php-forms-and-sessions",
+      "slug": "php-forms-and-sessions",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 三：表单、Cookie 与会话",
+      "summary": "接收用户输入，用 Session 记住登录状态。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "php-types-and-arrays"
+      ],
+      "order": 18
+    },
+    {
+      "id": "php-functions-and-files",
+      "slug": "php-functions-and-files",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 四：函数、include 与文件",
+      "summary": "把页面拆成多个文件，读写服务器上的文件。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "php-forms-and-sessions"
+      ],
+      "order": 19
+    },
+    {
+      "id": "php-pdo-database",
+      "slug": "php-pdo-database",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 五：PDO 与预处理",
+      "summary": "连上数据库，用参数绑定的方式执行查询。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "php-functions-and-files",
+        "sql-basics"
+      ],
+      "order": 20
+    },
+    {
+      "id": "php-objects-and-serialization",
+      "slug": "php-objects-and-serialization",
+      "categoryId": "programming",
+      "series": "PHP",
+      "title": "PHP 六：面向对象与序列化",
+      "summary": "类、魔术方法，以及对象怎样被存成字符串再还原。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "php-pdo-database"
+      ],
+      "order": 21
+    },
+    {
+      "id": "java-jvm-and-objects",
+      "slug": "java-jvm-and-objects",
+      "categoryId": "programming",
+      "series": "Java",
+      "title": "Java 一：JDK、JVM、类与对象",
+      "summary": "编译、运行一个 Java 程序，认识类和对象。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "shell-permissions-and-pipes"
+      ],
+      "order": 22
+    },
+    {
+      "id": "java-web-project-reading",
+      "slug": "java-web-project-reading",
+      "categoryId": "programming",
+      "series": "Java",
+      "title": "Java 二：读懂一个 Java Web 项目",
+      "summary": "Maven 目录结构，以及一个请求怎样走到某个方法。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "java-jvm-and-objects",
+        "http-basics"
+      ],
+      "order": 23
+    },
+    {
+      "id": "guestbook-capstone",
+      "slug": "guestbook-capstone",
+      "categoryId": "custom",
+      "title": "综合项目：留言板",
+      "summary": "用 Git 管理、PHP 加 SQLite 实现、Docker 部署，下学期当本地靶子用。",
+      "difficulty": "beginner",
+      "status": "planned",
+      "pagePath": null,
+      "prerequisites": [
+        "git-branches-and-collaboration",
+        "php-pdo-database",
+        "docker-compose-labs"
+      ],
+      "order": 1
     }
   ]
 }

@@ -1,6 +1,7 @@
 ---
 import DefaultPageTitle from '@astrojs/starlight/components/PageTitle.astro';
 import CategoryHero from './category-hero.astro';
+import PathHero from './path-hero.astro';
 
 interface RouteData {
   entry: {
@@ -16,11 +17,14 @@ interface RouteData {
 const { entry } = (Astro.locals as unknown as { starlightRoute: RouteData }).starlightRoute;
 const isLesson = entry.data.pageType === 'lesson';
 const isCategory = entry.data.pageType === 'category';
+const isPath = entry.data.pageType === 'path';
 ---
 {isLesson ? (
   <h1 id="_top" class="lesson-screen-reader-title">{entry.data.title}</h1>
   ) : isCategory ? (
     <CategoryHero title={entry.data.title} description={entry.data.description} entryId={entry.id} />
+  ) : isPath ? (
+    <PathHero title={entry.data.title} entryId={entry.id} />
   ) : (
   <DefaultPageTitle {...Astro.props}><slot /></DefaultPageTitle>
 )}

@@ -11,6 +11,8 @@ export interface CatalogCategory {
 export interface CatalogTopic {
   id: string;
   categoryId: string;
+  /** 分类内的系列分组（如 Python、C）。同一分类要么全部登记，要么全部不登记。 */
+  series?: string;
   title: string;
   summary: string;
   difficulty: string;
@@ -45,6 +47,23 @@ export function topicsByCategory(categoryId: string): CatalogTopic[] {
   return catalog.topics
     .filter((topic) => topic.categoryId === categoryId)
     .sort((a, b) => a.order - b.order);
+}
+
+export interface CatalogSeries {
+  name: string;
+  topics: CatalogTopic[];
+}
+
+/** 按系列首次出现的顺序分组；分类没有登记系列时返回空数组。 */
+export function seriesByCategory(categoryId: string): CatalogSeries[] {
+  const groups: CatalogSeries[] = [];
+  for (const topic of topicsByCategory(categoryId)) {
+    if (!topic.series) continue;
+    const group = groups.find((item) => item.name === topic.series);
+    if (group) group.topics.push(topic);
+    else groups.push({ name: topic.series, topics: [topic] });
+  }
+  return groups;
 }
 
 export function completedTopics(): CatalogTopic[] {

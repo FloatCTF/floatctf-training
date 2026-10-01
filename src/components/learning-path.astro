@@ -1,0 +1,50 @@
+---
+import { findCategory } from '../data/catalog';
+import { findPath, nextLesson, resolveStages } from '../data/paths';
+import { withBase } from '../lib/base-url';
+import { romanNumeral } from '../lib/roman-numeral';
+
+interface Props { pathId: string }
+const { pathId } = Astro.props;
+const path = findPath(pathId);
+if (!path) throw new Error(`Unknown learning path: ${pathId}`);
+const stages = resolveStages(path);
+const next = nextLesson(path);
+const pad = (value: number) => String(value).padStart(2, '0');
+---
+<div class="learning-path not-content">
+  {stages.map((stage, index) => {
+    const completed = stage.lessons.filter((lesson) => lesson.topic.status === 'completed').length;
+    return (
+      <section class="path-stage" aria-labelledby={`path-stage-${index + 1}`}>
+        <span class="path-stage-number" aria-hidden="true">{romanNumeral(index + 1)}</span>
+        <div class="path-stage-body">
+          <header class="path-stage-head">
+            <h2 id={`path-stage-${index + 1}`}>{stage.name}</h2>
+            <p>{stage.goal}</p>
+            <span class="path-stage-count">{completed} / {stage.lessons.length} 已上线</span>
+          </header>
+          <ol class="path-lessons" start={stage.lessons[0]?.number}>
+            {stage.lessons.map(({ number, topic }) => {
+              const isDone = topic.status === 'completed' && Boolean(topic.pagePath);
+              const isNext = next?.number === number;
+              return (
+                <li class:list={['path-lesson', isDone ? 'path-lesson-completed' : 'path-lesson-planned']}>
+                  <span class="path-lesson-number" aria-hidden="true">{pad(number)}</span>
+                  {isDone && topic.pagePath
+                    ? <a class="path-lesson-title" href={withBase(topic.pagePath)}>{topic.title}</a>
+                    : <span class="path-lesson-title">{topic.title}</span>}
+                  <span class="path-lesson-leader" aria-hidden="true"></span>
+                  <span class="path-lesson-series">{topic.series ?? findCategory(topic.categoryId)?.name}</span>
+                  {isNext
+                    ? <span class="path-lesson-next">下一课</span>
+                    : <span class="path-lesson-status">{isDone ? '已上线 →' : '规划中'}</span>}
+                </li>
+              );
+            })}
+          </ol>
+        </div>
+      </section>
+    );
+  })}
+</div>

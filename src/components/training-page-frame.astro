@@ -8,7 +8,7 @@ interface RouteData {
 
 const route = (Astro.locals as unknown as { starlightRoute: RouteData }).starlightRoute;
 const pageType = route.entry.data.pageType || 'default';
-const showSidebar = route.hasSidebar && !['home', 'category', 'lesson'].includes(pageType);
+const showSidebar = route.hasSidebar && !['home', 'category', 'lesson', 'path'].includes(pageType);
 ---
 
 <div class:list={['page', 'sl-flex', `page-${pageType}`]} data-page-type={pageType}>
@@ -64,7 +64,8 @@ const showSidebar = route.hasSidebar && !['home', 'category', 'lesson'].includes
     }
     .page-home .main-frame,
     .page-category .main-frame,
-    .page-lesson .main-frame { padding-inline-start: 0; }
+    .page-lesson .main-frame,
+    .page-path .main-frame { padding-inline-start: 0; }
     @media (min-width: 50rem) {
       .sidebar-content::after { content: ''; padding-bottom: 1px; }
       .sidebar-pane {

@@ -3,7 +3,7 @@ const route = (Astro.locals as unknown as {
   starlightRoute: { toc?: unknown; entry: { data: { pageType?: string } } };
 }).starlightRoute;
 const pageType = route.entry.data.pageType || 'default';
-const showTableOfContents = Boolean(route.toc) && !['home', 'category', 'lesson'].includes(pageType);
+const showTableOfContents = Boolean(route.toc) && !['home', 'category', 'lesson', 'path'].includes(pageType);
 ---
 
 <div class="lg:sl-flex">
@@ -39,7 +39,7 @@ const showTableOfContents = Boolean(route.toc) && !['home', 'category', 'lesson'
         order: 1;
         width: min(calc(100% - var(--sl-sidebar-width)), calc(var(--sl-content-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2));
       }
-      :global(.page-home, .page-category, .page-lesson) .main-pane {
+      :global(.page-home, .page-category, .page-lesson, .page-path) .main-pane {
         --sl-content-margin-inline: auto;
         order: initial;
         width: 100%;

@@ -1,0 +1,24 @@
+---
+import { findPath, nextLesson, pathLessons } from '../data/paths';
+import { withBase } from '../lib/base-url';
+import { Icon } from '@astrojs/starlight/components';
+
+interface Props { pathId: string }
+const { pathId } = Astro.props;
+const path = findPath(pathId);
+if (!path) throw new Error(`Unknown learning path: ${pathId}`);
+const lessons = pathLessons(path);
+const completed = lessons.filter((lesson) => lesson.topic.status === 'completed').length;
+const next = nextLesson(path);
+---
+<a class="path-entry" href={withBase(path.pagePath)}>
+  <span class="path-entry-heading">
+    <span class="path-entry-kicker">零基础从这里开始</span>
+    <span class="path-entry-title">{path.title}</span>
+  </span>
+  <span class="path-entry-facts">
+    <span>{path.stages.length} 个阶段 · {lessons.length} 课 · 已上线 {completed}</span>
+    {next && <span class="path-entry-next">下一课　{String(next.number).padStart(2, '0')}　{next.topic.title}</span>}
+  </span>
+  <span class="path-entry-arrow" aria-hidden="true"><Icon name="right-arrow" size="1rem" /></span>
+</a>
