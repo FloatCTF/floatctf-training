@@ -1,12 +1,7 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "sql-injection",
-    "slug": "sql-injection",
-    "categoryId": "web-security",
-    "title": "SQL 注入：从字符串拼接到参数化查询",
     "audience": "具有基础 SQL 与 Web 后端知识的本科生",
-    "durationMinutes": 90,
+    "durationMinutes": 50,
     "primaryMode": "mechanism",
     "supportingModes": [
       "code",
@@ -51,6 +46,7 @@
     {
       "id": "owasp-sqli-prevention",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "SQL Injection Prevention Cheat Sheet",
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
@@ -72,6 +68,7 @@
     {
       "id": "cwe-89",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command",
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/89.html",
@@ -127,6 +124,7 @@
     {
       "id": "node-sqlite",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "SQLite",
       "publisher": "Node.js",
       "url": "https://nodejs.org/api/sqlite.html",
@@ -252,10 +250,6 @@
       ]
     }
   ],
-  "assessments": [
-    "interview",
-    "lab-check"
-  ],
   "visualNarrative": {
     "kind": "code-compare",
     "primaryAnimations": 0,
@@ -264,10 +258,10 @@
   },
   "runnableExamples": [
     {
-      "id": "sql-injection-demo",
-      "path": "examples/sql-injection-demo.mjs",
-      "command": "node examples/sql-injection-demo.mjs",
-      "expectedResult": "真实 SQLite 查询返回被绕过的管理员记录；同一输入经参数绑定后返回 null，合法凭据仍能查询成功。"
+      "id": "sql-binding-check",
+      "path": "public/sql-binding-check.mjs",
+      "command": "node public/sql-binding-check.mjs",
+      "expectedResult": "5 组防御检查通过，进程退出码为 0；覆盖普通值、引号、分号、空结果、标识符映射与数量边界。"
     }
   ],
   "interviewQuestions": [

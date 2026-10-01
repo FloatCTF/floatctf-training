@@ -1,12 +1,7 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "rce",
-    "slug": "rce",
-    "categoryId": "web-security",
-    "title": "RCE：命令注入与代码执行的信任边界",
     "audience": "理解进程、shell 与一种后端语言基础的本科生",
-    "durationMinutes": 90,
+    "durationMinutes": 40,
     "primaryMode": "mechanism",
     "supportingModes": [
       "code",
@@ -51,6 +46,7 @@
     {
       "id": "owasp-command-injection",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "OS Command Injection",
       "publisher": "OWASP",
       "url": "https://owasp.org/www-community/attacks/Command_Injection",
@@ -66,6 +62,7 @@
     {
       "id": "owasp-command-defense",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "OS Command Injection Defense Cheat Sheet",
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/OS_Command_Injection_Defense_Cheat_Sheet.html",
@@ -83,6 +80,7 @@
     {
       "id": "cwe-78",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "CWE-78: Improper Neutralization of Special Elements used in an OS Command",
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/78.html",
@@ -143,6 +141,7 @@
     {
       "id": "node-child-process",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Child process",
       "publisher": "Node.js",
       "url": "https://nodejs.org/api/child_process.html",
@@ -239,10 +238,6 @@
         "log4j-security"
       ]
     }
-  ],
-  "assessments": [
-    "interview",
-    "lab-check"
   ],
   "visualNarrative": {
     "kind": "code-compare",

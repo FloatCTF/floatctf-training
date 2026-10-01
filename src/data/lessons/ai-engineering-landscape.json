@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "ai-engineering-landscape",
-    "slug": "ai-engineering-landscape",
-    "categoryId": "ai-ml",
-    "title": "AI 工程全景：从一次调用到生产系统",
     "audience": "已经理解 AI Agent 工程方法，希望建立生产级 AI 应用完整工程地图的本科生和工程师",
     "durationMinutes": 90,
     "primaryMode": "concept",
@@ -16,12 +11,12 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "simulation",
-    "visualStory": "五层技能栈建立全景地图；RAG 二维检索沙盒作为主交互，让 query、余弦相似度与 top-k 在同一空间中可操作；LoRA 窄矩阵、教师学生蒸馏与请求全链路用静态图示收束，步骤清单保留请求旅程的文字细节",
+    "visualStory": "六层技能栈建立全景地图，执行编排标明由前课覆盖，本课重点展开其余五层；RAG 二维检索沙盒作为主交互，让 query、余弦相似度与 top-k 在同一空间中可操作；LoRA 窄矩阵、教师学生蒸馏与请求全链路用静态图示收束，步骤清单保留请求旅程的文字细节",
     "learningObjectives": [
-      "用五层框架给 2026 年常见的 AI 工程名词定位：能力接入、知识与记忆、模型定制、质量与安全、运行与成本",
+      "用六层框架定位 AI 工程分工，重点解释能力接入、知识与记忆、模型定制、质量与安全、运行与成本五层；执行编排衔接前课",
       "解释 Function Calling 的调用契约与 MCP 的关系，并说明 Stateless MCP 解决的水平扩展问题",
       "解释 RAG 管线的检索与生成分工、向量数据库的近似最近邻索引作用和 Agent 记忆分层的读写机制",
       "比较 Prompt、RAG 与微调三种优化手段的适用条件，并说明 LoRA、蒸馏与合成数据在模型定制中的位置",
@@ -35,6 +30,61 @@
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "给六层定位",
+      "question": "全景共几层？执行编排在哪门课详讲？本课的检索、微调、评测分别属于哪层？",
+      "answer": "全景六层，执行编排由《AI Agent 工程方法》详讲；检索属于知识与记忆，微调属于模型定制，评测属于质量与安全。本课重点展开其余五层。",
+      "sourceIds": [
+        "rag-paper"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "计算检索噪声",
+      "question": "教学检索结果中，top-2 有 2 段相关材料；扩展为 top-5 后仍只有原来的 2 段相关。相关材料占比分别是多少？",
+      "answer": "top-2 为 2/2 = 100%，top-5 为 2/5 = 40%。新增 3 段增加输入长度和噪声；本例相关材料数量保持为 2。应同时检查相关材料覆盖、排序和生成质量。",
+      "sourceIds": [
+        "rag-paper"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "选择 top-k",
+      "question": "在检索沙盒固定同一个 query，分别设置较小和较大的 top-k，记录入选片段、相关性及上下文长度，说明选择依据。",
+      "answer": "合格记录包含两种 k 的候选列表与变化。优先保留能支持问题的材料，检查新增片段是否增加证据覆盖，并记录噪声和输入长度的代价。该沙盒使用示意向量，实际任务需使用固定评测集复核。",
+      "sourceIds": [
+        "rag-paper"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "六层地图与接入",
+      "heading": "一、",
+      "minutes": 20,
+      "checkpoint": "说明前课与本课的分工。"
+    },
+    {
+      "kind": "动手",
+      "title": "检索与定制",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "比较 top-k 的证据覆盖和噪声。"
+    },
+    {
+      "kind": "进阶",
+      "title": "评测与运营",
+      "heading": "五、",
+      "minutes": 35,
+      "checkpoint": "串起请求旅程，完成三题自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -59,16 +109,11 @@
     ],
     "notes": "课程优先采用原始论文、协议规范和官方文档。RAG 2.0 标注为 Contextual AI 的厂商说法，Stateless MCP 绑定 MCP 规范 2026-07-28 修订，OTel GenAI 语义约定标注 Development 状态；三者都不写成边界统一的行业标准。缓存计费倍率、OWASP 排名与 LLM-as-judge 一致率均在原始页面核对。2026-08-23 完成 RAG 检索沙盒、LoRA、蒸馏和请求旅程视觉重构；蒸馏图比例明确标注为教学示意；phi-4 数据配比按报告表格写为 40% synthetic 加 15% web rewrites。"
   },
-  "versionInfo": {
-    "targetVersion": "AI 生产工程术语与官方文档，2026-08-13 核验快照",
-    "environment": "模型 API 应用、RAG 系统、Agent 系统与多模型生产部署；正文使用静态案例与计费数字直接展示机制",
-    "verifiedAt": "2026-08-28",
-    "knownDifferences": "RAG 2.0 与 Stateless MCP 属于厂商或规范新说法，行业边界未统一；OTel GenAI 语义约定处于 Development 状态且字段仍在变化；各家模型价格、缓存倍率与网关能力会持续调整。"
-  },
   "sources": [
     {
       "id": "openai-chatgpt-launch",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Introducing ChatGPT",
       "publisher": "OpenAI",
       "url": "https://openai.com/index/chatgpt/",
@@ -94,6 +139,7 @@
     {
       "id": "rag2-contextual",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Introducing RAG 2.0",
       "publisher": "Contextual AI",
       "url": "https://contextual.ai/introducing-rag2/",
@@ -130,6 +176,7 @@
     {
       "id": "openai-accuracy-guide",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Optimizing LLM Accuracy",
       "publisher": "OpenAI Developers",
       "url": "https://developers.openai.com/api/docs/guides/optimizing-llm-accuracy",
@@ -143,6 +190,7 @@
     {
       "id": "openai-sft-guide",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Supervised fine-tuning",
       "publisher": "OpenAI Developers",
       "url": "https://developers.openai.com/api/docs/guides/supervised-fine-tuning",
@@ -197,7 +245,8 @@
       "publisher": "Nature",
       "url": "https://www.nature.com/articles/s41586-024-07566-y",
       "publishedAt": "2024-07-24",
-      "accessedAt": "2026-08-13",
+      "accessedAt": "2026-09-22",
+      "notes": "核验使用 Nature 论文摘要与正文定义，并对照 arXiv:2305.17493。范围是不加区分的递归训练，覆盖 GMM、VAE 与 LLM。",
       "supports": [
         "claim-model-collapse",
         "evidence-model-collapse-paper"
@@ -206,6 +255,7 @@
     {
       "id": "anthropic-agent-evals",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Demystifying evals for AI agents",
       "publisher": "Anthropic",
       "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
@@ -230,6 +280,7 @@
     {
       "id": "nemo-guardrails-docs",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "NVIDIA NeMo Guardrails Library Overview",
       "publisher": "NVIDIA",
       "url": "https://docs.nvidia.com/nemo/guardrails/about-nemo-guardrails-library/overview",
@@ -255,12 +306,41 @@
     {
       "id": "otel-genai-repo",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "OpenTelemetry GenAI semantic conventions repository",
       "publisher": "OpenTelemetry",
       "url": "https://github.com/open-telemetry/semantic-conventions-genai",
       "publishedAt": "2026-08-13",
       "accessedAt": "2026-08-28",
-      "notes": "持续更新仓库；publishedAt 记录本次核验快照日期。GenAI 语义约定于 2026 年 6 月从主仓库迁入该独立仓库。",
+      "notes": "持续更新仓库；publishedAt 记录迁移事实的核验日期。Development 状态以规范页为准，不由本仓库 README 单独证明。",
+      "supports": [
+        "claim-otel-genai-development"
+      ]
+    },
+    {
+      "id": "otel-genai-spec",
+      "kind": "official-doc",
+      "dateType": "snapshot",
+      "title": "Semantic conventions for generative AI systems",
+      "publisher": "OpenTelemetry",
+      "url": "https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/README.md",
+      "publishedAt": "2026-09-22",
+      "accessedAt": "2026-09-22",
+      "notes": "2026-09-22 读取 main 分支该页，状态为 Development。该页没有 v1.37.0 里那条默认保留旧版本的迁移要求。",
+      "supports": [
+        "claim-otel-genai-development"
+      ]
+    },
+    {
+      "id": "otel-genai-v137",
+      "kind": "official-doc",
+      "dateType": "snapshot",
+      "title": "Semantic conventions for generative AI systems (v1.37.0)",
+      "publisher": "OpenTelemetry",
+      "url": "https://github.com/open-telemetry/semantic-conventions/blob/v1.37.0/docs/gen-ai/README.md",
+      "publishedAt": "2025-08-25",
+      "accessedAt": "2026-09-22",
+      "notes": "v1.37.0 文档写明：采用 v1.36.0 或更早 GenAI 约定的 instrumentation 默认不应改发最新实验版本。",
       "supports": [
         "claim-otel-genai-development"
       ]
@@ -268,6 +348,7 @@
     {
       "id": "cloudflare-ai-gateway",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Cloudflare AI Gateway overview",
       "publisher": "Cloudflare",
       "url": "https://developers.cloudflare.com/ai-gateway/",
@@ -281,6 +362,7 @@
     {
       "id": "anthropic-prompt-caching",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Prompt caching",
       "publisher": "Anthropic",
       "url": "https://platform.claude.com/docs/en/docs/build-with-claude/prompt-caching",
@@ -294,6 +376,7 @@
     {
       "id": "openai-function-calling",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Function calling",
       "publisher": "OpenAI Developers",
       "url": "https://developers.openai.com/api/docs/guides/function-calling",
@@ -307,6 +390,7 @@
     {
       "id": "mcp-streamable-http",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "MCP Streamable HTTP transport",
       "publisher": "Model Context Protocol",
       "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http",
@@ -390,7 +474,7 @@
     },
     {
       "id": "claim-model-collapse",
-      "text": "Nature 2024 论文证明：无差别使用模型生成数据递归训练会引发模型坍缩，原始分布的尾部信息不可逆地消失，真实人类数据的价值因此上升。",
+      "text": "Nature 2024 表明：不加区分地把模型生成数据递归用作下一代训练集，会在 GMM、VAE 和 LLM 上造成分布退化。收敛到点质量分布是特定理论设定下的长期结论；有限代实验的坍缩程度取决于具体条件。论文强调真实人类交互数据的价值。这不是任何合成数据都会坍缩。",
       "sourceIds": [
         "model-collapse-nature"
       ]
@@ -425,9 +509,11 @@
     },
     {
       "id": "claim-otel-genai-development",
-      "text": "OpenTelemetry 为生成式 AI 制定 gen_ai 语义约定，覆盖模型调用、Agent 与工具的 span 和 token 用量属性；该约定已迁入独立仓库，整体仍处于 Development 状态。",
+      "text": "OpenTelemetry gen_ai 语义约定覆盖模型调用、Agent 与工具的 span 和 token 用量。约定已迁入独立仓库。2026-09-22 的现行文档仍标为 Development。v1.37.0 的迁移说明只要求采用 v1.36.0 或更早约定的 instrumentation 默认保留原版本。",
       "sourceIds": [
-        "otel-genai-repo"
+        "otel-genai-repo",
+        "otel-genai-spec",
+        "otel-genai-v137"
       ]
     },
     {
@@ -458,9 +544,6 @@
         "mcp-streamable-http"
       ]
     }
-  ],
-  "assessments": [
-    "none"
   ],
   "visualNarrative": {
     "kind": "retrieval-sandbox",
@@ -497,7 +580,7 @@
       "sourceIds": [
         "model-collapse-nature"
       ],
-      "summary": "Nature 论文证明递归训练引发模型坍缩，支撑合成数据治理的边界结论。"
+      "summary": "Nature 2024 在 GMM、VAE 和 LLM 上观察到递归训练造成的分布退化。收敛到点质量分布是特定理论设定下的长期结论，有限代实验的程度取决于条件。筛选与混入真实数据不是该文已证明的解药。"
     }
   ]
 }

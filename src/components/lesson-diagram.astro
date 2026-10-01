@@ -1,0 +1,48 @@
+---
+// 课程图示骨架：eyebrow + 标题 + 图身 + 尾注的公共 interface。
+// headered 决定 eyebrow/标题是否包进 <header>（与拆分前的两种 DOM 形状一一对应）。
+interface Props {
+  eyebrow: string;
+  title: string;
+  /** 无障碍名称：与 aria-labelledby 二选一。 */
+  ariaLabel?: string;
+  labelledBy?: string;
+  titleId?: string;
+  class?: string;
+  headered?: boolean;
+  note?: string;
+  noteClass?: string;
+}
+
+const {
+  eyebrow,
+  title,
+  ariaLabel,
+  labelledBy,
+  titleId,
+  class: className,
+  headered = false,
+  note,
+  noteClass,
+} = Astro.props;
+
+const sectionClass = className ? `${className} lesson-diagram not-content` : 'lesson-diagram not-content';
+const ariaAttrs = labelledBy ? { 'aria-labelledby': labelledBy } : { 'aria-label': ariaLabel };
+const noteClassList = noteClass ? `lesson-diagram__note ${noteClass}` : 'lesson-diagram__note';
+---
+
+<section class={sectionClass} {...ariaAttrs}>
+  {headered ? (
+    <header>
+      <p class="lesson-diagram__eyebrow">{eyebrow}</p>
+      <h3 id={titleId} class="lesson-diagram__title">{title}</h3>
+    </header>
+  ) : (
+    <>
+      <p class="lesson-diagram__eyebrow">{eyebrow}</p>
+      <h3 id={titleId} class="lesson-diagram__title">{title}</h3>
+    </>
+  )}
+  <slot />
+  {note && <p class={noteClassList}>{note}</p>}
+</section>

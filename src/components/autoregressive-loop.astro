@@ -13,10 +13,9 @@ const arrows: [number, number, number, number][] = [
   [110 + W / 2 + 4, 210, 340 - W / 2 - 4, 210],
   [340, 210 - H / 2 - 4, 340, 60 + H / 2 + 4],
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-<section class="lesson-diagram not-content" aria-label="自回归生成循环">
-  <p class="lesson-diagram__eyebrow">AUTOREGRESSIVE LOOP / 一次一个</p>
-  <h3 class="lesson-diagram__title">为什么回答是一个字一个字蹦出来的</h3>
+<LessonDiagram eyebrow="AUTOREGRESSIVE LOOP / 一次一个" title="为什么回答是一个字一个字蹦出来的" ariaLabel="自回归生成循环" note="生成 100 个 token 就是 100 圈循环，这是长回答更慢、推理成本按 token 计费的原因。">
   <svg viewBox="0 0 560 290" role="img" aria-label="自回归循环：当前上下文送入模型，得到下一 token 的概率分布，采样选出一个 token，拼回上下文再进入下一轮，循环直到结束。">
     <title>自回归生成循环</title>
     <defs>
@@ -38,5 +37,5 @@ const arrows: [number, number, number, number][] = [
     <text x="309" y="22" text-anchor="middle" class="diagram-lane-label">选出的 token 拼回上下文</text>
     <text x="196" y="248" class="diagram-lane-label">每个新 token 都要完整走一圈前向计算</text>
   </svg>
-  <p class="lesson-diagram__note">生成 100 个 token 就是 100 圈循环，这是长回答更慢、推理成本按 token 计费的原因。</p>
-</section>
+  
+</LessonDiagram>

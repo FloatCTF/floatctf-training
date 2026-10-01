@@ -3,12 +3,6 @@ title: RCE：命令注入与代码执行的信任边界
 description: 区分命令注入与代码执行，演示 shell 拼接风险，并对照公开 RCE 案例设计防御
 pageType: lesson
 template: splash
-lessonId: rce
-categoryId: web-security
-sources: ["owasp-command-injection", "owasp-command-defense", "cwe-78", "node-child-process", "cve-2021-44228", "log4j-security", "cve-2022-22965", "spring-cve-2022-22965", "tib3rius-interview"]
-motionLevel: explanatory
-safetyScope: authorized-lab
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -19,8 +13,8 @@ import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
-import InterviewAccordion from '../../../components/interview-accordion';
-import ScrollReveal from '../../../components/scroll-reveal';
+import InterviewAccordion from '../../../components/interview-accordion.astro';
+import ScrollReveal from '../../../components/scroll-reveal.astro';
 import manifest from '../../../data/lessons/rce.json';
 
 export const vulnerableSnippet = `// 危险：经 shell 拼接主机名
@@ -72,6 +66,8 @@ CWE-78 描述的是 OS 命令中特殊元素中和不足；OWASP 给出攻击说
 
 ## 本地演示
 
+本实验验证参数构造阶段的输入校验与 argv 结构。实际进程权限、目标程序选项、超时和输出上限需要在部署环境另行验收。仓库内的命令在项目根目录运行。
+
 ```bash
 node examples/command-injection-demo.mjs
 ```
@@ -115,14 +111,14 @@ node examples/command-injection-demo.mjs
 CVE-2021-44228 影响特定 Log4j Core 版本：攻击者控制进入日志的消息或参数后，JNDI Lookup 可能从 LDAP 加载并执行代码；Apache 为 Java 6、7、8 及以上分支分别发布了修复版本。CVE-2022-22965 的公开利用场景要求 JDK 9 及以上、受影响 Spring Framework、`spring-webmvc` 或 `spring-webflux`、传统 WAR 部署和特定 Servlet 容器；常见 Spring Boot 可执行 JAR 不受该公开利用链影响。（来源：[CVE-2021-44228](#source-cve-2021-44228)、[Apache 公告](#source-log4j-security)、[CVE-2022-22965](#source-cve-2022-22965)、[Spring 公告](#source-spring-cve-2022-22965)）
 
 <Callout variant="warning" title="授权实验边界">
-本课演示只构造命令字符串与 argv，不在培训环境执行反弹 shell、持久化或对公共目标的利用。复现真实 CVE 请使用下一课的隔离靶场流程。
+本课演示只构造命令字符串与 argv，不在培训环境执行反弹 shell、持久化或对公共目标的利用。本站还没有隔离靶场课。复现真实 CVE 只能在你自己准备的、已获授权的隔离环境里做，不能把公共目标当实验对象。
 </Callout>
 
 ## 分层防御
 
 按 OWASP 命令注入防御思路：优先使用语言库替代 OS 命令；必须调用时固定程序、禁用 shell、使用 argv、校验每个参数的语义，并设置最小权限、超时和输出上限。参数数组仍需防止选项注入。（来源：[OWASP Defense](#source-owasp-command-defense)、[Node.js](#source-node-child-process)）
 
-<ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
+<ScrollReveal motionLevel="explanatory" label="修复复盘">
   <p>修复回归覆盖原参数位置、二次封装函数、异步任务和运维接口，并检查 shell 配置、选项注入、超时、输出上限和进程权限。</p>
 </ScrollReveal>
 
@@ -135,7 +131,7 @@ CVE-2021-44228 影响特定 Log4j Core 版本：攻击者控制进入日志的�
 
 ## 面试检查
 
-<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+<InterviewAccordion questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
 RCE 的根因是输入越过应用预期的执行边界。命令路径固定程序并禁用 shell；代码路径删除不必要的动态求值；组件路径建立版本盘点和升级流程。

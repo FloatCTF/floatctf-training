@@ -1,0 +1,1126 @@
+/* 学习模拟器与共享账本（learning-sim、backprop、context-window、RAG、LoRA 等）。
+   本文件由 components.css 按原始级联顺序 @import；顺序即优先级契约，勿重排。 */
+.learning-sim-ledger {
+  border-block-start: var(--training-rule-heavy);
+  font-family: var(--training-font-code);
+  font-size: 0.8125rem;
+  overflow-x: auto;
+}
+
+.learning-sim-ledger-row {
+  display: grid;
+  grid-template-columns: 0.45fr repeat(var(--ledger-extra-columns, 4), minmax(5rem, 1fr));
+  min-inline-size: 31rem;
+}
+
+.learning-sim-ledger-row > span {
+  border-block-end: var(--training-rule-light);
+  padding: 0.7rem 0.85rem;
+}
+
+.learning-sim-ledger-head {
+  background: var(--training-table-header);
+  color: var(--training-table-header-text);
+  font-weight: 800;
+}
+
+/* Backprop playground */
+.bp-intro {
+  color: var(--training-muted);
+  font-size: 0.88rem;
+  line-height: 1.8;
+  margin: 0 0 var(--training-space-3);
+}
+
+.bp-figure svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.bp-figure figcaption {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+  line-height: 1.7;
+  margin-block-start: 0.5rem;
+}
+
+.bp-node {
+  fill: color-mix(in srgb, var(--training-heading) calc(var(--act, 0) * 100%), transparent);
+  stroke: var(--training-heading);
+  stroke-width: 2;
+  transition: fill 260ms ease;
+}
+
+.bp-node--loss {
+  stroke: var(--training-danger-text);
+}
+
+.bp-node-value {
+  fill: var(--training-heading);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.bp-weight {
+  fill: var(--training-muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bp-calc {
+  fill: var(--training-muted);
+  font-size: 12.5px;
+}
+
+.bp-loss-wire {
+  stroke: var(--training-danger-text);
+  stroke-width: 2;
+}
+
+.bp-chip rect {
+  fill: var(--training-page-bg);
+  stroke: var(--training-accent);
+  stroke-width: 1.4;
+}
+
+.bp-chip text {
+  fill: var(--training-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.bp-chip--zero rect {
+  stroke: var(--training-border);
+}
+
+.bp-chip--zero text {
+  fill: var(--training-muted);
+  font-weight: 500;
+}
+
+.bp-chip--loss rect {
+  stroke: var(--training-danger-text);
+}
+
+.bp-chip--loss text {
+  fill: var(--training-danger-text);
+}
+
+.bp-gate {
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.bp-gate--open {
+  stroke: var(--training-success-text);
+}
+
+.bp-gate--closed {
+  stroke: var(--training-danger-text);
+}
+
+.bp-gate-label {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.bp-gate-label--open {
+  fill: var(--training-success-text);
+}
+
+.bp-gate-label--closed {
+  fill: var(--training-danger-text);
+}
+
+.bp-stage-note {
+  align-items: baseline;
+  border-block-start: var(--training-rule-light);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: var(--training-space-3) 0 0;
+  padding-block-start: 0.8rem;
+}
+
+.bp-stage-note strong {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.78rem;
+  white-space: nowrap;
+}
+
+.bp-stage-note span {
+  font-size: 0.86rem;
+  line-height: 1.8;
+}
+
+.bp-controls {
+  gap: 0.6rem;
+}
+
+.bp-progress {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0;
+}
+
+.bp-progress__dot {
+  align-items: center;
+  border: 0.08rem solid var(--training-border);
+  border-radius: 50%;
+  color: var(--training-muted);
+  display: inline-flex;
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  height: 1.5rem;
+  justify-content: center;
+  width: 1.5rem;
+}
+
+.bp-progress__dot--on {
+  border-color: var(--training-accent);
+  color: var(--training-accent);
+  font-weight: 800;
+}
+
+.bp-update {
+  background: color-mix(in srgb, var(--training-success-text) 7%, transparent);
+  border: 0.08rem solid var(--training-success-text);
+  border-radius: var(--training-radius-sm);
+  margin-block-start: var(--training-space-3);
+  padding: var(--training-space-3);
+}
+
+.bp-update[hidden] {
+  display: none;
+}
+
+.bp-update__title {
+  color: var(--training-success-text);
+  font-family: var(--training-font-code);
+  font-size: 0.76rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.bp-update ul {
+  display: grid;
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+  gap: 0.3rem;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.bp-update strong {
+  color: var(--training-accent);
+}
+
+.bp-ledger .learning-sim-ledger-row {
+  grid-template-columns: 0.55fr 1.8fr 0.45fr;
+}
+
+/* 上下文窗口演化实验 */
+.cwe-track {
+  border: 0.1rem solid var(--training-heading);
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  height: 3.4rem;
+  overflow: hidden;
+}
+
+.cwe-segment {
+  background: color-mix(in srgb, var(--segment-color, var(--training-heading)) 78%, transparent);
+  position: relative;
+  transition: inline-size 520ms ease;
+}
+
+.cwe-segment--free {
+  background: repeating-linear-gradient(45deg, transparent 0 0.3rem, color-mix(in srgb, var(--training-border) 60%, transparent) 0.3rem 0.6rem);
+}
+
+.cwe-curve {
+  margin: 0.9rem 0 0;
+}
+
+.cwe-curve svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.cwe-curve[hidden] {
+  display: none;
+}
+
+.cwe-curve__axis {
+  stroke: var(--training-border);
+  stroke-width: 1.4;
+}
+
+.cwe-curve__path {
+  fill: none;
+  stroke: var(--training-danger-text);
+  stroke-width: 3;
+}
+
+.cwe-curve__label {
+  fill: var(--training-muted);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.cwe-curve figcaption {
+  color: var(--training-muted);
+  font-size: 0.76rem;
+  line-height: 1.7;
+  margin-block-start: 0.4rem;
+}
+
+.cwe-ledger .learning-sim-ledger-row {
+  grid-template-columns: 0.9fr 0.7fr 0.7fr 0.7fr 0.5fr;
+}
+
+/* MCP 架构图 */
+.mcp-architecture svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 44rem;
+}
+
+.ma-host {
+  fill: color-mix(in srgb, var(--training-heading) 8%, transparent);
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.ma-host__title {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.ma-host__note {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+.ma-client,
+.ma-server {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-heading);
+  stroke-width: 1.4;
+}
+
+.ma-server {
+  stroke: var(--training-accent);
+}
+
+.ma-box__label {
+  fill: var(--training-heading);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ma-box__note {
+  fill: var(--training-muted);
+  font-size: 11.5px;
+}
+
+.ma-link--down {
+  stroke: var(--training-heading);
+  stroke-width: 1.6;
+}
+
+.ma-rpc {
+  stroke: var(--training-link);
+  stroke-width: 2;
+}
+
+.ma-rpc-label {
+  fill: var(--training-link);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+/* Skill 渐进式加载 */
+.skill-loading__steps {
+  display: grid;
+  gap: 0;
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+.skill-loading__step {
+  display: grid;
+  justify-items: center;
+}
+
+.sl-layer {
+  align-items: center;
+  background: var(--training-surface-bg);
+  border: 0.1rem solid var(--training-heading);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  padding: 0.9rem 1rem;
+}
+
+.sl-layer--compact {
+  border-color: var(--training-success-text);
+  inline-size: min(100%, 30rem);
+}
+
+.sl-layer--medium {
+  inline-size: min(100%, 36rem);
+}
+
+.sl-layer--full {
+  border-color: var(--training-accent);
+  inline-size: min(100%, 42rem);
+}
+
+.sl-layer__index {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.sl-layer__copy h4 {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1rem;
+  margin: 0 0 0.45rem;
+}
+
+.sl-layer__copy dl {
+  display: grid;
+  gap: 0.2rem;
+  margin: 0;
+}
+
+.sl-layer__copy dl > div {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: 2.6rem minmax(0, 1fr);
+}
+
+.sl-layer__copy dt,
+.sl-layer__copy dd {
+  font-size: 0.72rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.sl-layer__copy dt {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-weight: 800;
+}
+
+.sl-layer__copy dd {
+  color: var(--training-heading);
+}
+
+.sl-layer__cost {
+  border-inline-start: var(--training-rule-light);
+  display: grid;
+  gap: 0.15rem;
+  margin: 0;
+  min-inline-size: 7rem;
+  padding-inline-start: 0.8rem;
+}
+
+.sl-layer__cost span {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+}
+
+.sl-layer__cost strong {
+  color: var(--training-accent);
+  font-size: 0.75rem;
+}
+
+.skill-loading__transition {
+  align-items: center;
+  color: var(--training-muted);
+  display: flex;
+  font-family: var(--training-font-code);
+  font-size: 0.65rem;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+
+.skill-loading__transition span {
+  color: var(--training-accent);
+  font-size: 1.1rem;
+}
+
+/* 编排选择阶梯 */
+.choice-ladder__steps {
+  display: grid;
+  gap: 0.2rem;
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+}
+
+.choice-ladder__item {
+  margin-inline-start: min(calc(var(--choice-level) * 1.05rem), 5.25rem);
+}
+
+.cl-step {
+  align-items: center;
+  background: var(--training-surface-bg);
+  border: 0.08rem solid var(--training-border);
+  border-inline-start: 0.32rem solid var(--training-heading);
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(8.5rem, 0.8fr) minmax(8rem, 1fr) minmax(8rem, 1fr);
+  padding: 0.72rem 0.85rem;
+}
+
+.choice-ladder__item:last-child .cl-step {
+  border-inline-start-color: var(--training-accent);
+}
+
+.cl-step__name {
+  align-items: center;
+  display: flex;
+  gap: 0.65rem;
+}
+
+.cl-step__name > span {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.cl-step__name h4 {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.92rem;
+  margin: 0;
+}
+
+.cl-step__fit,
+.cl-step__why {
+  color: var(--training-heading);
+  font-size: 0.71rem;
+  line-height: 1.55;
+  margin: 0;
+}
+
+.cl-step__fit span,
+.cl-step__why span {
+  color: var(--training-muted);
+  display: block;
+  font-family: var(--training-font-code);
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.choice-ladder__signal {
+  align-items: center;
+  color: var(--training-muted);
+  display: flex;
+  font-size: 0.64rem;
+  gap: 0.35rem;
+  margin: 0.22rem 0 0.22rem 1rem;
+}
+
+.choice-ladder__signal > span,
+.choice-ladder__signal > strong {
+  color: var(--training-accent);
+}
+
+.choice-ladder__signal > strong {
+  font-family: var(--training-font-code);
+  font-size: 0.58rem;
+  letter-spacing: 0.04em;
+}
+
+.choice-ladder__axis {
+  color: var(--training-muted);
+  display: flex;
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  justify-content: space-between;
+  margin-block-start: 0.9rem;
+}
+
+/* L5 · RAG 检索沙盒 */
+.retrieval-sandbox {
+  overflow: hidden;
+  padding: 0;
+}
+
+.retrieval-sandbox > h3,
+.retrieval-sandbox__intro {
+  padding-inline: 1.2rem;
+}
+
+.retrieval-sandbox__intro {
+  color: var(--training-muted);
+  font-size: 0.84rem;
+  line-height: 1.75;
+  margin: 1rem 0 1.1rem;
+}
+
+.retrieval-sandbox__controls {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  grid-template-columns: minmax(0, 1.4fr) minmax(13rem, 0.6fr);
+  margin: 0;
+}
+
+.retrieval-sandbox__controls label {
+  display: grid;
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  gap: 0.2rem;
+}
+
+.retrieval-query-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.retrieval-query-buttons button {
+  background: transparent;
+  border: 0.0625rem solid color-mix(in srgb, var(--training-code-text) 42%, transparent);
+  border-radius: 999px;
+  color: var(--training-code-text);
+  cursor: pointer;
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  min-block-size: 2.75rem;
+  padding: 0.45rem 0.7rem;
+}
+
+.retrieval-query-buttons button[aria-pressed='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
+}
+
+.retrieval-query-buttons button:focus-visible {
+  outline: 0.18rem solid var(--training-focus);
+  outline-offset: 0.16rem;
+}
+
+.retrieval-sandbox__layout {
+  border-block-start: var(--training-rule-light);
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(14rem, 0.55fr);
+}
+
+.retrieval-space {
+  background-color: color-mix(in srgb, var(--training-page-bg) 72%, var(--training-surface-bg));
+  background-image: radial-gradient(color-mix(in srgb, var(--training-border) 42%, transparent) 0.045rem, transparent 0.045rem);
+  background-size: 1rem 1rem;
+  margin: 0;
+  padding: 1rem;
+}
+
+.retrieval-space svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.retrieval-space figcaption {
+  color: var(--training-muted);
+  font-size: 0.7rem;
+  line-height: 1.65;
+  margin-block-start: 0.35rem;
+}
+
+.retrieval-axis {
+  stroke: color-mix(in srgb, var(--training-border) 78%, transparent);
+  stroke-dasharray: 5 5;
+  stroke-width: 1.2;
+}
+
+.retrieval-axis-label {
+  fill: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 11px;
+}
+
+.retrieval-point__halo {
+  fill: color-mix(in srgb, var(--training-accent) 12%, transparent);
+  stroke: var(--training-accent);
+  stroke-width: 2;
+}
+
+.retrieval-point__dot {
+  fill: var(--retrieval-fill);
+  stroke: var(--training-heading);
+  stroke-width: 1.4;
+}
+
+.retrieval-point--selected .retrieval-point__dot {
+  stroke: var(--training-accent);
+  stroke-width: 2.4;
+}
+
+.retrieval-point__id {
+  fill: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.retrieval-query path {
+  fill: var(--training-heading);
+  stroke: var(--training-page-bg);
+  stroke-width: 2;
+}
+
+.retrieval-query text {
+  fill: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.retrieval-results {
+  background: var(--training-code-bg);
+  border-inline-start: var(--training-rule-heavy);
+  color: var(--training-code-text);
+  padding: 1.15rem;
+}
+
+.retrieval-results > p:first-child {
+  color: color-mix(in srgb, var(--training-accent) 62%, var(--training-code-text));
+  font-family: var(--training-font-code);
+  font-size: 0.64rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  margin: 0 0 0.85rem;
+}
+
+.retrieval-results ol {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.retrieval-results li {
+  align-items: center;
+  border-block-end: 0.0625rem solid color-mix(in srgb, var(--training-code-text) 18%, transparent);
+  display: grid;
+  gap: 0.55rem;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  padding-block-end: 0.55rem;
+}
+
+.retrieval-results li > span {
+  align-items: center;
+  border: 0.0625rem solid var(--training-accent);
+  border-radius: 50%;
+  color: var(--training-accent);
+  display: inline-flex;
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 900;
+  height: 2rem;
+  justify-content: center;
+  width: 2rem;
+}
+
+.retrieval-results strong,
+.retrieval-results small {
+  display: block;
+}
+
+.retrieval-results strong {
+  color: var(--training-code-text);
+  font-size: 0.76rem;
+}
+
+.retrieval-results small {
+  color: color-mix(in srgb, var(--training-code-text) 68%, transparent);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  margin-block-start: 0.18rem;
+}
+
+.retrieval-results__note {
+  color: color-mix(in srgb, var(--training-code-text) 72%, transparent);
+  font-size: 0.7rem;
+  line-height: 1.65;
+  margin: 1rem 0 0;
+}
+
+.retrieval-corpus {
+  border-block-start: var(--training-rule-light);
+  display: grid;
+  gap: 0.45rem 0.8rem;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  padding: 0.85rem 1.2rem;
+}
+
+.retrieval-corpus span {
+  color: var(--training-muted);
+  font-size: 0.68rem;
+}
+
+.retrieval-corpus b {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  margin-inline-end: 0.35rem;
+}
+
+.retrieval-ledger .learning-sim-ledger-row {
+  grid-template-columns: minmax(9rem, 0.75fr) repeat(2, minmax(10rem, 1fr));
+}
+
+/* L5 · LoRA 低秩分解 */
+.lora-decomposition__body {
+  align-items: center;
+  display: flex;
+  gap: 0.8rem;
+  justify-content: center;
+  overflow-x: auto;
+  padding: 1rem 0.3rem;
+}
+
+.lora-matrix-group {
+  align-items: center;
+  display: grid;
+  justify-items: center;
+  position: relative;
+}
+
+.lora-matrix-group > strong {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1.05rem;
+  margin-block-end: 0.35rem;
+}
+
+.lora-matrix-group > small {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  margin-block-start: 0.3rem;
+}
+
+.lora-matrix {
+  border: 0.1rem solid var(--training-heading);
+  display: grid;
+  gap: 0.16rem;
+  padding: 0.35rem;
+}
+
+.lora-matrix i {
+  background: color-mix(in srgb, var(--training-heading) 18%, var(--training-surface-bg));
+  border: 0.04rem solid color-mix(in srgb, var(--training-heading) 28%, transparent);
+  display: block;
+  height: 0.48rem;
+  width: 0.48rem;
+}
+
+.lora-matrix--large {
+  grid-template-columns: repeat(8, 0.48rem);
+}
+
+.lora-matrix--tall {
+  grid-template-columns: repeat(2, 0.48rem);
+}
+
+.lora-matrix--wide {
+  grid-template-columns: repeat(8, 0.48rem);
+  grid-template-rows: repeat(2, 0.48rem);
+}
+
+.lora-adapter {
+  align-items: center;
+  background: color-mix(in srgb, var(--training-success-bg) 72%, transparent);
+  border: 0.1rem solid var(--training-success-text);
+  display: flex;
+  gap: 0.6rem;
+  padding: 1rem 0.8rem 0.7rem;
+  position: relative;
+}
+
+.lora-adapter .lora-matrix i {
+  background: color-mix(in srgb, var(--training-success-text) 28%, var(--training-surface-bg));
+  border-color: var(--training-success-text);
+}
+
+.lora-matrix--merged i:nth-child(3n) {
+  background: color-mix(in srgb, var(--training-accent) 32%, var(--training-surface-bg));
+}
+
+.lora-matrix-label {
+  background: var(--training-heading);
+  color: var(--training-page-bg);
+  font-family: var(--training-font-code);
+  font-size: 0.54rem;
+  font-weight: 900;
+  inset-block-start: -0.7rem;
+  letter-spacing: 0.08em;
+  padding: 0.18rem 0.4rem;
+  position: absolute;
+}
+
+.lora-matrix-label--train {
+  background: var(--training-success-text);
+  inset-inline-start: 0.6rem;
+}
+
+.lora-matrix-label--merge {
+  background: var(--training-accent);
+}
+
+.lora-operator {
+  color: var(--training-accent);
+  flex: 0 0 auto;
+  font-family: var(--training-font-title);
+  font-size: 1.6rem;
+  font-weight: 900;
+}
+
+/* L5 · 知识蒸馏 */
+.distillation-flow {
+  align-items: stretch;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(8rem, 0.7fr) minmax(14rem, 1.35fr) minmax(8rem, 0.7fr);
+}
+
+.distillation-model {
+  align-content: center;
+  border: 0.1rem solid var(--training-heading);
+  display: grid;
+  min-block-size: 10rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.distillation-model > span {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.distillation-model > strong {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1.5rem;
+  margin-block: 0.35rem;
+}
+
+.distillation-model > small {
+  color: var(--training-muted);
+  font-size: 0.68rem;
+}
+
+.distillation-model--teacher {
+  border-block-start: 0.35rem solid var(--training-heading);
+}
+
+.distillation-model--student {
+  border-block-start: 0.35rem solid var(--training-success-text);
+}
+
+.distillation-soft {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  padding: 1rem;
+}
+
+.distillation-soft > p {
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 800;
+  margin: 0 0 0.75rem;
+}
+
+.distillation-bar {
+  align-items: center;
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: 2.4rem minmax(0, 1fr) 2.2rem;
+  margin-block: 0.45rem;
+}
+
+.distillation-bar > span,
+.distillation-bar > small {
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+}
+
+.distillation-bar > i {
+  background: color-mix(in srgb, var(--training-code-text) 14%, transparent);
+  display: block;
+  height: 0.55rem;
+}
+
+.distillation-bar > i > b {
+  background: var(--training-accent);
+  display: block;
+  height: 100%;
+}
+
+/* L5 · 一次请求的全链路 */
+.request-journey-map__body {
+  display: grid;
+  gap: 1rem;
+}
+
+.request-journey-map ol {
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.request-journey-step {
+  --journey-color: var(--training-heading);
+  border: 0.08rem solid var(--journey-color);
+  border-block-start-width: 0.3rem;
+  display: grid;
+  min-block-size: 7rem;
+  padding: 0.75rem;
+  position: relative;
+}
+
+.request-journey-step--ops { --journey-color: var(--training-warning-text); }
+.request-journey-step--quality { --journey-color: var(--training-danger-text); }
+.request-journey-step--knowledge { --journey-color: var(--training-accent); }
+.request-journey-step--access { --journey-color: var(--training-info-text); }
+.request-journey-step--orchestration { --journey-color: var(--training-heading); }
+
+.request-journey-step > span {
+  color: var(--journey-color);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.request-journey-step > strong {
+  align-self: end;
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.98rem;
+}
+
+.request-journey-step > small {
+  color: var(--journey-color);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.request-offline-loop {
+  align-items: center;
+  background: color-mix(in srgb, var(--training-success-bg) 72%, transparent);
+  border-inline-start: 0.3rem solid var(--training-success-text);
+  display: grid;
+  gap: 0.3rem 1rem;
+  grid-template-columns: 9rem minmax(0, 1fr);
+  padding: 0.8rem 1rem;
+}
+
+.request-offline-loop span {
+  color: var(--training-success-text);
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.request-offline-loop p {
+  font-size: 0.76rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+/* Interview accordion */
+.interview-module { margin-block: var(--training-space-5);
+  border-block-start: var(--training-rule-heavy);
+  margin-block-start: 4rem;
+  padding-block-start: 1.8rem;
+}
+
+.interview-module > h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+}
+
+.interview-level {
+  margin-block: 2rem 2.7rem;
+}
+
+.page-lesson .interview-level > h3 {
+  font-size: 0.7rem;
+  padding: 0.8rem 1rem;
+}
+
+.page-lesson .interview-level details {
+  background: transparent;
+  border: 0;
+  border-block-end: var(--training-rule-light);
+}
+
+.page-lesson .interview-level summary {
+  align-items: baseline;
+  gap: 0.8rem;
+  padding: 1rem 0.15rem;
+}
+
+.page-lesson .interview-level summary::before {
+  content: none;
+}
+
+.question-number {
+  color: var(--training-accent);
+  flex: 0 0 auto;
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+}
+
+.interview-answer {
+  border-block-start: 0;
+  color: var(--training-text);
+  padding: 0 0 1.4rem 2rem;
+}
+
+.interview-answer p {
+  font-size: 0.9rem;
+  margin-block: 0.6rem;
+}
+
+.scroll-reveal { transform: translateY(0); opacity: 1;
+  border-inline-start: 0.2rem solid var(--training-accent);
+  margin-block: 1.8rem;
+  padding-inline-start: 1.2rem;
+}
+/* 滚动进入视口时一次性淡入：支持 view timeline 的浏览器里随进入进度播放；
+   其余浏览器与静态/打印呈现直接显示最终状态。 */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .scroll-reveal[data-motion-level='explanatory'],
+    .scroll-reveal[data-motion-level='simulation'] {
+      animation: scroll-reveal-in 0.52s ease-out both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 55%;
+    }
+  }
+}
+@keyframes scroll-reveal-in {
+  from { transform: translateY(12px); opacity: 0; }
+}

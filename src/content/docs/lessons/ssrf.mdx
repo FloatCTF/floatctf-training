@@ -3,12 +3,6 @@ title: SSRF：识别服务端请求的信任边界
 description: 通过请求链、本地实验、真实案例和面试训练掌握 SSRF
 pageType: lesson
 template: splash
-lessonId: ssrf
-categoryId: web-security
-sources: ["owasp-ssrf-cheat-sheet", "portswigger-ssrf", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438", "nvd-cve-2021-40438", "aws-imdsv2", "appsec-interview-gist", "linkedin-ssrf-interview"]
-motionLevel: simulation
-safetyScope: authorized-lab
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -19,9 +13,10 @@ import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
-import AttackDefenseFlow from '../../../components/attack-defense-flow';
-import InterviewAccordion from '../../../components/interview-accordion';
-import ScrollReveal from '../../../components/scroll-reveal';
+import FlowSimulator from '../../../components/flow-simulator';
+import attackSteps from '../../../data/flows/ssrf-request-chain.json';
+import InterviewAccordion from '../../../components/interview-accordion.astro';
+import ScrollReveal from '../../../components/scroll-reveal.astro';
 import manifest from '../../../data/lessons/ssrf.json';
 
 export const vulnerableSnippet = `async function preview(userUrl) {
@@ -63,7 +58,7 @@ export const guardedSnippet = `async function preview(rawUrl) {
 
 OWASP 将 SSRF 描述为利用服务端应用访问非预期位置的行为；PortSwigger 进一步说明，内部系统经常依赖网络位置形成隐含信任。（来源：[OWASP](#source-owasp-ssrf-cheat-sheet)、[PortSwigger](#source-portswigger-ssrf)）
 
-<AttackDefenseFlow client:visible motionLevel="simulation" />
+<FlowSimulator client:visible title="SSRF 攻防请求链" steps={attackSteps} motionLevel="simulation" />
 
 ## 机制：从字符串到实际连接
 
@@ -81,6 +76,8 @@ OWASP 将 SSRF 描述为利用服务端应用访问非预期位置的行为；Po
 
 ## localhost 最小实验
 
+覆盖范围：本实验观察环回 IPv4 字面量的拒绝结果。域名的全部 A/AAAA 记录、连接绑定、逐跳重定向与出口策略需要分别进行防御配置验收；下方代码对照用于说明这些职责。仓库内的命令在项目根目录运行。
+
 实验脚本只在 `127.0.0.1` 的随机端口启动临时 HTTP 服务。它先展示未经约束的服务端取回，再让教学校验器拒绝 `127.0.0.0/8` 环回 IPv4 字面量。校验器对域名和 IPv6 失败关闭，且不承担生产校验职责。
 
 运行环境：Node.js 22.12 或更高版本。
@@ -96,7 +93,7 @@ node examples/ssrf-local-lab.mjs
 安全流程：已阻止环回 IPv4 地址
 ```
 
-实验检查：把目标改成另一个 `127.0.0.1` 端口，确认安全流程继续阻止；再阅读页面中的生产设计轮廓，列出域名允许列表、全部 A/AAAA 解析、连接绑定、逐跳重定向校验和出口控制的职责。
+实验检查：把脚本里的目标改成另一个 `127.0.0.1` 端口。脆弱流程会尝试连接，端口上没有服务时打印连接失败；安全流程仍应打印「已阻止环回 IPv4 地址」，因为它在连接前拒绝环回字面量。再阅读页面中的生产设计轮廓，列出域名允许列表、全部 A/AAAA 解析、连接绑定、逐跳重定向校验和出口控制的职责。
 
 <CodeCompare
   language="javascript"
@@ -123,7 +120,7 @@ node examples/ssrf-local-lab.mjs
 
 AWS 文档说明，EC2 IMDSv2 使用会话令牌流程，并支持响应跳数限制。这项机制收紧元数据访问边界，工作负载的最小权限与网络出口限制仍需独立配置。（来源：[AWS EC2 文档](#source-aws-imdsv2)）
 
-<ScrollReveal client:visible motionLevel="explanatory" label="防御复盘">
+<ScrollReveal motionLevel="explanatory" label="防御复盘">
   <p>修复验证需要重新走完输入、解析、重定向、连接、响应和日志链路。单个入口修好后，还要搜索共享取回函数的其他调用点。</p>
 </ScrollReveal>
 
@@ -151,7 +148,7 @@ AWS 文档说明，EC2 IMDSv2 使用会话令牌流程，并支持响应跳数�
 
 ## 面试与实战检查
 
-<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+<InterviewAccordion questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
 SSRF 防御围绕“服务端最终连接到哪里、以什么权限连接”展开。把业务允许列表、解析与连接复核、重定向策略、网络出口、最小权限和可观测性组合成独立控制层。

@@ -11,13 +11,9 @@ const NODE_W = 104;
 const GAP = 22;
 const START_X = 20;
 const Y = 70;
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="data-pipeline lesson-diagram not-content" aria-label="数据流水线与泄漏路径总览">
-  <header>
-    <p class="lesson-diagram__eyebrow">DATA PIPELINE / 环节与红线</p>
-    <h3 class="lesson-diagram__title">数据从现实到评估的一条流水线</h3>
-  </header>
+<LessonDiagram eyebrow="DATA PIPELINE / 环节与红线" title="数据从现实到评估的一条流水线" ariaLabel="数据流水线与泄漏路径总览" class="data-pipeline" headered note="本节的各项说明分别挂在这条流水线的不同环节上：样本与特征在 ①③，特征处理与状态保存在 ③， 学习范式由 ① 的答案来源决定，任务类型在末端决定目标函数。红线提醒：任何让 ⑤④ 的信息流回 ③① 的捷径都是泄漏。" noteClass="data-pipeline__note">
   <div class="data-pipeline__body">
     <svg viewBox="0 0 660 200" role="img" aria-label="五个环节依次连接：采集与标注、清洗与校验、特征表示、切分、评估与监控；一条红色虚线从评估绕回特征表示，标注为泄漏路径，被禁止">
       <title>数据流水线与泄漏路径</title>
@@ -45,8 +41,5 @@ const Y = 70;
       <text class="dp-leak-label" x={START_X + 3 * (NODE_W + GAP) + NODE_W / 2} y="180" text-anchor="middle">泄漏：测试侧信息绕回训练侧 → 分数虚高（禁止）</text>
     </svg>
   </div>
-  <p class="lesson-diagram__note data-pipeline__note">
-    本节的各项说明分别挂在这条流水线的不同环节上：样本与特征在 ①③，特征处理与状态保存在 ③，
-    学习范式由 ① 的答案来源决定，任务类型在末端决定目标函数。红线提醒：任何让 ⑤④ 的信息流回 ③① 的捷径都是泄漏。
-  </p>
-</section>
+  
+</LessonDiagram>

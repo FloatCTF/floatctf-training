@@ -14,10 +14,9 @@ const bars = segments.map((s) => {
   offset += s.pct;
   return bar;
 });
+import LessonDiagram from './lesson-diagram.astro';
 ---
-<section class="lesson-diagram not-content" aria-label="上下文预算构成">
-  <p class="lesson-diagram__eyebrow">CONTEXT BUDGET / 一轮调用的窗口</p>
-  <h3 class="lesson-diagram__title">一次模型调用的上下文都装了什么</h3>
+<LessonDiagram eyebrow="CONTEXT BUDGET / 一轮调用的窗口" title="一次模型调用的上下文都装了什么" ariaLabel="上下文预算构成" note="示意比例：检索文档与历史往往占据大部分窗口，安全规则只占很小但必须保留的一角。Context Engineering 管的就是这一条的取舍。">
   <div class="budget-track" role="img" aria-label={`上下文构成示意：${segments.filter((s) => s.label !== '剩余').map((s) => `${s.label} ${s.pct}%`).join('，')}，剩余 ${segments[segments.length - 1].pct}%。`}>
     {bars.map((b) => (
       <span
@@ -32,5 +31,5 @@ const bars = segments.map((s) => {
       <li><span class="budget-swatch" style={`--segment-color: ${s.color};`}></span>{s.label}（{s.pct}%）</li>
     ))}
   </ul>
-  <p class="lesson-diagram__note">示意比例：检索文档与历史往往占据大部分窗口，安全规则只占很小但必须保留的一角。Context Engineering 管的就是这一条的取舍。</p>
-</section>
+  
+</LessonDiagram>

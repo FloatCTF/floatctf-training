@@ -1,0 +1,290 @@
+{
+  "pages": [
+    {
+      "id": "machine-learning-foundations",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "neural-network-foundations",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-literacy",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "agent-harness-engineering",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-engineering-landscape",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-security-essentials",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "sql-injection",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "sql-injection-advanced",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ssrf",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "xss",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "rce",
+      "width": 1280,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "machine-learning-foundations",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "neural-network-foundations",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-literacy",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "agent-harness-engineering",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-engineering-landscape",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ai-security-essentials",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 3,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "sql-injection",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "sql-injection-advanced",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "ssrf",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "xss",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    },
+    {
+      "id": "rce",
+      "width": 390,
+      "status": 200,
+      "overflow": 0,
+      "h1": 1,
+      "exercises": 0,
+      "brokenAnchors": [],
+      "startAction": true,
+      "prerequisiteIds": 0
+    }
+  ],
+  "errors": [],
+  "targeted": {
+    "code": [
+      {
+        "top": 378.59375,
+        "preOverflow": 0
+      },
+      {
+        "top": 378.59375,
+        "preOverflow": 0
+      }
+    ],
+    "copy": "已复制完整文件",
+    "downloadStatus": 200,
+    "keyboardOpen": true,
+    "keyboardClose": true,
+    "focusReturned": true,
+    "xor": {
+      "circles": 2,
+      "squares": 2
+    },
+    "print": [
+      "block",
+      "block",
+      "block"
+    ],
+    "reduced": "static",
+    "noJs": {
+      "h1": 1,
+      "exercises": 3,
+      "xorStages": 3,
+      "answerOpen": true
+    }
+  },
+  "testedAt": "2026-09-12",
+  "sqlDownloadedExecution": {
+    "passedGroups": 5,
+    "exitCode": 0
+  },
+  "build": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "pages": 22
+  }
+}

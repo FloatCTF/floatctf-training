@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "neural-network-foundations",
-    "slug": "neural-network-foundations",
-    "categoryId": "ai-ml",
-    "title": "神经网络：从神经元到架构",
     "audience": "已完成机器学习训练闭环、刚进入计算机专业的大一新生",
     "durationMinutes": 90,
     "primaryMode": "mechanism",
@@ -16,7 +11,7 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "explanatory",
     "visualStory": "一条视觉主线贯穿全课：亮度在网络里的流动。前向是「数字穿过网络」（激活即亮度，四种 3 与一个 8），反向是主交互「反向传播追责演示」——2-2-1 网络计算图上，梯度波从损失逐步流回每个参数，ReLU 门把 h₂ 的责任拦成 0，数值与手算矩阵图严格同源。辅助交互：神经元（滑权重看连线粗细）、XOR 三步演示；静态锚点：手写 3 像素图、手算矩阵、全连接网络图与 Dropout 对照、卷积滑动窗口（真实位图上现场计算响应）、RNN 沿时间展开与梯度衰减",
@@ -34,6 +29,61 @@
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "区分梯度和更新",
+      "question": "一次训练中，反向传播和优化器分别输出什么？",
+      "answer": "反向传播计算各参数的损失梯度，优化器根据梯度、学习率及自身状态更新参数。合格回答应明确两步的输入和产出。",
+      "sourceIds": [
+        "pytorch-optimization"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "数出参数",
+      "question": "一个全连接网络为 3 个输入、4 个隐藏单元、2 个输出，每层每个单元都有偏置。共有多少个可训练参数？",
+      "answer": "输入到隐藏层为 3 × 4 + 4 = 16；隐藏到输出层为 4 × 2 + 2 = 10；共 26。批量大小改变激活张量的形状，参数总数保持 26。",
+      "sourceIds": [
+        "d2l-mlp"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "验算 XOR 坐标",
+      "question": "在 XOR 第二步查看输入 00、01、10、11 的隐藏坐标，再用 h₁ − h₂ > 0.5 判断输出。写出四个结果。",
+      "answer": "隐藏坐标依次是 (0,0)、(1,0)、(1,0)、(1,1)，输出依次为 0、1、1、0。01 和 10 合并到同一位置，隐藏变换使输出层能够线性分开两类。",
+      "sourceIds": [
+        "d2l-mlp"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "神经元与表示",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "验算 XOR 的隐藏坐标。"
+    },
+    {
+      "kind": "动手",
+      "title": "参数与梯度",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "数出参数并追踪一次反向传播。"
+    },
+    {
+      "kind": "进阶",
+      "title": "架构与部署",
+      "heading": "六、",
+      "minutes": 30,
+      "checkpoint": "比较连接方式，完成三题自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -48,6 +98,7 @@
     {
       "id": "pytorch-autograd",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Autograd mechanics",
       "publisher": "PyTorch",
       "url": "https://docs.pytorch.org/docs/main/notes/autograd.html",
@@ -62,6 +113,7 @@
     {
       "id": "pytorch-optimization",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Optimizing Model Parameters",
       "publisher": "PyTorch Tutorials",
       "url": "https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html",
@@ -75,6 +127,7 @@
     {
       "id": "stanford-cs231n-backprop",
       "kind": "university-course",
+      "dateType": "snapshot",
       "title": "CS231n Lecture 4: Backpropagation and Neural Networks",
       "publisher": "Stanford University",
       "url": "https://cs231n.stanford.edu/slides/2025/lecture_4.pdf",
@@ -88,6 +141,7 @@
     {
       "id": "d2l-mlp",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Dive into Deep Learning — Multilayer Perceptrons",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_multilayer-perceptrons/mlp.html",
@@ -101,6 +155,7 @@
     {
       "id": "d2l-dropout",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Dropout",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_multilayer-perceptrons/dropout.html",
@@ -114,6 +169,7 @@
     {
       "id": "d2l-image-augmentation",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Image Augmentation",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_computer-vision/image-augmentation.html",
@@ -127,6 +183,7 @@
     {
       "id": "d2l-index",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Dive into Deep Learning",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/",
@@ -141,6 +198,7 @@
     {
       "id": "d2l-cnn",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "From Fully Connected Layers to Convolutions",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_convolutional-neural-networks/why-conv.html",
@@ -155,6 +213,7 @@
     {
       "id": "d2l-rnn",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Recurrent Neural Networks",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_recurrent-neural-networks/rnn.html",
@@ -183,6 +242,7 @@
     {
       "id": "tensorflow-playground",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "A Neural Network Playground",
       "publisher": "TensorFlow Playground",
       "url": "https://playground.tensorflow.org/",
@@ -196,6 +256,7 @@
     {
       "id": "google-production-monitoring",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Production ML systems: Monitoring pipelines",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/production-ml-systems/monitoring",
@@ -209,6 +270,7 @@
     {
       "id": "threeblueonebrown-neural-networks",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Neural Networks",
       "publisher": "3Blue1Brown",
       "url": "https://www.3blue1brown.com/topics/neural-networks",
@@ -331,14 +393,10 @@
       ]
     }
   ],
-  "assessments": [
-    "none"
-  ],
   "visualNarrative": {
     "kind": "digit-network-backprop",
     "primaryAnimations": 1,
     "supportingInteractions": 3,
     "scrollReveals": 0
-  },
-  "visualStory": "一条视觉主线贯穿全课：亮度在网络里的流动。前向是「数字穿过网络」（激活即亮度，四种 3 与一个 8），反向是主交互「反向传播追责演示」——2-2-1 网络计算图上，梯度波从损失逐步流回每个参数，ReLU 门把 h₂ 的责任拦成 0，数值与手算矩阵图严格同源。辅助交互：神经元（滑权重看连线粗细）、XOR 三步演示；静态锚点：手写 3 像素图、手算矩阵、全连接网络图与 Dropout 对照、卷积滑动窗口（真实位图上现场计算响应）、RNN 沿时间展开与梯度衰减"
+  }
 }

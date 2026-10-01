@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "machine-learning-foundations",
-    "slug": "machine-learning-foundations",
-    "categoryId": "ai-ml",
-    "title": "AI 如何学习：从任务到泛化",
     "audience": "刚进入计算机专业、具备高中数学基础的大一新生",
     "durationMinutes": 90,
     "primaryMode": "mechanism",
@@ -17,7 +12,7 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "simulation",
     "visualStory": "两条亲手制造的曲线贯穿全课：损失面上的下山轨迹（二维权重等高线 + 梯度下降模拟器，可拖学习率制造振荡与发散）与训练/考试误差的分叉（拟合实验台新增过拟合模式，拖多项式阶数看分叉）。嵌套边界图定位 AI/ML/DL，softmax 概率条对比集中度，数据流水线图（含泄漏红线）锚定第二节",
@@ -28,8 +23,8 @@
       "计算线性回归的平方损失、逻辑回归的 sigmoid 概率和二元交叉熵",
       "解释梯度、mini-batch、学习率、SGD、Momentum 与 Adam 的职责和边界",
       "使用训练曲线、数据切分、交叉验证、泄漏检查和多指标评估判断泛化",
-      "比较树模型与线性模型的学习方式，并区分随机森林与梯度提升树的集成分工",
-      "针对类别失衡选择类别权重、重采样或阈值调整，并说明为何先换指标"
+      "进阶：比较树模型与线性模型的学习方式，并区分随机森林与梯度提升树的集成分工",
+      "进阶：针对类别失衡选择类别权重、重采样或阈值调整，并说明为何先换指标"
     ],
     "prerequisites": [
       "高中数学：函数、平均数、指数与对数",
@@ -38,6 +33,61 @@
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "模型选择",
+      "question": "1 阶训练／验证 MSE 为 204.7／119.9，3 阶为 15.3／32.7。选哪个候选？误差比接近 1 能证明模型合适吗？",
+      "answer": "选择 3 阶。它的验证 MSE 更低，训练误差也明显降低；1 阶两侧绝对误差都较高，属于当前候选中的欠拟合。误差比接近 1 只说明两者接近，仍需对照基线和其他候选。",
+      "sourceIds": [
+        "google-loss-curves"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "计算 MSE",
+      "question": "真实值为 2、4，预测值为 1、6。先写两个误差平方，再计算 MSE。",
+      "answer": "误差平方分别为 1 和 4，MSE = (1 + 4) / 2 = 2.5。先平方再求平均，量纲为原标签单位的平方。",
+      "sourceIds": [
+        "google-linear-loss"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "比较三个阶数",
+      "question": "在过拟合实验中依次选择 1、3、7 阶，记录训练与验证 MSE，选一个模型并说明最终评估还需要哪份数据。",
+      "answer": "应记录三组数值并选 3 阶，它在这三个候选中验证 MSE 最低。7 阶训练误差接近零而验证误差升高。选型使用验证集，最终性能用另外保留的独立测试集评估。",
+      "sourceIds": [
+        "sklearn-cross-validation"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "任务与数据",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "说明特征、标签与切分方式。"
+    },
+    {
+      "kind": "动手",
+      "title": "预测、损失与优化",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "手算一组 MSE，观察学习率。"
+    },
+    {
+      "kind": "进阶",
+      "title": "泛化与验收",
+      "heading": "五、",
+      "minutes": 35,
+      "checkpoint": "比较候选误差，完成三题自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -54,6 +104,7 @@
     {
       "id": "google-intro-ml",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "What is Machine Learning?",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/intro-to-ml/what-is-ml",
@@ -68,6 +119,7 @@
     {
       "id": "google-ml-glossary",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Machine Learning Glossary",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/glossary",
@@ -82,6 +134,7 @@
     {
       "id": "google-mlcc",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Machine Learning Crash Course",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course",
@@ -95,6 +148,7 @@
     {
       "id": "stanford-cs229-2017",
       "kind": "university-course",
+      "dateType": "snapshot",
       "title": "CS229 Machine Learning — Course Information",
       "publisher": "Stanford University",
       "url": "https://cs229.stanford.edu/Handout2017.pdf",
@@ -107,6 +161,7 @@
     {
       "id": "cs229-bias-variance",
       "kind": "university-course",
+      "dateType": "snapshot",
       "title": "Bias-Variance Analysis",
       "publisher": "Stanford CS229",
       "url": "https://cs229.stanford.edu/summer2023/BiasVarianceAnalysis.pdf",
@@ -119,6 +174,7 @@
     {
       "id": "google-linear-loss",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Linear regression: Loss",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/loss",
@@ -133,6 +189,7 @@
     {
       "id": "google-linear-gradient",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Linear regression: Gradient descent",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/linear-regression/gradient-descent",
@@ -147,6 +204,7 @@
     {
       "id": "google-logistic-sigmoid",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Logistic regression: Calculating a probability with the sigmoid function",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/logistic-regression/sigmoid-function",
@@ -160,6 +218,7 @@
     {
       "id": "google-logistic-loss",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Logistic regression: Loss and regularization",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/logistic-regression/loss-regularization",
@@ -173,6 +232,7 @@
     {
       "id": "d2l-softmax",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Softmax Regression",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_linear-classification/softmax-regression.html",
@@ -186,6 +246,7 @@
     {
       "id": "google-normalization",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Numerical data: Normalization",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/numerical-data/normalization",
@@ -199,6 +260,7 @@
     {
       "id": "google-categorical",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Working with categorical data",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/categorical-data",
@@ -211,6 +273,7 @@
     {
       "id": "google-overfitting",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Overfitting",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/overfitting/overfitting",
@@ -227,6 +290,7 @@
     {
       "id": "google-loss-curves",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Overfitting: Interpreting loss curves",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/overfitting/interpreting-loss-curves",
@@ -240,6 +304,7 @@
     {
       "id": "google-l2-regularization",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Overfitting: L2 regularization",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/overfitting/regularization",
@@ -253,6 +318,7 @@
     {
       "id": "google-classification-metrics",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Accuracy, precision, and recall",
       "publisher": "Google for Developers",
       "url": "https://developers.google.com/machine-learning/crash-course/classification/accuracy-precision-recall",
@@ -266,6 +332,7 @@
     {
       "id": "sklearn-data-leakage",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Common pitfalls and recommended practices",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/common_pitfalls.html",
@@ -280,6 +347,7 @@
     {
       "id": "sklearn-cross-validation",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Cross-validation: evaluating estimator performance",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/modules/cross_validation.html",
@@ -294,6 +362,7 @@
     {
       "id": "sklearn-model-evaluation",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Metrics and scoring: quantifying the quality of predictions",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/modules/model_evaluation.html",
@@ -307,6 +376,7 @@
     {
       "id": "sklearn-calibration",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Probability calibration",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/modules/calibration.html",
@@ -320,6 +390,7 @@
     {
       "id": "aws-splits-leakage",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Splits and data leakage",
       "publisher": "AWS Prescriptive Guidance",
       "url": "https://docs.aws.amazon.com/prescriptive-guidance/latest/ml-operations-planning/splits-leakage.html",
@@ -333,6 +404,7 @@
     {
       "id": "pytorch-optimization",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Optimizing Model Parameters",
       "publisher": "PyTorch Tutorials",
       "url": "https://docs.pytorch.org/tutorials/beginner/basics/optimization_tutorial.html",
@@ -346,6 +418,7 @@
     {
       "id": "pytorch-optim",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "torch.optim",
       "publisher": "PyTorch",
       "url": "https://docs.pytorch.org/docs/stable/optim.html",
@@ -359,6 +432,7 @@
     {
       "id": "d2l-dropout",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Dropout",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_multilayer-perceptrons/dropout.html",
@@ -372,6 +446,7 @@
     {
       "id": "d2l-image-augmentation",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Image Augmentation",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/chapter_computer-vision/image-augmentation.html",
@@ -385,6 +460,7 @@
     {
       "id": "d2l-index",
       "kind": "textbook",
+      "dateType": "snapshot",
       "title": "Dive into Deep Learning",
       "publisher": "Dive into Deep Learning",
       "url": "https://d2l.ai/",
@@ -398,6 +474,7 @@
     {
       "id": "threeblueonebrown-neural-networks",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Neural Networks",
       "publisher": "3Blue1Brown",
       "url": "https://www.3blue1brown.com/topics/neural-networks",
@@ -411,6 +488,7 @@
     {
       "id": "sklearn-ensemble",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Ensembles: Gradient boosting, random forests, bagging, voting, stacking",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/modules/ensemble.html",
@@ -424,6 +502,7 @@
     {
       "id": "sklearn-class-weight",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "sklearn.linear_model.LogisticRegression",
       "publisher": "scikit-learn",
       "url": "https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html",
@@ -656,9 +735,6 @@
         "sklearn-class-weight"
       ]
     }
-  ],
-  "assessments": [
-    "none"
   ],
   "visualNarrative": {
     "kind": "parameter-simulation",

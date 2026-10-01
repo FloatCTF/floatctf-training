@@ -3,12 +3,6 @@ title: AI 工程全景：从一次调用到生产系统
 description: 沿能力接入、执行编排、知识与记忆、模型定制、质量与安全、运行与成本六层，把 2026 年的 AI 工程名词收进一张可导航的地图
 pageType: lesson
 template: splash
-lessonId: ai-engineering-landscape
-categoryId: ai-ml
-sources: ["openai-chatgpt-launch", "rag-paper", "rag2-contextual", "hnsw-paper", "memgpt-paper", "openai-accuracy-guide", "openai-sft-guide", "lora-paper", "distillation-paper", "phi4-report", "model-collapse-nature", "anthropic-agent-evals", "llm-judge-paper", "nemo-guardrails-docs", "owasp-llm-top10", "otel-genai-repo", "cloudflare-ai-gateway", "anthropic-prompt-caching", "openai-function-calling", "mcp-streamable-http"]
-motionLevel: simulation
-safetyScope: not-applicable
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -18,6 +12,8 @@ import DataTable from '../../../components/data-table.astro';
 import IntuitionBox from '../../../components/intuition-box.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
 import StepList from '../../../components/step-list.astro';
 import AiStackExplorer from '../../../components/ai-stack-explorer';
 import RagPipeline from '../../../components/rag-pipeline.astro';
@@ -47,13 +43,15 @@ export const requestJourneySteps = [
     { text: "AI 工程全景" },
     { text: "从一次调用到生产系统", accent: true },
   ]}
-  summary="2022 年入门 AI 应用只需要三样东西，2026 年同类岗位的清单已经列到二十多项。本课把这份清单整理成五个工程层，逐层解释每个名词管什么、怎么工作、边界在哪里，并与前四课的内容拼成完整地图。"
+  summary="全景共六层，本课重点讲其中五层。执行编排由前课《AI Agent 工程方法》覆盖；这里继续展开能力接入、知识与记忆、模型定制、质量与安全、运行与成本，最后串起一次完整请求。"
 />
 
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
   <Prerequisites items={manifest.lessonPlan.prerequisites} />
 </div>
+
+<LessonPacing segments={manifest.segments} />
 
 ## 引导问题：为什么 2022 年只要三样，2026 年要背二十多项
 
@@ -63,16 +61,16 @@ ChatGPT 于 2022 年 11 月 30 日发布。（来源：[Introducing ChatGPT](#so
 
 <AiStackExplorer client:visible motionLevel="subtle" />
 
-## 一、怎样阅读这张地图：五个工程层
+## 一、怎样阅读这张地图：全景六层，本课重点五层
 
-二十多个名词按解决的问题分成六层。执行编排层的七个名词已经在《AI Agent 工程方法：从 Prompt 到执行图》里详细讲过，本课补齐其余五层，并在最后把六层串成一次请求的完整旅程。
+二十多个名词按解决的问题分成六层。前课的七个对象并不整组落在同一层：Prompt、Context、Harness、Loop、Graph 归执行编排；MCP 在本课的能力接入层再出现；Skills 仍是前课的流程资产，不进这张六层表。本课补齐其余五层，并在最后把六层串成一次请求的完整旅程。
 
 <DataTable
   caption="六个工程层与本课的分工"
   headers={["层", "回答的问题", "包含名词", "详讲位置"]}
   rows={[
     ["能力接入", "模型怎样调用外部能力", "Function Calling、Tool Use、MCP、Stateless MCP", "本课第二节；MCP 协议见前课"],
-    ["执行编排", "多步任务怎样可控执行", "Prompt Optimization、Context、Agentic AI、Harness、Loop、Graph、Multi-Agent", "《AI Agent 工程方法》全课"],
+    ["执行编排", "多步任务怎样可控执行", "Prompt、Context、Harness、Loop、Graph；另有 Prompt Optimization、Agentic AI、Multi-Agent", "前课讲前五个；后三个在本层作为相关名词"],
     ["知识与记忆", "模型怎样获得窗口之外的信息", "RAG 2.0、Vector DBs、Memory Layers", "本课第三节"],
     ["模型定制", "什么时候需要改模型参数", "Fine-Tuning、Distillation、Synthetic Data", "本课第四节"],
     ["质量与安全", "怎样兜住质量和安全下限", "Evaluation Frameworks、Guardrails", "本课第五节"],
@@ -81,7 +79,7 @@ ChatGPT 于 2022 年 11 月 30 日发布。（来源：[Introducing ChatGPT](#so
 />
 
 <Callout variant="note" title="名词并存，没有年代更替">
-五层是同一个系统里的分工，长清单反映分工细化。一个生产系统同时需要清晰的 Prompt、可靠的检索、上线前的评测和运行中的护栏；后出现的名词没有淘汰先出现的名词。
+六层是同一个系统里的分工，本课展开其中五层。一个生产系统同时需要清晰的 Prompt、可靠的检索、上线前的评测和运行中的护栏。
 </Callout>
 
 ## 二、能力接入层：模型怎样调用外部能力
@@ -243,7 +241,7 @@ OpenAI 的官方优化指南给出明确顺序：先用 Prompt Engineering 建�
 
 合成数据指用模型生成或改写训练数据。phi-4 的预训练配方把 40% token 列为 synthetic，另有 15% 列为 web rewrites；技术报告把 web rewrites 明确归入合成数据子类，因此至少 55% token 来自合成生成或改写流程。报告还描述了多智能体提示、自修订和指令反转等生成方法。（来源：[Phi-4 Technical Report](#source-phi4-report)）
 
-合成数据同时有被证明的失败模式。Nature 2024 的研究表明：无差别地用模型生成数据递归训练，会引发模型坍缩，原始分布的尾部信息不可逆地消失，模型逐代收敛到低方差的失真分布；真实人类数据的价值因此上升。（来源：[AI models collapse when trained on recursively generated data](#source-model-collapse-nature)）工程含义直接：合成数据要经过筛选、配比并混合真实数据，生成数据的来源要可追踪。
+合成数据也有被论文钉住的失败模式。Shumailov 等人在 Nature 2024 中研究不加区分的递归训练：上一代模型生成的数据，直接变成下一代的训练集。论文在高斯混合模型、变分自编码器和语言模型中观察到由此引起的分布退化。尾部消失之后收敛到点质量分布，是特定理论设定下对长期训练的结论；有限代实验里坍缩到什么程度，取决于具体条件。论文把这类缺陷称为模型坍缩，并强调真实人类交互数据的价值。这不是「用过任何合成数据就会坍缩」。（来源：[AI models collapse when trained on recursively generated data](#source-model-collapse-nature)）工程上仍要把生成数据的来源标清，并单独验证筛选和配比；那是使用策略，不是这篇论文已经证明的解药。
 
 ## 五、质量与安全工程：上线前与运行中的两道闸
 
@@ -286,10 +284,10 @@ LLM 评审是带偏差的测量仪器。上线一个自动评分器之前，先�
 
 一次 Agent 请求可能跨越网关、多轮模型调用、若干工具执行。出问题时需要回答：哪一步慢、哪一步错、token 花在哪。分布式追踪的做法是给每个环节建 span，串成一条 trace。
 
-OpenTelemetry 正在为生成式 AI 制定 gen_ai 语义约定，统一模型调用、Agent 与工具调用的 span 命名和 token 用量属性；这套约定已迁入独立仓库维护，属性仍在快速演进、字段可能继续变化。（来源：[OpenTelemetry GenAI semantic conventions repository](#source-otel-genai-repo)，核验于 2026-08-27）选型时优先支持该约定的框架与平台，但要预期属性名会随版本迁移。
+OpenTelemetry 正在为生成式 AI 制定 gen_ai 语义约定，统一模型调用、Agent 与工具调用的 span 命名和 token 用量属性。约定正文已迁入独立仓库。2026-09-22 读取的现行文档仍把状态标为 Development。（来源：[现行 GenAI 约定](#source-otel-genai-spec)）另外，v1.37.0 的迁移说明只约束已经采用 v1.36.0 或更早约定的 instrumentation：默认继续发送原来的版本，不要自行改成最新实验版本。这不是对所有现有仪器的统一要求。（来源：[v1.37.0 迁移说明](#source-otel-genai-v137)）选型时优先支持该约定的框架与平台，但要预期属性名会随版本迁移。
 
 ```text
-trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
+示意 trace: 客服请求 #8f2a（总耗时 6.8s，模型调用 token 21,230）
 ├── span: gateway.route          120ms
 ├── span: guardrails.input        80ms
 ├── span: retrieval.search       340ms   top-k=8
@@ -299,7 +297,7 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 └── span: guardrails.output       90ms
 ```
 
-这条 trace 直接回答成本问题：第 1 轮输入 18,200 token，其中稳定前缀值得进缓存；检索只取 8 条却贡献了大半输入量，说明切分过粗。
+这是教学示意，不是一次真实导出。两次模型调用的 token 合计为 18,200 + 240 + 2,300 + 490 = 21,230。它能说明第 1 轮输入远大于第 2 轮，稳定前缀值得单独看能不能缓存。它没有列出检索片段、系统提示和工具定义各占多少 token，所以不能从 `top-k=8` 推出「切分过粗」。要做那个判断，还得补片段长度分布和检索质量。
 
 ### 2. AI 网关：多模型时代的统一入口
 
@@ -322,7 +320,7 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
   ]}
 />
 
-第 2 次调用就越过收支平衡点：写入多付的 25%，一次 0.1 倍的读取就赚回来了。前提是前缀逐字节稳定。把时间戳、用户 ID 放进前缀会让缓存永远无法命中，这是最常见的实现错误。
+第 2 次调用就越过收支平衡点：写入多付的 25%，一次 0.1 倍的读取就赚回来了。前提是缓存边界内的前缀逐字节相同，并仍在有效期内。每次请求都变的字段，例如当前时间戳，要放在这条前缀之后。同一用户反复使用、内容不变的用户 ID，可以留在该用户复用的前缀里；不是「任何用户 ID 都会让缓存永远无法命中」。
 
 ## 七、一次请求的完整旅程
 
@@ -340,11 +338,11 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 - **RAG 优先于微调处理知识问题：** 事实放检索层可随时更新；微调固化行为模式，注入事实是方向性错误。
 - **RAG 2.0 与 Stateless MCP 是新说法：** 前者出自厂商定义，后者出自协议修订；使用前先对齐所指。
 - **向量检索是近似检索：** ANN 索引用召回率换速度，关键场景要度量召回率并考虑混合检索。
-- **合成数据需要治理：** 有 phi-4 式的成功配方，也有模型坍缩的失败证明，差别在筛选、配比和真实数据混合。
+- **合成数据需要治理：** phi-4 报告写了合成与改写的配比；Nature 2024 证明的是不加区分的递归训练会造成模型坍缩。筛选和混入真实数据是工程控制，不是那篇论文已经证明的解药。
 - **单次通过不是评测证据：** 随机系统要看多次 trial 的成功率与波动，轨迹与最终状态分开评。
 - **LLM 评审自身带偏差：** 位置、冗长、自我增强三类偏差需要换序与人工校准对照。
 - **护栏挡不住全部注入：** OWASP 明确 RAG 与微调不能完全缓解提示注入，防线要叠加权限收敛与人工确认。
-- **可观测性约定仍在变化：** gen_ai 语义约定处于 Development 状态，选型时保留属性迁移的余地。
+- **可观测性约定仍在变化：** 现行 gen_ai 文档状态仍是 Development。v1.37.0 另要求采用 v1.36.0 或更早约定的仪器默认保留原版本。
 - **缓存收益依赖前缀稳定：** 动态内容混入前缀会让写入费白付，先分离稳定段再开缓存。
 
 <KeyTakeaway>
@@ -352,5 +350,9 @@ trace: 客服请求 #8f2a（总耗时 6.8s，总 token 21,430）
 </KeyTakeaway>
 
 下一课《AI 安全：从提示注入到对抗样本》把质量与安全层单独放大：沿 LLM 应用和经典 ML 模型两条线拆解提示注入、越狱、对抗样本、数据投毒与模型提取，收束到 CTF AI 题型的分析框架。
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
 
 <SourceList sources={manifest.sources} />

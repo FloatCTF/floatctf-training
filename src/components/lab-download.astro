@@ -1,0 +1,38 @@
+---
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { withBase } from '../lib/base-url';
+interface Props { file: 'sql-binding-check.mjs' | 'sql-audit-sample.txt'; label: string }
+const { file, label } = Astro.props;
+const allowed = new Set(['sql-binding-check.mjs', 'sql-audit-sample.txt']);
+if (!allowed.has(file)) throw new Error('Unknown lesson material');
+const source = readFileSync(resolve('public', file), 'utf8');
+---
+<section class="lab-download not-content" aria-label={label}>
+  <p><a href={withBase(`/${file}`)} download={file}>{label} · {file}</a></p>
+  <details>
+    <summary>查看与复制完整文件</summary>
+    <button type="button" data-copy-material>复制完整文件</button>
+    <span role="status" data-copy-status></span>
+    <pre tabindex="0"><code>{source}</code></pre>
+  </details>
+</section>
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-material]').forEach((button) => {
+    button.addEventListener('click', async () => {
+      const container = button.closest('details')!;
+      const code = container.querySelector('code')!;
+      const status = container.querySelector('[data-copy-status]')!;
+      try {
+        await navigator.clipboard.writeText(code.textContent || '');
+        status.textContent = '已复制完整文件';
+      } catch {
+        const range = document.createRange();
+        range.selectNodeContents(code);
+        const selection = window.getSelection();
+        selection?.removeAllRanges(); selection?.addRange(range);
+        status.textContent = '已选中文件内容，请按复制快捷键。';
+      }
+    });
+  });
+</script>

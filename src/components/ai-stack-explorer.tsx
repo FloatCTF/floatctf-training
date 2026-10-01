@@ -185,7 +185,7 @@ export default function AiStackExplorer({ motionLevel = 'subtle' }: Props) {
             {layers.map((layer) => (
               <div key={layer.id} className="stack-layer">
                 <p className="stack-layer__name">
-                  <span>{layer.name}</span>
+                  <span>{layer.name}{layer.id === 'orchestration' ? ' · 前课覆盖' : ''}</span>
                   <small>{layer.english}</small>
                   <span className="stack-layer__count">{layer.items.length}</span>
                 </p>
@@ -236,7 +236,7 @@ export default function AiStackExplorer({ motionLevel = 'subtle' }: Props) {
       <div className="stack-explorer__summary" aria-label="2026 年技能栈分层定义">
         {layers.map((layer) => (
           <article key={layer.id}>
-            <strong>{layer.name}</strong>
+            <strong>{layer.name}{layer.id === 'orchestration' ? ' · 前课覆盖' : ''}</strong>
             <ul>
               {layer.items.map((item) => (
                 <li key={item.id}>

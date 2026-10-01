@@ -1,11 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { gsap } from 'gsap';
-import { installMotion, keyboardRangeValue, type MotionLevel } from './motion-utils';
+import { installMotion, type MotionLevel } from './motion-utils';
+import { RangeControl } from './simulator-controls';
 
 export interface FlowStep {
   label: string;
   detail: string;
-  state?: 'normal' | 'danger' | 'success';
+  /** tone 类名后缀：normal | danger | success（JSON 导入推断为 string，此处仅约束展示）。 */
+  state?: string;
 }
 
 interface Props {
@@ -55,23 +57,15 @@ export default function FlowSimulator({ title, steps, motionLevel = 'simulation'
         ))}
       </div>
       {interactive && (
-        <label className="simulator-control">
-          <span>流程步骤：{step + 1} / {steps.length}</span>
-          <input
-            type="range"
-            min="0"
-            max={Math.max(steps.length - 1, 0)}
-            value={step}
-            onChange={(event) => setStep(Number(event.currentTarget.value))}
-            onKeyDown={(event) => {
-              const next = keyboardRangeValue(event.key, step, 0, Math.max(steps.length - 1, 0));
-              if (next == null) return;
-              event.preventDefault();
-              setStep(next);
-            }}
-            aria-label={`${title}的当前步骤`}
-          />
-        </label>
+        <RangeControl
+          className="simulator-control"
+          label={<>流程步骤：{step + 1} / {steps.length}</>}
+          min={0}
+          max={Math.max(steps.length - 1, 0)}
+          value={step}
+          onChange={setStep}
+          ariaLabel={`${title}的当前步骤`}
+        />
       )}
       <noscript><p className="static-content-note">当前展示完整流程。</p></noscript>
     </section>

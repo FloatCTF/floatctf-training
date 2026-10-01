@@ -1,12 +1,7 @@
-import { useEffect, useId, useRef } from 'react';
-import { gsap } from 'gsap';
-import {
-  useInView,
-  useMotionPresentation,
-  useSimulatorStage,
-  type MotionLevel,
-  type SimulatorStage,
-} from './motion-utils';
+import { useId, useRef } from 'react';
+import { useSimulator, type MotionLevel } from './motion-utils';
+import { useGsapTween } from './motion-gsap';
+import { SimLedger, StageControls } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -144,43 +139,30 @@ function wireWidth(weight: number) {
 export default function BackpropPlayground({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const simRef = useRef<SimulatorStage | null>(null);
-  const visible = useInView(root, () => simRef.current?.stop());
-  const presentation = useMotionPresentation(root, motionLevel, (next) => {
-    if (next === 'static') simRef.current?.reset();
-  });
-  const sim = useSimulatorStage(MAX_STAGE, 900, {
-    interactive: presentation === 'interactive',
-    visible,
-  });
-  simRef.current = sim;
-  const { stage, running, advance, reset, toggleRunning } = sim;
+  const sim = useSimulator(root, MAX_STAGE, 900, motionLevel, 'reset');
+  const { stage } = sim;
 
-  const settled = presentation !== 'interactive';
+  const settled = sim.presentation !== 'interactive';
   const at = (key: (typeof STAGES)[number]['key']) => {
     if (settled) return true;
     return STAGES.findIndex((s) => s.key === key) <= stage;
   };
 
-  useEffect(() => {
-    if (!root.current || settled) return undefined;
-    if (root.current.querySelectorAll('[data-bp-signal]').length === 0) return undefined;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        '[data-bp-signal]',
-        { y: 6, opacity: 0.4 },
-        { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'power2.out' },
-      );
-    }, root.current);
-    return () => context.revert();
-  }, [settled, stage]);
+  useGsapTween(
+    root,
+    !settled,
+    '[data-bp-signal]',
+    { y: 6, opacity: 0.4 },
+    { y: 0, opacity: 1, duration: 0.3, stagger: 0.05, ease: 'power2.out' },
+    [settled, stage],
+  );
 
   const currentStage = STAGES[Math.min(stage, MAX_STAGE)];
   const forwardLit = at('f-hidden');
   const outLit = at('f-out');
 
   return (
-    <section className="bp-playground simulator" ref={root} aria-labelledby={titleId}>
+    <section className="bp-playground simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={sim.presentation}>
       <h3 id={titleId}>反向传播追责演示：误差怎样流回每个参数</h3>
       <p className="bp-intro">
         网络就是上一节手算的那一个：x₁ = 1.0、x₂ = 0.5，隐藏层 ReLU，输出 ŷ，目标 y = 1。
@@ -275,27 +257,7 @@ export default function BackpropPlayground({ motionLevel = 'explanatory' }: Prop
       </p>
 
       {!settled && (
-        <div className="simulator-control bp-controls">
-          <div className="learning-sim-actions" aria-label="追责演示控制">
-            <button type="button" onClick={advance} disabled={running || stage >= MAX_STAGE}>单步追责</button>
-            <button
-              type="button"
-              onClick={toggleRunning}
-              disabled={stage >= MAX_STAGE}
-              aria-pressed={running}
-            >
-              {running ? '暂停' : '连续播放'}
-            </button>
-            <button type="button" onClick={reset}>复位</button>
-          </div>
-          <p className="bp-progress" aria-hidden="true">
-            {STAGES.map((s, index) => (
-              <span key={s.key} className={index <= stage ? 'bp-progress__dot bp-progress__dot--on' : 'bp-progress__dot'}>
-                {index}
-              </span>
-            ))}
-          </p>
-        </div>
+        <StageControls sim={sim} maxStage={MAX_STAGE} stepLabel="单步追责" ariaLabel="追责演示控制" showDots />
       )}
 
       <div className="bp-update" data-bp-update hidden={!settled && stage < MAX_STAGE}>
@@ -309,23 +271,13 @@ export default function BackpropPlayground({ motionLevel = 'explanatory' }: Prop
         </ul>
       </div>
 
-      <div className="learning-sim-ledger bp-ledger" role="table" aria-label="反向传播完整推导记录">
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          <span role="columnheader">梯度</span>
-          <span role="columnheader">链式计算</span>
-          <span role="columnheader">结果</span>
-        </div>
-        {LEDGER_ROWS.map((row) => (
-          <div className="learning-sim-ledger-row" role="row" key={row[0]}>
-            <span role="cell">{row[0]}</span>
-            <span role="cell">{row[1]}</span>
-            <span role="cell">{row[2]}</span>
-          </div>
-        ))}
-      </div>
-      <p className="static-content-note">
-        前向值：z₁ = 0.2、a₁ = 0.2、z₂ = −0.4、a₂ = 0、ŷ = 0.4、L = 0.36。完整推导固定保留在打印、减少动态和无 JavaScript 状态中。
-      </p>
+      <SimLedger
+        className="bp-ledger"
+        ariaLabel="反向传播完整推导记录"
+        columns={['梯度', '链式计算', '结果']}
+        rows={LEDGER_ROWS.map((row) => [...row])}
+        note="前向值：z₁ = 0.2、a₁ = 0.2、z₂ = −0.4、a₂ = 0、ŷ = 0.4、L = 0.36。完整推导固定保留在打印、减少动态和无 JavaScript 状态中。"
+      />
     </section>
   );
 }

@@ -1,191 +1,191 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-28",
-  "reviewer": "agent",
+  "reviewedAt": "2026-09-12",
+  "reviewer": "Codex",
   "mode": "validate-site",
-  "summary": "AI 分类全面优化轮：修复 danger/safe 未定义主题 token（32 处硬编码 fallback）与全站 941KB 阻塞 CSS（字体移出打包管线，主 CSS 降至 195KB），GSAP 与动效检测解耦并抽出三个公共 hooks，删除 2 个死代码组件与对应死样式；五课完成内容与档案修订（RLHF/DPO 与幻觉小节、树模型与失衡对策、术语定义、子代理机制、三处高时效事实内联核验日期、claim 与正文对齐）；新增第六课《AI 安全：从提示注入到对抗样本》（security+academic 双证据档案，两起真实事件证据，无考核）。npm run verify 通过（结构门禁、astro check 0 错误、22 页构建），浏览器矩阵与 judge 整页视觉评审全部通过，QA 新鲜度与原生 table 回归已纳入自动门禁。 后续按用户反馈重设计 AiStackExplorer（层头问题句+计数徽标、中性 chip 色、×7 标注、谱系去向、默认选中），设计中发现 subtle 动效等级被误报为 static 呈现的回归并修复，AiStackExplorer/AiMlDlExplorer 交互经浏览器实测与 judge 复审通过。 曾进一步实现 SVG 谱系连线并经 judge 两轮通过，按用户偏好撤除连线、保留文字谱系标注，撤除后组件交互复验通过。",
+  "summary": "用户评审十八项修复验收，证据与边界见 qa/user-review-fixes.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 mechanism 主模式配 case-study/comparison 支持；五门既有课模式未变。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "保留课程模式；本轮按用户评审改善教学交互与阅读结构。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/catalog.json",
-      "note": "先修链延伸为六课：ML→NN→LLM→Agent→全景→安全；新课前置登记 ai-engineering-landscape，分类页主线同步。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "六门 AI 课增加分段节奏与三题验收，manifest 结构门禁通过。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-literacy.mdx",
-      "note": "RLHF 作文类比沿用既有边界声明；新课注入流程与「指令即数据」机制直接对应，无空比喻。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "拟合评价补充训练、验证与独立测试集区别；XOR 明确坐标变换与线性可分关系。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "提示注入、越狱、直接/间接注入、对抗样本、后门、成员推断、模型提取、FGSM 首现即定义；前课补齐 grader、DAG、成功谓词、sampling/roots/elicitation、探针/消融、共适应、seq2seq、MT-Bench/Arena。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "完整六层和本课五层统一口径；先修课使用真实课名。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-literacy.json",
-      "note": "本轮新增 12 个来源全部核验（InstructGPT、DPO、幻觉综述、Greshake、Rehberger、AIID-622、FGSM、BadNets、Shokri、Tramèr、sklearn 集成/类权重），claims 双向绑定；MCP/OTel/缓存倍率三处高时效句加内联核验日期。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "来源日期拆分为发布与快照语义；习题来源 ID 通过验证。历史外部来源日期保留。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/components/prompt-injection-flow.tsx",
-      "note": "astro check 0 错误 0 警告 0 提示；新课流程模拟器与注意力头交互实测通过；重设计后发现并修复 subtle 等级误报 static 的呈现回归（AiStackExplorer 22 chip、AiMlDlExplorer 3 按钮恢复交互）。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "npm run verify 通过；下载后的 SQL 防御脚本五组 PASS。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 safetyScope=authorized-lab，页面含标准免责声明并明确「只针对自建靶场练习」；其余五课仍为 not-applicable。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "可执行新增材料仅覆盖内存 SQLite 参数绑定防御；审计样本为只读文本。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课主交互解释间接注入的攻防数据流；技能栈组件以层头问题句、计数徽标与文字谱系标注承载「名词分工细化」的关系，无装饰性动效。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "拟合评价反映两组误差；注意力完整行读数辅助检查零权重与屏蔽。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 primaryAnimations=1、supportingInteractions=1、scrollReveals=0，与页面实际一致；全站动效预算未超。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "XOR 在减少动态效果设置下呈现 static；交互预算结构检查通过。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png",
-      "note": "无 JS 态新课整页内容完整；技能栈组件的文字谱系标注在无 JS/打印/移动单栏完整保留。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "神经网络课无 JS 时保留 XOR 三步与三题验收，答案原生折叠可打开。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "新课流程 range 聚焦按 End 值至 4 并保持焦点；ai-literacy 注意力头按钮 aria-pressed 状态正确；公共 hooks 重构未改变键盘行为。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "搜索 Ctrl+K、Esc 和焦点返回通过；无 JS 原生答案折叠可操作。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png",
-      "note": "390×844 下首页、AI 分类页与六课页面级横向溢出为 0（滚动条基线内）。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "十一课在 390 与 1280 宽度下整页溢出为零；注意力宽图保持局部滚动。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-print.pdf",
-      "note": "新课 A4 打印 PDF 生成成功：控制区隐藏、静态内容/表格/来源完整；打印样式未受 hooks 重构影响。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "神经网络课打印媒体模拟下三题答案全部显示；纸张分页未验收。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/catalog.json",
-      "note": "六门 completed 专题 ID/slug/路径/先修一致；首页目录与 AI 分类页自动收录新课；22 页构建成功。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "22 页构建通过，十一课双宽度 H1 和页内锚点检查通过。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-dark.png",
-      "note": "danger/safe token 三套主题生效；技能栈组件移除非安全红绿语义色后 judge 复审通过（默认态/选中态/深色/移动端）。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "新增蓝橙类别 token、形状区分和注意力 SVG 纹理；已检查首页、打印和关键组件截图。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
-      "status": "pass",
-      "evidenceFile": "deploy/nginx.conf.example",
-      "note": "字体分片由既有静态资源规则覆盖（woff2 MIME 与 30 天缓存已映射），异步字体样式表走 font-src 'self'，CSP 未放宽；nginx 结构门禁通过。"
+      "status": "not-run",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本地构建与搜索已验证；生产 nginx/CSP 验收未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-literacy-full-light.png",
-      "note": "六课整页 judge 视觉评审通过：表格全宽、编号连续、无重叠裁切；发现过的深色/无 JS 取证范围问题已补拍全页并复审通过。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "首页卡片层级、代码双栏对齐和宽图局部滚动检查通过，范围见修复记录。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课脆弱/防御代码对照、五步流程、OWASP 十项映射与 CTF 四步全部在页内呈现；RLHF/DPO 效果数据（1.3B 优于 175B）直接给出。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "新增完整 SQL 防御文件页内展示与下载，六课验收含答案。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 11 条 claim 全部绑定原始论文/事件记录/OWASP；ai-literacy 的 CS336 claim 在正文获得落点；LAND 与 AGENT 的重复评测 claim 建立跨课引用语义。"
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "修正拟合结论、XOR 图线分组与六层/五层口径；来源 ID 门禁通过。"
     },
     {
       "id": "opening-question",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课以「骗的是模型还是权重」建立两类攻击面的学习动机；LAND 开头矛盾修复后引导问题完整。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "diagram-value",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-machine-learning-foundations-full-light.png",
-      "note": "树模型对照表与失衡对策将高理解成本关系落为表格；新课攻防流程图与机制地图减少名词理解步骤。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "authentic-example",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课两个真实事件（AIID-622、markdown 外泄）与两段生产风格代码对照贴合真实任务。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "review-card",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-light.png",
-      "note": "新课 KeyTakeaway 收束两条攻击线；各课仍保持单一结论卡。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "src/components/motion-utils.ts",
-      "note": "公共 hooks 统一播放节奏与离屏停止；新课交互由用户输入驱动，无装饰循环。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "visual-focus",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课主视觉对象为注入攻防数据流；各课每课一个主视觉的约定保持。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "qa/ai-ml-deep-audit.json",
-      "note": "本轮用户请求的优化清单逐项落地：性能、正确性、组件复用、门禁自动化、五课内容缺口、新课与分类闭环；既有 37 个视觉实例回归无破坏。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/user-review-fixes.md",
+      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
     }
   ]
 }

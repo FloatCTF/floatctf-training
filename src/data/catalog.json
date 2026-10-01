@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "categories": [
     {
       "id": "web-security",
@@ -18,7 +17,7 @@
     {
       "id": "ai-ml",
       "name": "AI 与机器学习",
-      "summary": "从机器学习训练闭环与神经网络表示学习出发，经大语言模型、AI Agent 工程与生产全景，收束到 AI 系统的攻击面与防御。",
+      "summary": "从机器学习、神经网络到大模型、Agent 与生产系统，逐步学习 AI 机制及防御。",
       "order": 3,
       "pagePath": "/categories/ai-ml/"
     },

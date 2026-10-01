@@ -1,8 +1,15 @@
 ---
+import NumberedBox from './numbered-box.astro';
+import { findTopic } from '../data/catalog';
+import { withBase } from '../lib/base-url';
+
 interface Props { items: string[] }
 const { items } = Astro.props;
 ---
-<section class="learning-box prerequisites" aria-labelledby="prerequisites-title">
-  <header class="learning-box-heading"><span aria-hidden="true">02</span><h2 id="prerequisites-title">前置知识</h2></header>
-  <ul>{items.map((item) => <li>{item}</li>)}</ul>
-</section>
+
+<NumberedBox class="prerequisites" number="02" title="前置知识" titleId="prerequisites-title">
+  <ul>{items.map((item) => {
+    const topic = findTopic(item);
+    return <li>{topic?.pagePath ? <a href={withBase(topic.pagePath)}>{topic.title}</a> : item}</li>;
+  })}</ul>
+</NumberedBox>

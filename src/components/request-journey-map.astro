@@ -9,11 +9,9 @@ const STEPS = [
   { id: '07', label: '记录轨迹', layer: '运行与成本', kind: 'ops' },
   { id: '08', label: '回流评测', layer: '质量与安全', kind: 'quality' },
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="request-journey-map lesson-diagram not-content" aria-label="一次 AI 请求的五层全链路">
-  <p class="lesson-diagram__eyebrow">REQUEST JOURNEY / 五层同场</p>
-  <h3 class="lesson-diagram__title">请求在线上走八步，失败样本在线下回流</h3>
+<LessonDiagram eyebrow="REQUEST JOURNEY / 五层同场" title="请求在线上走八步，失败样本在线下回流" ariaLabel="一次 AI 请求的五层全链路" class="request-journey-map" note="在线路径保持确定的八步清单；模型定制位于离线回路，吸收失败证据后通过评测重新发布。">
   <div class="request-journey-map__body">
     <ol>
       {STEPS.map((step) => (
@@ -27,5 +25,5 @@ const STEPS = [
       <p>第 08 步积累的失败案例进入 Prompt、检索、微调或蒸馏改进，再经过评测门禁回到线上。</p>
     </div>
   </div>
-  <p class="lesson-diagram__note">在线路径保持确定的八步清单；模型定制位于离线回路，吸收失败证据后通过评测重新发布。</p>
-</section>
+  
+</LessonDiagram>

@@ -15,13 +15,9 @@ const SIGNALS = [
   '需要根据状态回到旧节点',
   '需要多个独立责任主体',
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="choice-ladder lesson-diagram not-content" aria-labelledby="choice-ladder-title">
-  <header>
-    <p class="lesson-diagram__eyebrow">ORCHESTRATION / 复杂度阶梯</p>
-    <h3 id="choice-ladder-title" class="lesson-diagram__title">从最简单的方案开始，沿任务结构逐级升级</h3>
-  </header>
+<LessonDiagram eyebrow="ORCHESTRATION / 复杂度阶梯" title="从最简单的方案开始，沿任务结构逐级升级" labelledBy="choice-ladder-title" titleId="choice-ladder-title" class="choice-ladder" headered note="每张卡片给出任务结构、适用条件与采用理由；卡片之间标出升级信号。先选能满足任务的最低一级，再用可测量的并行收益、恢复需求和责任边界支持升级。" noteClass="choice-ladder__note">
   <ol class="choice-ladder__steps" aria-label="六级编排复杂度阶梯">
     {STEPS.map((step, i) => (
       <li class="choice-ladder__item" style={`--choice-level:${i}`}>
@@ -45,7 +41,5 @@ const SIGNALS = [
     <span>简单 · 先从这里验证</span>
     <span>复杂 · 协调成本递增</span>
   </div>
-  <p class="lesson-diagram__note choice-ladder__note">
-    每张卡片给出任务结构、适用条件与采用理由；卡片之间标出升级信号。先选能满足任务的最低一级，再用可测量的并行收益、恢复需求和责任边界支持升级。
-  </p>
-</section>
+  
+</LessonDiagram>

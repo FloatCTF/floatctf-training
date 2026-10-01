@@ -1,0 +1,16 @@
+---
+// 编号盒 primitive：learning-objectives 与 prerequisites 的公共形状。
+interface Props {
+  class: string;
+  number: string;
+  title: string;
+  titleId: string;
+}
+
+const { class: className, number, title, titleId } = Astro.props;
+---
+
+<section class:list={['learning-box', className]} aria-labelledby={titleId}>
+  <header class="learning-box-heading"><span aria-hidden="true">{number}</span><h2 id={titleId}>{title}</h2></header>
+  <slot />
+</section>

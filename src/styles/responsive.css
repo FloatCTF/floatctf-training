@@ -190,7 +190,7 @@
     margin-inline-start: 0.2rem;
   }
 
-  .training-masthead.is-lesson .lesson-navigation--masthead .lesson-outline summary {
+  .training-masthead.is-lesson .lesson-navigation--masthead .lesson-outline > summary {
     min-width: 6.7rem;
     padding-inline: 0.55rem;
   }
@@ -207,7 +207,7 @@
     padding-inline: 0.6rem;
   }
 
-  .lesson-outline summary {
+  .lesson-outline > summary {
     border-inline-end: 0;
     min-width: 7.4rem;
     padding-inline: 0.75rem;
@@ -226,25 +226,25 @@
 
   .lesson-hero {
     min-height: auto;
-    padding-block: 2.3rem 3.5rem;
+    padding-block: 1.2rem 1.8rem;
   }
 
   .lesson-hero-main {
-    margin-block-start: 4.5rem;
+    margin-block-start: 1.8rem;
   }
 
   .lesson-display-title {
-    font-size: clamp(3rem, 15vw, 4.45rem);
+    font-size: clamp(2.6rem, 11vw, 3.5rem);
     letter-spacing: -0.055em;
     line-height: 1;
   }
 
   .lesson-title-medium .lesson-display-title {
-    font-size: clamp(2.8rem, 13.5vw, 4.05rem);
+    font-size: clamp(2.4rem, 10vw, 3.2rem);
   }
 
   .lesson-title-long .lesson-display-title {
-    font-size: clamp(2.55rem, 12.2vw, 3.65rem);
+    font-size: clamp(2.2rem, 9vw, 3rem);
   }
 
   .lesson-accent-rule {
@@ -267,11 +267,11 @@
 
   .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 {
     padding-block-start: var(--training-space-5);
-    margin-block-start: 4.7rem;
+    margin-block-start: 2.5rem;
   }
 
   .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 h2 {
-    font-size: clamp(2rem, 10vw, 2.7rem);
+    font-size: clamp(1.65rem, 7.5vw, 2.15rem);
   }
 
   .intuition-box,

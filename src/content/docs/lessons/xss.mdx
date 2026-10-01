@@ -3,12 +3,6 @@ title: XSS：输出上下文与浏览器侧信任边界
 description: 区分三类 XSS，按输出上下文选择安全 API，并用本地演示验证汇点差异
 pageType: lesson
 template: splash
-lessonId: xss
-categoryId: web-security
-sources: ["owasp-xss-prevention", "cwe-79", "cve-2023-27898", "jenkins-cve-2023-27898", "cve-2023-1932", "nvd-cve-2023-1932", "appsec-interview-gist", "tib3rius-interview"]
-motionLevel: explanatory
-safetyScope: authorized-lab
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -19,8 +13,8 @@ import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
-import InterviewAccordion from '../../../components/interview-accordion';
-import ScrollReveal from '../../../components/scroll-reveal';
+import InterviewAccordion from '../../../components/interview-accordion.astro';
+import ScrollReveal from '../../../components/scroll-reveal.astro';
 import manifest from '../../../data/lessons/xss.json';
 
 export const vulnerableSnippet = `// 危险：innerHTML 会把输入交给 HTML 解析器
@@ -82,11 +76,24 @@ CWE-79 将其描述为网页生成期间未正确中和输入；OWASP 给出按�
 
 ## 本地演示
 
+本实验验证终端中的字符串处理与 URL 参数编码；浏览器 DOM 渲染、模板转义和 CSP 生效情况属于后续应用验收。仓库内的命令在项目根目录运行。
+
 ```bash
 node examples/xss-encode-demo.mjs
 ```
 
-预期会看到同一输入分别进入 `innerHTML`、`textContent` 和 URL 参数。脚本只打印数据流，不创建 DOM，也不执行 payload。示例强调安全汇点与 URL 参数编码的职责边界。
+预期输出：
+
+```text
+源字符串： "\"><img src=x onerror=alert(1)>"
+若写入 innerHTML：浏览器会把它解析成标签。这里会得到一个 img，并在加载失败时执行 onerror。
+若写入 textContent：浏览器把整段当作文本显示，不创建 img，也不注册 onerror。
+本脚本不创建 DOM，所以上面两句是解析规则，不是这次运行里已经发生的页面效果。
+URL 参数： https://training.local/search?q=%22%3E%3Cimg+src%3Dx+onerror%3Dalert%281%29%3E
+说明：URLSearchParams 只做 URL 参数编码，不决定 HTML 如何解析。
+```
+
+两行赋值如果只打印源字符串，会看起来一样。差别在浏览器解析规则，不在字符串本身。脚本不创建 DOM，也不执行 payload。
 
 <CodeCompare
   language="javascript"
@@ -115,7 +122,7 @@ node examples/xss-encode-demo.mjs
 
 CVE-2023-27898 影响 Jenkins 2.270–2.393 与 LTS 2.277.1–2.375.3：插件管理器未转义插件依赖的 Jenkins 版本错误消息；攻击者还需要向已配置更新站点提供插件并让实例显示该消息。修复版本为 2.394、LTS 2.375.4 与 2.387.1。CVE-2023-1932 是 Hibernate Validator `SafeHtmlValidator.isValid` 的校验绕过，浏览器可能把无效 HTML 解释为 HTML 注入或 XSS。（来源：[CVE-2023-27898](#source-cve-2023-27898)、[Jenkins 公告](#source-jenkins-cve-2023-27898)、[CVE-2023-1932](#source-cve-2023-1932)、[NVD](#source-nvd-cve-2023-1932)）
 
-<ScrollReveal client:visible motionLevel="explanatory" label="修复复盘">
+<ScrollReveal motionLevel="explanatory" label="修复复盘">
   <p>修复验收应覆盖：原输出点、同源模板片段、前端路由回写，以及错误页与邮件/富文本渲染链路。</p>
 </ScrollReveal>
 
@@ -128,7 +135,7 @@ CVE-2023-27898 影响 Jenkins 2.270–2.393 与 LTS 2.277.1–2.375.3：插件�
 
 ## 面试检查
 
-<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+<InterviewAccordion questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
 XSS 的关键判断是浏览器将在哪个上下文解释不可信数据。优先使用安全汇点和默认转义模板；需要编码时匹配具体上下文；CSP 与 Cookie 属性承担纵深防御。

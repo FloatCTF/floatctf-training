@@ -1,9 +1,9 @@
 import { useId, useMemo, useRef, useState } from 'react';
 import {
   useMotionPresentation,
-  keyboardRangeValue,
   type MotionLevel,
 } from './motion-utils';
+import { RangeControl, SimLedger } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -89,7 +89,7 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
   };
 
   return (
-    <section className="sp-playground simulator" ref={root} aria-labelledby={titleId}>
+    <section className="sp-playground simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={presentation}>
       <h3 id={titleId}>采样实验台：温度与 top-p 怎样决定落笔</h3>
       <p className="bp-intro">
         候选分数固定为上一节的「漏洞修复后」场景（T = 1 时：测试 58%、构建 21%、扫描 13%、删除 8%）。
@@ -98,40 +98,22 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
 
       {interactive && (
         <div className="simulator-control sp-controls">
-          <label>
-            <span>温度 T：{temperature.toFixed(2)}</span>
-            <input
-              type="range"
-              min={TEMPERATURE_MIN}
-              max={TEMPERATURE_MAX}
-              step="0.05"
-              value={temperature}
-              onChange={(event) => setTemperature(Number(event.currentTarget.value))}
-              onKeyDown={(event) => {
-                const next = keyboardRangeValue(event.key, temperature, TEMPERATURE_MIN, TEMPERATURE_MAX, 0.05);
-                if (next == null) return;
-                event.preventDefault();
-                setTemperature(next);
-              }}
-            />
-          </label>
-          <label>
-            <span>top-p：{topP.toFixed(2)}</span>
-            <input
-              type="range"
-              min={TOPP_MIN}
-              max={TOPP_MAX}
-              step="0.05"
-              value={topP}
-              onChange={(event) => setTopP(Number(event.currentTarget.value))}
-              onKeyDown={(event) => {
-                const next = keyboardRangeValue(event.key, topP, TOPP_MIN, TOPP_MAX, 0.05);
-                if (next == null) return;
-                event.preventDefault();
-                setTopP(next);
-              }}
-            />
-          </label>
+          <RangeControl
+            label={<>温度 T：{temperature.toFixed(2)}</>}
+            min={TEMPERATURE_MIN}
+            max={TEMPERATURE_MAX}
+            step={0.05}
+            value={temperature}
+            onChange={setTemperature}
+          />
+          <RangeControl
+            label={<>top-p：{topP.toFixed(2)}</>}
+            min={TOPP_MIN}
+            max={TOPP_MAX}
+            step={0.05}
+            value={topP}
+            onChange={setTopP}
+          />
           <div className="learning-sim-actions" aria-label="采样控制">
             <button type="button" onClick={draw}>采样一次</button>
             <button type="button" onClick={() => setHistory([])}>清空历史</button>
@@ -142,7 +124,8 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
       <div className="sp-bars" aria-live="polite">
         {CANDIDATES.map((candidate, i) => {
           const kept = keep.has(i);
-          const widthPercent = Math.max(Math.round(probs[i] * 100000) / 1000, 1.5);
+          const shown = kept ? normalized[i] : 0;
+          const widthPercent = Math.max(Math.round(shown * 100000) / 1000, kept ? 1.5 : 0);
           return (
             <div key={candidate.token} className={kept ? 'sp-bar' : 'sp-bar sp-bar--cut'}>
               <span className="sp-bar__token">{candidate.token}</span>
@@ -152,7 +135,7 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
                   style={{ inlineSize: `${widthPercent}%` }}
                 />
               </span>
-              <span className="sp-bar__value">{(probs[i] * 100).toFixed(1)}%</span>
+              <span className="sp-bar__value">{kept ? `${(shown * 100).toFixed(1)}%` : '0%'}</span>
               <span className="sp-bar__mark">{kept ? '' : '被 top-p 砍掉'}</span>
             </div>
           );
@@ -175,25 +158,16 @@ export default function SamplingPlayground({ motionLevel = 'simulation' }: Props
         </>
       )}
 
-      <div className="learning-sim-ledger sp-ledger" role="table" aria-label="三种温度下的固定分布记录">
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          <span role="columnheader">温度</span>
-          {CANDIDATES.map((c) => (
-            <span key={c.token} role="columnheader">{c.token}</span>
-          ))}
-        </div>
-        {STATIC_ROWS.map((row) => (
-          <div className="learning-sim-ledger-row" role="row" key={row.temperature}>
-            <span role="cell">T = {row.temperature.toFixed(1)}</span>
-            {row.probs.map((p, i) => (
-              <span role="cell" key={i}>{(p * 100).toFixed(1)}%</span>
-            ))}
-          </div>
-        ))}
-      </div>
-      <p className="static-content-note">
-        固定记录由同一组 logits 现场计算（softmax(z/T)），完整保留在打印、减少动态和无 JavaScript 状态中。
-      </p>
+      <SimLedger
+        className="sp-ledger"
+        ariaLabel="三种温度下的固定分布记录"
+        columns={['温度', ...CANDIDATES.map((c) => c.token)]}
+        rows={STATIC_ROWS.map((row) => [
+          `T = ${row.temperature.toFixed(1)}`,
+          ...row.probs.map((p) => `${(p * 100).toFixed(1)}%`),
+        ])}
+        note="固定记录由同一组 logits 现场计算（softmax(z/T)），完整保留在打印、减少动态和无 JavaScript 状态中。"
+      />
     </section>
   );
 }

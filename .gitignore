@@ -9,3 +9,9 @@ dist/
 .vscode/
 .idea/
 public/fontsource/
+tmp/
+.playwright-cli/
+.playwright-mcp/
+.zcode/
+qa/screenshots/
+qa/audit/

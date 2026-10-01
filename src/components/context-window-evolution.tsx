@@ -1,12 +1,7 @@
-import { useEffect, useId, useRef } from 'react';
-import { gsap } from 'gsap';
-import {
-  useInView,
-  useMotionPresentation,
-  useSimulatorStage,
-  type MotionLevel,
-  type SimulatorStage,
-} from './motion-utils';
+import { useId, useRef } from 'react';
+import { useSimulator, type MotionLevel } from './motion-utils';
+import { useGsapTween } from './motion-gsap';
+import { SimLedger, StageControls } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -117,40 +112,26 @@ function Segment({
 export default function ContextWindowEvolution({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const simRef = useRef<SimulatorStage | null>(null);
-  const visible = useInView(root, () => simRef.current?.stop());
-  const presentation = useMotionPresentation(root, motionLevel, (next) => {
-    if (next === 'static') simRef.current?.stop();
-  });
-  const sim = useSimulatorStage(MAX_STAGE, 1100, {
-    interactive: presentation === 'interactive',
-    visible,
-  });
-  simRef.current = sim;
-  const { stage, running, advance, reset, toggleRunning } = sim;
+  const sim = useSimulator(root, MAX_STAGE, 1100, motionLevel, 'stop');
+  const { stage } = sim;
 
-  const settled = presentation !== 'interactive';
+  const settled = sim.presentation !== 'interactive';
   const current = settled ? STAGES[MAX_STAGE - 1] : STAGES[stage];
   const showCurve = settled || stage >= MAX_STAGE;
 
-  useEffect(() => {
-    if (!root.current || !showCurve) return undefined;
-    const curve = root.current.querySelectorAll('[data-cwe-curve]');
-    if (curve.length === 0) return undefined;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        '[data-cwe-curve]',
-        { opacity: 0, y: 8 },
-        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
-      );
-    }, root.current);
-    return () => context.revert();
-  }, [showCurve]);
+  useGsapTween(
+    root,
+    showCurve,
+    '[data-cwe-curve]',
+    { opacity: 0, y: 8 },
+    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
+    [showCurve],
+  );
 
   const remaining = remainingOf(current);
 
   return (
-    <section className="cwe-simulator simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={presentation}>
+    <section className="cwe-simulator simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={sim.presentation}>
       <h3 id={titleId}>上下文窗口演化实验：跟着发布简报 Agent 走六步</h3>
       <p className="bp-intro">
         同一条窗口，六步走完一轮真实的 Context Engineering：组装、检索、行动、满载、压缩、放对位置。
@@ -192,50 +173,22 @@ export default function ContextWindowEvolution({ motionLevel = 'explanatory' }: 
       </p>
 
       {!settled && (
-        <div className="simulator-control bp-controls">
-          <div className="learning-sim-actions" aria-label="窗口演化控制">
-            <button type="button" onClick={advance} disabled={running || stage >= MAX_STAGE}>单步</button>
-            <button
-              type="button"
-              onClick={toggleRunning}
-              disabled={stage >= MAX_STAGE}
-              aria-pressed={running}
-            >
-              {running ? '暂停' : '连续播放'}
-            </button>
-            <button type="button" onClick={reset}>复位</button>
-          </div>
-          <p className="bp-progress" aria-hidden="true">
-            {STAGES.map((s, index) => (
-              <span key={s.key} className={index <= stage ? 'bp-progress__dot bp-progress__dot--on' : 'bp-progress__dot'}>
-                {index}
-              </span>
-            ))}
-          </p>
-        </div>
+        <StageControls sim={sim} maxStage={MAX_STAGE} ariaLabel="窗口演化控制" showDots />
       )}
 
-      <div className="learning-sim-ledger cwe-ledger" role="table" aria-label="关键三步的窗口构成记录">
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          <span role="columnheader">时刻</span>
-          <span role="columnheader">历史与计划</span>
-          <span role="columnheader">检索文档</span>
-          <span role="columnheader">工具结果</span>
-          <span role="columnheader">剩余</span>
-        </div>
-        {LEDGER_STAGES.map((s) => (
-          <div className="learning-sim-ledger-row" role="row" key={s.key}>
-            <span role="cell">{s.label.replace(/^\d+ · /, '')}</span>
-            <span role="cell">{s.history}%</span>
-            <span role="cell">{s.retrieval}%</span>
-            <span role="cell">{s.toolResults}%</span>
-            <span role="cell">{remainingOf(s)}%</span>
-          </div>
-        ))}
-      </div>
-      <p className="static-content-note">
-        权限 8%、目标 6%、工具定义 12% 三块固定不变；百分比与静态预算图同源，完整保留在打印、减少动态和无 JavaScript 状态中。
-      </p>
+      <SimLedger
+        className="cwe-ledger"
+        ariaLabel="关键三步的窗口构成记录"
+        columns={['时刻', '历史与计划', '检索文档', '工具结果', '剩余']}
+        rows={LEDGER_STAGES.map((s) => [
+          s.label.replace(/^\d+ · /, ''),
+          `${s.history}%`,
+          `${s.retrieval}%`,
+          `${s.toolResults}%`,
+          `${remainingOf(s)}%`,
+        ])}
+        note="权限 8%、目标 6%、工具定义 12% 三块固定不变；百分比与静态预算图同源，完整保留在打印、减少动态和无 JavaScript 状态中。"
+      />
     </section>
   );
 }

@@ -11,13 +11,9 @@ const CELL_H = 56;
 const STEP_GAP = 150;
 const START_X = 60;
 const CELL_Y = 150;
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="rnn-unfold lesson-diagram not-content" aria-label="循环神经网络展开与沿时间反向传播的示意">
-  <header>
-    <p class="lesson-diagram__eyebrow">顺序结构 / 展开才见深度</p>
-    <h3 class="lesson-diagram__title">RNN：同一套权重，沿时间展开</h3>
-  </header>
+<LessonDiagram eyebrow="顺序结构 / 展开才见深度" title="RNN：同一套权重，沿时间展开" ariaLabel="循环神经网络展开与沿时间反向传播的示意" class="rnn-unfold" headered note="「循环」在公式里只有一行，展开后却是一张随序列变深的计算图。上一节的链式法则原封不动地适用， 只是要沿时间连乘很多次——这正是长序列难训练、需要门控与梯度裁剪的原因。" noteClass="rnn-unfold__note">
   <div class="rnn-unfold__body">
     <svg viewBox="0 0 700 330" role="img" aria-label="左侧是带自循环的 RNN 单元，右侧展开成四个时间步，同一套 W_h 权重反复出现，梯度虚线从右往左逐级变弱">
       <title>RNN 展开与沿时间反向传播</title>
@@ -77,8 +73,5 @@ const CELL_Y = 150;
       <text class="ru-bp-note" x={START_X + 60} y="296">每过一步都乘一次由 W_h 与激活导数组成的局部 Jacobian：连乘可能让梯度消失或爆炸。</text>
     </svg>
   </div>
-  <p class="lesson-diagram__note rnn-unfold__note">
-    「循环」在公式里只有一行，展开后却是一张随序列变深的计算图。上一节的链式法则原封不动地适用，
-    只是要沿时间连乘很多次——这正是长序列难训练、需要门控与梯度裁剪的原因。
-  </p>
-</section>
+  
+</LessonDiagram>

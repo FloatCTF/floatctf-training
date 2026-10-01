@@ -1,0 +1,27 @@
+SQL 代码审计固定样本（只读片段，供分类与修复设计）
+
+任务：对 A、B、C、D 标注输入来源、查询结构控制权、值绑定方式和修复建议。
+这些片段仅用于阅读。可运行的防御回归文件为 sql-binding-check.mjs。
+
+A｜值拼接
+sql = "SELECT id FROM contacts WHERE name = '" + request.name + "'"
+关注：请求数据在查询准备之前进入 SQL 文本。
+
+B｜动态排序字段
+sql = "SELECT id FROM contacts ORDER BY " + request.sort
+关注：排序字段属于语法标识符，需由服务端有限映射产生。
+
+C｜固定查询与绑定值
+statement = db.prepare("SELECT id FROM contacts WHERE name = ?")
+row = statement.get(request.name)
+关注：请求数据由绑定接口传入，查询结构固定。
+
+D｜有限映射与绑定值
+SORTS = Object.freeze({ id: "id", name: "name" })
+if (!Object.hasOwn(SORTS, sortKey)) throw Error("unsupported sort")
+statement = db.prepare("SELECT id FROM contacts ORDER BY " + SORTS[sortKey] + " LIMIT ?")
+rows = statement.all(limit)
+关注：字段来自服务端映射；limit 先检查整数及范围，再绑定。
+
+验收产物：四行审计记录；说明 A 的绑定修复与 B 的标识符映射修复；
+为 C、D 列出普通值、含引号值、未知字段和越界数量的回归检查。

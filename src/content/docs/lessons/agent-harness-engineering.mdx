@@ -3,12 +3,6 @@ title: AI Agent 工程方法：从 Prompt 到执行图
 description: 从 Prompt、MCP、Skills、上下文、Harness、Loop 到 Graph，理解 AI 应用怎样从一次模型调用扩展为可验证的执行系统
 pageType: lesson
 template: splash
-lessonId: agent-harness-engineering
-categoryId: ai-ml
-sources: ["anthropic-prompt-overview", "mcp-architecture", "mcp-tools-spec", "agent-skills-spec", "openai-skills", "anthropic-context-engineering", "lost-in-the-middle", "langchain-context-engineering", "openai-harness-engineering", "langchain-harness-boundaries", "anthropic-agent-evals", "react-paper", "anthropic-effective-agents", "langchain-loop-engineering", "langgraph-graph-api", "google-adk-graphs", "autogen-graphflow", "anthropic-multi-agent", "graph-origin-archive"]
-motionLevel: explanatory
-safetyScope: not-applicable
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -18,6 +12,8 @@ import CodeCompare from '../../../components/code-compare.astro';
 import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
 import StepList from '../../../components/step-list.astro';
 import AgentTraceReplay from '../../../components/agent-trace-replay';
 import ContextBudget from '../../../components/context-budget.astro';
@@ -100,6 +96,8 @@ export const agentLoopSteps = [
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
   <Prerequisites items={manifest.lessonPlan.prerequisites} />
 </div>
+
+<LessonPacing segments={manifest.segments} />
 
 ## 引导问题：为什么一段好 Prompt 最后会长成一个系统
 
@@ -277,11 +275,11 @@ Anthropic 将 Context Engineering 定义为策划和维护推理时完整信息�
 
 <ContextBudget />
 
-上面这条是某一轮的静态剖面。把「哪一轮」也画进去，才看得到 Context Engineering 真正的管理对象——跟着发布简报的 Agent 走六步：首轮组装、检索、工具结果涌入、窗口满载、触发压缩、把关键证据放到两端：
+上面这条是某一轮的静态剖面。把「哪一轮」也画进去，才看得到 Context Engineering 真正的管理对象。演示的标签从 0 数到 5，和下面的名字一一对应：0 首轮组装，1 检索，2 工具结果涌入，3 窗口满载，4 压缩，5 把关键证据放到两端。
 
 <ContextWindowEvolution client:visible motionLevel="explanatory" />
 
-第 3 步「满载」就是上面静态图的快照时刻；第 4 步的压缩对应下一小节的 Compress 操作；第 5 步的位置问题对应本节第 3 小节。
+标签 3「窗口满载」就是上面静态图的快照时刻；标签 4 的压缩对应下一小节的 Compress 操作；标签 5 的位置问题对应本节第 3 小节。这里的 3、4、5 是演示上印的标签，不是「六步里的第 3 个」。
 
 ### 2. 上下文管理有四种基本操作
 
@@ -477,10 +475,14 @@ Anthropic 区分了预定义代码路径的 Workflow 与由模型动态选择过
 - **Graph 可以包含 Loop：** Loop 负责节点内部和跨运行的反馈。
 - **复杂度需要证据：** 新增节点、Agent 或框架之前，先证明它改善成功率、恢复性、成本或可审计性。
 
-七层解决的是一次任务怎样可控执行。生产系统还要回答窗口之外的知识与记忆、模型定制、评测护栏和运行成本这些问题。下一课《AI 工程全景》用五层框架把它们与七层拼在同一张地图上。
+本课的七个工程对象解决一次任务怎样可控执行。下一课《AI 工程全景》把 Prompt、Context、Harness、Loop、Graph 放进执行编排层，把 MCP 放到能力接入层，Skills 不进入那张六层表。其余五层在下一课展开。
 
 <KeyTakeaway>
 AI 工程从 Prompt 向外扩展，形成一组可以分别设计和验证的对象：指令、连接、流程、上下文、执行环境、反馈和拓扑。可靠系统用外部证据判断结果，用权限和预算限制副作用，并在关系复杂到值得管理时引入图式编排。
 </KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
 
 <SourceList sources={manifest.sources} />

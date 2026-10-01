@@ -1,44 +1,35 @@
 ---
-import catalog from '../data/catalog.json';
+import { catalog, categoriesByOrder, completedTopics, completedTopicsByCategory, difficultyLabel, findCategory, topicsByCategory, type CatalogCategory } from '../data/catalog';
+import { withBase } from '../lib/base-url';
+import { romanNumeral } from '../lib/roman-numeral';
 import { Icon } from '@astrojs/starlight/components';
 
 interface Props { categoryId?: string }
-interface CatalogTopic {
-  id: string;
-  categoryId: string;
-  title: string;
-  summary: string;
-  difficulty: string;
-  status: 'completed' | 'planned';
-  pagePath: string | null;
-  order: number;
-}
 const { categoryId } = Astro.props;
-const catalogTopics = catalog.topics as CatalogTopic[];
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
-const withBase = (pagePath: string) => `${base}${pagePath}`;
-const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-const difficultyLabels: Record<string, string> = {
-  beginner: '入门',
-  intermediate: '中级',
-  advanced: '进阶',
-};
-const categories = catalog.categories
-  .filter((category) => !categoryId || category.id === categoryId)
-  .sort((a, b) => a.order - b.order);
-const completedTotal = catalogTopics.filter((topic) => topic.status === 'completed').length;
+const categories = (categoryId ? [findCategory(categoryId)] : categoriesByOrder()).filter(
+  (category): category is CatalogCategory => Boolean(category),
+).sort((a, b) => Number(completedTopicsByCategory(b.id).length > 0) - Number(completedTopicsByCategory(a.id).length > 0));
+const completedTotal = completedTopics().length;
 const isHomeMap = !categoryId;
+const manifests = import.meta.glob('../data/lessons/*.json', { eager: true, import: 'default' }) as Record<string, { lessonPlan: { durationMinutes: number; audience: string } }>;
+const planFor = (id: string) => manifests[`../data/lessons/${id}.json`]?.lessonPlan;
+const sequenceLabel = (topics: { id: string; status: string; prerequisites: string[] }[]) => {
+  const completed = topics.filter((topic) => topic.status === 'completed');
+  if (completed.length === 0) return '规划中';
+  const chained = completed.every((topic, index) => index === 0 || topic.prerequisites.includes(completed[index - 1].id));
+  if (chained) return `${completed.length} 节已上线 · 按列表顺序学习`;
+  return `${completed.length} 节已上线 · 先修课已标明，其余可按主题选`;
+};
 
 const panelPayload = isHomeMap
   ? categories.map((category) => {
-      const topics = catalogTopics
-        .filter((topic) => topic.categoryId === category.id)
-        .sort((a, b) => a.order - b.order)
+      const topics = topicsByCategory(category.id)
         .map((topic) => ({
           id: topic.id,
           title: topic.title,
           summary: topic.summary,
-          difficulty: difficultyLabels[topic.difficulty] || topic.difficulty,
+          difficulty: difficultyLabel(topic.difficulty),
+          duration: planFor(topic.id)?.durationMinutes,
           status: topic.status,
           href: topic.status === 'completed' && topic.pagePath ? withBase(topic.pagePath) : null,
         }));
@@ -46,11 +37,12 @@ const panelPayload = isHomeMap
       return {
         id: category.id,
         name: category.name,
-        summary: category.summary,
-        roman: romanNumerals[category.order - 1] || String(category.order),
+        summary: `${category.summary}${topics[0] ? ` 适合：${planFor(topics[0].id)?.audience || '具备相关基础的读者'}。` : ''}`,
+        roman: romanNumeral(category.order),
         pagePath: withBase(category.pagePath),
         topicCount: topics.length,
         completed,
+        countLabel: sequenceLabel(topicsByCategory(category.id)),
         topics,
       };
     })
@@ -61,16 +53,16 @@ const panelPayload = isHomeMap
   data-learning-map={isHomeMap ? 'home' : 'category'}
 >
   {categories.map((category) => {
-    const topics = catalogTopics
-      .filter((topic) => topic.categoryId === category.id)
-      .sort((a, b) => a.order - b.order);
+    const topics = topicsByCategory(category.id);
     const completed = topics.filter((topic) => topic.status === 'completed').length;
-    const roman = romanNumerals[category.order - 1] || category.order;
-    const countLabel = `${String(topics.length).padStart(2, '0')} 专题　·　已完成 ${String(completed).padStart(2, '0')}`;
+    const roman = romanNumeral(category.order);
+    const firstTopic = topics.find((topic) => topic.status === 'completed');
+    const firstPlan = firstTopic ? planFor(firstTopic.id) : undefined;
+    const countLabel = sequenceLabel(topics);
 
     return isHomeMap ? (
       <a
-        class="category-directory category-trigger"
+        class:list={['category-directory', 'category-trigger', { 'category-planned': completed === 0 }]}
         href={withBase(category.pagePath)}
         data-category-id={category.id}
         aria-haspopup="dialog"
@@ -82,6 +74,7 @@ const panelPayload = isHomeMap
             <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
             <span class="category-summary">{category.summary}</span>
             <span class="category-count">{countLabel}</span>
+            {firstTopic && <span class="category-count">从《{firstTopic.title}》开始 · {firstPlan?.durationMinutes} 分钟</span>}
           </span>
           <span class="category-toggle" aria-hidden="true"><Icon name="right-arrow" size="1rem" /></span>
         </span>
@@ -92,7 +85,6 @@ const panelPayload = isHomeMap
           <span class="category-number" aria-hidden="true">{roman}</span>
           <span class="category-heading">
             <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
-            <span class="category-summary">{category.summary}</span>
             <span class="category-count">{countLabel}</span>
           </span>
         </div>
@@ -104,7 +96,7 @@ const panelPayload = isHomeMap
                 <span>{topic.summary}</span>
               </span>
               <span class="directory-topic-meta">
-                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <span>{difficultyLabel(topic.difficulty)} · {planFor(topic.id)?.durationMinutes} 分钟</span>
                 <Icon name="right-arrow" size="1rem" aria-hidden="true" />
               </span>
             </a>
@@ -115,11 +107,11 @@ const panelPayload = isHomeMap
                 <span>{topic.summary}</span>
               </span>
               <span class="directory-topic-meta">
-                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <span>{difficultyLabel(topic.difficulty)}</span>
                 <span class="directory-status">规划中</span>
               </span>
             </article>
-          )) : <p class="directory-empty">当前分类等待首个专题。</p>}
+          )) : <p class="directory-empty">本分类规划中。<a href={withBase('/')}>返回课程地图，选择已上线课程</a>。</p>}
         </div>
       </section>
     );
@@ -279,14 +271,20 @@ const panelPayload = isHomeMap
           document.documentElement.classList.remove('category-morphing');
         }
 
-        function pad(n) {
-          return String(n).padStart(2, '0');
-        }
-
         function renderTopics(category) {
           const topics = category.topics || [];
           if (!topics.length) {
-            panelBody.innerHTML = '<p class="directory-empty">当前分类等待首个专题。</p>';
+            const empty = document.createElement('p');
+            empty.className = 'directory-empty';
+            empty.textContent = '本分类规划中。可先选择已上线的学习路线：';
+            panelBody.replaceChildren(empty);
+            payload.filter((item) => item.completed > 0).forEach((item) => {
+              const link = document.createElement('a');
+              link.className = 'directory-topic';
+              link.href = item.pagePath;
+              link.textContent = `${item.name} · ${item.completed} 节已上线`;
+              panelBody.append(link);
+            });
             return;
           }
 
@@ -312,7 +310,7 @@ const panelPayload = isHomeMap
             const meta = document.createElement('span');
             meta.className = 'directory-topic-meta';
             const difficulty = document.createElement('span');
-            difficulty.textContent = topic.difficulty;
+            difficulty.textContent = `${topic.difficulty}${topic.duration ? ` · ${topic.duration} 分钟` : ''}`;
             const trailing = document.createElement('span');
             trailing.className = isDone ? 'topic-trailing' : 'directory-status';
             trailing.textContent = isDone ? '→' : '规划中';
@@ -345,7 +343,7 @@ const panelPayload = isHomeMap
           panelRoman.textContent = category.roman;
           panelTitle.textContent = category.name;
           panelSummary.textContent = category.summary;
-          panelCount.textContent = `${pad(category.topicCount)} 专题　·　已完成 ${pad(category.completed)}`;
+          panelCount.textContent = category.countLabel;
           panelLink.href = category.pagePath;
           renderTopics(category);
 

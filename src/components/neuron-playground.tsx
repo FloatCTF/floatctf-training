@@ -1,9 +1,9 @@
 import { useId, useRef, useState } from 'react';
 import {
   useMotionPresentation,
-  keyboardRangeValue,
   type MotionLevel,
 } from './motion-utils';
+import { RangeControl } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -25,7 +25,7 @@ const DIALS: Dial[] = [
   { id: 'x2', label: '输入 x₂', min: 0, max: 1, step: 0.1, initial: 0.4, format: (v) => v.toFixed(1), role: '第二科成绩' },
   { id: 'w1', label: '权重 w₁', min: -2, max: 2, step: 0.1, initial: 0.8, format: (v) => v.toFixed(1), role: 'x₁ 的重要程度（负数=拖后腿）' },
   { id: 'w2', label: '权重 w₂', min: -2, max: 2, step: 0.1, initial: 1.2, format: (v) => v.toFixed(1), role: 'x₂ 的重要程度（负数=拖后腿）' },
-  { id: 'b', label: '偏置 b', min: -2, max: 2, step: 0.1, initial: -0.3, format: (v) => v.toFixed(1), role: '及格门槛：分数减去它才作数' },
+  { id: 'b', label: '偏置 b', min: -2, max: 2, step: 0.1, initial: -0.3, format: (v) => v.toFixed(1), role: '直接加进总分；为负时相当于门槛' },
 ];
 
 export default function NeuronPlayground({ motionLevel = 'explanatory' }: Props) {
@@ -69,7 +69,7 @@ export default function NeuronPlayground({ motionLevel = 'explanatory' }: Props)
       <header className="xor-explorer__header">
         <p className="lesson-diagram__eyebrow">ONE NEURON / 加权打分</p>
         <h3 id={titleId} className="lesson-diagram__title">亲手调一个神经元</h3>
-        <p className="xor-explorer__intro">把神经元想成一位评委：两科成绩各乘一个权重（重要程度），加起来再减一道门槛（偏置），得到总分 z；ReLU 决定「负分直接判 0」。拖动下面的滑块，看连线粗细（权重大小）、颜色（正=加分，蓝=扣分）和输出怎样联动。</p>
+        <p className="xor-explorer__intro">把神经元想成一位评委：两科成绩各乘一个权重（重要程度），再直接加上偏置 b，得到总分 z = w₁x₁ + w₂x₂ + b。b 为负时才相当于设了一道门槛。ReLU 决定「负分直接判 0」。拖动下面的滑块，看连线粗细（权重大小）、颜色（正=加分，蓝=扣分）和输出怎样联动。</p>
       </header>
 
       <div className="neuron-playground__layout">
@@ -105,27 +105,16 @@ export default function NeuronPlayground({ motionLevel = 'explanatory' }: Props)
         <div className="neuron-playground__dials">
           {presentation === 'interactive' ? (
             DIALS.map((dial) => (
-              <label key={dial.id}>
-                <span>{dial.label}：{dial.format(values[dial.id])}</span>
-                <input
-                  type="range"
-                  min={dial.min}
-                  max={dial.max}
-                  step={dial.step}
-                  value={values[dial.id]}
-                  aria-label={`${dial.label}（${dial.role}）`}
-                  onChange={(event) => {
-                    const next = Number(event.currentTarget.value);
-                    setValues((v) => ({ ...v, [dial.id]: next }));
-                  }}
-                  onKeyDown={(event) => {
-                    const next = keyboardRangeValue(event.key, values[dial.id], dial.min, dial.max, dial.step);
-                    if (next == null) return;
-                    event.preventDefault();
-                    setValues((v) => ({ ...v, [dial.id]: next }));
-                  }}
-                />
-              </label>
+              <RangeControl
+                key={dial.id}
+                label={<>{dial.label}：{dial.format(values[dial.id])}</>}
+                min={dial.min}
+                max={dial.max}
+                step={dial.step}
+                value={values[dial.id]}
+                ariaLabel={`${dial.label}（${dial.role}）`}
+                onChange={(next) => setValues((v) => ({ ...v, [dial.id]: next }))}
+              />
             ))
           ) : (
             <p className="xor-explorer__static-note">静态模式展示默认参数（w₁ = 0.8、w₂ = 1.2、b = -0.3）；交互模式可拖动全部滑块，观察连线粗细与输出的联动。</p>

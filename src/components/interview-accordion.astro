@@ -1,0 +1,55 @@
+---
+// 面试训练模块：纯静态 <details> 交互，无 JavaScript 也能展开收起。
+interface Question {
+  id: string;
+  question: string;
+  level: number;
+  answer: string;
+  keyPoints: string[];
+  bonus: string;
+  trap?: { text: string };
+}
+
+interface Props { questions: Question[] }
+
+const { questions } = Astro.props;
+
+const labels: Record<number, string> = {
+  1: '基础概念',
+  2: '利用与技术细节',
+  3: '防御与工程设计',
+  4: '实战与综合判断',
+};
+---
+
+<section class="interview-module" aria-labelledby="interview-module-title">
+  <p id="interview-module-title"><strong>答题方法</strong></p>
+  <p>先给结论，再说明成立条件和边界；涉及防御时覆盖应用、网络和权限三层，并用来源支持案例。</p>
+  {[1, 2, 3, 4].map((level) => (
+    <section class="interview-level" aria-labelledby={`interview-module-title-${level}`}>
+      <h3 id={`interview-module-title-${level}`}>第 {level} 档：{labels[level]}</h3>
+      {questions.filter((item) => item.level === level).map((item, index) => (
+        <div class="interview-question">
+          <details>
+            <summary><span class="question-number">{String(index + 1).padStart(2, '0')}</span><span>{item.question}<small class="answer-hint">展开参考答案 ▾</small></span></summary>
+            <div class="interview-answer">
+              <p><strong>参考回答：</strong>{item.answer}</p>
+              <p><strong>合格要点：</strong>{item.keyPoints.join('；')}</p>
+              <p><strong>加分项：</strong>{item.bonus}</p>
+              {item.trap && <p><strong>真实追问依据：</strong>{item.trap.text}</p>}
+            </div>
+          </details>
+          <article class="interview-print-item">
+            <h4>{index + 1}. {item.question}</h4>
+            <div class="interview-answer">
+              <p><strong>参考回答：</strong>{item.answer}</p>
+              <p><strong>合格要点：</strong>{item.keyPoints.join('；')}</p>
+              <p><strong>加分项：</strong>{item.bonus}</p>
+              {item.trap && <p><strong>真实追问依据：</strong>{item.trap.text}</p>}
+            </div>
+          </article>
+        </div>
+      ))}
+    </section>
+  ))}
+</section>

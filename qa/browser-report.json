@@ -1,245 +1,117 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-08-28",
-  "target": "http://localhost:4321/",
-  "browser": "Playwright chromium-1228 (headless)",
-  "scope": "AI 分类六课更新验收：ai-literacy 新增 RLHF/DPO 与幻觉小节，machine-learning-foundations 新增树模型与失衡对策，neural-network-foundations/agent-harness-engineering/ai-engineering-landscape 术语与时效修订，新增 ai-security-essentials 课程；全站字体异步加载、prefetch、danger/safe 主题 token 与公共 hooks 重构回归。桌面 1280×720 浅/深、390×844、无 JS、A4 打印、键盘与控制台矩阵覆盖首页、AI 分类页与六课；视觉评审由 judge 全页复核（6 张整页浅色 + 深色/无 JS 全页）。 追加：AiStackExplorer 改版重设计（层头问题句+计数徽标、中性 chip 色、×7 膨胀标注、2022 谱系去向、默认选中 Harness）；期间发现并修复 subtle 动效等级被误报为 static 呈现的回归（AiStackExplorer 与 AiMlDlExplorer 交互因此失效），已按组件特写+交互实测复验。",
+  "testedAt": "2026-09-12",
+  "target": "http://localhost:4322/",
+  "browser": "Playwright CLI Chromium",
+  "scope": "用户评审十八项修复；本地预览与关键组件抽查，详见 qa/user-review-fixes.md",
   "pages": [
     "/",
-    "/categories/",
-    "/categories/web-security/",
-    "/categories/system-network-security/",
-    "/categories/ai-ml/",
-    "/categories/programming/",
-    "/categories/cs-foundations/",
-    "/categories/engineering-tools/",
-    "/categories/ctf-practice/",
-    "/categories/custom/",
-    "/lessons/ssrf/",
-    "/lessons/sql-injection/",
-    "/lessons/sql-injection-advanced/",
-    "/lessons/xss/",
-    "/lessons/rce/",
     "/lessons/machine-learning-foundations/",
     "/lessons/neural-network-foundations/",
     "/lessons/ai-literacy/",
     "/lessons/agent-harness-engineering/",
     "/lessons/ai-engineering-landscape/",
-    "/lessons/ai-security-essentials/"
-  ],
-  "topicChecks": [
-    {
-      "topic": "machine-learning-foundations",
-      "result": "新增树模型与集成小节：随机森林/梯度提升树对照表全宽渲染，失衡对策三段编号列表与既有指标表排版一致；LinearFit/NeuralSimulator 回归正常。 subtle 级 AiMlDlExplorer 在呈现语义回归修复后恢复 3 按钮交互（回归已记录并修复）。",
-      "screenshots": [
-        "qa/screenshots/qa0828-machine-learning-foundations-full-light.png",
-        "qa/screenshots/qa0828-lessons-machine-learning-foundations-desktop-light.png"
-      ]
-    },
-    {
-      "topic": "neural-network-foundations",
-      "result": "探针/消融、共适应注释与残差/归一化预告句渲染正常，无标题裁切；四个交互岛回归正常。",
-      "screenshots": [
-        "qa/screenshots/qa0828-neural-network-foundations-full-light.png"
-      ]
-    },
-    {
-      "topic": "ai-literacy",
-      "result": "RLHF/DPO 对照小节与表格、幻觉三入口表、CS336 结构句全部渲染；注意力矩阵「位置头」按钮 aria-pressed 交互通过。",
-      "screenshots": [
-        "qa/screenshots/qa0828-ai-literacy-full-light.png",
-        "qa/screenshots/qa0828-lessons-ai-literacy-desktop-dark.png"
-      ]
-    },
-    {
-      "topic": "agent-harness-engineering",
-      "result": "Hero 副题与标题统一为「从 Prompt 到执行图」；MCP 反向能力注释、grader/DAG/成功谓词注释、子代理上下文隔离段渲染正常。",
-      "screenshots": [
-        "qa/screenshots/qa0828-agent-harness-engineering-full-light.png"
-      ]
-    },
-    {
-      "topic": "ai-engineering-landscape",
-      "result": "开头段「三样东西」补齐、内联核验日期渲染正常；技能栈组件改版：六层各带问题句与 4/7/3/3/2/3 计数徽标，chip 中性墨色（移除非安全红绿语义），默认选中 Harness 显示定义详情，×7 膨胀标注与 2022 谱系文字去向（长出调用契约/长出开放协议/细分为）落在原空白区。SVG 谱系连线曾实现并经 judge 两轮通过，按用户偏好撤除，保留文字标注；组件交互（22 chip、详情切换）复验通过。",
-      "screenshots": [
-        "qa/screenshots/qa0828-stack-explorer-component-light.png",
-        "qa/screenshots/qa0828-stack-explorer-component-selected.png",
-        "qa/screenshots/qa0828-stack-explorer-component-dark.png",
-        "qa/screenshots/qa0828-stack-explorer-component-mobile.png",
-        "qa/screenshots/qa0828-ai-engineering-landscape-full-light.png"
-      ]
-    },
-    {
-      "topic": "ai-security-essentials",
-      "result": "新课整页通过 judge 视觉评审：5 步注入流程模拟器（range 滑块键盘 End=4 通过、离屏停止）、VULNERABLE/GUARDED 代码对照红绿随主题切换、OWASP 十项映射表、CTF 四步框架、免责声明条完整；无 JS 态静态降级齐全。",
-      "screenshots": [
-        "qa/screenshots/qa0828-ai-security-essentials-full-light.png",
-        "qa/screenshots/qa0828-ai-security-essentials-full-dark.png",
-        "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png",
-        "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png",
-        "qa/screenshots/qa0828-ai-security-essentials-print.pdf"
-      ]
-    }
+    "/lessons/ai-security-essentials/",
+    "/lessons/sql-injection/",
+    "/lessons/sql-injection-advanced/",
+    "/lessons/ssrf/",
+    "/lessons/xss/",
+    "/lessons/rce/"
   ],
   "checks": [
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "1280×720 下首页、AI 分类页与六课页面宽度等于 viewport，无横向溢出（滚动条宽度 −10px 为计量基线）；六门 AI 课程 judge 整页评审通过。",
-      "screenshot": "qa/screenshots/qa0828-ai-security-essentials-full-light.png"
+      "evidence": "首页桌面卡片层级与已上线计数截图；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-home-desktop.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "data-theme=dark 显式切换下重拍：新课整页与 ai-literacy 深色渲染正常，新增 danger/safe token 红绿在代码对照块随主题切换，无浅色硬编码残留（judge 复核）。",
-      "screenshot": "qa/screenshots/qa0828-ai-security-essentials-full-dark.png"
+      "evidence": "注意力矩阵深色屏蔽纹理截图；此项为组件范围；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-attention-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "六课沿用无侧栏教材壳层、课程路径、本课目录与 LessonHero；新增章节编号连续（新课一至六），表格全宽。",
-      "screenshot": "qa/screenshots/qa0828-machine-learning-foundations-full-light.png"
+      "evidence": "SQL 代码双栏顶部相同、代码栏溢出为零；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-sql-code.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390×844 下首页、AI 分类页与六课 document/body 与 viewport 同宽，无页面级横向溢出。",
-      "screenshot": "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png"
+      "evidence": "首页 390 宽度截图；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-home-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "六课移动端首屏完整：新课 hero、学习目标与引导问题正常渲染。",
-      "screenshot": "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png"
+      "evidence": "十一课 390 宽度溢出为零；注意力局部滚动；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-attention-mobile.png"
     },
     {
       "id": "category-page",
-      "status": "pass",
-      "evidence": "AI 分类页登记六门课程，摘要含安全课出口；其余分类页不受影响。",
-      "screenshot": "qa/screenshots/qa0828-categories-ai-ml-desktop-light.png"
+      "status": "not-run",
+      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
     },
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "首页分类卡与 AI 分类弹层在无 JS 下保留静态语义；新课按 completed 登记进首页目录。"
+      "evidence": "首页已上线卡片在前，规划卡片压缩，计数展示已上线课程；qa/user-review-verification.json"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "新课 A4 打印 PDF 生成成功，控制区隐藏、静态内容与表格完整保留。",
-      "screenshot": "qa/screenshots/qa0828-ai-security-essentials-print.pdf"
+      "evidence": "神经网络课打印媒体模拟三题答案显示；未验证纸张分页；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "公共 installMotion 以原生 matchMedia 监听 reduce/print；本轮重构后全部 19 个 React 岛走统一 useMotionPresentation，静态呈现回退与上一轮一致，未发现回归。"
+      "evidence": "XOR data-presentation=static；qa/user-review-verification.json"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "禁用 JS 后新课与 ai-literacy 整页内容完整：静态说明、代码对照、DataTable、来源列表与免责声明齐全（judge 复核全页）。",
-      "screenshot": "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png"
+      "evidence": "神经网络课无 JS 三步 XOR 与三题习题保留，原生折叠可打开；qa/user-review-verification.json",
+      "screenshot": "qa/screenshots/user-review-no-js.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "新课课末出口句、LAND→新课桥接、分类页与新课链接均指向存在的静态页面（22 页构建成功）；新课内部锚点与来源列表逐条对应。"
+      "evidence": "十一课双宽度页内锚点全部可解析；qa/user-review-verification.json"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "新课注入流程 range 聚焦后按 End 值到 4 并保持焦点；ai-literacy「位置头」按钮点击后 aria-pressed=true。 改版组件回归：AiStackExplorer 22 个 chip 按钮与 AiMlDlExplorer 3 按钮在 subtle 等级下恢复可交互（修复 subtle 被误判 static 的呈现回归）。",
-      "screenshot": "qa/screenshots/qa0828-lessons-ai-security-essentials-desktop-light.png"
+      "evidence": "Ctrl+K 打开搜索、Esc 关闭、焦点返回通过；qa/user-review-verification.json"
     },
     {
       "id": "deployment-csp-pagefind",
-      "status": "pass",
-      "evidence": "字体分片落在既有静态资源 location（woff2 MIME 已映射，30 天 immutable 缓存）；异步字体样式表走 font-src 'self'，CSP 无需放宽。"
+      "status": "not-run",
+      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
     },
     {
       "id": "console",
       "status": "pass",
-      "evidence": "六课、首页与 AI 分类页 console 无 error/warning，无 pageerror；React SVG 属性迁移后保持零告警。",
-      "screenshot": "qa/screenshots/qa0828-lessons-ai-literacy-desktop-light.png"
+      "evidence": "22 次课程页面检查未捕获 pageerror；未全面审计第三方警告；qa/user-review-verification.json"
     },
     {
       "id": "performance",
-      "status": "pass",
-      "evidence": "主 CSS 由 941KB（含 @font-face）降至 195KB；字体 618 个分片移至 public/fontsource 并以非阻塞样式表加载；GSAP 仅存在于确有补间的组件 chunk；prefetch 已启用。",
-      "screenshot": "qa/screenshots/qa0828-home-desktop-light.png"
+      "status": "not-run",
+      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
     }
   ],
   "screenshots": [
-    "qa/screenshots/agent-harness-3b1b-desktop-dark.png",
-    "qa/screenshots/agent-harness-3b1b-desktop-light.png",
-    "qa/screenshots/agent-harness-3b1b-mobile-light.png",
-    "qa/screenshots/agent-harness-3b1b-mobile-no-js.png",
-    "qa/screenshots/agent-harness-3b1b-print.png",
-    "qa/screenshots/agent-harness-context-window-desktop-dark.png",
-    "qa/screenshots/agent-harness-context-window-mobile.png",
-    "qa/screenshots/agent-harness-context-window-no-js.png",
-    "qa/screenshots/agent-harness-context-window-print.png",
-    "qa/screenshots/ai-engineering-landscape-3b1b-desktop-dark.png",
-    "qa/screenshots/ai-engineering-landscape-3b1b-desktop-light.png",
-    "qa/screenshots/ai-engineering-landscape-3b1b-mobile-light.png",
-    "qa/screenshots/ai-engineering-landscape-3b1b-mobile-no-js.png",
-    "qa/screenshots/ai-engineering-landscape-3b1b-print.png",
-    "qa/screenshots/ai-engineering-landscape-distillation-desktop.png",
-    "qa/screenshots/ai-engineering-landscape-lora-desktop.png",
-    "qa/screenshots/ai-engineering-landscape-request-journey-desktop.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-desktop-dark.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-desktop.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-mobile.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-no-js.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-print.png",
-    "qa/screenshots/ai-engineering-landscape-retrieval-reduced-motion.png",
-    "qa/screenshots/ai-literacy-attention-matrix-desktop-light.png",
-    "qa/screenshots/ai-literacy-sampling-desktop-light.png",
-    "qa/screenshots/ai-ml-category-3b1b.png",
-    "qa/screenshots/ai-ml-deep-audit-choice-ladder.png",
-    "qa/screenshots/ai-ml-deep-audit-distillation.png",
-    "qa/screenshots/ai-ml-deep-audit-matrix-mobile.png",
-    "qa/screenshots/ai-ml-deep-audit-memory-layers.png",
-    "qa/screenshots/ai-ml-deep-audit-print-contact.png",
-    "qa/screenshots/ai-ml-deep-audit-skill-loading.png",
-    "qa/screenshots/machine-learning-foundations-generalization-desktop-light.png",
-    "qa/screenshots/machine-learning-foundations-loss-simulator-desktop-light.png",
-    "qa/screenshots/neural-network-foundations-backprop-controls-desktop-light.png",
-    "qa/screenshots/neural-network-foundations-backprop-figure-desktop-light.png",
-    "qa/screenshots/qa0828-agent-harness-engineering-full-light.png",
-    "qa/screenshots/qa0828-ai-engineering-landscape-full-light.png",
-    "qa/screenshots/qa0828-ai-literacy-full-light.png",
-    "qa/screenshots/qa0828-ai-security-essentials-full-dark.png",
-    "qa/screenshots/qa0828-ai-security-essentials-full-light.png",
-    "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png",
-    "qa/screenshots/qa0828-ai-security-essentials-print.pdf",
-    "qa/screenshots/qa0828-categories-ai-ml-desktop-light.png",
-    "qa/screenshots/qa0828-categories-ai-ml-mobile.png",
-    "qa/screenshots/qa0828-home-desktop-dark.png",
-    "qa/screenshots/qa0828-home-desktop-light.png",
-    "qa/screenshots/qa0828-home-mobile.png",
-    "qa/screenshots/qa0828-lessons-agent-harness-engineering-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-agent-harness-engineering-mobile.png",
-    "qa/screenshots/qa0828-lessons-ai-engineering-landscape-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-ai-engineering-landscape-mobile.png",
-    "qa/screenshots/qa0828-lessons-ai-literacy-desktop-dark.png",
-    "qa/screenshots/qa0828-lessons-ai-literacy-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-ai-literacy-mobile.png",
-    "qa/screenshots/qa0828-lessons-ai-literacy-no-js.png",
-    "qa/screenshots/qa0828-lessons-ai-security-essentials-desktop-dark.png",
-    "qa/screenshots/qa0828-lessons-ai-security-essentials-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png",
-    "qa/screenshots/qa0828-lessons-ai-security-essentials-no-js.png",
-    "qa/screenshots/qa0828-lessons-machine-learning-foundations-desktop-dark.png",
-    "qa/screenshots/qa0828-lessons-machine-learning-foundations-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-machine-learning-foundations-mobile.png",
-    "qa/screenshots/qa0828-lessons-neural-network-foundations-desktop-light.png",
-    "qa/screenshots/qa0828-lessons-neural-network-foundations-mobile.png",
-    "qa/screenshots/qa0828-machine-learning-foundations-full-light.png",
-    "qa/screenshots/qa0828-neural-network-foundations-full-light.png",
-    "qa/screenshots/qa0828-stack-explorer-component-dark.png",
-    "qa/screenshots/qa0828-stack-explorer-component-light.png",
-    "qa/screenshots/qa0828-stack-explorer-component-mobile.png",
-    "qa/screenshots/qa0828-stack-explorer-component-selected.png"
+    "qa/screenshots/user-review-attention-dark.png",
+    "qa/screenshots/user-review-attention-mobile.png",
+    "qa/screenshots/user-review-fit-desktop.png",
+    "qa/screenshots/user-review-home-desktop.png",
+    "qa/screenshots/user-review-home-mobile.png",
+    "qa/screenshots/user-review-no-js.png",
+    "qa/screenshots/user-review-print.png",
+    "qa/screenshots/user-review-search-empty.png",
+    "qa/screenshots/user-review-sql-code.png",
+    "qa/screenshots/user-review-xor.png"
   ]
 }

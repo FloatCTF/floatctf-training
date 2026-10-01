@@ -25,6 +25,11 @@
   color: var(--training-muted);
 }
 
+.category-directory.category-planned { background: transparent; border-style: dashed; }
+.category-directory.category-trigger { align-self: stretch; }
+.category-planned .category-title { font-size: 1.2rem; }
+.category-planned .category-summary { display: none; }
+
 .directory-empty { color: var(--training-muted); font-size: 0.82rem; }
 
 
@@ -227,18 +232,6 @@ a.category-trigger:focus-visible {
   letter-spacing: 0.05em;
 }
 
-.category-overview {
-  text-decoration: none;
-  letter-spacing: 0.08em;
-  justify-content: space-between;
-  font-weight: 700;
-  font-family: var(--training-font-code);
-  display: flex;
-  color: var(--training-link);
-  align-items: center;
-  font-size: 0.66rem;
-  padding-block: 0.9rem 0.45rem;
-}
 
 .learning-map-footer {
   text-align: center;

@@ -3,12 +3,6 @@ title: SQL 注入进阶：预编译边界与代码审计
 description: 深入预编译机制、参数化盲区、危险代码模式与分层防御职责
 pageType: lesson
 template: splash
-lessonId: sql-injection-advanced
-categoryId: web-security
-sources: ["owasp-sqli-prevention", "cwe-89", "cve-2023-34362", "cve-2025-1094", "postgresql-cve-2025-1094", "tib3rius-interview"]
-motionLevel: subtle
-safetyScope: authorized-lab
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -19,13 +13,15 @@ import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
-import InterviewAccordion from '../../../components/interview-accordion';
-import ScrollReveal from '../../../components/scroll-reveal';
+import InterviewAccordion from '../../../components/interview-accordion.astro';
+import ScrollReveal from '../../../components/scroll-reveal.astro';
 import manifest from '../../../data/lessons/sql-injection-advanced.json';
+import { withBase } from '../../../lib/base-url';
+import LabDownload from '../../../components/lab-download.astro';
 
 export const vulnerableSnippet = "// MyBatis 风格风险：${} 直接拼接\n"
   + "// SELECT * FROM orders ORDER BY ${sort}\n"
-  + "// sort=id; DROP TABLE orders -- 可改写结构";
+  + "// sort 若是列名，可以改成其他列；能否再执行第二条语句取决于驱动是否允许多语句";
 
 export const secureSnippet = `// 白名单映射标识符，值继续绑定
 const SORTS = Object.freeze({ created: "created_at", amount: "amount" });
@@ -71,8 +67,8 @@ db.query("SELECT * FROM orders ORDER BY " + col + " ASC LIMIT ?", [limit]);`;
 
 OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片段都能占位。（来源：[OWASP](#source-owasp-sqli-prevention)）
 
-<Callout variant="warning" title="确认驱动的绑定语义">
-部分驱动支持客户端模拟模式。审查时确认参数通过驱动绑定接口传递，并检查驱动文档、配置和最终调用路径，避免业务代码自行拼接 SQL。
+<Callout variant="warning" title="真预编译和模拟预编译">
+真预编译把语句模板和参数值分开交给数据库，数据库按值处理参数，参数里的引号不会变成语法。模拟预编译由客户端驱动先转义参数，再拼成一条完整 SQL 发出去。PHP PDO 连接 MySQL 时，`PDO::ATTR_EMULATE_PREPARES` 默认就是这种模拟；设为 `false` 才尽量走数据库自己的预编译，驱动无法预编译的语句仍可能退回模拟。模拟模式在错误的字符集下可以被多字节字符绕过转义，所以「代码里写了 prepare」不等于安全边界已经在数据库一侧。审查时要看驱动文档、这个开关、连接字符集，以及最终发出去的是模板加值，还是一整段 SQL。（来源：[PHP PDO 预定义常量](#source-php-pdo-emulate)、[OWASP](#source-owasp-sqli-prevention)）
 </Callout>
 
 ## 参数化盲区
@@ -96,7 +92,18 @@ OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片
 - **Java/MyBatis：** `#{}` 绑定值；`${}` 字符串替换，审计所有 `${}`。
 - **Python：** `cursor.execute(sql, params)` 正确；`execute(sql % values)` 或 f-string 拼 SQL 危险；Django `raw()`/`extra()` 需重点看。
 
-练习：在授权代码库中搜索 `ORDER BY`、`${`、`+ "SELECT`、`execute(f"`，把命中点分类为“值拼接”或“标识符拼接”。
+<LabDownload file="sql-audit-sample.txt" label="下载固定审计样本" />
+
+逐项记录 A—D 的输入来源、查询结构控制权、绑定方式及修复建议。样本包含值拼接、动态标识符、固定绑定和有限映射四种情况。
+
+<details>
+  <summary>展开审计参考答案</summary>
+  <p>A 需要将请求值移入绑定接口；B 需要通过服务端有限映射选择标识符。C 保持固定查询与值绑定；D 使用标识符映射与绑定值，数量还需检查整数和范围。验收记录应解释每段代码的数据入口，并为修复写出成功与拒绝条件。</p>
+</details>
+
+<p><a href={withBase('/sql-binding-check.mjs')} download>下载完整防御回归脚本</a>。将文件放在新建的 training-lab 目录，用 Node.js 22.13 或更高版本运行 <code>node sql-binding-check.mjs</code>。成功输出“完成：5 组防御检查通过”，退出码为 0。脚本仅使用当前进程内存数据库。</p>
+
+下面的代码对照为核心片段，展示查询结构和值的分工。
 
 <CodeCompare
   language="javascript"
@@ -125,7 +132,7 @@ OWASP 将预编译语句作为首选防御，并提醒并非所有动态 SQL 片
 
 CVE-2023-34362 作为基础案例的进阶复盘，重点检查产品中的查询构造与补丁覆盖面。CVE-2025-1094 影响 PostgreSQL 17.3、16.7、15.11、14.16、13.19 之前的版本：特定 libpq quoting API 的结果被用于构造 `psql` 输入时可能形成 SQL 注入；命令行工具路径还涉及 BIG5 与 EUC_TW 或 MULE_INTERNAL 的编码组合。该案例属于特定客户端工具链条件，不代表参数绑定失效。（来源：[CVE-2023-34362](#source-cve-2023-34362)、[CVE-2025-1094](#source-cve-2025-1094)、[PostgreSQL 公告](#source-postgresql-cve-2025-1094)）
 
-<ScrollReveal client:visible motionLevel="subtle" label="审计复盘">
+<ScrollReveal motionLevel="subtle" label="审计复盘">
   <p>进阶修复需要覆盖全部动态 SQL 构造点：值通过绑定 API 传递，标识符来自服务端枚举，二次使用路径进入回归测试。</p>
 </ScrollReveal>
 
@@ -138,7 +145,7 @@ CVE-2023-34362 作为基础案例的进阶复盘，重点检查产品中的查�
 
 ## 面试检查
 
-<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+<InterviewAccordion questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
 参数绑定 API 将参数作为值传递。标识符、客户端模拟模式、ORM 原始接口和二次拼接仍需单独审计。

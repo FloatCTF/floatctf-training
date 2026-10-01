@@ -1,12 +1,7 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "xss",
-    "slug": "xss",
-    "categoryId": "web-security",
-    "title": "XSS：输出上下文与浏览器侧信任边界",
     "audience": "具有 HTML/JS 基础与基本 HTTP 知识的本科生",
-    "durationMinutes": 90,
+    "durationMinutes": 40,
     "primaryMode": "mechanism",
     "supportingModes": [
       "code",
@@ -51,6 +46,7 @@
     {
       "id": "owasp-xss-prevention",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Cross Site Scripting Prevention Cheat Sheet",
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/Cross_Site_Scripting_Prevention_Cheat_Sheet.html",
@@ -73,6 +69,7 @@
     {
       "id": "cwe-79",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "CWE-79: Improper Neutralization of Input During Web Page Generation",
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/79.html",
@@ -217,10 +214,6 @@
         "owasp-xss-prevention"
       ]
     }
-  ],
-  "assessments": [
-    "interview",
-    "lab-check"
   ],
   "visualNarrative": {
     "kind": "code-compare",

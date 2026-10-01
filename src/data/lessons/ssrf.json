@@ -1,16 +1,19 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "ssrf",
-    "slug": "ssrf",
-    "categoryId": "web-security",
-    "title": "SSRF：识别服务端请求的信任边界",
     "audience": "具有 HTTP 与基础 Web 开发知识的本科生",
-    "durationMinutes": 90,
+    "durationMinutes": 50,
     "primaryMode": "mechanism",
-    "supportingModes": ["lab", "case-study"],
-    "evidenceProfiles": ["security"],
-    "assessments": ["interview", "lab-check"],
+    "supportingModes": [
+      "lab",
+      "case-study"
+    ],
+    "evidenceProfiles": [
+      "security"
+    ],
+    "assessments": [
+      "interview",
+      "lab-check"
+    ],
     "motionLevel": "simulation",
     "visualStory": "浏览器、应用服务器、内网服务和云元数据服务之间的请求路径与信任边界",
     "learningObjectives": [
@@ -19,7 +22,10 @@
       "在 localhost 实验中比较脆弱请求与目标校验",
       "设计覆盖解析、重定向、网络出口和日志的分层防御"
     ],
-    "prerequisites": ["HTTP 请求与 URL 基础", "服务端与客户端的角色差异"],
+    "prerequisites": [
+      "HTTP 请求与 URL 基础",
+      "服务端与客户端的角色差异"
+    ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-07-23"
   },
@@ -38,24 +44,39 @@
     {
       "id": "owasp-ssrf-cheat-sheet",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Server-Side Request Forgery Prevention Cheat Sheet",
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/Server_Side_Request_Forgery_Prevention_Cheat_Sheet.html",
       "publishedAt": "2026-07-17",
       "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
-      "supports": ["claim-definition", "claim-defense", "interview-q1", "interview-q3", "interview-q5", "interview-q6", "interview-q7", "interview-q8"]
+      "supports": [
+        "claim-definition",
+        "claim-defense",
+        "interview-q1",
+        "interview-q3",
+        "interview-q5",
+        "interview-q6",
+        "interview-q7",
+        "interview-q8"
+      ]
     },
     {
       "id": "portswigger-ssrf",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Server-side request forgery (SSRF)",
       "publisher": "PortSwigger",
       "url": "https://portswigger.net/web-security/ssrf",
       "publishedAt": "2026-07-21",
       "accessedAt": "2026-07-23",
       "notes": "持续更新页面未公开发布或修订日期；publishedAt 记录本次核验快照日期。",
-      "supports": ["claim-mechanism", "interview-q2", "interview-q4"]
+      "supports": [
+        "claim-mechanism",
+        "interview-q2",
+        "interview-q4"
+      ]
     },
     {
       "id": "nvd-cve-2021-26855",
@@ -65,7 +86,10 @@
       "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-26855",
       "publishedAt": "2021-03-02",
       "accessedAt": "2026-07-23",
-      "supports": ["evidence-proxylogon", "interview-q8"]
+      "supports": [
+        "evidence-proxylogon",
+        "interview-q8"
+      ]
     },
     {
       "id": "apache-cve-2021-40438",
@@ -75,7 +99,10 @@
       "url": "https://httpd.apache.org/security/vulnerabilities_24.html",
       "publishedAt": "2021-09-16",
       "accessedAt": "2026-07-23",
-      "supports": ["evidence-apache-proxy", "interview-q8"]
+      "supports": [
+        "evidence-apache-proxy",
+        "interview-q8"
+      ]
     },
     {
       "id": "nvd-cve-2021-40438",
@@ -85,18 +112,25 @@
       "url": "https://nvd.nist.gov/vuln/detail/CVE-2021-40438",
       "publishedAt": "2021-09-16",
       "accessedAt": "2026-07-23",
-      "supports": ["evidence-apache-proxy"]
+      "supports": [
+        "evidence-apache-proxy"
+      ]
     },
     {
       "id": "aws-imdsv2",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Use the Instance Metadata Service to access instance metadata",
       "publisher": "Amazon Web Services",
       "url": "https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/configuring-instance-metadata-service.html",
       "publishedAt": "2026-07-18",
       "accessedAt": "2026-07-23",
       "notes": "持续更新页面；publishedAt 取自核验时响应头的 Last-Modified 日期。",
-      "supports": ["claim-imdsv2", "interview-q6", "interview-q7"]
+      "supports": [
+        "claim-imdsv2",
+        "interview-q6",
+        "interview-q7"
+      ]
     },
     {
       "id": "appsec-interview-gist",
@@ -106,7 +140,9 @@
       "url": "https://gist.github.com/mccabe615/29e1587f5fcd837308f2",
       "publishedAt": "2022-09-02",
       "accessedAt": "2026-07-23",
-      "supports": ["interview-q1"]
+      "supports": [
+        "interview-q1"
+      ]
     },
     {
       "id": "linkedin-ssrf-interview",
@@ -117,7 +153,15 @@
       "publishedAt": "2024-05-13",
       "accessedAt": "2026-07-23",
       "notes": "围绕 SSRF 面试问题的拆解文章；本课按其评审维度改写为分层追问。",
-      "supports": ["interview-q2", "interview-q3", "interview-q4", "interview-q5", "interview-q6", "interview-q7", "interview-q8"]
+      "supports": [
+        "interview-q2",
+        "interview-q3",
+        "interview-q4",
+        "interview-q5",
+        "interview-q6",
+        "interview-q7",
+        "interview-q8"
+      ]
     },
     {
       "id": "microsoft-cve-2021-26855",
@@ -127,7 +171,10 @@
       "url": "https://www.microsoft.com/en-us/security/blog/2021/03/02/hafnium-targeting-exchange-servers/",
       "publishedAt": "2021-03-02",
       "accessedAt": "2026-07-23",
-      "supports": ["evidence-proxylogon", "interview-q8"]
+      "supports": [
+        "evidence-proxylogon",
+        "interview-q8"
+      ]
     }
   ],
   "evidence": [
@@ -136,7 +183,10 @@
       "kind": "cve",
       "identifier": "CVE-2021-26855",
       "topicRelation": "direct",
-      "sourceIds": ["nvd-cve-2021-26855", "microsoft-cve-2021-26855"],
+      "sourceIds": [
+        "nvd-cve-2021-26855",
+        "microsoft-cve-2021-26855"
+      ],
       "summary": "Microsoft Exchange Server 的预认证 SSRF 漏洞允许攻击者以 Exchange 服务器身份发送任意 HTTP 请求并完成认证；微软记录了其在攻击链中的实际利用。"
     },
     {
@@ -144,7 +194,10 @@
       "kind": "cve",
       "identifier": "CVE-2021-40438",
       "topicRelation": "direct",
-      "sourceIds": ["apache-cve-2021-40438", "nvd-cve-2021-40438"],
+      "sourceIds": [
+        "apache-cve-2021-40438",
+        "nvd-cve-2021-40438"
+      ],
       "summary": "Apache HTTP Server mod_proxy 的 SSRF 漏洞，可把请求转发到攻击者选择的源服务器。"
     }
   ],
@@ -152,25 +205,32 @@
     {
       "id": "claim-definition",
       "text": "SSRF 发生在服务端应用根据可控输入向非预期位置发起请求。",
-      "sourceIds": ["owasp-ssrf-cheat-sheet"]
+      "sourceIds": [
+        "owasp-ssrf-cheat-sheet"
+      ]
     },
     {
       "id": "claim-mechanism",
       "text": "SSRF 常被用于访问从外部网络不可达的内部服务。",
-      "sourceIds": ["portswigger-ssrf"]
+      "sourceIds": [
+        "portswigger-ssrf"
+      ]
     },
     {
       "id": "claim-defense",
       "text": "防护应同时约束应用层目标和网络层出口，并处理 DNS 与重定向边界。",
-      "sourceIds": ["owasp-ssrf-cheat-sheet"]
+      "sourceIds": [
+        "owasp-ssrf-cheat-sheet"
+      ]
     },
     {
       "id": "claim-imdsv2",
       "text": "EC2 IMDSv2 使用会话令牌请求流程，并允许配置响应跳数限制。",
-      "sourceIds": ["aws-imdsv2"]
+      "sourceIds": [
+        "aws-imdsv2"
+      ]
     }
   ],
-  "assessments": ["interview", "lab-check"],
   "visualNarrative": {
     "kind": "attack-defense-flow",
     "primaryAnimations": 1,
@@ -191,80 +251,166 @@
       "question": "什么是 SSRF，它与浏览器直接发请求有什么关键差异？",
       "level": 1,
       "answer": "SSRF 是服务端应用受可控输入影响，向非预期目标发起请求；目标系统看到的请求来源与网络权限属于服务器。",
-      "keyPoints": ["服务端发起请求", "目标由输入影响", "服务器网络权限"],
+      "keyPoints": [
+        "服务端发起请求",
+        "目标由输入影响",
+        "服务器网络权限"
+      ],
       "bonus": "可以补充 CWE-918，并说明内部服务常把服务器所在网络视为受信边界。",
-      "sourceIds": ["appsec-interview-gist", "owasp-ssrf-cheat-sheet"],
-      "questionSourceIds": ["appsec-interview-gist"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet"]
+      "sourceIds": [
+        "appsec-interview-gist",
+        "owasp-ssrf-cheat-sheet"
+      ],
+      "questionSourceIds": [
+        "appsec-interview-gist"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet"
+      ]
     },
     {
       "id": "interview-q2",
       "question": "SSRF 通常需要哪些成立条件？",
       "level": 1,
       "answer": "应用需要存在服务端取回资源的功能，并让用户输入直接或间接控制目标，同时缺少足够严格的目标校验或出口限制。",
-      "keyPoints": ["服务端取回功能", "可控目标", "校验或出口限制不足"],
+      "keyPoints": [
+        "服务端取回功能",
+        "可控目标",
+        "校验或出口限制不足"
+      ],
       "bonus": "头像抓取、Webhook、PDF 渲染和 URL 预览都可能形成服务端取回入口。",
-      "sourceIds": ["linkedin-ssrf-interview", "portswigger-ssrf"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["portswigger-ssrf"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "portswigger-ssrf"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "portswigger-ssrf"
+      ]
     },
     {
       "id": "interview-q3",
       "question": "只检查 URL 字符串中是否包含 127.0.0.1 为什么不充分？",
       "level": 2,
       "answer": "URL 可以使用其他地址表示、域名解析和重定向到私有地址，因此校验需要在规范化和解析后判断实际目标，并在连接阶段继续约束。",
-      "keyPoints": ["地址表示", "DNS 解析", "重定向", "连接阶段复核"],
+      "keyPoints": [
+        "地址表示",
+        "DNS 解析",
+        "重定向",
+        "连接阶段复核"
+      ],
       "bonus": "允许列表方案还需要固定协议、端口，并防止解析结果在校验后发生变化。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "owasp-ssrf-cheat-sheet"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet"
+      ]
     },
     {
       "id": "interview-q4",
       "question": "盲 SSRF 与可见回显的 SSRF 在验证方法上有什么差别？",
       "level": 2,
       "answer": "可见回显的 SSRF 可以从应用响应判断请求结果，盲 SSRF 通常依赖受控外部服务的 DNS 或 HTTP 交互记录确认服务端行为。",
-      "keyPoints": ["响应可见性", "带外交互", "受控验证端点"],
+      "keyPoints": [
+        "响应可见性",
+        "带外交互",
+        "受控验证端点"
+      ],
       "bonus": "验证应使用自有域名或授权协作服务，并把请求时间和唯一标识写入实验记录。",
-      "sourceIds": ["linkedin-ssrf-interview", "portswigger-ssrf"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["portswigger-ssrf"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "portswigger-ssrf"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "portswigger-ssrf"
+      ]
     },
     {
       "id": "interview-q5",
       "question": "你会怎样设计一个只允许抓取指定合作方图片的 URL 校验器？",
       "level": 3,
       "answer": "我会固定 HTTPS，使用主机允许列表和端口限制，解析全部地址并拒绝私有或特殊地址，关闭自动重定向，并通过受限出口代理执行请求。",
-      "keyPoints": ["协议和主机允许列表", "IP 分类", "重定向", "出口代理"],
+      "keyPoints": [
+        "协议和主机允许列表",
+        "IP 分类",
+        "重定向",
+        "出口代理"
+      ],
       "bonus": "连接时应绑定已经验证的地址，并限制响应大小、超时和内容类型。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "owasp-ssrf-cheat-sheet"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet"
+      ]
     },
     {
       "id": "interview-q6",
       "question": "SSRF 的分层防御为什么需要网络出口控制？",
       "level": 3,
       "answer": "应用校验仍可能受到解析差异和新入口影响，网络出口控制能限制进程可达的地址与端口，形成独立的安全边界。",
-      "keyPoints": ["独立边界", "最小可达范围", "降低绕过影响"],
+      "keyPoints": [
+        "独立边界",
+        "最小可达范围",
+        "降低绕过影响"
+      ],
       "bonus": "云环境还应启用实例元数据服务的强化配置，并限制工作负载取得不必要的身份权限。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "aws-imdsv2"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet", "aws-imdsv2"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "owasp-ssrf-cheat-sheet",
+        "aws-imdsv2"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet",
+        "aws-imdsv2"
+      ]
     },
     {
       "id": "interview-q7",
       "question": "代码评审中看到一个通用 URL 抓取函数，你会按什么顺序审查？",
       "level": 4,
       "answer": "我会先追踪输入来源与所有调用点，再核对协议、主机、解析结果、重定向和连接行为，随后检查超时、响应限制、出口策略、日志与测试。",
-      "keyPoints": ["数据流", "规范化与解析", "连接和重定向", "运行时防护"],
+      "keyPoints": [
+        "数据流",
+        "规范化与解析",
+        "连接和重定向",
+        "运行时防护"
+      ],
       "bonus": "把校验与实际连接放进同一受控组件，可以减少不同调用方产生规则漂移。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "aws-imdsv2"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet", "aws-imdsv2"],
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "owasp-ssrf-cheat-sheet",
+        "aws-imdsv2"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet",
+        "aws-imdsv2"
+      ],
       "trap": {
         "text": "追问会给出一段包含 URL 获取逻辑的代码，要求指出可绕过路径和修复位置。",
-        "sourceIds": ["linkedin-ssrf-interview"]
+        "sourceIds": [
+          "linkedin-ssrf-interview"
+        ]
       }
     },
     {
@@ -272,11 +418,29 @@
       "question": "发现服务器可以访问内网管理接口时，你如何安全验证并推进修复？",
       "level": 4,
       "answer": "我会在书面授权范围内使用最小化、只读的验证请求，记录请求链和影响证据，立即限制出口与入口功能，并在修复后复测解析、重定向和权限边界。",
-      "keyPoints": ["授权与最小化", "证据记录", "临时缓解", "完整复测"],
+      "keyPoints": [
+        "授权与最小化",
+        "证据记录",
+        "临时缓解",
+        "完整复测"
+      ],
       "bonus": "CVE-2021-26855 与 CVE-2021-40438 展示了 SSRF 进入真实产品攻击面的不同方式。",
-      "sourceIds": ["linkedin-ssrf-interview", "owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438"],
-      "questionSourceIds": ["linkedin-ssrf-interview"],
-      "answerSourceIds": ["owasp-ssrf-cheat-sheet", "nvd-cve-2021-26855", "microsoft-cve-2021-26855", "apache-cve-2021-40438"]
+      "sourceIds": [
+        "linkedin-ssrf-interview",
+        "owasp-ssrf-cheat-sheet",
+        "nvd-cve-2021-26855",
+        "microsoft-cve-2021-26855",
+        "apache-cve-2021-40438"
+      ],
+      "questionSourceIds": [
+        "linkedin-ssrf-interview"
+      ],
+      "answerSourceIds": [
+        "owasp-ssrf-cheat-sheet",
+        "nvd-cve-2021-26855",
+        "microsoft-cve-2021-26855",
+        "apache-cve-2021-40438"
+      ]
     }
   ]
 }

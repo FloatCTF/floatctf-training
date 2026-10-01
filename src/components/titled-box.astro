@@ -1,0 +1,33 @@
+---
+// 带小标题的内容盒 primitive：kicker + 标题 + slot 的公共 interface。
+// callout / intuition-box / key-takeaway 是它的三个语义 adapter，CSS 契约不变。
+interface Props {
+  class: string;
+  kicker: string;
+  kickerClass?: string;
+  title: string;
+  titleId?: string;
+  headingLevel?: 'h2' | 'h3';
+  as?: 'aside' | 'section';
+  role?: 'note' | 'alert' | 'status';
+}
+
+const {
+  class: className,
+  kicker,
+  kickerClass = 'component-kicker',
+  title,
+  titleId,
+  headingLevel = 'h2',
+  as: Tag = 'aside',
+  role,
+}: Props = Astro.props;
+
+const ariaLabel = titleId ? undefined : title;
+---
+
+<Tag class={className} role={role} aria-label={ariaLabel} aria-labelledby={titleId}>
+  <p class={kickerClass}>{kicker}</p>
+  {headingLevel === 'h2' ? <h2 id={titleId}>{title}</h2> : <h3 id={titleId}>{title}</h3>}
+  <slot />
+</Tag>

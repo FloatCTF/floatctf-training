@@ -9,13 +9,9 @@ const HOST_Y = 66;
 const CLIENT_X = 150;
 const SERVER_X = 470;
 const ROW_GAP = 76;
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="mcp-architecture lesson-diagram not-content" aria-label="MCP 架构示意">
-  <header>
-    <p class="lesson-diagram__eyebrow">MCP / 能力交换的标准协议</p>
-    <h3 class="lesson-diagram__title">Host 管理一切，Server 提供能力</h3>
-  </header>
+<LessonDiagram eyebrow="MCP / 能力交换的标准协议" title="Host 管理一切，Server 提供能力" ariaLabel="MCP 架构示意" class="mcp-architecture" headered note="一个 Host 管理用户体验与安全策略，为每个 MCP Server 建立独立 Client 连接；能力发现与调用都是 JSON-RPC 消息。 协议不替 Host 决定「谁可以调用什么」——授权、审批和审计仍在 Host 与目标系统。" noteClass="mcp-architecture__note">
   <div class="mcp-architecture__body">
     <svg viewBox="0 0 660 370" role="img" aria-label="用户在上方连接 Host；Host 内负责对话、权限、上下文与用户确认，并向三个 MCP Client 各建立一条 JSON-RPC 连接，分别对接 Git、Issue 与文档三个 Server">
       <title>MCP 架构</title>
@@ -47,8 +43,5 @@ const ROW_GAP = 76;
       })}
     </svg>
   </div>
-  <p class="lesson-diagram__note mcp-architecture__note">
-    一个 Host 管理用户体验与安全策略，为每个 MCP Server 建立独立 Client 连接；能力发现与调用都是 JSON-RPC 消息。
-    协议不替 Host 决定「谁可以调用什么」——授权、审批和审计仍在 Host 与目标系统。
-  </p>
-</section>
+  
+</LessonDiagram>
