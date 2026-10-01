@@ -1,15 +1,17 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-10-01",
+  "testedAt": "2026-10-02",
   "target": "http://localhost:4321/",
   "browser": "Playwright Chromium",
-  "scope": "基础学期第 1、2 批十课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 与 qa/foundations-batch-2-verification.json。截图只在本地留档，不随仓库分发。",
+  "scope": "基础学期第 1 到 3 批十二课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json、qa/foundations-batch-2-verification.json 与 qa/foundations-batch-3-verification.json。本次实测的是第 3 批两课与站点层面的入口，前十课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
     "/categories/cs-foundations/",
     "/categories/engineering-tools/",
     "/categories/programming/",
     "/lessons/data-representation/",
+    "/lessons/git-branches-and-collaboration/",
+    "/lessons/git-local-workflow/",
     "/lessons/python-collections/",
     "/lessons/python-control-flow/",
     "/lessons/python-files-and-exceptions/",
@@ -25,32 +27,32 @@
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口：已上线 10，下一课 11；编程语言面板默认停在 Python，6 条可进入",
-      "screenshot": "qa/screenshots/foundations-b2-home-panel.png"
+      "evidence": "首页入口：已上线 12，下一课 13；工程工具面板默认停在 Git，2 条可进入",
+      "screenshot": "qa/screenshots/foundations-b3-home-panel.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 7 课深色主题整页，无横向溢出",
-      "screenshot": "qa/screenshots/foundations-b2-lesson7-desktop-dark.png"
+      "evidence": "第 12 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b3-lesson12-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 5 课桌面浅色整页：刊头、代码清单、交互模式会话、逐行执行图",
-      "screenshot": "qa/screenshots/foundations-b2-lesson5-desktop-light.png"
+      "evidence": "第 11 课桌面浅色整页：刊头、终端会话、提交图、警示与速查卡",
+      "screenshot": "qa/screenshots/foundations-b3-lesson11-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下基础十课整页溢出为零",
-      "screenshot": "qa/screenshots/foundations-b2-lesson8-mobile.png"
+      "evidence": "390 宽度下 Git 两课整页溢出为零；前十课沿用上一轮读数",
+      "screenshot": "qa/screenshots/foundations-b3-lesson12-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 8 课手机整页：逐行执行图单列排布，代码与输出在块内滚动",
-      "screenshot": "qa/screenshots/foundations-b2-lesson8-mobile.png"
+      "evidence": "第 12 课手机整页：提交图三栏单列排布，分支标签换到提交说明下一行",
+      "screenshot": "qa/screenshots/foundations-b3-git-graph-mobile.png"
     },
     {
       "id": "category-page",
@@ -61,35 +63,35 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页已上线十课为链接，规划课为纯文本；「下一课」标在第 11 课"
+      "evidence": "路线页已上线十二课为链接，规划课为纯文本；「下一课」标在第 13 课"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "打印媒体模拟：十课验收答案、终端会话与代码清单可见；纸张分页未验收",
-      "screenshot": "qa/screenshots/foundations-b2-lesson10-print.png"
+      "evidence": "打印媒体模拟：Git 两课验收答案与终端会话可见，提交图转为逐步表；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b3-lesson11-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "探索器与逐行执行图在减少动态设置下为 static，显示对照表或逐步表",
-      "screenshot": "qa/screenshots/foundations-b1-permission-bits-reduced.png"
+      "evidence": "提交图在减少动态设置下为 static，显示最终状态与逐步表；其余探索器见上一轮",
+      "screenshot": "qa/screenshots/foundations-b3-git-graph-nojs.png"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "关闭 JavaScript 后逐行执行图显示终态与逐步表，验收题与原生折叠保留",
-      "screenshot": "qa/screenshots/foundations-b2-stepper-nojs.png"
+      "evidence": "关闭 JavaScript 后提交图显示最终状态与逐步表，验收题的原生折叠保留",
+      "screenshot": "qa/screenshots/foundations-b3-git-graph-nojs.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "十课多种环境下页内锚点无断链；翻页与前置知识链接指向正确"
+      "evidence": "Git 两课多种环境下页内锚点无断链；第 10 课的下一课指向第 11 课，第 11 课的前置知识链接指向第 10 课与第 3 课"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "权限位开关用空格键切换、逐行执行图滑杆用方向键回退均通过。未做完整 Tab 顺序走查"
+      "evidence": "提交图滑杆用方向键回退、「回到开头」按钮均通过。未做完整 Tab 顺序走查"
     },
     {
       "id": "deployment-csp-pagefind",
@@ -99,7 +101,7 @@
     {
       "id": "console",
       "status": "pass",
-      "evidence": "全部检查过程中控制台与页面错误为零"
+      "evidence": "第 3 批全部检查过程中控制台与页面错误为零"
     },
     {
       "id": "performance",
@@ -115,6 +117,13 @@
     "qa/screenshots/foundations-b2-lesson5-desktop-light.png",
     "qa/screenshots/foundations-b2-lesson7-desktop-dark.png",
     "qa/screenshots/foundations-b2-lesson8-mobile.png",
-    "qa/screenshots/foundations-b2-stepper-nojs.png"
+    "qa/screenshots/foundations-b2-stepper-nojs.png",
+    "qa/screenshots/foundations-b3-git-graph-mobile.png",
+    "qa/screenshots/foundations-b3-git-graph-nojs.png",
+    "qa/screenshots/foundations-b3-home-panel.png",
+    "qa/screenshots/foundations-b3-lesson11-desktop-light.png",
+    "qa/screenshots/foundations-b3-lesson11-print.png",
+    "qa/screenshots/foundations-b3-lesson12-desktop-dark.png",
+    "qa/screenshots/foundations-b3-lesson12-mobile.png"
   ]
 }

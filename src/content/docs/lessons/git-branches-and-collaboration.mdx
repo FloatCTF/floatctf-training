@@ -1,0 +1,392 @@
+---
+title: Git 二：分支、远程与协作
+description: 理解分支和 HEAD，用 git switch 与 git merge 新建、合并分支并解决冲突，用 remote、push、clone、pull 同步远程仓库，了解社团的同仓分支加 PR 流程
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import GitGraph from '../../../components/git-graph';
+import manifest from '../../../data/lessons/git-branches-and-collaboration.json';
+import branchMerge from '../../../data/git-traces/branch-merge.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '在 ~/lab/toolbox 里自己制造并解决一次冲突，最后推送。git status 应当显示 Your branch is up to date with origin/main。' },
+  { title: '在 Python 练习仓库里用一次分支', detail: '进入上一课作业建好的 ~/lab/python 仓库，从 main 新建一条分支，在上面写一个新脚本并提交，切回 main 合并，再删除这条分支。合并时应当看到 Fast-forward。' },
+  { title: '把提交图画在纸上', detail: '对验收第 3 题完成后的 toolbox 仓库执行 git log --oneline --graph --all，照着输出在纸上画出提交图：每个提交一个圆点，用线连到它的上一个提交，标出 main 和 HEAD。合并提交应当连着两条线。' },
+  { title: '读一遍 GitHub flow', detail: '打开来源列表里的 GitHub flow 文档，用自己的话写下六个步骤，并标出每一步是在本地终端完成，还是在 GitHub 网页上完成。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="GIT / LESSON 12"
+  kicker="Branches, Merging, Remotes"
+  lines={[
+    { text: "Git 二" },
+    { text: "分支、远程与协作", accent: true },
+  ]}
+  summary="上一课的历史是一条直线，只有你一个人在上面走。这一课让历史分叉再汇合：先在自己的仓库里练分支与合并，再把仓库推到远程，最后看社团实际用的协作流程。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：想试一个改法，又不想弄坏能跑的版本
+
+`toolbox` 里的脚本现在能正常运行。你想给它加一个功能，但没把握，可能要改好几天，中间会有一段时间跑不起来。
+
+如果直接在现有的历史上一路提交下去，这几天里仓库的最新版本都是坏的。假如这时有人找你要一份能用的版本，或者你发现了一个必须马上修的小错误，就很被动。
+
+两个人合作时问题更明显：你和队友同时改同一个项目，各自提交，最后怎样合到一起？两人恰好改了同一行又该听谁的？
+
+Git 对这两个问题的回答是同一个东西：**分支**。
+
+## 一、分支是一个会移动的名字
+
+### 1. 分支和 HEAD
+
+上一课说过，每个提交都记着自己的上一个提交，提交连成一条链。
+
+**分支**（branch）是指向其中某个提交的一个名字。你一直在用的 `main` 就是一条分支。在某条分支上做一次提交，这个名字就自动移到新提交上。新建一条分支，只是多了一个指向当前提交的名字，不复制任何文件，所以几乎不花时间。
+
+仓库里可以同时有很多条分支，Git 用 **HEAD** 记住你现在在哪一条上。上一课 `git log` 输出里的 `(HEAD -> main)` 就是这个意思：你在 `main` 上，`main` 指着这个提交。
+
+**切换分支**做两件事：把 HEAD 移到另一条分支上，再把工作区里的文件换成那条分支所指提交的样子。（来源：[Pro Git: Branches in a Nutshell](#source-progit-branches)、[git-switch](#source-git-switch)）
+
+### 2. 在提交图上看一遍
+
+下面这张图接着上一课的三个提交往下做。右边一栏是提交图：每个圆点是一个提交，线连向它的上一个提交，标签是分支名。先点着看一遍，留意每一步里哪个标签动了、哪个没动。
+
+<GitGraph
+  client:visible
+  trace={branchMerge}
+  title="分支指针怎样移动"
+  eyebrow="GIT / 分支与合并"
+  intro="每点一次「下一步」执行一组命令。留意 main、另一条分支和 HEAD 各指着哪个提交。"
+/>
+
+### 3. 合并的三种结果
+
+把另一条分支上的提交并入当前分支，用 `git merge`。结果取决于两条分支的相对位置：
+
+<DataTable
+  caption="git merge 会遇到的三种情况"
+  headers={["情况", "Git 做什么", "你要做什么"]}
+  rows={[
+    ["当前分支落后于对方，自己没有新提交", "快进（fast-forward）：把当前分支的名字直接挪到对方所指的提交，不产生新提交", "不用做什么"],
+    ["两条分支各有对方没有的提交，改的是不同的地方", "把两边的内容合在一起，自动生成一个合并提交。它有两个上一个提交", "确认或填写合并提交的信息"],
+    ["两条分支改了同一个文件的同一处", "停下来，在文件里标出两个版本，等你决定", "改好文件，git add，再 git commit"],
+  ]}
+  columnRatios={[1.5, 2.2, 1.3]}
+/>
+
+（来源：[Pro Git: Basic Branching and Merging](#source-progit-merging)、[gitglossary](#source-gitglossary)）
+
+## 二、分支、合并与冲突
+
+### 1. 新建分支，在上面提交
+
+<TerminalSession
+  title="git switch -c：新建并切换"
+  steps={[
+    { cmd: 'cd ~/lab/toolbox' },
+    { cmd: 'git branch', out: '* main', note: 'git branch 列出所有分支，* 标出当前所在的那条。' },
+    { cmd: 'git switch -c feature/banner', out: "Switched to a new branch 'feature/banner'", note: '-c 是 create。分支名里可以有斜杠，常用来分类，例如 feature/、fix/、docs/。' },
+    { cmd: 'git branch', out: '* feature/banner\n  main' },
+    { cmd: "echo 'print(\"== toolbox ==\")' > banner.py" },
+    { cmd: 'git add banner.py' },
+    { cmd: 'git commit -m "Add banner"', out: '[feature/banner c0cd205] Add banner\n 1 file changed, 1 insertion(+)\n create mode 100644 banner.py', note: '方括号里写着这次提交落在哪条分支上。' },
+    {
+      cmd: 'git log --oneline --graph --all',
+      out: '* c0cd205 (HEAD -> feature/banner) Add banner\n* 15f1190 (main) Add README and ignore secrets\n* 4f5d1a3 Print done at the end\n* 91ee7f5 Add port check script',
+      note: '--all 显示所有分支，--graph 在行首画出提交之间的连线。feature/banner 往前走了一步，main 留在原地。',
+    },
+  ]}
+/>
+
+和上一课一样，你的提交编号与页面不同，以自己屏幕上的为准。
+
+### 2. 快进合并
+
+<TerminalSession
+  title="切回 main，把 feature/banner 合并进来"
+  steps={[
+    { cmd: 'git switch main', out: "Switched to branch 'main'" },
+    { cmd: 'ls', out: 'portcheck.py  README.md  secret.txt', note: 'banner.py 不见了。工作区被换成了 main 所指提交的样子，那个提交里没有它。文件没有丢，它在 feature/banner 所指的提交里。' },
+    {
+      cmd: 'git merge feature/banner',
+      out: 'Updating 15f1190..c0cd205\nFast-forward\n banner.py | 1 +\n 1 file changed, 1 insertion(+)\n create mode 100644 banner.py',
+      note: 'Fast-forward：main 没有自己的新提交，Git 只是把 main 挪到了 c0cd205。',
+    },
+    { cmd: 'ls', out: 'banner.py  portcheck.py  README.md  secret.txt' },
+    {
+      cmd: 'git log --oneline --graph --all',
+      out: '* c0cd205 (HEAD -> main, feature/banner) Add banner\n* 15f1190 Add README and ignore secrets\n* 4f5d1a3 Print done at the end\n* 91ee7f5 Add port check script',
+      note: '两条分支现在指着同一个提交。没有多出新提交。',
+    },
+    { cmd: 'git branch -d feature/banner', out: 'Deleted branch feature/banner (was c0cd205).', note: '分支用完就删。删掉的只是这个名字，提交还在 main 的历史里。' },
+  ]}
+/>
+
+`git merge 分支名` 的方向是：把那条分支**合并进当前所在的分支**。所以合并之前先切到接收改动的分支上。
+
+### 3. 让历史分叉
+
+这次在两条分支上各做一个提交，而且故意改同一个文件的同一行。
+
+<TerminalSession
+  title="两条分支各自前进"
+  steps={[
+    { cmd: 'git switch -c feature/title', out: "Switched to a new branch 'feature/title'" },
+    { cmd: "echo '# toolbox: small scripts' > README.md", note: '在 feature/title 上把标题改成这样。' },
+    { cmd: 'git add README.md' },
+    { cmd: 'git commit -m "Describe the toolbox"', out: '[feature/title f830461] Describe the toolbox\n 1 file changed, 1 insertion(+), 1 deletion(-)' },
+    { cmd: 'git switch main', out: "Switched to branch 'main'" },
+    { cmd: "echo '# Toolbox' > README.md", note: '在 main 上把同一行改成另一个样子。' },
+    { cmd: 'git add README.md' },
+    { cmd: 'git commit -m "Capitalize the title"', out: '[main 43ebdb9] Capitalize the title\n 1 file changed, 1 insertion(+), 1 deletion(-)' },
+    {
+      cmd: 'git log --oneline --graph --all',
+      out: '* f830461 (feature/title) Describe the toolbox\n| * 43ebdb9 (HEAD -> main) Capitalize the title\n|/\n* c0cd205 Add banner\n* 15f1190 Add README and ignore secrets\n* 4f5d1a3 Print done at the end\n* 91ee7f5 Add port check script',
+      note: '历史分叉了：f830461 和 43ebdb9 的上一个提交都是 c0cd205，两条分支各有一个对方没有的提交。',
+    },
+  ]}
+/>
+
+### 4. 解决冲突
+
+<TerminalSession
+  title="合并停在冲突上"
+  steps={[
+    {
+      cmd: 'git merge feature/title',
+      out: 'Auto-merging README.md\nCONFLICT (content): Merge conflict in README.md\nAutomatic merge failed; fix conflicts and then commit the result.',
+      note: '这不是出错。Git 在告诉你：README.md 两边改了同一处，它不替你做决定。',
+    },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nYou have unmerged paths.\n  (fix conflicts and run "git commit")\n  (use "git merge --abort" to abort the merge)\n\nUnmerged paths:\n  (use "git add <file>..." to mark resolution)\n\tboth modified:   README.md\n\nno changes added to commit (use "git add" and/or "git commit -a")',
+      note: '括号里写着接下来的每一步：改好文件，git add，git commit。想放弃这次合并就用 git merge --abort。',
+    },
+    {
+      cmd: 'cat README.md',
+      out: '<<<<<<< HEAD\n# Toolbox\n=======\n# toolbox: small scripts\n>>>>>>> feature/title',
+      note: 'Git 把两个版本都写进了文件，用三行标记隔开。',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="冲突标记怎么读"
+  headers={["标记", "含义"]}
+  rows={[
+    ["<<<<<<< HEAD 到 =======", "当前分支（这里是 main）上的版本"],
+    ["======= 到 >>>>>>> feature/title", "被合并进来的那条分支上的版本"],
+  ]}
+  columnRatios={[1.4, 2]}
+/>
+
+解决冲突就是把这一段改成你最终想要的内容，并且**把三行标记全部删掉**。可以留其中一个版本，也可以两边各取一部分。实际工作中用编辑器改；这里为了让所有人的结果一致，用 `echo` 直接写入最终内容。
+
+<TerminalSession
+  title="改好文件，add，commit"
+  steps={[
+    { cmd: "echo '# Toolbox: small scripts' > README.md", note: '两边各取一部分：大写的 Toolbox，加上后面的说明。' },
+    { cmd: 'git add README.md', note: '在合并过程中，git add 的意思是「这个文件的冲突我解决了」。' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nAll conflicts fixed but you are still merging.\n  (use "git commit" to conclude merge)\n\nChanges to be committed:\n\tmodified:   README.md',
+    },
+    { cmd: 'git commit -m "Merge feature/title"', out: '[main a294e73] Merge feature/title' },
+    {
+      cmd: 'git log --oneline --graph --all',
+      out: '*   a294e73 (HEAD -> main) Merge feature/title\n|\\\n| * f830461 (feature/title) Describe the toolbox\n* | 43ebdb9 Capitalize the title\n|/\n* c0cd205 Add banner\n* 15f1190 Add README and ignore secrets\n* 4f5d1a3 Print done at the end\n* 91ee7f5 Add port check script',
+      note: 'a294e73 是合并提交，它连着两条线：一条通向 43ebdb9，一条通向 f830461。分叉的历史在这里汇合。',
+    },
+    { cmd: 'git branch -d feature/title', out: 'Deleted branch feature/title (was f830461).' },
+  ]}
+/>
+
+（来源：[Pro Git: Basic Branching and Merging](#source-progit-merging)）
+
+<Callout variant="warning" title="解决冲突之后先运行一遍">
+Git 只检查你有没有 `git add`，不检查文件内容对不对。冲突标记如果没删干净就提交了，`<<<<<<< HEAD` 这样的行会留在代码里，脚本一运行就是 SyntaxError。提交之前先把程序跑一遍。
+</Callout>
+
+## 三、远程仓库与社团的协作流程
+
+### 1. 把仓库推到远程
+
+到目前为止，全部历史都只在你这台虚拟机上。**远程仓库**（remote）是放在别处的同一个项目，大家把自己的提交推送上去，再从它那里取回别人的提交。社团的远程仓库在 GitHub 上。
+
+这一节不需要账号和网络：在本机建一个目录充当远程仓库，命令和连接 GitHub 时完全相同，只有地址不同。
+
+<TerminalSession
+  title="建一个远程仓库，把 main 推上去"
+  steps={[
+    { cmd: 'git init --bare ~/lab/remote.git', out: 'Initialized empty Git repository in /home/kali/lab/remote.git/', note: '--bare 建的是裸仓库：只存历史，没有工作区，专门用来接收推送和被克隆。' },
+    { cmd: 'git remote add origin ~/lab/remote.git', note: '给当前仓库登记一个远程仓库，简称 origin。连接 GitHub 时，最后一个参数换成仓库的网址。' },
+    { cmd: 'git remote -v', out: 'origin\t/home/kali/lab/remote.git (fetch)\norigin\t/home/kali/lab/remote.git (push)' },
+    {
+      cmd: 'git push -u origin main',
+      out: "…（前面几行是打包和传输的进度，数字因机器而异，这里省略）\nTo /home/kali/lab/remote.git\n * [new branch]      main -> main\nbranch 'main' set up to track 'origin/main'.",
+      note: '把 main 推送到 origin。-u 让本地的 main 记住它对应远程的 main，以后在这条分支上只敲 git push、git pull 就行。',
+    },
+    { cmd: 'git status', out: "On branch main\nYour branch is up to date with 'origin/main'.\n\nnothing to commit, working tree clean", note: 'status 多了一行：本地的 main 和远程的 main 一致。' },
+  ]}
+/>
+
+`origin` 只是一个约定俗成的简称。`origin/main` 是 Git 在本地记下的「远程仓库的 main 上次在哪」。（来源：[Pro Git: Working with Remotes](#source-progit-remotes)、[git-push](#source-git-push)、[gitglossary](#source-gitglossary)）
+
+### 2. 队友克隆、提交、推送，你拉取
+
+再克隆一份到另一个目录，假装它是队友的电脑。
+
+<TerminalSession
+  title="扮演队友：clone，提交，push"
+  steps={[
+    { cmd: 'git clone ~/lab/remote.git ~/lab/teammate', out: "Cloning into '/home/kali/lab/teammate'...\ndone.", note: 'clone 把远程仓库连同全部历史复制一份，并自动登记好 origin。' },
+    { cmd: 'cd ~/lab/teammate' },
+    { cmd: 'ls', out: 'banner.py  portcheck.py  README.md', note: '没有 secret.txt。它被 .gitignore 挡住，从未进过仓库，所以也不会出现在别人那里。' },
+    { cmd: "echo 'print(\"ping\")' > ping.py" },
+    { cmd: 'git add ping.py' },
+    { cmd: 'git commit -m "Add ping script"', out: '[main 97587a5] Add ping script\n 1 file changed, 1 insertion(+)\n create mode 100644 ping.py' },
+    { cmd: 'git push', out: '…（传输进度省略）\nTo /home/kali/lab/remote.git\n   a294e73..97587a5  main -> main', note: '队友把新提交推到了远程。' },
+  ]}
+/>
+
+<TerminalSession
+  title="回到自己的仓库：pull"
+  steps={[
+    { cmd: 'cd ~/lab/toolbox' },
+    { cmd: 'ls', out: 'banner.py  portcheck.py  README.md  secret.txt', note: '还没有 ping.py。队友推送到的是远程，你的仓库不会自己更新。' },
+    {
+      cmd: 'git pull',
+      out: '…（传输进度省略）\nFrom /home/kali/lab/remote\n   a294e73..97587a5  main       -> origin/main\nUpdating a294e73..97587a5\nFast-forward\n ping.py | 1 +\n 1 file changed, 1 insertion(+)\n create mode 100644 ping.py',
+      note: 'pull 做了两件事：取回远程的新提交，再把它们合并进当前分支。你没有自己的新提交，所以是快进。',
+    },
+    { cmd: 'ls', out: 'banner.py  ping.py  portcheck.py  README.md  secret.txt' },
+    { cmd: 'git log --oneline -3', out: '97587a5 (HEAD -> main, origin/main, origin/HEAD) Add ping script\na294e73 Merge feature/title\n43ebdb9 Capitalize the title', note: '-3 只看最近三个提交。' },
+  ]}
+/>
+
+如果你和队友都直接在 `main` 上提交并推送，后推送的人会被拒绝，必须先把对方的提交取回来合并，才能再推。人一多，这种情况会不断发生。社团的做法是谁也不直接往 `main` 上推。
+
+### 3. 社团的流程：同仓分支 + PR
+
+每一项改动都在自己的分支上做，推送这条分支，然后在 GitHub 上发起一个 **pull request**（PR）：一份「请把这条分支合并进 main」的提议。其他人在网页上看你改了什么、提意见，通过之后才合并。（来源：[About pull requests](#source-github-pull-requests)）
+
+先在本地把你这一侧的动作走一遍：
+
+<TerminalSession
+  title="在分支上改，推送这条分支"
+  steps={[
+    { cmd: 'git switch -c docs/usage', out: "Switched to a new branch 'docs/usage'", note: '从最新的 main 建分支。' },
+    { cmd: "echo 'Run: python3 portcheck.py' >> README.md" },
+    { cmd: 'git add README.md' },
+    { cmd: 'git commit -m "Document how to run"', out: '[docs/usage cec13d0] Document how to run\n 1 file changed, 1 insertion(+)' },
+    {
+      cmd: 'git push -u origin docs/usage',
+      out: "…（传输进度省略）\nTo /home/kali/lab/remote.git\n * [new branch]      docs/usage -> docs/usage\nbranch 'docs/usage' set up to track 'origin/docs/usage'.",
+      note: '推送的是 docs/usage 这条分支。远程的 main 没有被动过。',
+    },
+    { cmd: 'git switch main', out: "Switched to branch 'main'\nYour branch is up to date with 'origin/main'.", note: '回到 main。本地练习到这里为止。' },
+  ]}
+/>
+
+在 GitHub 上，推送之后的步骤在网页上完成。完整的一轮是这样的：
+
+<DataTable
+  caption="一项改动从开始到合并"
+  headers={["步骤", "在哪里做", "做什么"]}
+  rows={[
+    ["1. 同步", "本地", "git switch main，然后 git pull，拿到最新的 main"],
+    ["2. 建分支", "本地", "git switch -c 分支名。名字说明这条分支要做什么，例如 docs/usage、fix/port-range"],
+    ["3. 修改并提交", "本地", "改文件，git add，git commit。可以提交多次"],
+    ["4. 推送分支", "本地", "git push -u origin 分支名"],
+    ["5. 发起 PR", "GitHub 网页", "目标选 main，来源选你的分支。标题写清楚改了什么"],
+    ["6. 审查与修改", "GitHub 网页与本地", "别人提意见。你在同一条分支上继续提交并 git push，PR 会自动更新"],
+    ["7. 合并", "GitHub 网页", "审查通过后合并进 main，然后删除这条分支"],
+    ["8. 收尾", "本地", "git switch main，git pull，再 git branch -d 分支名"],
+  ]}
+  columnRatios={[1, 1.1, 3]}
+/>
+
+（来源：[GitHub flow](#source-github-flow)）
+
+本站仓库的约定：不直接改 `main`；每个 PR 合并前至少要有一个人审查通过。你会看到旧教程和一些文档里写 `git checkout -b 分支名`，它和 `git switch -c 分支名` 做的是同一件事，`git switch` 是 Git 2.23 加入的更清楚的写法。
+
+## 常见报错与排错
+
+<TerminalSession
+  title="分支名写错、删除当前分支、推送不存在的分支"
+  steps={[
+    { cmd: 'git switch nosuch', out: 'fatal: invalid reference: nosuch', note: '没有这条分支。用 git branch 看有哪些。' },
+    { cmd: 'git branch -d main', out: "error: cannot delete branch 'main' used by worktree at '/home/kali/lab/toolbox'", note: '不能删除自己正站着的分支。' },
+    { cmd: 'git push origin nosuch', out: "error: src refspec nosuch does not match any\nerror: failed to push some refs to '/home/kali/lab/remote.git'", note: '本地没有叫 nosuch 的分支，没有东西可推。' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["CONFLICT (content): Merge conflict in …", "两条分支改了同一处", "打开文件改成最终内容，删掉三行标记，git add，git commit。想放弃合并用 git merge --abort"],
+    ["运行脚本时报 SyntaxError，指向 <<<<<<< HEAD", "冲突标记没删干净就提交了", "删掉残留的标记，再提交一次"],
+    ["error: Your local changes to the following files would be overwritten by checkout", "有还没提交的改动，切换分支会覆盖它们", "先提交这些改动，或者用 git restore 丢弃，再切换"],
+    ["error: the branch '…' is not fully merged", "要删的分支上有还没合并的提交", "确认这些提交是否还要。要就先合并；确实不要再按提示用 -D"],
+    ["! [rejected] main -> main (fetch first)", "别人先推送过，远程有你本地没有的提交", "先 git pull 把对方的提交合进来，再 git push"],
+    ["fatal: Need to specify how to reconcile divergent branches.", "pull 时本地和远程各有新提交，Git 要你选合并方式", "git pull --no-rebase，按合并提交的方式合进来"],
+    ["error: src refspec … does not match any", "要推送的分支名本地不存在", "git branch 核对分支名"],
+    ["改动提交到了 main 上，本来想提交到新分支", "忘了先 git switch -c", "提交前先看 git status 的第一行 On branch …"],
+  ]}
+  columnRatios={[1.7, 1.4, 1.9]}
+/>
+
+边界：`git push` 有一个 `--force` 选项，可以用本地的历史强行覆盖远程的历史，别人已经推送的提交会因此消失。被拒绝时的正确做法是先 pull，不是强推。在多人共用的分支上不要使用它。（来源：[git-push](#source-git-push)）
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'git branch', description: '列出分支，* 是当前分支。' },
+    { term: 'git switch 分支 / git switch -c 新分支', description: '切换；新建并切换。' },
+    { term: 'git log --oneline --graph --all', description: '看所有分支的提交图。' },
+    { term: 'git merge 分支', description: '把那条分支合并进当前分支。' },
+    { term: 'git merge --abort', description: '放弃正在进行的合并，回到合并之前。' },
+    { term: 'git branch -d 分支', description: '删除已经合并的分支。' },
+    { term: 'git remote add origin 地址 / git remote -v', description: '登记远程仓库；查看。' },
+    { term: 'git push -u origin 分支', description: '第一次推送一条分支。之后只敲 git push。' },
+    { term: 'git clone 地址', description: '把远程仓库完整复制一份到本地。' },
+    { term: 'git pull', description: '取回远程的新提交并合并进当前分支。' },
+    { term: '<<<<<<< / ======= / >>>>>>>', description: '冲突标记：上半是当前分支的版本，下半是对方的版本。' },
+  ]}
+/>
+
+<KeyTakeaway>
+分支是指向某个提交的名字，HEAD 记着你在哪条分支上。在分支上提交不影响其他分支，`git merge` 把一条分支并入当前分支：能快进就只挪指针，分叉了就生成合并提交，改了同一处就停下来等你解决。协作时每项改动走自己的分支，推送分支，经 PR 审查后再合并进 main。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

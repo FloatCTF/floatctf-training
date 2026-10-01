@@ -6,7 +6,8 @@
 //   没有 environment          Kali 的 shell，默认处理这一类；需要键盘输入的步骤导出成带 stdin 的 JSON 行
 //   environment 以 PYTHON 开头 Python 交互模式，加 --python 处理；每个 TerminalSession 是一个全新的解释器会话
 //   其他（如 WINDOWS …）       不在 Kali 里运行，两个动作都跳过
-// 时间戳、进程号、有意截取的长输出会报为不一致，需要人工判断；其余不一致就是页面写错了。
+// 页面输出里以「…」开头的行表示有意省略的若干行（进度条、因机器而异的统计），比对时当作通配，其余行必须按顺序原样出现。
+// 时间戳、进程号这类每次都变的内容会报为不一致，需要人工判断；其余不一致就是页面写错了。
 import { readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -35,6 +36,31 @@ function pageSessions(id) {
 }
 
 const trimmed = (value) => (value ?? '').replace(/\s+$/, '');
+
+/** 页面输出与一条运行记录是否相符。页面里以「…」开头的行匹配记录中任意多行（含零行）。 */
+function matches(page, recorded) {
+  const pageLines = page.split('\n');
+  if (!pageLines.some((line) => line.trimStart().startsWith('…'))) return page === recorded;
+  const lines = recorded.split('\n');
+  const segments = [[]];
+  for (const line of pageLines) {
+    if (line.trimStart().startsWith('…')) segments.push([]);
+    else segments.at(-1).push(line);
+  }
+  let cursor = 0;
+  for (const [index, segment] of segments.entries()) {
+    if (segment.length === 0) continue;
+    const anchoredStart = index === 0;
+    const anchoredEnd = index === segments.length - 1;
+    const fits = (at) => segment.every((line, offset) => lines[at + offset] === line);
+    let at = -1;
+    if (anchoredEnd) at = lines.length - segment.length;
+    else for (let probe = cursor; probe + segment.length <= lines.length; probe += 1) if (fits(probe)) { at = probe; break; }
+    if (at < cursor || !fits(at) || (anchoredStart && at !== 0)) return false;
+    cursor = at + segment.length;
+  }
+  return true;
+}
 const sessions = pageSessions(lessonId);
 
 if (action === 'extract') {
@@ -55,7 +81,7 @@ const report = (step, outputs) => {
   if (!outputs) {
     missing += 1;
     console.log(`? 没有运行记录：${step.cmd}`);
-  } else if (outputs.includes(page)) {
+  } else if (outputs.some((recorded) => matches(page, recorded))) {
     identical += 1;
   } else {
     differing += 1;

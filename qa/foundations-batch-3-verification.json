@@ -1,0 +1,494 @@
+{
+ "schemaVersion": 1,
+ "recordedAt": "2026-10-02",
+ "scope": "基础学期第 3 批：Git 两课（第 11、12 课）",
+ "commandReplay": {
+  "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh，git 2.53.0，由 pexpect 驱动",
+  "method": "sh scripts/lab/replay-lesson.sh <课 id>：先执行 scripts/lab/preludes/<课 id>.txt 里的前置步骤（清掉旧仓库与全局配置、固定提交时间；第 12 课另把第 11 课页面上的命令悄悄跑一遍），再按页面顺序重放全部 TerminalSession 并逐条比对",
+  "commands": 104,
+  "identical": 104,
+  "differing": 0,
+  "perLesson": {
+   "git-local-workflow": {
+    "shell": {
+     "identical": 46,
+     "differing": 0
+    }
+   },
+   "git-branches-and-collaboration": {
+    "shell": {
+     "identical": 58,
+     "differing": 0
+    }
+   }
+  },
+  "elidedOutputs": [
+   {
+    "lesson": "git-branches-and-collaboration",
+    "command": "git push -u origin main",
+    "detail": "页面用「…」行省略了对象计数、线程数与速度这几行（因机器而异），其余行逐字比对"
+   },
+   {
+    "lesson": "git-branches-and-collaboration",
+    "command": "git push",
+    "detail": "同上"
+   },
+   {
+    "lesson": "git-branches-and-collaboration",
+    "command": "git pull",
+    "detail": "同上"
+   },
+   {
+    "lesson": "git-branches-and-collaboration",
+    "command": "git push -u origin docs/usage",
+    "detail": "同上"
+   }
+  ],
+  "deterministicHashes": "重放时固定 GIT_AUTHOR_DATE 与 GIT_COMMITTER_DATE 为 2026-10-01T10:00:00+08:00，作者为页面上配置的 Kali Student <student@example.com>，九个提交的哈希（91ee7f5、4f5d1a3、15f1190、c0cd205、f830461、43ebdb9、a294e73、97587a5、cec13d0）可复现",
+  "separatelyReproduced": "常见情况表里不在页面流程中的报错另在容器的临时目录里复现后抄录：Author identity unknown、有未暂存改动时 git commit 的 no changes added to commit、推送被拒（fetch first）、分叉后 git pull 的 Need to specify how to reconcile divergent branches 及 git pull --no-rebase 的结果、带着改动切分支、删除未合并分支。第 11 课作业第 4 步（提交后删除的文件仍可用 git show 取回）与验收第 3 题参考答案（git add . 不会加入被忽略的 .venv、__pycache__、report.txt）也在容器里跑过。默认编辑器在容器里是 nano。"
+ },
+ "gitTraces": {
+  "method": "scripts/lab/git-trace.py 在临时目录里执行场景文件（scripts/lab/git-scenarios/*.json）的每一组命令，之后用 git status --porcelain、git log、git for-each-ref 读取真实状态，生成 src/data/git-traces/*.json；门禁校验数据里的命令与场景文件一致",
+  "files": [
+   "three-areas.json",
+   "branch-merge.json"
+  ],
+  "hashesMatchReplay": true,
+  "browserTrail": {
+   "git-local-workflow": [
+    {
+     "commands": "$ git init",
+     "workingTree": [],
+     "staged": [],
+     "topCommits": [],
+     "merging": false
+    },
+    {
+     "commands": "$ echo 'print(\"port check\")' > portcheck.py",
+     "workingTree": [
+      "portcheck.py 未跟踪"
+     ],
+     "staged": [],
+     "topCommits": [],
+     "merging": false
+    },
+    {
+     "commands": "$ git add portcheck.py",
+     "workingTree": [
+      "portcheck.py 已暂存"
+     ],
+     "staged": [
+      "portcheck.py 新文件"
+     ],
+     "topCommits": [],
+     "merging": false
+    },
+    {
+     "commands": "$ git commit -m \"Add port check script\"",
+     "workingTree": [
+      "portcheck.py 无改动"
+     ],
+     "staged": [],
+     "topCommits": [
+      "91ee7f5 Add port check script HEAD → main"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ echo 'print(\"done\")' >> portcheck.py",
+     "workingTree": [
+      "portcheck.py 已修改"
+     ],
+     "staged": [],
+     "topCommits": [
+      "91ee7f5 Add port check script HEAD → main"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git add portcheck.py",
+     "workingTree": [
+      "portcheck.py 已暂存"
+     ],
+     "staged": [
+      "portcheck.py 修改"
+     ],
+     "topCommits": [
+      "91ee7f5 Add port check script HEAD → main"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git commit -m \"Print done at the end\"",
+     "workingTree": [
+      "portcheck.py 无改动"
+     ],
+     "staged": [],
+     "topCommits": [
+      "4f5d1a3 Print done at the end HEAD → main",
+      "91ee7f5 Add port check script"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ echo '# toolbox' > README.md ;  ; $ echo 'password=kali123' > secret.txt ;  ; $ echo 'secret.txt' > .gitignore",
+     "workingTree": [
+      ".gitignore 未跟踪",
+      "README.md 未跟踪",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "4f5d1a3 Print done at the end HEAD → main",
+      "91ee7f5 Add port check script"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git add .gitignore README.md ;  ; $ git commit -m \"Add README and ignore secrets\"",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "15f1190 Add README and ignore secrets HEAD → main",
+      "4f5d1a3 Print done at the end",
+      "91ee7f5 Add port check script"
+     ],
+     "merging": false
+    }
+   ],
+   "git-branches-and-collaboration": [
+    {
+     "commands": "$ git switch -c feature/banner",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "15f1190 Add README and ignore secrets HEAD → feature/banner main",
+      "4f5d1a3 Print done at the end",
+      "91ee7f5 Add port check script"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ echo 'print(\"== toolbox ==\")' > banner.py ;  ; $ git add banner.py ;  ; $ git commit -m \"Add banner\"",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "c0cd205 Add banner HEAD → feature/banner",
+      "15f1190 Add README and ignore secrets main",
+      "4f5d1a3 Print done at the end"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git switch main",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "c0cd205 Add banner feature/banner",
+      "15f1190 Add README and ignore secrets HEAD → main",
+      "4f5d1a3 Print done at the end"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git merge feature/banner",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "c0cd205 Add banner feature/banner HEAD → main",
+      "15f1190 Add README and ignore secrets",
+      "4f5d1a3 Print done at the end"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git branch -d feature/banner ;  ; $ git switch -c feature/title ;  ; $ echo '# toolbox: small scripts' > README.md ;  ; $ git add README.md ;  ; $ git commit -m \"Describe the toolbox\"",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "f830461 Describe the toolbox HEAD → feature/title",
+      "c0cd205 Add banner main",
+      "15f1190 Add README and ignore secrets"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git switch main ;  ; $ echo '# Toolbox' > README.md ;  ; $ git add README.md ;  ; $ git commit -m \"Capitalize the title\"",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "f830461 Describe the toolbox feature/title",
+      "43ebdb9 Capitalize the title HEAD → main",
+      "c0cd205 Add banner"
+     ],
+     "merging": false
+    },
+    {
+     "commands": "$ git merge feature/title",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 冲突",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "f830461 Describe the toolbox feature/title",
+      "43ebdb9 Capitalize the title HEAD → main",
+      "c0cd205 Add banner"
+     ],
+     "merging": true
+    },
+    {
+     "commands": "$ echo '# Toolbox: small scripts' > README.md ;  ; $ git add README.md",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 已暂存",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [
+      "README.md 修改"
+     ],
+     "topCommits": [
+      "f830461 Describe the toolbox feature/title",
+      "43ebdb9 Capitalize the title HEAD → main",
+      "c0cd205 Add banner"
+     ],
+     "merging": true
+    },
+    {
+     "commands": "$ git commit -m \"Merge feature/title\"",
+     "workingTree": [
+      ".gitignore 无改动",
+      "README.md 无改动",
+      "banner.py 无改动",
+      "portcheck.py 无改动",
+      "secret.txt 被忽略"
+     ],
+     "staged": [],
+     "topCommits": [
+      "a294e73 Merge feature/title HEAD → main",
+      "f830461 Describe the toolbox feature/title",
+      "43ebdb9 Capitalize the title"
+     ],
+     "merging": false
+    }
+   ]
+  },
+  "controls": {
+   "git-local-workflow": {
+    "nextDisabledAtEnd": true,
+    "afterArrowLeft": "第 8 步 / 共 9 步",
+    "afterReset": "点「下一步」执行第一条命令。",
+    "presentation": "interactive"
+   },
+   "git-branches-and-collaboration": {
+    "nextDisabledAtEnd": true,
+    "afterArrowLeft": "第 8 步 / 共 9 步",
+    "afterReset": "点「下一步」执行第一条命令。",
+    "presentation": "interactive"
+   }
+  }
+ },
+ "browser": {
+  "tool": "Playwright Chromium，开发服务器 http://localhost:4321",
+  "note": "下面的读数是修正提交图三处细节（跨泳道连线、已暂存标记、手机宽度下分支标签换行）之后重新跑的结果",
+  "pages": [
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "tables": 5,
+    "sources": 8,
+    "check": "desk git-local-workflow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "tables": 4,
+    "sources": 8,
+    "check": "desk git-branches-and-collaboration http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "tables": 5,
+    "sources": 8,
+    "check": "phone git-local-workflow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "tables": 4,
+    "sources": 8,
+    "check": "phone git-branches-and-collaboration http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "tables": 5,
+    "sources": 8,
+    "check": "dark git-local-workflow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "tables": 4,
+    "sources": 8,
+    "check": "dark git-branches-and-collaboration http=200"
+   }
+  ],
+  "static": {
+   "reduced": {
+    "git-local-workflow": {
+     "presentation": "static",
+     "ledgerRows": 9,
+     "controls": 0,
+     "commits": 3,
+     "details": 3
+    },
+    "git-branches-and-collaboration": {
+     "presentation": "static",
+     "ledgerRows": 9,
+     "controls": 0,
+     "commits": 7,
+     "details": 3
+    }
+   },
+   "nojs": {
+    "git-local-workflow": {
+     "presentation": "static",
+     "ledgerRows": 9,
+     "controls": 0,
+     "commits": 3,
+     "details": 3
+    },
+    "git-branches-and-collaboration": {
+     "presentation": "static",
+     "ledgerRows": 9,
+     "controls": 0,
+     "commits": 7,
+     "details": 3
+    }
+   }
+  },
+  "print": {
+   "git-local-workflow": {
+    "answersVisible": 3,
+    "terminals": 9,
+    "graphPresentation": "static",
+    "ledgerRows": 9,
+    "headerHidden": true
+   },
+   "git-branches-and-collaboration": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "graphPresentation": "static",
+    "ledgerRows": 9,
+    "headerHidden": true
+   }
+  },
+  "site": {
+   "path": "已上线 12 / 37",
+   "pathLinks": 12,
+   "nextTag": "网络基础：IP、端口、DNS 与 TCP",
+   "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 12 | 下一课　13　网络基础：IP、端口、DNS 与 TCP",
+   "panel": {
+    "series": "Git 2 课",
+    "links": 2,
+    "planned": 0
+   },
+   "lastPagination": "上一课 Git 一：快照、暂存区与历史  《新生学期路线》的下一课《网络基础：IP、端口、DNS 与 TCP》还在准备中。",
+   "lesson10Next": [
+    "/lessons/python-strings-and-bytes/",
+    "/lessons/git-local-workflow/"
+   ],
+   "prereqLinks": [
+    "/lessons/python-files-and-exceptions/",
+    "/lessons/shell-permissions-and-pipes/"
+   ]
+  },
+  "consoleErrors": []
+ },
+ "sources": {
+  "opened": [
+   "Pro Git 第二版 1.3、1.6、2.2、2.4、2.5、3.1、3.2 七节",
+   "git-scm.com/docs 的 git-status、git-restore、gitignore、git-switch、git-push、gitglossary 六页",
+   "GitHub Docs: About pull requests、GitHub flow",
+   "MIT Missing Semester 2026: Version Control and Git"
+  ],
+  "count": 16
+ },
+ "notRun": [
+  "在 GitHub 网页上创建、审查、合并 pull request",
+  "真实 Kali 虚拟机桌面",
+  "真实移动设备、屏幕阅读器、纸张分页",
+  "生产 nginx 与 CSP"
+ ]
+}

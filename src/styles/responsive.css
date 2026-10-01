@@ -722,8 +722,39 @@
   }
 
   .code-stepper__layout,
-  .code-stepper__controls {
+  .code-stepper__controls,
+  .git-graph__areas {
     padding-inline: 0.9rem;
+  }
+
+  .git-graph__areas {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .git-graph__command {
+    margin-inline: 0.9rem;
+  }
+
+  /* 窄屏：分支标签换到提交说明下面一行，行高仍是 44px，和左边的连线对齐 */
+  .git-graph__commits li {
+    align-content: center;
+    column-gap: 0.5rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    row-gap: 0.1rem;
+  }
+
+  .git-graph__commits li code,
+  .git-graph__subject {
+    line-height: 1.25;
+  }
+
+  .git-graph__refs {
+    grid-column: 1 / -1;
+  }
+
+  .git-graph__ref {
+    line-height: 1.35;
   }
 
   .code-stepper__note,

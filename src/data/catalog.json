@@ -253,8 +253,8 @@
       "title": "Git 一：快照、暂存区与历史",
       "summary": "提交、查看历史、撤销改动，理解三个区各存了什么。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/git-local-workflow/",
       "prerequisites": [
         "shell-permissions-and-pipes"
       ],
@@ -268,8 +268,8 @@
       "title": "Git 二：分支、远程与协作",
       "summary": "开分支、合并、解决冲突，走通社团的 PR 流程。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/git-branches-and-collaboration/",
       "prerequisites": [
         "git-local-workflow"
       ],

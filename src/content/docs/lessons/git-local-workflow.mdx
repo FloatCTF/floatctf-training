@@ -1,0 +1,419 @@
+---
+title: Git 一：快照、暂存区与历史
+description: 理解提交、工作区、暂存区和仓库，用 git init、status、add、commit 记录改动，用 log、diff、show 查看历史，用 restore 撤销，用 .gitignore 排除不该提交的文件
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import GitGraph from '../../../components/git-graph';
+import manifest from '../../../data/lessons/git-local-workflow.json';
+import threeAreas from '../../../data/git-traces/three-areas.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '把 ~/lab/python 变成仓库，写好 .gitignore 再做第一次提交。git status 应当显示 working tree clean，git log --oneline 应当只有一行。' },
+  { title: '在这个仓库里再做两次提交', detail: '改一个脚本里的一行，先用 git diff 看清楚改了什么，再提交；然后新建一个脚本并提交。每条提交信息都要让人不看代码就知道这次做了什么。完成后 git log --oneline 应当有三行。' },
+  { title: '验证验收第 1、2 题', detail: '在 ~/lab/python 里照着两道题各做一遍，对照 git status 的实际输出检查你的预测，做完用 git restore 和 git restore --staged 把仓库恢复干净。' },
+  { title: '亲手验证「提交过的内容删不掉」', detail: '新建目录 ~/lab/leak-test 并 git init。提交一个内容为 password=abc 的 pass.txt；然后 rm pass.txt、git add pass.txt、git commit -m "Remove password"。最后执行 git show HEAD~1:pass.txt，它应当仍然打印出 password=abc。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="GIT / LESSON 11"
+  kicker="Snapshots, Staging Area, History"
+  lines={[
+    { text: "Git 一" },
+    { text: "快照、暂存区与历史", accent: true },
+  ]}
+  summary="你已经写了十几个脚本。从这一课开始，它们的每一次改动都有记录：改了什么、什么时候改的、为什么改，改坏了能退回去。这一课只在自己的机器上练，下一课再和别人协作。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：昨天还能跑的那一版在哪
+
+你大概见过这样的文件夹：
+
+```text
+report.py
+report_new.py
+report_final.py
+report_final_v2.py
+report_final_v2_fixed.py
+```
+
+哪个是最新的？`final` 和 `final_v2` 差在哪几行？当时为什么要改？两周之后，连你自己也答不上来。
+
+更麻烦的情况是没有留副本：脚本昨天还能跑，今天改了几处就报错，而你已经记不清改过哪里。
+
+这一课结束时，你会有一个工具来回答这些问题。它记下每一个版本，告诉你任意两个版本之间差了哪几行，并且能把文件恢复成之前的样子。
+
+## 一、Git 记录的是什么
+
+### 1. 提交：一张带说明的快照
+
+**版本控制系统**把一个文件夹的变化记成一连串快照，每张快照保存当时整个文件夹的样子，同时记下是谁、在什么时候、为了什么存的。（来源：[Missing Semester](#source-missing-semester-git)）**Git** 是这类工具中的一个，本站自己的源码就用它管理。
+
+Git 里的一张快照叫一次**提交**（commit）。一次提交包含四样东西：
+
+<DataTable
+  caption="一次提交里有什么"
+  headers={["内容", "说明"]}
+  rows={[
+    ["快照", "提交那一刻，项目里所有被管理的文件的样子。没有变化的文件不会重复存一份，只记一个指向已有内容的链接"],
+    ["作者与时间", "谁提交的，什么时候提交的"],
+    ["提交信息", "你写的一句话，说明这次做了什么"],
+    ["上一个提交", "它接在谁的后面。靠这一项，提交连成一条链，这条链就是历史"],
+  ]}
+  columnRatios={[1, 3.4]}
+/>
+
+（来源：[Pro Git: What is Git?](#source-progit-what-is-git)）
+
+每次提交有一个编号，例如 `91ee7f5779d4abd13a388f58f3a37df610e0c1a1`。它是 Git 根据提交的内容算出来的 SHA-1 哈希，40 个十六进制字符。第 7 课用 `hashlib` 算过哈希，道理相同：内容差一个字节，哈希就完全不同。平时用前 7 位就够了，例如 `91ee7f5`。
+
+被 Git 管理的项目文件夹叫**仓库**（repository）。全部历史都存在文件夹里一个名为 `.git` 的隐藏目录中。
+
+### 2. 三个区
+
+一个文件从「我改了它」到「它进了历史」，要经过两步，中间隔着一个暂存区：
+
+<DataTable
+  caption="Git 项目的三个区"
+  headers={["区", "是什么", "对应的文件状态"]}
+  rows={[
+    ["工作区", "你在文件管理器和编辑器里看到的那些文件", "已修改：改了，还没告诉 Git"],
+    ["暂存区", "一份清单，记着下一次提交要包含哪些内容", "已暂存：已经标记为要进入下一次提交"],
+    ["仓库", ".git 目录里保存的全部提交", "已提交：已经安全地存进历史"],
+  ]}
+  columnRatios={[0.8, 2.2, 2]}
+/>
+
+（来源：[Pro Git: What is Git?](#source-progit-what-is-git)）
+
+两条命令负责搬运：`git add` 把工作区的内容放进暂存区，`git commit` 把暂存区的内容存成一次提交。
+
+下面这张图逐条执行本课要敲的命令。先点着看一遍，留意同一个文件在三栏之间怎样移动，然后在第二节亲手做。
+
+<GitGraph
+  client:visible
+  trace={threeAreas}
+  title="一个文件怎样走进历史"
+  intro="每点一次「下一步」执行一条命令。三栏显示的是执行之后 Git 的真实状态。"
+/>
+
+为什么不直接从工作区提交，非要多一个暂存区？因为你常常同时改了好几处，而它们不是一回事：一处是修 bug，一处是随手加的调试输出。暂存区让你挑出属于同一件事的改动，先提交它们，其余的留着下次再说。
+
+### 3. 首次配置
+
+Kali 自带 Git。每次提交都要记下作者，所以第一次使用前要告诉 Git 你是谁。这一步每台机器只做一次。
+
+<TerminalSession
+  title="确认版本，登记姓名和邮箱"
+  steps={[
+    { cmd: 'git --version', out: 'git version 2.53.0', note: '版本号比这个新也没关系。' },
+    { cmd: 'git config --global user.name "Kali Student"', note: '换成你自己的名字。没有输出就是成功。' },
+    { cmd: 'git config --global user.email "student@example.com"', note: '换成你自己的邮箱。' },
+    { cmd: 'git config --global init.defaultBranch main', note: '新仓库的第一条分支叫 main。分支是下一课的内容，这里先照抄。' },
+    { cmd: 'git config --global --list', out: 'user.name=Kali Student\nuser.email=student@example.com\ninit.defaultbranch=main', note: '检查刚才写进去的三项。' },
+  ]}
+/>
+
+`--global` 表示这项设置对这台机器上你的所有仓库生效。姓名和邮箱会写进之后的每一次提交，写进去就改不了，所以现在就填对。（来源：[Pro Git: First-Time Git Setup](#source-progit-setup)）
+
+## 二、建仓库，做三次提交
+
+### 1. git init：把一个目录变成仓库
+
+<TerminalSession
+  title="新建目录并初始化"
+  steps={[
+    { cmd: 'mkdir ~/lab/toolbox' },
+    { cmd: 'cd ~/lab/toolbox' },
+    { cmd: 'git init', out: 'Initialized empty Git repository in /home/kali/lab/toolbox/.git/' },
+    { cmd: 'ls -a', out: '.  ..  .git', note: '多了一个隐藏目录 .git。历史全在里面，不要手动改它，也不要删它。' },
+    { cmd: 'git status', out: 'On branch main\n\nNo commits yet\n\nnothing to commit (create/copy files and use "git add" to track)', note: '在 main 分支上，还没有任何提交，也没有可以提交的东西。' },
+  ]}
+/>
+
+`git status` 是用得最多的一条命令。它只查看，不改动任何东西。每做一步之前和之后都可以敲一次，它会告诉你现在的状态，并在括号里提示下一步可以用什么命令。
+
+### 2. 第一次提交
+
+实际写代码时用编辑器。这里为了让每个人的文件内容完全一致，用 `echo` 生成。
+
+<TerminalSession
+  title="新文件：未跟踪，暂存，提交"
+  steps={[
+    { cmd: "echo 'print(\"port check\")' > portcheck.py" },
+    {
+      cmd: 'git status',
+      out: 'On branch main\n\nNo commits yet\n\nUntracked files:\n  (use "git add <file>..." to include in what will be committed)\n\tportcheck.py\n\nnothing added to commit but untracked files present (use "git add" to track)',
+      note: 'Untracked files：Git 看到了这个文件，但它不在任何一次提交里，Git 还没开始管它。',
+    },
+    { cmd: 'git add portcheck.py', note: '把它放进暂存区。没有输出。' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\n\nNo commits yet\n\nChanges to be committed:\n  (use "git rm --cached <file>..." to unstage)\n\tnew file:   portcheck.py',
+      note: 'Changes to be committed：这一组就是暂存区，下一次提交会包含它们。',
+    },
+    {
+      cmd: 'git commit -m "Add port check script"',
+      out: '[main (root-commit) 91ee7f5] Add port check script\n 1 file changed, 1 insertion(+)\n create mode 100644 portcheck.py',
+      note: '-m 后面是提交信息。输出里的 91ee7f5 是这次提交编号的前 7 位，root-commit 表示它是这个仓库的第一个提交。',
+    },
+    {
+      cmd: 'git log',
+      out: 'commit 91ee7f5779d4abd13a388f58f3a37df610e0c1a1 (HEAD -> main)\nAuthor: Kali Student <student@example.com>\nDate:   Thu Oct 1 10:00:00 2026 +0800\n\n    Add port check script',
+      note: 'git log 列出历史。HEAD -> main 的含义下一课讲，现在把它读作「你在这里」。',
+    },
+  ]}
+/>
+
+<Callout variant="info" title="你的提交编号和页面上的不一样">
+提交编号是由文件内容、作者、时间一起算出来的。你的姓名、邮箱和提交时间与页面不同，编号必然不同。这是正常的，后面凡是出现编号的地方，都以你自己屏幕上的为准。
+</Callout>
+
+（来源：[Pro Git: Recording Changes to the Repository](#source-progit-recording)、[git-status](#source-git-status)）
+
+### 3. 第二次提交：先看清改了什么
+
+<TerminalSession
+  title="修改已有文件：已修改，diff，暂存，提交"
+  steps={[
+    { cmd: "echo 'print(\"done\")' >> portcheck.py", note: '往文件末尾追加一行。' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nChanges not staged for commit:\n  (use "git add <file>..." to update what will be committed)\n  (use "git restore <file>..." to discard changes in working directory)\n\tmodified:   portcheck.py\n\nno changes added to commit (use "git add" and/or "git commit -a")',
+      note: 'Changes not staged for commit：文件改了，但改动还停在工作区。',
+    },
+    {
+      cmd: 'git diff',
+      out: 'diff --git a/portcheck.py b/portcheck.py\nindex 99a74d8..127f973 100644\n--- a/portcheck.py\n+++ b/portcheck.py\n@@ -1 +1,2 @@\n print("port check")\n+print("done")',
+      note: '以 + 开头的行是新增的，以 - 开头的行是删掉的，前面是空格的行没有变。',
+    },
+    { cmd: 'git add portcheck.py' },
+    { cmd: 'git commit -m "Print done at the end"', out: '[main 4f5d1a3] Print done at the end\n 1 file changed, 1 insertion(+)' },
+  ]}
+/>
+
+`git diff` 显示的是工作区里还没有暂存的改动。已经 `git add` 过的改动要用 `git diff --staged` 看，它比较的是暂存区和上一次提交。养成习惯：提交之前先看一眼 diff，确认要提交的正是你想提交的。（来源：[Pro Git: Recording Changes to the Repository](#source-progit-recording)）
+
+`git status` 里会出现的四种说法，对应文件的四种处境：
+
+<DataTable
+  caption="读懂 git status"
+  headers={["status 里的说法", "文件的处境", "通常的下一步"]}
+  rows={[
+    ["Untracked files", "新文件，Git 还没开始管", "git add 它，或者写进 .gitignore"],
+    ["Changes not staged for commit", "被管着的文件改了，改动在工作区", "git diff 看一眼，再 git add"],
+    ["Changes to be committed", "改动已在暂存区", "git commit"],
+    ["nothing to commit, working tree clean", "工作区和最新的提交完全一致", "继续写代码"],
+  ]}
+  columnRatios={[1.6, 1.5, 1.5]}
+/>
+
+### 4. 第三次提交：有些文件不该进仓库
+
+<TerminalSession
+  title="用 .gitignore 把 secret.txt 挡在外面"
+  steps={[
+    { cmd: "echo '# toolbox' > README.md" },
+    { cmd: "echo 'password=kali123' > secret.txt", note: '假设这是一份存着密码的本地配置。' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nUntracked files:\n  (use "git add <file>..." to include in what will be committed)\n\tREADME.md\n\tsecret.txt\n\nnothing added to commit but untracked files present (use "git add" to track)',
+    },
+    { cmd: "echo 'secret.txt' > .gitignore", note: '.gitignore 是一个普通的文本文件，每行写一个要忽略的文件名或模式。' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nUntracked files:\n  (use "git add <file>..." to include in what will be committed)\n\t.gitignore\n\tREADME.md\n\nnothing added to commit but untracked files present (use "git add" to track)',
+      note: 'secret.txt 从列表里消失了。.gitignore 自己出现在列表里，它需要提交。',
+    },
+    { cmd: 'git add .gitignore README.md', note: 'git add 可以一次给多个文件。' },
+    {
+      cmd: 'git commit -m "Add README and ignore secrets"',
+      out: '[main 15f1190] Add README and ignore secrets\n 2 files changed, 2 insertions(+)\n create mode 100644 .gitignore\n create mode 100644 README.md',
+    },
+    {
+      cmd: 'git log --oneline',
+      out: '15f1190 (HEAD -> main) Add README and ignore secrets\n4f5d1a3 Print done at the end\n91ee7f5 Add port check script',
+      note: '--oneline 让每次提交只占一行。最新的在最上面。',
+    },
+  ]}
+/>
+
+`.gitignore` 只对还没被跟踪的文件起作用。一个文件一旦提交过，之后再把它写进 `.gitignore` 也没用，Git 会继续管它。所以顺序很重要：**先写 .gitignore，再做第一次 git add。**（来源：[gitignore](#source-gitignore)）
+
+常见的该忽略的东西：密码和密钥文件、虚拟环境目录 `.venv/`、Python 自动生成的 `__pycache__/`、程序运行时产生的日志和结果文件。以 `/` 结尾的模式只匹配目录。
+
+### 5. 提交信息怎么写
+
+提交信息是写给以后的人看的，包括以后的你。它应当让人不打开代码就知道这次做了什么。
+
+<DataTable
+  caption="同一次提交，两种写法"
+  headers={["看不出做了什么", "能看出做了什么"]}
+  rows={[
+    ["update", "Print done at the end"],
+    ["fix", "Fix port range check when start equals end"],
+    ["aaa", "Add README and ignore secrets"],
+  ]}
+  columnRatios={[1, 2]}
+/>
+
+本站仓库的提交信息用英文，以动词开头写一句话。中文也可以，关键是具体。一次提交只做一件事，这样信息才写得出来；写不出一句话能概括的信息，通常说明这次提交混进了不相干的改动。
+
+## 三、撤销与查看旧版本
+
+### 1. 丢弃工作区里的改动
+
+改乱了，想回到上一次提交的样子：
+
+<TerminalSession
+  title="git restore：用上一次提交的版本覆盖工作区"
+  steps={[
+    { cmd: "echo 'oops' >> portcheck.py", note: '模拟一次改坏。' },
+    {
+      cmd: 'git diff',
+      out: 'diff --git a/portcheck.py b/portcheck.py\nindex 127f973..75e0b14 100644\n--- a/portcheck.py\n+++ b/portcheck.py\n@@ -1,2 +1,3 @@\n print("port check")\n print("done")\n+oops',
+    },
+    { cmd: 'git restore portcheck.py', note: '没有输出。' },
+    { cmd: 'git status', out: 'On branch main\nnothing to commit, working tree clean', note: '文件恢复成了最近一次提交时的样子。' },
+  ]}
+/>
+
+<Callout variant="warning" title="git restore 丢掉的改动找不回来">
+被 `git restore` 丢弃的是还没提交的改动，Git 从来没有存过它们，所以没有任何办法恢复。执行之前先用 `git diff` 看清楚要丢掉的是什么。
+</Callout>
+
+（来源：[Pro Git: Undoing Things](#source-progit-undoing)、[git-restore](#source-git-restore)）
+
+### 2. 取消暂存
+
+`git add` 了不该加的东西，想把它从暂存区拿出来，但保留工作区里的改动：
+
+<TerminalSession
+  title="git restore --staged：只动暂存区"
+  steps={[
+    { cmd: "echo 'print(\"wip\")' >> portcheck.py" },
+    { cmd: 'git add portcheck.py' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nChanges to be committed:\n  (use "git restore --staged <file>..." to unstage)\n\tmodified:   portcheck.py',
+      note: '括号里就是取消暂存的命令。',
+    },
+    { cmd: 'git restore --staged portcheck.py' },
+    {
+      cmd: 'git status',
+      out: 'On branch main\nChanges not staged for commit:\n  (use "git add <file>..." to update what will be committed)\n  (use "git restore <file>..." to discard changes in working directory)\n\tmodified:   portcheck.py\n\nno changes added to commit (use "git add" and/or "git commit -a")',
+      note: '改动回到了工作区，文件内容没有变。',
+    },
+    { cmd: 'git restore portcheck.py', note: '这次连工作区的改动也丢掉，恢复干净。' },
+  ]}
+/>
+
+两条命令的区别只在作用的区：`git restore 文件` 还原工作区，`git restore --staged 文件` 还原暂存区。
+
+### 3. 查看旧版本
+
+<TerminalSession
+  title="git show：看某次提交，或某次提交里的某个文件"
+  steps={[
+    { cmd: 'git show HEAD~2:portcheck.py', out: 'print("port check")', note: 'HEAD 指当前所在的提交，HEAD~2 是往回数两个。冒号后面是文件名。这是第一次提交时的 portcheck.py，只有一行。' },
+    {
+      cmd: 'git show --stat HEAD',
+      out: 'commit 15f119003bf2f01153206e24ae37c16cdf9963f8 (HEAD -> main)\nAuthor: Kali Student <student@example.com>\nDate:   Thu Oct 1 10:00:00 2026 +0800\n\n    Add README and ignore secrets\n\n .gitignore | 1 +\n README.md  | 1 +\n 2 files changed, 2 insertions(+)',
+      note: '--stat 只列出这次提交动了哪些文件。去掉 --stat 会显示完整的 diff。',
+    },
+  ]}
+/>
+
+`HEAD~2` 的位置也可以直接写提交编号，例如 `git show 91ee7f5:portcheck.py`（换成你自己的编号）。
+
+<Callout variant="danger" title="提交过的密码，删掉文件也没用">
+上面这条 `git show` 说明了一件事：只要提交过，旧版本就一直在历史里。假如你不小心提交了密码，之后再提交一次「删除密码」，文件从工作区消失了，但任何拿到这个仓库的人都能用 `git show` 把它翻出来。
+
+所以密码、密钥、令牌这类东西要在提交之前就写进 `.gitignore`。万一已经提交并且推送到了别人能访问的地方，第一件事是去改掉那个密码。
+</Callout>
+
+Git 的操作几乎都只是往仓库里添加数据。这是它可靠的原因：已经提交的东西很难丢。它也是上面这条警告的原因。（来源：[Pro Git: What is Git?](#source-progit-what-is-git)）
+
+## 常见报错与排错
+
+先看三个最常见的回答：
+
+<TerminalSession
+  title="没东西可提交、文件名写错、不在仓库里"
+  steps={[
+    { cmd: 'git commit -m "nothing"', out: 'On branch main\nnothing to commit, working tree clean', note: '工作区和最新提交一致，没有可提交的内容。' },
+    { cmd: 'git add nosuch.py', out: "fatal: pathspec 'nosuch.py' did not match any files", note: '没有这个文件。' },
+    { cmd: 'cd /tmp' },
+    { cmd: 'git status', out: 'fatal: not a git repository (or any of the parent directories): .git', note: '/tmp 不是仓库。Git 命令要在仓库目录里执行。' },
+    { cmd: 'cd ~/lab/toolbox' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["fatal: not a git repository (or any of the parent directories): .git", "当前目录不在任何仓库里", "pwd 确认位置，cd 回仓库目录"],
+    ["fatal: pathspec 'nosuch.py' did not match any files", "文件名写错，或文件不在当前目录", "ls 看一眼，用 Tab 补全文件名"],
+    ["Author identity unknown … Please tell me who you are.", "还没配置姓名和邮箱", "按提示执行两条 git config --global"],
+    ["no changes added to commit", "改了文件但没有 git add，暂存区是空的", "先 git add 要提交的文件"],
+    ["敲了 git commit 后终端变成了一个编辑器", "忘了 -m，Git 打开编辑器让你写提交信息", "写一行信息后保存退出。底部有 ^X Exit 字样的是 nano，按 Ctrl+O 回车保存、Ctrl+X 退出；信息留空退出则放弃这次提交"],
+    ["改了文件，提交之后 git status 仍然说它 modified", "git add 之后又改过，后改的部分没进暂存区", "再 git add 一次，再提交"],
+    ["写了 .gitignore，文件还是出现在 status 里", "这个文件之前已经提交过", ".gitignore 只管未跟踪的文件。先确认它是否真的不该进仓库"],
+  ]}
+  columnRatios={[1.6, 1.4, 1.8]}
+/>
+
+局限：这一课的撤销只覆盖「还没提交」的改动。已经提交的内容怎样改，例如改写上一次的提交信息（`git commit --amend`），留到实际需要时再学；在那之前，提交错了就再做一次新的提交把它改对，这样最安全。（来源：[Pro Git: Undoing Things](#source-progit-undoing)）
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'git config --global user.name / user.email', description: '登记作者信息，每台机器一次。' },
+    { term: 'git init', description: '把当前目录变成仓库。' },
+    { term: 'git status', description: '看每个文件的状态和下一步提示。随时可敲。' },
+    { term: 'git add 文件', description: '把文件现在的内容放进暂存区。git add . 是当前目录下全部。' },
+    { term: 'git commit -m "信息"', description: '把暂存区存成一次提交。' },
+    { term: 'git log / git log --oneline', description: '看历史；每次提交一行。' },
+    { term: 'git diff / git diff --staged', description: '看未暂存的改动；看已暂存的改动。' },
+    { term: 'git restore 文件', description: '丢弃工作区的改动。找不回来。' },
+    { term: 'git restore --staged 文件', description: '取消暂存，改动留在工作区。' },
+    { term: 'git show 提交 / 提交:文件', description: '看某次提交；看那次提交里的某个文件。HEAD~1 是上一个提交。' },
+    { term: '.gitignore', description: '每行一个不想让 Git 管的文件或目录。先写它，再 git add。' },
+  ]}
+/>
+
+<KeyTakeaway>
+Git 把项目的历史记成一串提交，每次提交是一张快照加一句说明。改动先在工作区，`git add` 放进暂存区，`git commit` 存进仓库。不确定现在是什么状态就敲 `git status`。提交过的内容很难丢，也很难删，所以密码要在提交之前挡在 `.gitignore` 里。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。`~/lab/toolbox` 仓库下一课接着用，作业不要在它里面做。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

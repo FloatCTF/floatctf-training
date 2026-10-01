@@ -1,0 +1,61 @@
+{
+ "steps": [
+  {
+   "run": [
+    "git init"
+   ],
+   "note": "在当前目录建立仓库。Git 的全部记录都放在新出现的 .git 目录里。此刻三个区都是空的。"
+  },
+  {
+   "run": [
+    "echo 'print(\"port check\")' > portcheck.py"
+   ],
+   "note": "工作区多了一个文件。Git 看到了它，但还没有开始管它，状态是「未跟踪」。"
+  },
+  {
+   "run": [
+    "git add portcheck.py"
+   ],
+   "note": "git add 把这个文件现在的内容放进暂存区。暂存区是「下一次提交打算包含什么」的清单。"
+  },
+  {
+   "run": [
+    "git commit -m \"Add port check script\""
+   ],
+   "note": "git commit 把暂存区的内容存成一个提交，写进仓库。暂存区清空，分支 main 指向这个新提交。"
+  },
+  {
+   "run": [
+    "echo 'print(\"done\")' >> portcheck.py"
+   ],
+   "note": "改了一个已经被跟踪的文件。Git 拿工作区和上一次提交比较，发现它变了，状态是「已修改」。仓库里的提交没有变。"
+  },
+  {
+   "run": [
+    "git add portcheck.py"
+   ],
+   "note": "把这次修改放进暂存区。"
+  },
+  {
+   "run": [
+    "git commit -m \"Print done at the end\""
+   ],
+   "note": "第二个提交。它记着自己的上一个提交是谁，提交就这样连成一条链。main 移到了新提交上。"
+  },
+  {
+   "run": [
+    "echo '# toolbox' > README.md",
+    "echo 'password=kali123' > secret.txt",
+    "echo 'secret.txt' > .gitignore"
+   ],
+   "note": "新建了三个文件。secret.txt 里是不该进仓库的内容，把它的名字写进 .gitignore 之后，Git 就当它不存在，状态是「被忽略」。.gitignore 自己是个普通文件，需要提交。"
+  },
+  {
+   "run": [
+    "git add .gitignore README.md",
+    "git commit -m \"Add README and ignore secrets\""
+   ],
+   "note": "第三个提交包含 README.md 和 .gitignore。secret.txt 留在工作区，始终没有进暂存区，也不会进仓库。"
+  }
+ ]
+}

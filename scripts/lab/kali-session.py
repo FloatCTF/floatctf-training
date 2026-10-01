@@ -23,6 +23,7 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
   commands.txt 每行一条 shell 命令，以 ## 开头的行是注释。程序运行中需要键盘输入时，
   把这一行写成 JSON：{"cmd": "python3 age.py", "stdin": ["18"]}，stdin 里的每一项会在程序等待时依次输入。
   stdin 里写 "^C" 表示按下 Ctrl+C。
+  以「##! 」开头的行是准备动作：照常执行但不记录。
 
   --python 模式记录 Python 交互模式（>>>）里的输入输出。sessions.txt 每行一条语句，
   以「## session」开头的行表示另开一个全新的解释器；输出是按会话分组的二维数组。
@@ -93,6 +94,12 @@ def record_shell(path):
     records = []
     for raw in open(path, encoding='utf-8'):
         line = raw.rstrip('\n')
+        if line.startswith('##! '):
+            # 准备动作：照常执行，但不进记录（清理上次的现场、固定提交时间等）
+            child.sendline(line[4:])
+            child.expect(MARK)
+            settle(child, 0.3)
+            continue
         if not line.strip() or line.startswith('##'):
             continue
         entry = json.loads(line) if line.startswith('{') else {'cmd': line}

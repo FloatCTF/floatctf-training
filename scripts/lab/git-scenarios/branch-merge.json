@@ -1,0 +1,83 @@
+{
+ "setup": [
+  "git init",
+  "echo 'print(\"port check\")' > portcheck.py",
+  "git add portcheck.py",
+  "git commit -m \"Add port check script\"",
+  "echo 'print(\"done\")' >> portcheck.py",
+  "git add portcheck.py",
+  "git commit -m \"Print done at the end\"",
+  "echo '# toolbox' > README.md",
+  "echo 'password=kali123' > secret.txt",
+  "echo 'secret.txt' > .gitignore",
+  "git add .gitignore README.md",
+  "git commit -m \"Add README and ignore secrets\""
+ ],
+ "steps": [
+  {
+   "run": [
+    "git switch -c feature/banner"
+   ],
+   "note": "新建分支并切过去。分支只是一个指向提交的名字：此刻 main 和 feature/banner 指向同一个提交，HEAD 表示你现在在哪个分支上。"
+  },
+  {
+   "run": [
+    "echo 'print(\"== toolbox ==\")' > banner.py",
+    "git add banner.py",
+    "git commit -m \"Add banner\""
+   ],
+   "note": "在 feature/banner 上提交。只有当前分支跟着新提交往前移，main 留在原地。"
+  },
+  {
+   "run": [
+    "git switch main"
+   ],
+   "note": "切回 main。工作区被换成 main 指向的那个提交的内容，banner.py 从工作区消失了，但它还好好地在仓库里。"
+  },
+  {
+   "run": [
+    "git merge feature/banner"
+   ],
+   "note": "把 feature/banner 合并进来。main 落后于它且没有自己的新提交，Git 直接把 main 往前挪到同一个提交，这叫快进（fast-forward）。"
+  },
+  {
+   "run": [
+    "git branch -d feature/banner",
+    "git switch -c feature/title",
+    "echo '# toolbox: small scripts' > README.md",
+    "git add README.md",
+    "git commit -m \"Describe the toolbox\""
+   ],
+   "note": "删掉用完的分支，再开一个新分支 feature/title，在上面改了 README.md 的第一行并提交。"
+  },
+  {
+   "run": [
+    "git switch main",
+    "echo '# Toolbox' > README.md",
+    "git add README.md",
+    "git commit -m \"Capitalize the title\""
+   ],
+   "note": "回到 main，把同一行改成了另一个样子并提交。现在两个分支各有一个对方没有的提交，历史分叉了。"
+  },
+  {
+   "run": [
+    "git merge feature/title"
+   ],
+   "allowFailure": true,
+   "note": "合并时 Git 发现两边改了同一行，不知道该留哪个，于是停下来。README.md 的状态是「冲突」，文件里被写入了两个版本和分隔标记。"
+  },
+  {
+   "run": [
+    "echo '# Toolbox: small scripts' > README.md",
+    "git add README.md"
+   ],
+   "note": "你来决定最终内容：把文件改成想要的样子，再 git add，告诉 Git 这个冲突解决了。"
+  },
+  {
+   "run": [
+    "git commit -m \"Merge feature/title\""
+   ],
+   "note": "提交完成合并。这个提交有两个上一个提交，分叉的历史在这里重新汇合，它叫合并提交。"
+  }
+ ]
+}

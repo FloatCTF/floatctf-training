@@ -1,0 +1,413 @@
+{
+  "lessonPlan": {
+    "audience": "已经会在本地用 add、commit、log 记录改动，还没用过分支和远程仓库的新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "提交图上的分支指针怎样移动：新建分支、在分支上提交、快进合并、两条分支各自前进后分叉、冲突、合并提交把历史重新汇合",
+    "learningObjectives": [
+      "说出分支和 HEAD 各是什么，解释切换分支时工作区发生了什么",
+      "用 git switch 新建和切换分支，用 git log --oneline --graph --all 读提交图",
+      "用 git merge 合并分支，区分快进合并与合并提交",
+      "读懂冲突标记，手工解决一次合并冲突",
+      "用 git remote、push、clone、pull 在本地仓库和远程仓库之间同步提交",
+      "按社团的「同仓分支 + PR」流程说出一次改动从建分支到合并的每一步"
+    ],
+    "prerequisites": [
+      "git-local-workflow",
+      "~/lab/toolbox 仓库里有第 11 课的三次提交，git status 显示 working tree clean"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-switch-worktree",
+      "kind": "mechanism",
+      "title": "切回 main，文件不见了",
+      "question": "你在 feature/banner 分支上新建并提交了 banner.py，然后执行 git switch main，再 ls，发现 banner.py 不见了。文件丢了吗？用「分支是什么」解释发生了什么，并说出两种让它重新出现在工作区的办法。",
+      "answer": "没有丢。提交存在仓库里，feature/banner 这个分支名仍然指着包含 banner.py 的那个提交。git switch main 把 HEAD 移到 main，并把工作区换成 main 指向的那个提交的内容；那个提交里没有 banner.py，所以工作区里看不到它。两种办法：git switch feature/banner 切回去，工作区又换成有 banner.py 的那个快照；或者留在 main 上执行 git merge feature/banner，把那个提交合并进 main。",
+      "sourceIds": [
+        "progit-branches",
+        "git-switch"
+      ]
+    },
+    {
+      "id": "check-predict-merge",
+      "kind": "prediction",
+      "title": "这次合并会多出一个提交吗",
+      "question": "仓库里 main 上有 A、B 两个提交。从 B 新建分支 feature，在上面做了提交 C。情况一：回到 main 直接执行 git merge feature。情况二：回到 main 先做了一个提交 D，再执行 git merge feature，并且 C 和 D 改的是不同的文件。两种情况下，合并之后仓库里各有几个提交？main 指向谁？哪种情况会产生合并提交，它有几个上一个提交？",
+      "answer": "情况一：仍然是 A、B、C 三个提交。main 落后于 feature 且没有自己的新提交，Git 只把 main 这个指针从 B 挪到 C，这是快进合并，不产生新提交。情况二：共五个提交，A、B、C、D 和一个新的合并提交 M。main 和 feature 各有一个对方没有的提交，历史分叉了，Git 把两边的快照连同共同祖先 B 合在一起，生成 M；M 有两个上一个提交，D 和 C，main 指向 M。因为 C 和 D 改的是不同的文件，这次合并自动完成，不会冲突。",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "check-make-conflict",
+      "kind": "practice",
+      "title": "自己制造并解决一次冲突",
+      "question": "在 ~/lab/toolbox 里：从 main 新建分支 fix/banner，把 banner.py 里的那一行改成 print(\"== my toolbox ==\") 并提交；回到 main，把同一行改成 print(\"== TOOLBOX ==\") 并提交；然后把 fix/banner 合并进 main。解决冲突，完成合并，删除分支，推送到 origin。",
+      "answer": "参考步骤：git switch -c fix/banner；用编辑器改 banner.py；git add banner.py；git commit -m \"Reword the banner\"；git switch main；再改同一行；git add banner.py；git commit -m \"Uppercase the banner\"；git merge fix/banner，出现 CONFLICT；打开 banner.py，在 <<<<<<<、=======、>>>>>>> 之间选定要留下的那一行，把三行标记全部删掉，保存；git add banner.py；git commit -m \"Merge fix/banner\"；git branch -d fix/banner；git push。自查标准：python3 banner.py 能正常运行（文件里没有残留的冲突标记）；git log --oneline --graph 能看到分叉后又汇合；git status 显示 Your branch is up to date with 'origin/main'。",
+      "sourceIds": [
+        "progit-merging",
+        "progit-remotes"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "分支是一个会移动的名字",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能在提交图上指出 main、另一条分支和 HEAD 各指着哪个提交。"
+    },
+    {
+      "kind": "动手",
+      "title": "分支、合并与冲突",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "git log --oneline --graph --all 里能看到一次分叉和一次汇合。"
+    },
+    {
+      "kind": "进阶",
+      "title": "远程仓库与社团的协作流程",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "「队友」推送的提交通过 git pull 出现在你的仓库里。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Pro Git branches in a nutshell lightweight movable pointer HEAD",
+      "Pro Git basic branching and merging fast-forward merge commit conflict markers",
+      "Pro Git working with remotes origin push pull clone rejected",
+      "git-scm docs git-switch -c create",
+      "git-scm docs git-push --set-upstream",
+      "GitHub Docs about pull requests",
+      "GitHub Docs GitHub flow"
+    ],
+    "notes": "概念讲法参考 Pro Git 第 2.5、3.1、3.2 节，例子自写。全部命令在 kalilinux/kali-rolling 容器（git 2.53.0）里以 kali 用户、交互式 zsh 实际运行，接在第 11 课留下的仓库之后；提交时间与作者固定，哈希可复现。远程仓库用本机的一个裸仓库代替，「队友」是同一台机器上的另一份克隆。提交图的数据由 scripts/lab/git-trace.py 执行同一组命令后读取 git 的真实状态生成。常见情况表里的推送被拒、分叉后 pull、带着改动切分支、删除未合并分支四条报错，另在容器里单独复现后抄录。在 GitHub 网页上创建和合并 pull request 的操作没有在本课实跑，页面只依据 GitHub 官方文档和本仓库 README 描述流程，不给逐步点击说明。"
+  },
+  "versionInfo": {
+    "targetVersion": "Git 2.53.0（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh，git 2.53.0。重放时固定了提交时间（2026-10-01 10:00 +0800）与作者信息，所以页面上的提交哈希可以复现。",
+    "verifiedAt": "2026-10-01",
+    "knownDifferences": "提交哈希与页面不同。git push 和 git pull 输出里的对象数、线程数、字节数和速度随机器与仓库内容变化，页面省略了这几行。2.23 之前的 Git 没有 git switch，用 git checkout 分支名 和 git checkout -b 新分支名。自 2.27 起，本地与远程分叉时不带参数的 git pull 会要求先指定合并方式。GitHub 网页的界面文字会更新，以官方文档为准。"
+  },
+  "sources": [
+    {
+      "id": "progit-branches",
+      "kind": "textbook",
+      "title": "Pro Git: 3.1 Branches in a Nutshell",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Branching-Branches-in-a-Nutshell",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-branch-pointer",
+        "claim-head",
+        "claim-switch",
+        "claim-graph-log",
+        "cmd-graph"
+      ]
+    },
+    {
+      "id": "progit-merging",
+      "kind": "textbook",
+      "title": "Pro Git: 3.2 Basic Branching and Merging",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Branching-Basic-Branching-and-Merging",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-fast-forward",
+        "claim-merge-commit",
+        "claim-conflict",
+        "cmd-merge-ff",
+        "cmd-merge-conflict"
+      ]
+    },
+    {
+      "id": "progit-remotes",
+      "kind": "textbook",
+      "title": "Pro Git: 2.5 Working with Remotes",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Working-with-Remotes",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-remote",
+        "claim-push",
+        "claim-pull",
+        "cmd-push-upstream",
+        "cmd-pull"
+      ]
+    },
+    {
+      "id": "git-switch",
+      "kind": "official-doc",
+      "title": "Git Reference: git-switch",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/git-switch",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为该手册页最近一次有改动的 Git 版本的发布日期。",
+      "supports": [
+        "claim-switch",
+        "cmd-switch-create"
+      ]
+    },
+    {
+      "id": "git-push",
+      "kind": "official-doc",
+      "title": "Git Reference: git-push",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/git-push",
+      "publishedAt": "2026-06-29",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为该手册页最近一次有改动的 Git 版本的发布日期。",
+      "supports": [
+        "claim-set-upstream",
+        "claim-force",
+        "cmd-push-upstream"
+      ]
+    },
+    {
+      "id": "gitglossary",
+      "kind": "official-doc",
+      "title": "Git Reference: gitglossary",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/gitglossary",
+      "publishedAt": "2026-09-28",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为该手册页最近一次有改动的 Git 版本的发布日期。",
+      "supports": [
+        "claim-bare",
+        "claim-remote-tracking"
+      ]
+    },
+    {
+      "id": "github-pull-requests",
+      "kind": "official-doc",
+      "title": "About pull requests",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-pull-request"
+      ]
+    },
+    {
+      "id": "github-flow",
+      "kind": "official-doc",
+      "title": "GitHub flow",
+      "publisher": "GitHub Docs",
+      "url": "https://docs.github.com/en/get-started/using-github/github-flow",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-github-flow"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-branch-pointer",
+      "text": "Git 的分支只是一个指向某个提交的、轻量的可移动指针；每次提交，当前分支的指针自动向前移动。新建分支只是新建一个指向当前提交的指针。",
+      "sourceIds": [
+        "progit-branches"
+      ]
+    },
+    {
+      "id": "claim-head",
+      "text": "Git 用一个名为 HEAD 的特殊指针记住你当前所在的本地分支。切换分支会移动 HEAD，并把工作目录里的文件换成该分支指向的快照。",
+      "sourceIds": [
+        "progit-branches"
+      ]
+    },
+    {
+      "id": "claim-switch",
+      "text": "git switch 切换到指定分支，工作区和暂存区随之更新为与该分支一致；-c 在切换之前先新建分支。自 Git 2.23 起可以用 git switch 代替 git checkout 来切换和新建分支。",
+      "sourceIds": [
+        "git-switch",
+        "progit-branches"
+      ]
+    },
+    {
+      "id": "claim-fast-forward",
+      "text": "被合并分支指向的提交就在当前提交的正前方时，Git 只把指针向前移动，这称为快进。",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "claim-merge-commit",
+      "text": "当前分支上的提交不是被合并分支的直接祖先时，Git 用两个分支末端的快照和它们的共同祖先做三方合并，生成一个新快照并自动创建指向它的提交。这个提交叫合并提交，特别之处在于它有不止一个父提交。",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "claim-conflict",
+      "text": "如果在要合并的两个分支里对同一个文件的同一部分做了不同的修改，Git 无法干净地合并：它不会自动创建合并提交，而是暂停下来，并在冲突的文件里加入标准的冲突标记。解决之后对每个文件执行 git add，把它标记为已解决。",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "claim-graph-log",
+      "text": "git log --oneline --graph --all 打印提交历史，显示各分支指针的位置和历史在哪里分叉。",
+      "sourceIds": [
+        "progit-branches"
+      ]
+    },
+    {
+      "id": "claim-remote",
+      "text": "远程仓库是托管在互联网或网络上别处的项目版本。克隆一个仓库时，Git 自动把来源仓库以 origin 这个名字添加为远程仓库；git remote add <简称> <地址> 手动添加一个。",
+      "sourceIds": [
+        "progit-remotes"
+      ]
+    },
+    {
+      "id": "claim-bare",
+      "text": "裸仓库里没有检出任何受版本管理的文件，通常放在以 .git 结尾的目录里，Git 的管理文件直接位于这个目录中。对外发布的公共仓库通常是裸仓库。",
+      "sourceIds": [
+        "gitglossary"
+      ]
+    },
+    {
+      "id": "claim-remote-tracking",
+      "text": "origin 是默认的上游仓库；从上游取回的更新记在名为 origin/分支名 的远程跟踪分支上。",
+      "sourceIds": [
+        "gitglossary"
+      ]
+    },
+    {
+      "id": "claim-push",
+      "text": "git push <远程> <分支> 把提交推送到远程仓库。如果别人在你之前推送过，你的推送会被拒绝，必须先取回对方的工作并合入自己的，才能再推送。",
+      "sourceIds": [
+        "progit-remotes"
+      ]
+    },
+    {
+      "id": "claim-set-upstream",
+      "text": "git push 的 -u（--set-upstream）选项为成功推送的分支添加上游（跟踪）引用，之后不带参数的 git pull 等命令会用到它。",
+      "sourceIds": [
+        "git-push"
+      ]
+    },
+    {
+      "id": "claim-force",
+      "text": "git push 通常会拒绝更新一个不是被推送提交的祖先的分支；--force 关闭这项检查，可能导致远程仓库丢失提交，应当谨慎使用。",
+      "sourceIds": [
+        "git-push"
+      ]
+    },
+    {
+      "id": "claim-pull",
+      "text": "当前分支设置了跟踪远程分支时，git pull 会自动取回那个远程分支并合并进当前分支。",
+      "sourceIds": [
+        "progit-remotes"
+      ]
+    },
+    {
+      "id": "claim-pull-request",
+      "text": "Pull request 是把代码改动合并进项目的提议，让大家在合并之前讨论和审查这些改动。",
+      "sourceIds": [
+        "github-pull-requests"
+      ]
+    },
+    {
+      "id": "claim-github-flow",
+      "text": "GitHub flow 是一种轻量的、基于分支的工作流，步骤依次是：建分支、做修改、创建 pull request、回应审查意见、合并 pull request、删除分支。在分支上工作不会影响默认分支。",
+      "sourceIds": [
+        "github-flow"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-switch-create",
+      "command": "git switch -c feature/banner",
+      "expectedResult": "Switched to a new branch 'feature/banner'",
+      "sourceIds": [
+        "git-switch"
+      ]
+    },
+    {
+      "id": "cmd-graph",
+      "command": "git log --oneline --graph --all",
+      "expectedResult": "每个提交一行，行首用 * 和竖线画出分叉与汇合，括号里标出各分支和 HEAD 的位置。",
+      "sourceIds": [
+        "progit-branches"
+      ]
+    },
+    {
+      "id": "cmd-merge-ff",
+      "command": "git merge feature/banner",
+      "expectedResult": "输出 Updating 15f1190..c0cd205 和 Fast-forward，main 移到 feature/banner 所指的提交，不产生新提交。",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "cmd-merge-conflict",
+      "command": "git merge feature/title",
+      "expectedResult": "输出 CONFLICT (content): Merge conflict in README.md 和 Automatic merge failed; fix conflicts and then commit the result.",
+      "sourceIds": [
+        "progit-merging"
+      ]
+    },
+    {
+      "id": "cmd-push-upstream",
+      "command": "git push -u origin main",
+      "expectedResult": "末尾显示 * [new branch] main -> main 和 branch 'main' set up to track 'origin/main'.",
+      "sourceIds": [
+        "git-push",
+        "progit-remotes"
+      ]
+    },
+    {
+      "id": "cmd-pull",
+      "command": "git pull",
+      "expectedResult": "取回远程的新提交并快进合并，输出里有 Fast-forward 和新增的文件 ping.py。",
+      "sourceIds": [
+        "progit-remotes"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "branch-merge",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

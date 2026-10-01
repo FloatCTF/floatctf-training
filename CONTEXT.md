@@ -38,6 +38,9 @@
 - 命令与输出用 `TerminalSession`（`terminal-session.astro`）呈现，一步一条命令、一段输出、一句解释。采集与核对走 `scripts/lab/`：`kali-session.py` 在 Kali 容器的真实交互式 zsh 里执行并记录，`terminal-replay.mjs` 从页面取命令、把记录与页面逐条比对。这两个脚本依赖 docker，不进 `verify`。
 - 下载材料放 `public/labs/<课 id>/`，页面用 `LabDownload` 引用。代码文件用 `CodeFile`（`code-file.astro`）展示：它直接读取这个目录下的文件，页面上的代码与学员下载、重放时运行的是同一份，不在 MDX 里另抄一遍。
 - **CodeStepper**（`code-stepper.tsx`）——逐行执行图。数据在 `src/data/steppers/<名字>.json`，由 `scripts/lab/py-trace.py` 追踪课程材料的真实执行生成，每一步附一句解说；不手写状态。门禁（`steppers.mjs`）校验数据里的源码与材料文件一致，改了材料必须重新生成。`view="values"` 只显示名字的值，用于循环这类不关心对象身份的内容。
+- **GitGraph**（`git-graph.tsx`）——Git 三个区与提交图。数据在 `src/data/git-traces/<名字>.json`，由 `scripts/lab/git-trace.py` 执行场景文件（`scripts/lab/git-scenarios/<名字>.json`）里的真实 git 命令后读取状态生成；不手画提交图。它固定了作者与提交时间，所以哈希可复现，并且与页面终端会话里的哈希相同。门禁（`steppers.mjs`）校验数据里的命令与场景文件一致，改了场景必须重新生成。
+- 一门课接着上一门课的现场做时，在 `scripts/lab/preludes/<课 id>.txt` 写前置步骤：普通行是重放前悄悄执行的 shell 命令（清理目录、固定 git 提交时间），`@replay <另一课 id>` 先把那一课页面上的命令悄悄跑一遍。
+- 终端输出里因机器而异的进度与统计（如 git push 的对象数、线程数、速度）在页面上用一行以「…」开头的说明代替。比对时这一行匹配任意多行，其余行仍须逐字一致。
 - 中文输入法在第 1 课统一安装（fcitx5，Ctrl + 空格切换）。示例脚本的标识符、提示语仍用英文，省去学员写代码时来回切换输入法、打出全角符号的麻烦；确实要演示汉字的地方（如 UTF-8 的字节数）直接写中文。
 - 交互模式（`>>>`）的会话用 `TerminalSession` 加 `environment="PYTHON 交互模式"`，只放单行语句，每个会话块对应一个全新的解释器。重放一门课用 `sh scripts/lab/replay-lesson.sh <课 id>`。
 - 学习路线上的课按路线顺序翻页：`paths.ts` 的 `pathPosition()` 给出上一课、下一课，分页与验收题的「下一课」都用它；不在任何路线上的课沿用分类内顺序。

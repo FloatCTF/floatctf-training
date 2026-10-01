@@ -1,190 +1,190 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-10-01",
+  "reviewedAt": "2026-10-02",
   "reviewer": "Claude",
   "mode": "add-topic",
-  "summary": "基础学期第 1、2 批共十课验收（搭环境、命令行两课、数据表示、Python 六课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。",
+  "summary": "基础学期第 1 到 3 批共十二课验收（搭环境、命令行两课、数据表示、Python 六课、Git 两课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md、qa/foundations-batch-2.md 与 qa/foundations-batch-3.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "基础学期十课：环境与命令行三课以 tool 为主模式，数据表示以 concept 为主模式，Python 六课以 code 为主模式，按「运行模型、最小可运行示例、执行过程、常见错误、练习」展开。原有十一课未改动。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课以 tool 为主模式：先讲数据模型（提交、三个区、分支指针），再按「最小成功路径、逐步操作、常见报错」展开。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "每课三段节奏，分段用时之和等于 90 分钟；学习目标在正文都有对应小节。Python 六课前后衔接：第 10 课的统计脚本逐行对应第 8、9 课的内容，并与第 3 课的管道得到相同结果。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课各 90 分钟三段；第 12 课接着第 11 课留下的仓库做，从本地分支到远程再到社团的 PR 流程，逐级放大。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "Python 课只用了一处比喻：变量是贴在值上的名字，随后用逐行执行图给出对象与绑定的精确说法。第 1 课的两处比喻见上一批记录。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课只用了「快照」一个说法，随即给出一次提交包含的四样东西；分支直接讲成「指向提交的名字」，没有用树枝之类的比喻。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "解释器、交互模式、脚本、类型、赋值、对象、缩进、函数、参数、返回值、None、局部变量、模块、虚拟环境、列表、字典、可变对象、推导式、str、bytes、异或、文件对象、异常、Traceback 等术语首次出现时加粗并给出定义。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课的术语首次出现时加粗并定义：版本控制系统、提交、仓库、工作区、暂存区、分支、HEAD、远程仓库、pull request。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "Python 六课的来源为 Python 3.14 官方教程、标准库参考与语言参考共 20 个页面，另有 Kali 官方文章、CS50P 与两份 RFC，全部打开原页核对；claims 与 sources 的双向引用由门禁校验。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "Git 两课的来源为 Pro Git 七节、Git 官方手册六页、GitHub 官方文档两页与 MIT Missing Semester 一讲，共 16 个页面，全部打开原页核对。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "Python 六课页面上的 194 条命令与交互语句在 Kali 容器里按页面顺序重放，193 条逐字一致，1 条差异是 pip 缓存提示。五个逐行执行图的数据由追踪真实执行生成。验收题与作业的预期输出用参考解答运行核对过。第 1 批四课的重放记录见 qa/foundations-batch-1.md。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "Git 两课页面上的 104 条命令在 Kali 容器里按页面顺序重放，104 条一致（4 条推送与拉取的传输进度按省略行比对）；固定提交时间后九个提交哈希可复现。两份提交图数据由执行真实 git 命令后读取状态生成。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "Python 课不含攻击步骤。登录示例注明密码写在源码里只用于练习；单字节异或一节注明它没有安全性；pip 一节明确不使用 --break-system-packages。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课不含攻击步骤。第 11 课用一条警示说明提交过的密码删不掉、应当先写 .gitignore；第 12 课说明不要在共用分支上强推。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "逐行执行图用在五个高理解成本点：名字与对象的绑定、循环中的执行流、函数调用与返回、可变对象的共享、异常发生时的跳转。第 9 课沿用编码转换器。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "提交图用在两个高理解成本点：同一个文件在三个区之间的移动，以及分支指针在分叉、冲突、合并时的移动。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "逐行执行图只有上一步、下一步和滑杆，没有自动播放；每一步都改变高亮行、状态和解说，删掉控件信息就不完整。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "提交图与逐行执行图一样只有上一步、下一步和滑杆，没有自动播放；每一步改变命令、三栏状态和解说。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "减少动态与关闭 JavaScript 时，逐行执行图显示终态和完整的逐步表（每步的代码行与解说），验收题答案的原生折叠可展开。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "减少动态与关闭 JavaScript 时，提交图显示最终状态和完整的逐步表（每步的命令与解说）。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "逐行执行图的按钮与滑杆是原生控件，方向键可以在滑杆上逐步回退；未逐一做完整的 Tab 顺序走查。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "提交图的按钮与滑杆是原生控件，方向键可在滑杆上逐步回退。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "Python 六课在 390 与 1280 宽度、深浅主题下共 18 次检查，整页横向溢出为零；长的 Traceback 与代码只在各自容器内横向滚动。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "Git 两课在 390 与 1280 宽度、深浅主题下共 6 次检查，整页横向溢出为零；手机宽度下提交图三栏改为单列，分支标签换到提交说明下一行。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "打印媒体模拟下六课的验收题答案、终端会话与代码清单全部显示，站点顶栏隐藏。纸张分页未验收。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "打印媒体模拟下 Git 两课的验收题答案与终端会话全部显示，提交图转为逐步表。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "六课各有唯一 H1、专题刊头、目标与前置、分段安排、常见报错、速查卡、结论卡、验收题和来源列表；页内锚点无断链；路线页显示已上线 10 / 37，下一课为第 11 课。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "Git 两课结构与前十课一致；路线页显示已上线 12 / 37，下一课为第 13 课；第 10 课的「下一课」指向第 11 课。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "代码清单沿用站内代码围栏的外观并加下载链接；逐行执行图与其他探索器同框。截图核对了桌面浅色、深色与手机；修掉了代码清单标题栏与代码体之间多出的空隙。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "提交图与逐行执行图同框、共用解说条与控制条。看截图后修了三处：跨泳道连线、已暂存标记、手机宽度下提交编号折行。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
-      "evidenceFile": "qa/foundations-batch-2.md",
+      "evidenceFile": "qa/foundations-batch-3.md",
       "note": "本地 npm run verify 通过。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2-verification.json",
-      "note": "逐课打开页面检查表格全宽、代码清单、终端会话与逐行执行图在桌面和手机上的排布。"
+      "evidenceFile": "qa/foundations-batch-3-verification.json",
+      "note": "逐课打开页面检查了表格全宽、终端会话与提交图在桌面和手机上的排布。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "每个脚本先展示完整源码，再展示运行命令与实际输出；交互模式的每条语句与结果同屏。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课每条命令与实际输出同屏，冲突文件的内容用 cat 直接展示。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "每条 claim 对应官方文档中的具体语句，例如「简单赋值从不复制数据」绑定教程原句，Kali 上 pip 的限制绑定 Kali 官方文章。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课每条 claim 对应来源中的具体语句，例如「分支是轻量的可移动指针」绑定 Pro Git 3.1 原句，-u 的含义绑定 git-push 手册。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "六课分别从上一课留下的东西切入：那一行 python3 -c、密码输错三次、print() 是什么、五个 IP 谁最多、那串字符用 Python 解、把管道写成 Python。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课分别从「昨天还能跑的那一版在哪」和「想试一个改法又不想弄坏能跑的版本」切入。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "逐行执行图把「执行顺序」和「状态变化」这两件文字难以说清的事直接演示出来。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "提交图把「哪个指针动了、哪个没动」直接演示出来，这是文字和终端输出都不容易说清的部分。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "示例围绕密码检查、登录重试、日志统计、编码还原与异或，和后续安全课程的任务形态一致。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课的例子是学员自己的脚本仓库，并落到社团实际使用的同仓分支加 PR 流程。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "每课一张结论卡和一张速查卡。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课各一张结论卡和一张速查卡。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "逐行执行图由学员自己控制步进，没有定时动画。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "提交图由学员自己控制步进，没有定时动画。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-2.md",
-      "note": "每课一个逐行执行图或转换器，位置在对应机制讲解处。"
+      "evidenceFile": "qa/foundations-batch-3.md",
+      "note": "Git 两课各一个提交图，放在第一节的机制讲解处，动手之前先看一遍。 前两批的结论见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/foundations-batch-2.md",
+      "evidenceFile": "qa/foundations-batch-3.md",
       "note": "本批没有用户提供的讲义；公开课程只用于确定章节顺序。"
     }
   ]

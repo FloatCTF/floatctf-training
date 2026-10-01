@@ -2257,3 +2257,217 @@ button.trace-step:focus-visible {
 .page-lesson .sl-markdown-content .code-file pre {
   margin-block: 0;
 }
+
+/* Git 三个区与提交图：每一步执行真实的 git 命令，三栏是执行之后的状态 */
+.git-graph {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+  padding-block-end: 1.3rem;
+}
+
+.page-lesson .sl-markdown-content .git-graph li + li {
+  margin-block-start: 0;
+}
+
+.git-graph__command {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+  line-height: 1.7;
+  margin: 1rem 1.4rem 0;
+  min-height: 2.6rem;
+  overflow-x: auto;
+  padding: 0.55rem 0.9rem;
+}
+
+.git-graph__command p {
+  margin: 0;
+  white-space: pre;
+}
+
+.git-graph__command span {
+  color: color-mix(in srgb, var(--training-accent) 62%, var(--training-code-text));
+  font-weight: 700;
+}
+
+.git-graph__command-idle {
+  color: color-mix(in srgb, var(--training-code-text) 72%, transparent);
+  font-family: var(--training-font-body);
+}
+
+.git-graph__areas {
+  align-items: start;
+  display: grid;
+  gap: 1rem 1.2rem;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.8fr) minmax(0, 1.9fr);
+  padding: 1rem 1.4rem 0;
+}
+
+.git-graph__area {
+  min-width: 0;
+}
+
+.git-graph__area-name {
+  border-block-end: 0.0625rem solid var(--training-heading);
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 0 0 0.35rem;
+  padding-block-end: 0.3rem;
+}
+
+.git-graph__area-name small {
+  color: var(--training-muted);
+  display: block;
+  font-family: var(--training-font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+
+.git-graph__area ul,
+.git-graph__commits ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.git-graph__area ul li {
+  align-items: center;
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.5rem;
+  justify-content: space-between;
+  margin: 0;
+  padding: 0.28rem 0.4rem;
+  transition: background var(--training-duration-fast) ease;
+}
+
+.git-graph li.is-changed {
+  background: var(--training-warning-bg);
+}
+
+.git-graph code {
+  background: transparent;
+  border: 0;
+  color: var(--training-heading);
+  font-size: 0.78rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  padding: 0;
+}
+
+.git-graph__badge {
+  border: 0.0625rem solid currentColor;
+  border-radius: var(--training-radius-sm);
+  color: var(--training-muted);
+  font-size: 0.64rem;
+  font-weight: 700;
+  padding: 0 0.35rem;
+  white-space: nowrap;
+}
+
+.git-graph__badge--untracked,
+.git-graph__badge--modified { color: var(--training-warning-text); }
+.git-graph__badge--conflict { color: var(--training-danger-text); }
+.git-graph__badge--staged { color: var(--training-success-text); }
+
+.git-graph__empty {
+  color: var(--training-muted);
+  font-size: 0.8rem;
+  margin: 0;
+  padding: 0.28rem 0.4rem;
+}
+
+.git-graph__merging {
+  color: var(--training-danger-text);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0.4rem 0 0;
+  padding-inline: 0.4rem;
+}
+
+.git-graph__commits {
+  display: grid;
+  grid-template-columns: var(--graph-width) minmax(0, 1fr);
+}
+
+.git-graph__commits svg {
+  display: block;
+}
+
+.git-graph__edge {
+  fill: none;
+  stroke: var(--training-border);
+  stroke-width: 2;
+}
+
+.git-graph__node {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.git-graph__node--head {
+  fill: var(--training-accent);
+  stroke: var(--training-accent);
+}
+
+.git-graph__commits li {
+  align-items: center;
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.5rem;
+  height: 44px;
+  margin: 0;
+  min-width: 0;
+  padding-inline: 0.3rem;
+}
+
+.git-graph__commits li code {
+  flex: 0 0 auto;
+  overflow-wrap: normal;
+  white-space: nowrap;
+}
+
+.git-graph__refs {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 0.35rem;
+}
+
+.git-graph__subject {
+  font-size: 0.8rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-graph__ref {
+  border: 0.0625rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  flex: 0 0 auto;
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 700;
+  padding: 0 0.35rem;
+  white-space: nowrap;
+}
+
+.git-graph__ref--head {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-surface-bg);
+}
+
+.git-graph__ledger-command {
+  display: block;
+}

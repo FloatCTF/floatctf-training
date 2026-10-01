@@ -1,0 +1,4 @@
+# 第 12 课接着第 11 课留下的 toolbox 仓库做：先清场，再把第 11 课页面上的命令悄悄跑一遍。
+rm -rf ~/lab/toolbox ~/lab/remote.git ~/lab/teammate ~/.gitconfig
+export GIT_AUTHOR_DATE=2026-10-01T10:00:00+08:00 GIT_COMMITTER_DATE=2026-10-01T10:00:00+08:00
+@replay git-local-workflow
