@@ -1,0 +1,337 @@
+---
+title: Python 五：字符串、bytes 与编码
+description: 用字符串方法处理文本，分清 str 与 bytes，在 Python 里完成十六进制、Base64、URL 编码的转换和单字节异或
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import EncodingExplorer from '../../../components/encoding-explorer';
+import manifest from '../../../data/lessons/python-strings-and-bytes.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用 Python 解开那串三层编码，输出应当是 kali{python_bytes}。' },
+  { title: '从日志行里取出方法和路径', detail: '在 parse_log.py 的基础上，再打印出请求方法和路径，格式为 GET /backup.zip。提示：方法在 parts[5] 里，但带着一个多余的双引号，用 strip(\'"\') 去掉。' },
+  { title: '用 Python 重写往返脚本', detail: '把第 4 课的 roundtrip.sh 用 Python 写一遍：文字先转十六进制字符串，再做 Base64，然后原路还原，最后比较还原结果和原文是否相等。' },
+  { title: '猜出异或的密钥', detail: '3b313c3a263f2f282938023b322f3e3820 是某段文字逐字节异或同一个数之后的十六进制。写一个循环，把 0 到 255 都试一遍，打印出解密结果以 flag{ 开头的那一次的密钥和原文。密钥是 93。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 09"
+  kicker="Strings, Bytes, Encodings, XOR"
+  lines={[
+    { text: "Python 五" },
+    { text: "字符串、bytes 与编码", accent: true },
+  ]}
+  summary="第 4 课用 xxd 和 base64 命令处理过字节和编码。这一课在 Python 里做同样的事，并且弄清一个贯穿之后所有内容的区别：文字和字节是两种类型。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：那串字符，这次用 Python 解
+
+第 4 课最后用一条管道解开了这串字符：
+
+```text
+NjY2YzYxNjc3YjY4NjU2YzZjNmY3ZA==
+```
+
+管道适合两三层固定的编码。层数一多，或者中间夹着一步自定义的运算（比如每个字节都和某个数做异或），命令行就不够用了。这一课结束时，你会用 Python 脚本解它，并且能对付带异或的版本。
+
+## 一、字符串的常用操作
+
+### 1. 切、拼、换、查
+
+字符串是字符的序列，下标和切片的用法和列表完全相同。除此之外，它自带一批处理文本的方法：
+
+<TerminalSession
+  title="最常用的字符串方法"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 's = "  Kali Linux  "' },
+    { cmd: 's.strip()', out: "'Kali Linux'", note: 'strip 去掉两头的空白。读入的每一行末尾都带着换行，几乎总要先 strip。' },
+    { cmd: 's.strip().lower()', out: "'kali linux'", note: '方法可以连着调用，从左到右依次执行。' },
+    { cmd: '"a,b,c".split(",")', out: "['a', 'b', 'c']", note: 'split 按分隔符切开，得到列表。' },
+    { cmd: '"-".join(["2026", "10", "01"])', out: "'2026-10-01'", note: 'join 反过来：用分隔符把列表里的字符串连起来。' },
+    { cmd: '"kali".replace("k", "c")', out: "'cali'" },
+    { cmd: '"flag{x}".startswith("flag{")', out: 'True' },
+    { cmd: '"kali"[0]', out: "'k'" },
+    { cmd: '"kali"[1:3]', out: "'al'" },
+    { cmd: '"kali".upper()', out: "'KALI'" },
+    { cmd: '"lin" in "kali linux"', out: 'True', note: 'in 判断一段文字是否出现在另一段里。' },
+  ]}
+/>
+
+字符串是不可变对象。上面每个方法都返回一个**新**字符串，原来的 `s` 没有变。想保留结果，要赋值：`s = s.strip()`。（来源：[Built-in Types](#source-py-stdtypes)）
+
+### 2. 用 split 拆一行日志
+
+第 3 课用 `cut -d' ' -f1` 取日志的第一列。Python 里对应的是 `split()`：
+
+<CodeFile file="labs/python-strings-and-bytes/parse_log.py" />
+
+<TerminalSession
+  title="按空白切开，按下标取"
+  steps={[
+    { cmd: 'cd ~/lab/python' },
+    {
+      cmd: 'python3 parse_log.py',
+      out: '198.51.100.7\n/backup.zip\n404\nTrue\nTrue',
+      note: 'split() 不带参数时按空白切。cut 的列号从 1 数，列表下标从 0 数，所以 cut 的第 9 列是这里的 parts[8]。',
+    },
+  ]}
+/>
+
+`parts[8]` 是字符串 `"404"`。要和数字比较，先用 `int()` 转换，这和处理 `input()` 的结果是同一个道理。
+
+### 3. 字符、编号与进制
+
+<TerminalSession
+  title="字符和数字之间、各种进制之间"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'ord("A")', out: '65', note: 'ord：字符 → 它的编号。' },
+    { cmd: 'chr(97)', out: "'a'", note: 'chr：编号 → 字符。' },
+    { cmd: 'hex(255)', out: "'0xff'" },
+    { cmd: 'bin(5)', out: "'0b101'" },
+    { cmd: 'int("ff", 16)', out: '255', note: 'int 的第二个参数是进制：把十六进制文字转成整数。' },
+    { cmd: 'int("1010", 2)', out: '10' },
+    { cmd: 'f"{255:02x}"', out: "'ff'", note: 'f-string 的冒号后面是格式：x 是十六进制，02 表示至少两位、不足补 0。' },
+    { cmd: 'f"{5:08b}"', out: "'00000101'", note: 'b 是二进制，08 表示补足 8 位。' },
+  ]}
+/>
+
+（来源：[Built-in Functions](#source-py-functions)、[Format Specification](#source-py-string)）
+
+## 二、str 与 bytes
+
+### 1. 两种类型
+
+第 4 课的结论是：文字要先变成字节，才能存进文件或发到网络上。Python 把这两个阶段分成两种类型：
+
+- **str**：文字，由字符组成。你看到的、打印的、`input()` 读到的都是它。
+- **bytes**：字节，由 0 到 255 的整数组成。文件里存的、网络上传的都是它。字面值写作 `b"..."`。
+
+<TerminalSession
+  title="encode：文字变字节；decode：字节变文字"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 's = "中A"', note: '一个汉字加一个字母。用 Ctrl + 空格切到拼音打「中」，打完切回英文。' },
+    { cmd: 's', out: "'中A'" },
+    { cmd: 'len(s)', out: '2', note: '两个字符。' },
+    { cmd: 'b = s.encode()', note: 'encode 按 UTF-8 把文字变成字节。' },
+    { cmd: 'b', out: "b'\\xe4\\xb8\\xadA'", note: '显示 bytes 时，能当 ASCII 字符显示的字节显示成字符（A），其余显示成 \\x 加两位十六进制。' },
+    { cmd: 'len(b)', out: '4', note: '四个字节：「中」占三个，A 占一个。' },
+    { cmd: 'b[0]', out: '228', note: '取 bytes 的一个元素，得到的是整数。228 就是 0xe4。' },
+    { cmd: 'b.hex()', out: "'e4b8ad41'", note: '和 xxd -p 的输出一样。' },
+    { cmd: 'b.decode()', out: "'中A'", note: 'decode 把字节变回文字。' },
+    { cmd: 'bytes.fromhex("666c6167")', out: "b'flag'", note: '和 xxd -r -p 一样：十六进制文字 → 字节。' },
+    { cmd: 'b"flag".hex()', out: "'666c6167'" },
+    { cmd: 'type(b)', out: "<class 'bytes'>" },
+  ]}
+/>
+
+（来源：[Built-in Types](#source-py-stdtypes)）
+
+<DataTable
+  caption="str 和 bytes 对照"
+  headers={["", "str", "bytes"]}
+  rows={[
+    ["里面是什么", "字符", "0 到 255 的整数"],
+    ["字面值", "\"flag\"", "b\"flag\""],
+    ["len() 数的是", "字符个数", "字节个数"],
+    ["取一个元素得到", "长度为 1 的 str", "一个 int"],
+    ["变成另一种", ".encode() → bytes", ".decode() → str"],
+    ["和十六进制互转", "先 encode 再 .hex()", ".hex() 与 bytes.fromhex()"],
+  ]}
+  columnRatios={[1.2, 1.6, 1.8]}
+/>
+
+第 4 课的转换器在这里再用一次。对照着看：「字符 → 字节」那一步就是 `encode()`，「连起来的十六进制」就是 `.hex()`。
+
+<EncodingExplorer client:visible />
+
+### 2. 两种类型不能混用
+
+<TerminalSession
+  title="混用和解码失败"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    {
+      cmd: '"abc" + b"def"',
+      out: 'Traceback (most recent call last):\n  File "<python-input-0>", line 1, in <module>\n    "abc" + b"def"\n    ~~~~~~^~~~~~~~\nTypeError: can only concatenate str (not "bytes") to str',
+      note: 'str 和 bytes 不能直接拼。先把一边转成另一边的类型。',
+    },
+    {
+      cmd: 'b"\\xff\\xfe".decode()',
+      out: 'Traceback (most recent call last):\n  File "<python-input-1>", line 1, in <module>\n    b"\\xff\\xfe".decode()\n    ~~~~~~~~~~~~~~~~~~^^\nUnicodeDecodeError: \'utf-8\' codec can\'t decode byte 0xff in position 0: invalid start byte',
+      note: '不是所有字节串都是合法的 UTF-8。这两个字节根本不是文字，硬要 decode 就会报错。',
+    },
+  ]}
+/>
+
+（来源：[Built-in Exceptions](#source-py-exceptions)）
+
+第二个报错在做题时很常见。它的意思是：这些字节不是 UTF-8 编码的文字。此时不要想办法「绕过」报错，应该回头想这些字节到底是什么，往往是还有一层没解，或者它本来就是二进制数据。用 `.hex()` 看一眼最稳妥。
+
+## 三、编码、解码与异或
+
+### 1. Base64 和 URL 编码
+
+<TerminalSession
+  title="标准库里的编码工具"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'import base64' },
+    { cmd: 'base64.b64encode(b"hello")', out: "b'aGVsbG8='", note: '输入是 bytes，输出也是 bytes。' },
+    { cmd: 'base64.b64decode("aGVsbG8=")', out: "b'hello'", note: '解码的结果是 bytes。' },
+    { cmd: 'base64.b64decode("aGVsbG8=").decode()', out: "'hello'", note: '想要文字，再 decode 一次。注意两个 decode 不是一回事：前一个解 Base64，后一个解 UTF-8。' },
+    { cmd: 'from urllib.parse import quote, unquote' },
+    { cmd: 'quote("a b&c")', out: "'a%20b%26c'" },
+    { cmd: 'unquote("flag%7Burl%7D")', out: "'flag{url}'" },
+  ]}
+/>
+
+（来源：[base64](#source-py-base64)、[urllib.parse](#source-py-urllib-parse)）
+
+### 2. 一层一层解开
+
+现在用脚本解开头那串字符：
+
+<CodeFile file="labs/python-strings-and-bytes/decode_layers.py" />
+
+<TerminalSession
+  title="每一步都打印出来看"
+  steps={[
+    {
+      cmd: 'python3 decode_layers.py',
+      out: "b'666c61677b68656c6c6f7d'\nb'flag{hello}'\nflag{hello}",
+    },
+  ]}
+/>
+
+盯住每一步手里拿的是什么类型：
+
+<DataTable
+  caption="decode_layers.py 的每一步"
+  headers={["代码", "输入", "输出", "说明"]}
+  rows={[
+    ["base64.b64decode(data)", "str", "bytes", "解掉 Base64。结果是一串字节，内容恰好是十六进制字符"],
+    ["step1.decode()", "bytes", "str", "把这些字节当文字读出来，得到十六进制字符串"],
+    ["bytes.fromhex(...)", "str", "bytes", "把十六进制字符串还原成字节"],
+    ["step2.decode()", "bytes", "str", "最后的字节是 UTF-8 文字，解码成字符串"],
+  ]}
+  columnRatios={[1.6, 0.7, 0.7, 2.6]}
+/>
+
+调试这类脚本的方法就是脚本里做的：每解一层，`print` 一次，看结果像不像下一层的输入。
+
+### 3. 异或：最简单的「加密」
+
+**异或**（XOR）是对二进制位的一种运算，写作 `^`：两位相同得 0，不同得 1。（来源：[Expressions](#source-py-expressions)）
+
+<TerminalSession
+  title="异或两次，回到原值"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: '65 ^ 32', out: '97', note: '65 是 01000001，32 是 00100000，逐位异或得 01100001，也就是 97。' },
+    { cmd: 'chr(65 ^ 32)', out: "'a'", note: '大写 A 变成了小写 a。' },
+    { cmd: '97 ^ 32', out: '65', note: '再异或一次同一个数，回到 65。' },
+  ]}
+/>
+
+「同一个数异或两次会抵消」这个性质，让它成了最简单的加密方式：把每个字节都和一个密钥异或，得到密文；再异或一次，得到原文。
+
+<CodeFile file="labs/python-strings-and-bytes/xor.py" mark="2" />
+
+<TerminalSession
+  title="同一个函数，既加密也解密"
+  steps={[
+    {
+      cmd: 'python3 xor.py',
+      out: "b'LFKMQREXW'\n4c464b4d5152455857\nb'flag{xor}'",
+      note: '第一行是异或之后的字节，看不出原文；第三行对它再做一次同样的运算，原文回来了。',
+    },
+  ]}
+/>
+
+第 2 行 `bytes(b ^ key for b in data)` 的读法和列表推导式相同：依次取出 data 里的每个字节 b，算出 `b ^ key`，再把这一串结果组装成 bytes。
+
+<Callout variant="warning" title="单字节异或没有安全性">
+密钥只有一个字节，总共 256 种可能，写个循环全试一遍就能解开，课后作业第 4 题就是做这件事。它出现在这里，是因为大量入门题目用它，而且它是理解真正的加密算法的起点。
+</Callout>
+
+## 常见错误与边界
+
+<DataTable
+  caption="本课的常见报错"
+  headers={["最后一行", "原因", "处理"]}
+  rows={[
+    ["TypeError: can only concatenate str (not \"bytes\") to str", "把 str 和 bytes 拼在了一起", "用 encode 或 decode 统一成同一种类型"],
+    ["UnicodeDecodeError: 'utf-8' codec can't decode byte 0xff …", "这些字节不是 UTF-8 文字", "用 .hex() 查看；多半是还有一层没解"],
+    ["binascii.Error: Incorrect padding", "Base64 字符串不完整，结尾的 = 丢了或长度不对", "检查复制时有没有漏字符"],
+    ["ValueError: fromhex() arg must contain an even number of hexadecimal digits", "十六进制字符串的长度是奇数", "两个字符才是一个字节，检查是否漏了一位"],
+    ["TypeError: 'str' object does not support item assignment", "试图修改字符串里的某个字符", "字符串不可变，用 replace 或切片拼出新字符串"],
+    ["split 之后下标取到的东西不对", "分隔符或下标数错了", "先 print(parts) 看切出来的整个列表"],
+  ]}
+  columnRatios={[2.1, 1.5, 1.6]}
+/>
+
+Base64 报错时，Traceback 里会出现一段标准库文件的路径，例如 `/usr/lib/python3.14/base64.py`。那不是你的代码，照旧先看最后一行，再往上找属于自己文件的那一段。
+
+边界：`decode()` 默认按 UTF-8。遇到别的编码的数据（比如老旧中文系统常用的 GBK），需要写成 `decode("gbk")`。本学期的材料全部是 UTF-8。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 's.strip() / s.split() / "x".join(列表)', description: '去两头空白；切成列表；连成字符串。' },
+    { term: 's.replace(a, b) / s.startswith(p)', description: '替换；是否以某段开头。' },
+    { term: 'ord(c) / chr(n)', description: '字符 ↔ 编号。' },
+    { term: 'hex(n) / bin(n) / int(s, 16)', description: '整数 ↔ 各种进制的文字。' },
+    { term: 'f"{n:02x}" / f"{n:08b}"', description: '格式化成两位十六进制 / 八位二进制。' },
+    { term: 's.encode() / b.decode()', description: 'str → bytes / bytes → str，默认 UTF-8。' },
+    { term: 'b.hex() / bytes.fromhex(s)', description: 'bytes ↔ 十六进制字符串。' },
+    { term: 'base64.b64encode(b) / b64decode(s)', description: 'Base64 编码 / 解码，结果都是 bytes。' },
+    { term: 'quote(s) / unquote(s)', description: 'URL 编码 / 解码，来自 urllib.parse。' },
+    { term: 'a ^ b', description: '按位异或。同一个数异或两次抵消。' },
+    { term: 'bytes(b ^ key for b in data)', description: '对每个字节做异或，组装成新的 bytes。' },
+  ]}
+/>
+
+<KeyTakeaway>
+str 是文字，bytes 是字节，`encode()` 和 `decode()` 在两者之间转换，不能混用。十六进制、Base64、URL 编码在 Python 里各有一对函数。解多层编码时每一步都问一句：现在手里是 str 还是 bytes，下一步需要哪一种。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 70 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

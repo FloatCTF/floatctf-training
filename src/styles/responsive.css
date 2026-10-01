@@ -716,8 +716,27 @@
   }
 
   .path-explorer__layout,
-  .permission-bits__grid {
+  .permission-bits__grid,
+  .code-stepper__layout {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .code-stepper__layout,
+  .code-stepper__controls {
+    padding-inline: 0.9rem;
+  }
+
+  .code-stepper__note,
+  .code-stepper__ledger {
+    margin-inline: 0.9rem;
+  }
+
+  .code-stepper__ledger-row {
+    grid-template-columns: 1.4rem minmax(0, 1fr);
+  }
+
+  .code-stepper__ledger-row span:nth-child(3) {
+    grid-column: 2;
   }
 
   .path-explorer__label {

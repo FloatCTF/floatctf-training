@@ -18,7 +18,18 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
 
 用法：
   python3 scripts/lab/kali-session.py commands.txt > record.json
-  commands.txt 每行一条命令，以 ## 开头的行是注释。容器名用环境变量 KALI_CONTAINER 指定，默认 kali-lab。
+  python3 scripts/lab/kali-session.py --python sessions.txt > record.json
+
+  commands.txt 每行一条 shell 命令，以 ## 开头的行是注释。程序运行中需要键盘输入时，
+  把这一行写成 JSON：{"cmd": "python3 age.py", "stdin": ["18"]}，stdin 里的每一项会在程序等待时依次输入。
+  stdin 里写 "^C" 表示按下 Ctrl+C。
+
+  --python 模式记录 Python 交互模式（>>>）里的输入输出。sessions.txt 每行一条语句，
+  以「## session」开头的行表示另开一个全新的解释器；输出是按会话分组的二维数组。
+  只支持单行语句，多行代码请写成脚本文件用 shell 模式运行。
+
+  命令运行前需要的脚本和数据文件，先用 docker cp 放进容器里对应的目录。
+  容器名用环境变量 KALI_CONTAINER 指定，默认 kali-lab。
 
 依赖：宿主机上的 docker 与 Python 包 pexpect。
 """
@@ -47,17 +58,31 @@ def clean(text):
     return '\n'.join(overlay(line) for line in text.split('\n'))
 
 
-def main():
-    if len(sys.argv) != 2:
-        sys.exit(__doc__)
+def spawn_shell():
     child = pexpect.spawn(
         'docker',
         ['exec', '-it', '-e', 'LANG=en_US.UTF-8', '-e', 'TERM=xterm', CONTAINER, 'su', '-', 'kali'],
         encoding='utf-8', dimensions=(30, 80), timeout=120,
     )
-    # 等 Kali 的两行提示符出现，再换成容易识别的标记
+    # 等 Kali 的两行提示符出现
     child.expect('└─')
     child.expect(r'\[\?2004h')
+    return child
+
+
+def settle(child, quiet=0.8):
+    """一直读到终端安静下来为止，返回这段时间里的全部输出。"""
+    buffer = ''
+    while True:
+        try:
+            buffer += child.read_nonblocking(4096, timeout=quiet)
+        except pexpect.TIMEOUT:
+            return buffer
+
+
+def record_shell(path):
+    child = spawn_shell()
+    # 把提示符换成容易识别的标记
     child.sendline(
         f"PROMPT='{MARK}'; RPROMPT=''; NEWLINE_BEFORE_PROMPT=no; unset zle_bracketed_paste; "
         "unsetopt PROMPT_SP PROMPT_CR; precmd() {}; "
@@ -66,12 +91,21 @@ def main():
     child.expect(MARK)
 
     records = []
-    for raw in open(sys.argv[1], encoding='utf-8'):
-        command = raw.rstrip('\n')
-        if not command.strip() or command.startswith('##'):
+    for raw in open(path, encoding='utf-8'):
+        line = raw.rstrip('\n')
+        if not line.strip() or line.startswith('##'):
             continue
+        entry = json.loads(line) if line.startswith('{') else {'cmd': line}
+        command = entry['cmd']
         child.sendline(command)
         collected = ''
+        for typed in entry.get('stdin', []):
+            # 等程序打印完提示、停下来等输入，再像学员一样敲进去
+            collected += settle(child, 0.7)
+            if typed == '^C':
+                child.sendcontrol('c')
+            else:
+                child.sendline(typed)
         while True:
             # sudo 询问密码、command-not-found 追问是否安装，都在这里应答
             index = child.expect([MARK, r'password for kali: ?', r'\(N/y\)'])
@@ -97,6 +131,49 @@ def main():
 
     child.sendline('exit')
     child.close()
+    return records
+
+
+def record_python(path):
+    """Python 交互模式：每个会话开一个新的解释器，记录每条语句之后打印的内容。"""
+    sessions = [[]]
+    for raw in open(path, encoding='utf-8'):
+        line = raw.rstrip('\n')
+        if line.startswith('## session'):
+            if sessions[-1]:
+                sessions.append([])
+        elif line.strip() and not line.startswith('##'):
+            sessions[-1].append(line)
+
+    records = []
+    for statements in sessions:
+        if not statements:
+            continue
+        child = spawn_shell()
+        child.sendline('cd ~/lab/python 2>/dev/null; python3')
+        settle(child, 1.5)
+        session = []
+        for statement in statements:
+            child.send(statement + '\r')
+            text = ANSI.sub('', settle(child)).replace('\r\n', '\n')
+            # 新版交互模式每敲一个字符都会重画整行；回车之后才是真正的输出
+            output = text.split('\n\r', 1)[1] if '\n\r' in text else ''
+            output = re.sub(r'>>> $', '', output).rstrip('\n')
+            session.append({'cmd': statement, 'out': output})
+        child.send('exit()\r')
+        settle(child, 0.5)
+        child.close()
+        records.append(session)
+    return records
+
+
+def main():
+    args = sys.argv[1:]
+    python_mode = '--python' in args
+    paths = [arg for arg in args if not arg.startswith('--')]
+    if len(paths) != 1:
+        sys.exit(__doc__)
+    records = record_python(paths[0]) if python_mode else record_shell(paths[0])
     json.dump(records, sys.stdout, ensure_ascii=False, indent=1)
     sys.stdout.write('\n')
 

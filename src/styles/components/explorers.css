@@ -2001,3 +2001,259 @@ button.trace-step:focus-visible {
 .permission-bits__line {
   white-space: pre-wrap;
 }
+
+/* 代码逐步执行：左边源码，右边执行完当前行之后的名字、对象与输出 */
+.code-stepper {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+  padding-block-end: 1.3rem;
+}
+
+.code-stepper__layout {
+  align-items: start;
+  display: grid;
+  gap: 1.2rem 1.6rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  padding: 1rem 1.4rem 0;
+}
+
+.code-stepper__code {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.82rem;
+  line-height: 1.75;
+  list-style: none;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.8rem 0;
+}
+
+.page-lesson .sl-markdown-content .code-stepper li + li {
+  margin-block-start: 0;
+}
+
+.code-stepper__code li {
+  border-inline-start: 0.2rem solid transparent;
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  margin: 0;
+  padding: 0 0.9rem 0 0.6rem;
+  transition: background var(--training-duration-fast) ease;
+}
+
+.code-stepper__code li.is-current {
+  background: color-mix(in srgb, var(--training-accent) 30%, transparent);
+  border-inline-start-color: var(--training-accent);
+}
+
+.code-stepper__lineno {
+  color: color-mix(in srgb, var(--training-code-text) 48%, transparent);
+  text-align: end;
+  user-select: none;
+}
+
+.code-stepper__code code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-weight: 400;
+  padding: 0;
+  white-space: pre;
+}
+
+.code-stepper__state {
+  display: grid;
+  gap: 0.9rem;
+  min-width: 0;
+}
+
+.code-stepper__frame-name {
+  border-block-end: 0.0625rem solid var(--training-heading);
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.88rem;
+  font-weight: 800;
+  margin: 0 0 0.3rem;
+  padding-block-end: 0.25rem;
+}
+
+.code-stepper__frame ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.code-stepper__frame li {
+  align-items: baseline;
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+  gap: 0.2rem 0.55rem;
+  margin: 0;
+  padding: 0.22rem 0.4rem;
+  transition: background var(--training-duration-fast) ease;
+}
+
+.code-stepper__frame li.is-changed {
+  background: var(--training-warning-bg);
+  color: var(--training-warning-text);
+}
+
+.code-stepper__frame li code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-weight: 700;
+  padding: 0;
+}
+
+.code-stepper__ref {
+  color: var(--training-accent);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.code-stepper__frame li.is-changed .code-stepper__ref {
+  color: inherit;
+}
+
+.code-stepper__type {
+  color: var(--training-muted);
+  font-size: 0.7rem;
+}
+
+.code-stepper__value {
+  overflow-wrap: anywhere;
+}
+
+.code-stepper__empty {
+  color: var(--training-muted);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.code-stepper__signal {
+  background: var(--training-success-bg);
+  color: var(--training-success-text);
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+  padding: 0.35rem 0.6rem;
+}
+
+.code-stepper__signal--error {
+  background: var(--training-danger-bg);
+  color: var(--training-danger-text);
+}
+
+.code-stepper__output pre,
+.page-lesson .sl-markdown-content .code-stepper__output pre {
+  background: var(--training-code-bg);
+  border: 0;
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 0;
+  min-height: 2.2rem;
+  overflow-x: auto;
+  padding: 0.45rem 0.7rem;
+  white-space: pre;
+}
+
+.code-stepper__note {
+  border-block-start: var(--training-rule-light);
+  font-size: 0.88rem;
+  line-height: 1.75;
+  margin: 1.1rem 1.4rem 0;
+  min-height: 3.6rem;
+  padding-block-start: 0.8rem;
+}
+
+.code-stepper__note strong {
+  display: block;
+  font-size: 0.78rem;
+}
+
+.code-stepper__controls {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 1.4rem;
+  padding: 0.8rem 1.4rem 0;
+}
+
+.code-stepper__range {
+  color: var(--training-muted);
+  display: grid;
+  flex: 1 1 14rem;
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  gap: 0.2rem;
+}
+
+.code-stepper__range input[type='range'] {
+  inline-size: 100%;
+  min-block-size: 2.4rem;
+}
+
+.code-stepper__ledger {
+  border: var(--training-rule-light);
+  font-size: 0.82rem;
+  margin: 1.1rem 1.4rem 0;
+}
+
+.code-stepper__ledger-row {
+  border-block-end: var(--training-rule-light);
+  display: grid;
+  gap: 0.8rem;
+  grid-template-columns: 1.6rem minmax(0, 0.9fr) minmax(0, 1.6fr);
+  padding: 0.5rem 0.8rem;
+}
+
+.code-stepper__ledger-row:last-child {
+  border-block-end: 0;
+}
+
+.code-stepper__ledger-row code {
+  background: transparent;
+  border: 0;
+  color: var(--training-heading);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+  padding: 0;
+}
+
+.code-stepper__ledger-head {
+  color: var(--training-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+/* 代码清单：Starlight 的代码框加一行下载链接 */
+.code-file {
+  margin-block: var(--training-space-4);
+}
+
+.code-file__meta {
+  color: var(--training-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 0.2rem 1rem;
+  margin: 0.4rem 0 0;
+}
+
+/* 专题页给 pre 加的上下外边距会把代码框的标题栏和代码体拆开 */
+.page-lesson .sl-markdown-content .code-file pre {
+  margin-block: 0;
+}

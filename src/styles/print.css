@@ -323,6 +323,7 @@
     color: var(--training-muted);
   }
   .terminal-session,
+  .code-stepper,
   .nested-layers,
   .path-explorer,
   .permission-bits,

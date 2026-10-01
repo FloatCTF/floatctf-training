@@ -7,6 +7,8 @@ interface Step {
   out?: string;
   /** 这一步之后的一句解释，写给第一次见到这条输出的人。 */
   note?: string;
+  /** 程序运行中学员从键盘输入的内容。页面不单独渲染（out 里已经包含回显），供 scripts/lab 重放时使用。 */
+  stdin?: string[];
 }
 
 interface Props {

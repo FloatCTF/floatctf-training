@@ -1,0 +1,346 @@
+{
+  "lessonPlan": {
+    "audience": "已经会用 if、while、for 写脚本、还没有把代码组织成函数的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "tool",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一次函数调用的全过程：调用时新开一块名字空间并绑定参数，函数体在其中执行，return 把值交回并丢弃这块名字空间；逐行执行时并排显示全局的名字和函数内的名字",
+    "learningObjectives": [
+      "用 def 定义带参数的函数并调用它",
+      "区分 return 和 print：说明没有 return 的函数交回的是 None",
+      "解释函数里的名字和函数外的名字互不影响",
+      "用 import 使用标准库里的模块，把自己的函数拆到另一个文件里再导入",
+      "说明 if __name__ == \"__main__\": 这一行的作用",
+      "在 Kali 上用虚拟环境安装第三方包，读懂 externally-managed-environment 报错"
+    ],
+    "prerequisites": [
+      "python-control-flow",
+      "会写带 if 和循环的脚本"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-return-vs-print",
+      "kind": "mechanism",
+      "title": "打印了 3，为什么 x 是 None",
+      "question": "add_print(a, b) 的函数体只有一行 print(a + b)。执行 x = add_print(1, 2) 时屏幕上出现了 3，但随后 print(x) 打印的是 None。3 明明算出来了，为什么 x 里没有它？应该怎么改？",
+      "answer": "print 只是把值显示在屏幕上，没有把值交回给调用的地方。函数执行到末尾都没有遇到 return 时，交回的是 None，所以 x 绑到了 None。要让调用的地方拿到结果，函数体应该写 return a + b。区分的办法：print 是给人看的，return 是给程序用的；需要对结果继续计算、判断或保存时，用 return。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "check-scope",
+      "kind": "prediction",
+      "title": "函数里改了 n，外面的 n 变不变",
+      "question": "定义 bump(n)，函数体是 n = n + 1 和 return n。然后在函数外执行 n = 10、m = bump(n)、print(n, m)。写出打印的结果，并说明函数里的 n 和函数外的 n 是什么关系。",
+      "answer": "打印 10 11。调用 bump(n) 时，函数自己的名字空间里新建了一个名字 n，绑到传进来的 10。函数里的 n = n + 1 改的是这个局部的 n，让它指向 11，全局的 n 没有被重新赋值，仍然是 10。return 把 11 交回来，绑给 m。两个 n 只是名字相同，分属两个名字空间。",
+      "sourceIds": [
+        "py-controlflow",
+        "py-executionmodel"
+      ]
+    },
+    {
+      "id": "check-valid-port",
+      "kind": "practice",
+      "title": "写一个判断函数并测试它",
+      "question": "写函数 is_valid_port(n)：n 在 1 到 65535 之间（含两端）时返回 True，否则返回 False。在脚本末尾依次用 80、0、65535、70000 调用它并打印结果。",
+      "answer": "函数体一行即可：return n >= 1 and n <= 65535。比较表达式的结果本身就是 True 或 False，可以直接 return，不需要写 if。自查标准：四次调用依次打印 True、False、True、False。0 和 65535 这两个边界值最容易写错，测试时一定要包含边界。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "定义函数、参数与返回值",
+      "heading": "一、",
+      "minutes": 35,
+      "checkpoint": "能说出 no_return.py 为什么打印 None 3。"
+    },
+    {
+      "kind": "动手",
+      "title": "模块：用别人的代码，拆自己的代码",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "main.py 能导入 checks.py 里的函数并正确判断。"
+    },
+    {
+      "kind": "进阶",
+      "title": "虚拟环境与 pip",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "在虚拟环境里装上 cowsay 并运行，退出后确认系统环境里没有它。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python 3.14 tutorial defining functions return None default argument values",
+      "Python 3.14 tutorial function symbol table local variables",
+      "Python 3.14 tutorial modules import __name__ __main__",
+      "Python 3.14 tutorial virtual environments venv pip",
+      "Kali pip install externally-managed-environment",
+      "Python execution model local variable scope",
+      "Python standard library math hashlib base64"
+    ],
+    "notes": "语言行为绑定 Python 3.14 官方教程与参考；Kali 上 pip 的限制绑定 Kali 官方文章，报错原文取自容器实跑。全部脚本、交互模式和虚拟环境操作在 kalilinux/kali-rolling 容器（Python 3.14.7，pip 26.1.2）里实际运行；pip install 需要联网，下载到的 cowsay 版本以运行时为准（核验时为 6.1）。逐行执行图的数据由 scripts/lab/py-trace.py 追踪 double.py 的真实执行生成。激活虚拟环境后的提示符样式依据 kali-defaults 的 zsh 配置描述，容器重放时提示符被替换为标记，未直接截取。"
+  },
+  "sources": [
+    {
+      "id": "py-controlflow",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 4. More Control Flow Tools",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/controlflow.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-def",
+        "claim-default-arguments",
+        "claim-local-symbol-table"
+      ]
+    },
+    {
+      "id": "py-executionmodel",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 4. Execution model",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/executionmodel.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-local-variable"
+      ]
+    },
+    {
+      "id": "py-modules",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 6. Modules",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/modules.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-module"
+      ]
+    },
+    {
+      "id": "py-venv",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 12. Virtual Environments and Packages",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/venv.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-venv"
+      ]
+    },
+    {
+      "id": "kali-pip",
+      "kind": "official-doc",
+      "title": "Pip install and Python's externally managed",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/blog/python-externally-managed/",
+      "publishedAt": "2023-07-06",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为文章发布日期。",
+      "supports": [
+        "claim-kali-pip"
+      ]
+    },
+    {
+      "id": "py-math",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: math",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/math.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-stdlib-examples"
+      ]
+    },
+    {
+      "id": "py-hashlib",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: hashlib",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/hashlib.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-stdlib-examples"
+      ]
+    },
+    {
+      "id": "py-base64",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: base64",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/base64.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-stdlib-examples"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-import-errors"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-def",
+      "text": "关键字 def 引入一个函数定义。return 语句带着一个值从函数返回；不带表达式的 return 返回 None，函数执行到末尾也返回 None。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-default-arguments",
+      "text": "可以为参数指定默认值，这样调用时可以少传参数。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-local-symbol-table",
+      "text": "函数执行时会引入一个新的符号表存放局部变量：函数里的赋值都存进局部符号表，所以在函数里不能直接给全局变量赋值。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-local-variable",
+      "text": "在一个代码块里被绑定的名字是这个块的局部变量；在模块层级绑定的名字是全局变量。",
+      "sourceIds": [
+        "py-executionmodel"
+      ]
+    },
+    {
+      "id": "claim-module",
+      "text": "模块是包含 Python 定义和语句的文件，文件名去掉 .py 就是模块名；模块里可以通过全局变量 __name__ 取得自己的名字。把模块当脚本运行时，__name__ 被设为 \"__main__\"。",
+      "sourceIds": [
+        "py-modules"
+      ]
+    },
+    {
+      "id": "claim-venv",
+      "text": "不同程序可能需要同一个包的不同版本，虚拟环境是一个自带 Python 和附加包的独立目录树。用 python -m venv 创建，用 source 目录/bin/activate 激活，激活后 shell 的提示符会显示正在使用的环境。",
+      "sourceIds": [
+        "py-venv"
+      ]
+    },
+    {
+      "id": "claim-kali-pip",
+      "text": "在 Kali 上，系统级的 Python 包由 APT 管理；直接 pip install 会报 externally-managed-environment，官方建议改用 apt install python3-xyz、虚拟环境或 pipx。",
+      "sourceIds": [
+        "kali-pip"
+      ]
+    },
+    {
+      "id": "claim-stdlib-examples",
+      "text": "math.sqrt(x) 返回 x 的平方根，math.pi 是圆周率常数；hashlib 的 hexdigest() 以十六进制字符串形式返回摘要；base64.b64encode() 对字节做 Base64 编码并返回字节。",
+      "sourceIds": [
+        "py-math",
+        "py-hashlib",
+        "py-base64"
+      ]
+    },
+    {
+      "id": "claim-import-errors",
+      "text": "import 找不到模块时抛出 ModuleNotFoundError，它是 ImportError 的子类。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "greet",
+      "path": "public/labs/python-functions-and-modules/greet.py",
+      "command": "python3 greet.py",
+      "expectedResult": "两行：hello, kali 和 hello, root。"
+    },
+    {
+      "id": "double",
+      "path": "public/labs/python-functions-and-modules/double.py",
+      "command": "python3 double.py",
+      "expectedResult": "8"
+    },
+    {
+      "id": "no-return",
+      "path": "public/labs/python-functions-and-modules/no_return.py",
+      "command": "python3 no_return.py",
+      "expectedResult": "两行：3 和 None 3。"
+    },
+    {
+      "id": "scope",
+      "path": "public/labs/python-functions-and-modules/scope.py",
+      "command": "python3 scope.py",
+      "expectedResult": "两行：inside: 0 和 outside: 5。"
+    },
+    {
+      "id": "checks",
+      "path": "public/labs/python-functions-and-modules/checks.py",
+      "command": "python3 checks.py",
+      "expectedResult": "三行：False、True、True。"
+    },
+    {
+      "id": "main",
+      "path": "public/labs/python-functions-and-modules/main.py",
+      "command": "python3 main.py",
+      "expectedResult": "输入 kali-2026-ok 输出 ok；输入 abc 输出 too short。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "call-stack",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

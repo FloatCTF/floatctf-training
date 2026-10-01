@@ -11,6 +11,7 @@ export const paths = {
   catalogPath: join(root, 'src', 'data', 'catalog.json'),
   learningPathsPath: join(root, 'src', 'data', 'paths.json'),
   lessonDir: join(root, 'src', 'data', 'lessons'),
+  stepperDir: join(root, 'src', 'data', 'steppers'),
   docsDir: join(root, 'src', 'content', 'docs'),
   homePagePath: join(root, 'src', 'content', 'docs', 'index.mdx'),
   qaPath: join(root, 'qa-report.json'),

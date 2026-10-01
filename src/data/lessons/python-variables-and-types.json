@@ -1,0 +1,363 @@
+{
+  "lessonPlan": {
+    "audience": "会在 Kali 终端里操作文件、从没写过程序的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "名字与对象的绑定关系：逐行执行 a = 3、b = a、a = a + 1，观察名字指向哪个对象、哪一步产生了新对象，解释为什么改了 a 而 b 不变",
+    "learningObjectives": [
+      "用交互模式和脚本文件两种方式运行 Python 代码，说出各自适合做什么",
+      "说出 int、float、str、bool 四种类型，用 type() 查看一个值的类型",
+      "正确使用 /、//、%、** 和字符串的 +、*",
+      "解释赋值是把名字绑到对象上，预测连续赋值之后每个名字的值",
+      "用 input() 读入、int() 转换、f-string 输出，写出一个能对话的小脚本",
+      "读懂 NameError、TypeError、SyntaxError 的报错，定位到出错的那一行"
+    ],
+    "prerequisites": [
+      "shell-permissions-and-pipes",
+      "data-representation",
+      "会用 cd 进入目录、用 & 在后台启动一个程序"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-binding",
+      "kind": "mechanism",
+      "title": "改了 x，y 变不变",
+      "question": "依次执行 x = 10、y = x、x = x * 2。这时 y 的值是多少？有同学认为「y = x 让 y 永远等于 x」，这个说法错在哪？",
+      "answer": "y 仍然是 10。y = x 做的事是把名字 y 绑到 x 此刻指向的对象 10 上，它不记录「y 跟着 x」这种关系。第三行先算出新对象 20，再把名字 x 改绑到 20；名字 y 没有被重新赋值，还指向原来的 10。赋值只改变等号左边那个名字的指向。",
+      "sourceIds": [
+        "py-executionmodel",
+        "py-datamodel"
+      ]
+    },
+    {
+      "id": "check-operators",
+      "kind": "prediction",
+      "title": "五个表达式的结果",
+      "question": "不运行，先写出下面五个表达式在交互模式里显示的结果，再逐个验证：7 // 2、7 / 2、\"3\" * 2、int(\"3\") + 4、type(7 / 7)。",
+      "answer": "依次是 3、3.5、'33'、7、<class 'float'>。// 是向下取整的除法；/ 的结果永远是 float，所以 7 / 7 是 1.0，类型是 float；字符串乘以整数是重复，\"3\" * 2 得到字符串 '33'；int(\"3\") 先把字符串转成整数 3，再加 4 得 7。",
+      "sourceIds": [
+        "py-introduction",
+        "py-functions"
+      ]
+    },
+    {
+      "id": "check-seconds-script",
+      "kind": "practice",
+      "title": "把秒数换成时分秒",
+      "question": "写一个脚本 seconds.py：提示 seconds: 并读入一个整数秒数，输出它等于几小时几分几秒，格式为 1 h 2 min 5 s。用 3725 和 59 两个输入测试。",
+      "answer": "参考写法共五行：total = int(input(\"seconds: \"))；hours = total // 3600；minutes = total % 3600 // 60；seconds = total % 60；print(f\"{hours} h {minutes} min {seconds} s\")。自查标准：输入 3725 输出 1 h 2 min 5 s，输入 59 输出 0 h 0 min 59 s。思路是先用 // 取出整小时，用 % 取出不足一小时的余数，再对余数重复同样的做法。",
+      "sourceIds": [
+        "py-introduction",
+        "py-functions"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "两种运行方式与四种类型",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能在交互模式里算出 2 ** 10，并说出 7 / 2 和 7 // 2 的区别。"
+    },
+    {
+      "kind": "动手",
+      "title": "变量、输入与输出",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "age.py 输入 18 后输出 next year you will be 19。"
+    },
+    {
+      "kind": "进阶",
+      "title": "读懂三种报错",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "看到 Traceback 能指出出错的文件、行号和错误类型。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python 3.14 tutorial using the Python interpreter interactive mode",
+      "Python 3.14 tutorial informal introduction numbers strings",
+      "Python built-in functions input int type print",
+      "Python data model objects identity type value",
+      "Python execution model naming and binding",
+      "Python built-in exceptions NameError TypeError",
+      "CS50P weeks functions variables conditionals loops"
+    ],
+    "notes": "课程顺序参考 CS50P 的周次安排，正文与例子自写。语言行为绑定 Python 3.14 官方教程、标准库参考与语言参考。全部脚本与交互模式的输入输出在 kalilinux/kali-rolling 容器（Python 3.14.7）里实际运行，页面输出取自运行记录；逐行执行图的数据由 scripts/lab/py-trace.py 追踪 names.py 的真实执行生成。Kali 默认没有中文输入法，本课要求学员输入的代码全部是 ASCII 字符。"
+  },
+  "sources": [
+    {
+      "id": "py-interpreter",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 2. Using the Python Interpreter",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/interpreter.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-interactive-mode"
+      ]
+    },
+    {
+      "id": "py-introduction",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 3. An Informal Introduction to Python",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/introduction.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-division",
+        "claim-assignment",
+        "claim-string-operators"
+      ]
+    },
+    {
+      "id": "py-inputoutput",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 7. Input and Output",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/inputoutput.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-fstring"
+      ]
+    },
+    {
+      "id": "py-functions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Functions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/functions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-input-int"
+      ]
+    },
+    {
+      "id": "py-datamodel",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 3. Data model",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/datamodel.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-objects"
+      ]
+    },
+    {
+      "id": "py-executionmodel",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 4. Execution model",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/executionmodel.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-objects"
+      ]
+    },
+    {
+      "id": "py-lexical",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 2. Lexical analysis",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/lexical_analysis.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-names"
+      ]
+    },
+    {
+      "id": "py-stdtypes",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Types",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/stdtypes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-int-precision"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-error-types"
+      ]
+    },
+    {
+      "id": "cs50p",
+      "kind": "university-course",
+      "title": "CS50's Introduction to Programming with Python",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/python/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其周次顺序（函数与变量、条件、循环、异常、库、文件）。",
+      "supports": [
+        "claim-course-order"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-interactive-mode",
+      "text": "解释器从终端读命令时处于交互模式，主提示符是 >>>；给它一个文件名参数时，它读取并执行文件里的脚本。在主提示符下输入文件结束符（Unix 上是 Ctrl+D）或 quit() 可以退出。",
+      "sourceIds": [
+        "py-interpreter"
+      ]
+    },
+    {
+      "id": "claim-division",
+      "text": "/ 的结果总是 float；// 做向下取整的除法；% 取余数；** 计算乘方。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-assignment",
+      "text": "等号把一个值赋给变量；使用没有赋过值的变量会报 NameError。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-string-operators",
+      "text": "字符串可以用单引号或双引号括起来，效果相同；+ 把字符串拼接起来，* 把字符串重复若干次。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-objects",
+      "text": "每个对象都有身份、类型和值；名字通过绑定操作指向对象，赋值是绑定名字的操作之一。",
+      "sourceIds": [
+        "py-datamodel",
+        "py-executionmodel"
+      ]
+    },
+    {
+      "id": "claim-input-int",
+      "text": "input() 读入一行并把它作为字符串返回，末尾的换行会被去掉；int() 可以由数字或字符串构造整数；type() 返回对象的类型。",
+      "sourceIds": [
+        "py-functions"
+      ]
+    },
+    {
+      "id": "claim-fstring",
+      "text": "格式化字符串字面值（f-string）在字符串前加 f，并在花括号里写表达式，表达式的值会被嵌进字符串。",
+      "sourceIds": [
+        "py-inputoutput"
+      ]
+    },
+    {
+      "id": "claim-error-types",
+      "text": "NameError 在找不到局部或全局名字时抛出；TypeError 在把操作或函数用到类型不合适的对象上时抛出。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "claim-names",
+      "text": "名字由大小写字母、下划线和数字组成，数字不能出现在第一位；名字区分大小写。",
+      "sourceIds": [
+        "py-lexical"
+      ]
+    },
+    {
+      "id": "claim-int-precision",
+      "text": "Python 的整数精度没有上限。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-course-order",
+      "text": "CS50P 的前几周依次是函数与变量、条件、循环、异常。",
+      "sourceIds": [
+        "cs50p"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "hello",
+      "path": "public/labs/python-variables-and-types/hello.py",
+      "command": "python3 hello.py",
+      "expectedResult": "两行：hello, kali 和 3。"
+    },
+    {
+      "id": "names",
+      "path": "public/labs/python-variables-and-types/names.py",
+      "command": "python3 names.py",
+      "expectedResult": "4 3 kali"
+    },
+    {
+      "id": "age",
+      "path": "public/labs/python-variables-and-types/age.py",
+      "command": "python3 age.py",
+      "expectedResult": "依次输入 kali 和 18 后输出 kali, next year you will be 19。"
+    },
+    {
+      "id": "broken",
+      "path": "public/labs/python-variables-and-types/broken.py",
+      "command": "python3 broken.py",
+      "expectedResult": "输入 18 后在第 2 行抛出 TypeError: can only concatenate str (not \"int\") to str。这是故意留错的示例。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "name-binding",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

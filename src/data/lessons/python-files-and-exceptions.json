@@ -1,0 +1,309 @@
+{
+  "lessonPlan": {
+    "audience": "已经会用列表、字典和字符串方法处理数据的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "异常发生时执行流的跳转：逐行执行一段 try/except，观察抛出异常的那一行之后 try 块剩余的代码被跳过，执行流落到匹配的 except，再继续往下",
+    "learningObjectives": [
+      "用 with open() 打开文件，逐行读取并处理",
+      "用 w 和 a 两种模式写文件，说出它们的区别",
+      "解释脚本里的相对路径是相对于哪个目录",
+      "从下往上读懂多层函数调用的 Traceback，定位到自己代码里出错的那一行",
+      "用 try 和 except 处理可以预见的错误，让程序给出提示而不是崩溃",
+      "把前几课学的内容合起来，写出统计日志的完整脚本"
+    ],
+    "prerequisites": [
+      "python-strings-and-bytes",
+      "shell-permissions-and-pipes",
+      "~/lab 目录里有第 3 课的 access.log"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-read-traceback",
+      "kind": "mechanism",
+      "title": "三层调用的 Traceback 怎么读",
+      "question": "运行 crash.py 得到的 Traceback 里有三段 File …, line …，分别指向第 9 行、第 7 行和第 3 行。哪一行是直接出错的地方？另外两行说明了什么？为什么建议从最后一行往上读？",
+      "answer": "直接出错的是最下面那一段指向的第 3 行 return int(parts[8])：parts 只有两个元素，取下标 8 越界，所以最后一行是 IndexError: list index out of range。上面两段是调用的来路：第 9 行调用了 main()，main 在第 7 行调用了 parse_status(\"broken line\")。Traceback 按调用的先后从上往下排，最后发生的在最下面。从下往上读，先看到错误类型和直接出错的行，再顺着调用链往上找是谁传进来了有问题的数据。这里真正的原因在第 7 行：传进去的那一行不是合法的日志格式。",
+      "sourceIds": [
+        "py-errors",
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "check-which-except",
+      "kind": "prediction",
+      "title": "三次调用各走哪个分支",
+      "question": "函数 ratio(a, b) 的函数体是：try 块里 return int(a) / int(b)；except ValueError 时 return \"bad number\"；except ZeroDivisionError 时 return \"divide by zero\"。依次 print ratio(\"6\", \"3\")、ratio(\"6\", \"0\")、ratio(\"six\", \"3\")，写出三行输出。",
+      "answer": "依次是 2.0、divide by zero、bad number。第一次没有异常，6 / 3 得 2.0，/ 的结果是 float。第二次 int(\"0\") 成功，但除以 0 抛出 ZeroDivisionError，落到第二个 except。第三次 int(\"six\") 就失败了，抛出 ValueError，落到第一个 except，后面的除法根本没有执行。异常发生后，Python 从上往下找第一个类型匹配的 except。",
+      "sourceIds": [
+        "py-errors",
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "check-count-404",
+      "kind": "practice",
+      "title": "用 Python 找出探测目录的 IP",
+      "question": "写脚本 count_404.py：读取 access.log，统计返回 404 的请求分别来自哪个 IP，按次数从多到少逐行打印「次数 IP」。这是第 3 课验收题的 Python 版本，结果应当和那条管道一致。",
+      "answer": "参考写法：counts = {}；with open(\"access.log\") as f: 逐行 for line in f；每行 parts = line.split()；如果 parts[8] == \"404\"，就 counts[parts[0]] = counts.get(parts[0], 0) + 1；循环结束后 for ip in sorted(counts, key=counts.get, reverse=True): print(counts[ip], ip)。自查标准：输出两行，4 198.51.100.7 和 1 192.0.2.44。注意 parts[8] 是字符串，要和 \"404\" 比较，或者先 int() 再和 404 比较。",
+      "sourceIds": [
+        "py-inputoutput",
+        "py-stdtypes"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "读文件与写文件",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "top_ips.py 的第一行输出 8 192.0.2.10。"
+    },
+    {
+      "kind": "动手",
+      "title": "读懂 Traceback",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "能在 crash.py 的报错里指出直接出错的行和调用它的行。"
+    },
+    {
+      "kind": "进阶",
+      "title": "用 try 和 except 处理错误",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "ask_port.py 输入 abc 时提示重输，输入 8080 时打印 ok: 8080。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python 3.14 tutorial input and output reading and writing files open mode with",
+      "Python 3.14 tutorial errors and exceptions try except traceback",
+      "Python built-in exceptions FileNotFoundError ValueError ZeroDivisionError IndexError",
+      "Python built-in functions open mode",
+      "CS50P weeks exceptions file I/O"
+    ],
+    "notes": "课程顺序参考 CS50P 的异常与文件两周，正文与例子自写。语言行为绑定 Python 3.14 官方教程与标准库参考。全部脚本与交互模式的输入输出在 kalilinux/kali-rolling 容器（Python 3.14.7）里实际运行；逐行执行图的数据由 scripts/lab/py-trace.py 追踪 safe_number.py 的真实执行生成。access.log 与第 3 课使用的是同一份示例日志。Traceback 里波浪线和插入符的标注样式随 Python 版本略有不同。"
+  },
+  "sources": [
+    {
+      "id": "py-inputoutput",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 7. Input and Output",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/inputoutput.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-open-modes",
+        "claim-with",
+        "claim-iterate-file"
+      ]
+    },
+    {
+      "id": "py-errors",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 8. Errors and Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/errors.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-traceback",
+        "claim-try-except"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-exception-types"
+      ]
+    },
+    {
+      "id": "py-functions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Functions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/functions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-open-default"
+      ]
+    },
+    {
+      "id": "py-stdtypes",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Types",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/stdtypes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-split"
+      ]
+    },
+    {
+      "id": "cs50p",
+      "kind": "university-course",
+      "title": "CS50's Introduction to Programming with Python",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/python/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其周次顺序（函数与变量、条件、循环、异常、库、文件）。",
+      "supports": [
+        "claim-course-order"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-open-modes",
+      "text": "open() 返回一个文件对象；mode 为 'r' 表示只读，'w' 表示只写且同名文件会被清空，'a' 表示追加，写入的数据自动加到末尾；在 mode 后加 'b' 以二进制模式打开，读写的是 bytes。",
+      "sourceIds": [
+        "py-inputoutput"
+      ]
+    },
+    {
+      "id": "claim-with",
+      "text": "处理文件对象时用 with 关键字是好习惯：代码块结束后文件会被正确关闭，即使中途发生了异常。",
+      "sourceIds": [
+        "py-inputoutput"
+      ]
+    },
+    {
+      "id": "claim-iterate-file",
+      "text": "要逐行读取文件，可以直接对文件对象循环；这种写法省内存、速度快、代码简单。",
+      "sourceIds": [
+        "py-inputoutput"
+      ]
+    },
+    {
+      "id": "claim-open-default",
+      "text": "open() 的 mode 参数默认是 'r'；文件无法打开时抛出 OSError。",
+      "sourceIds": [
+        "py-functions"
+      ]
+    },
+    {
+      "id": "claim-traceback",
+      "text": "报错信息的最后一行说明发生了什么并给出异常的类型；它前面的部分以栈回溯的形式显示异常发生的上下文。",
+      "sourceIds": [
+        "py-errors"
+      ]
+    },
+    {
+      "id": "claim-try-except",
+      "text": "先执行 try 子句；没有异常时跳过 except 子句；try 子句执行中发生异常时，子句剩余的部分被跳过，如果异常类型与 except 后的名字匹配，就执行 except 子句，然后从 try 语句之后继续执行。",
+      "sourceIds": [
+        "py-errors"
+      ]
+    },
+    {
+      "id": "claim-exception-types",
+      "text": "请求的文件或目录不存在时抛出 FileNotFoundError；参数类型正确但值不合适时抛出 ValueError；除法或取模的第二个参数为零时抛出 ZeroDivisionError；序列下标超出范围时抛出 IndexError。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "claim-split",
+      "text": "str.split() 把字符串按分隔符拆成单词列表。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-course-order",
+      "text": "CS50P 在循环之后讲异常，稍后讲文件读写。",
+      "sourceIds": [
+        "cs50p"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "read-log",
+      "path": "public/labs/python-files-and-exceptions/read_log.py",
+      "command": "python3 read_log.py",
+      "expectedResult": "先打印 20，再打印日志第一行两次，第一次后面多一个空行。"
+    },
+    {
+      "id": "top-ips",
+      "path": "public/labs/python-files-and-exceptions/top_ips.py",
+      "command": "python3 top_ips.py",
+      "expectedResult": "四行：8 192.0.2.10、6 198.51.100.7、4 203.0.113.5、2 192.0.2.44。"
+    },
+    {
+      "id": "write-report",
+      "path": "public/labs/python-files-and-exceptions/write_report.py",
+      "command": "python3 write_report.py",
+      "expectedResult": "没有输出；生成的 report.txt 有三行：404 report、count: 5、checked by kali。"
+    },
+    {
+      "id": "crash",
+      "path": "public/labs/python-files-and-exceptions/crash.py",
+      "command": "python3 crash.py",
+      "expectedResult": "先打印 200，然后以 IndexError: list index out of range 终止。这是故意留错的示例。"
+    },
+    {
+      "id": "safe-number",
+      "path": "public/labs/python-files-and-exceptions/safe_number.py",
+      "command": "python3 safe_number.py",
+      "expectedResult": "两行：not a number: abc 和 done。"
+    },
+    {
+      "id": "ask-port",
+      "path": "public/labs/python-files-and-exceptions/ask_port.py",
+      "command": "python3 ask_port.py",
+      "expectedResult": "输入 abc 时提示 please enter a number 并重新询问；输入 8080 时打印 ok: 8080 并结束。"
+    },
+    {
+      "id": "open-missing",
+      "path": "public/labs/python-files-and-exceptions/open_missing.py",
+      "command": "python3 open_missing.py",
+      "expectedResult": "输入 access.log 打印 20 lines；输入 nosuch.log 打印 no such file: nosuch.log。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "exception-flow",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

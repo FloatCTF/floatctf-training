@@ -3,47 +3,54 @@
   "testedAt": "2026-10-01",
   "target": "http://localhost:4321/",
   "browser": "Playwright Chromium",
-  "scope": "基础学期第 1 批四课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json。截图只在本地留档，不随仓库分发。",
+  "scope": "基础学期第 1、2 批十课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 与 qa/foundations-batch-2-verification.json。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
-    "/paths/freshman/",
-    "/categories/engineering-tools/",
     "/categories/cs-foundations/",
-    "/lessons/vm-kali-setup/",
+    "/categories/engineering-tools/",
+    "/categories/programming/",
+    "/lessons/data-representation/",
+    "/lessons/python-collections/",
+    "/lessons/python-control-flow/",
+    "/lessons/python-files-and-exceptions/",
+    "/lessons/python-functions-and-modules/",
+    "/lessons/python-strings-and-bytes/",
+    "/lessons/python-variables-and-types/",
     "/lessons/shell-files-and-paths/",
     "/lessons/shell-permissions-and-pipes/",
-    "/lessons/data-representation/"
+    "/lessons/vm-kali-setup/",
+    "/paths/freshman/"
   ],
   "checks": [
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口与分类卡：已上线 4，下一课 05；qa/foundations-batch-1-verification.json",
-      "screenshot": "qa/screenshots/foundations-b1-home-desktop.png"
+      "evidence": "首页入口：已上线 10，下一课 11；编程语言面板默认停在 Python，6 条可进入",
+      "screenshot": "qa/screenshots/foundations-b2-home-panel.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 3 课深色主题整页，无横向溢出",
-      "screenshot": "qa/screenshots/foundations-b1-lesson3-desktop-dark.png"
+      "evidence": "第 7 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b2-lesson7-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 1 课桌面浅色整页：刊头、目标与前置、分段、嵌套图、终端会话",
-      "screenshot": "qa/screenshots/foundations-b1-lesson1-desktop-light.png"
+      "evidence": "第 5 课桌面浅色整页：刊头、代码清单、交互模式会话、逐行执行图",
+      "screenshot": "qa/screenshots/foundations-b2-lesson5-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下四课整页溢出为零",
-      "screenshot": "qa/screenshots/foundations-b1-lesson2-mobile.png"
+      "evidence": "390 宽度下基础十课整页溢出为零",
+      "screenshot": "qa/screenshots/foundations-b2-lesson8-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 2 课手机整页：终端输出在块内横向滚动，路径解析器单列排布",
-      "screenshot": "qa/screenshots/foundations-b1-lesson2-mobile.png"
+      "evidence": "第 8 课手机整页：逐行执行图单列排布，代码与输出在块内滚动",
+      "screenshot": "qa/screenshots/foundations-b2-lesson8-mobile.png"
     },
     {
       "id": "category-page",
@@ -54,35 +61,35 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页已上线课为链接、整行可点，规划课为纯文本；首页面板默认停在有课上线的系列"
+      "evidence": "路线页已上线十课为链接，规划课为纯文本；「下一课」标在第 11 课"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "打印媒体模拟：四课验收答案可见，复制按钮与顶栏隐藏；纸张分页未验收",
-      "screenshot": "qa/screenshots/foundations-b1-lesson4-print.png"
+      "evidence": "打印媒体模拟：十课验收答案、终端会话与代码清单可见；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b2-lesson10-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "三个探索器在减少动态设置下为 static，显示对照表",
+      "evidence": "探索器与逐行执行图在减少动态设置下为 static，显示对照表或逐步表",
       "screenshot": "qa/screenshots/foundations-b1-permission-bits-reduced.png"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "关闭 JavaScript 后探索器为静态对照表，验收题三道与原生折叠保留",
-      "screenshot": "qa/screenshots/foundations-b1-path-explorer-nojs.png"
+      "evidence": "关闭 JavaScript 后逐行执行图显示终态与逐步表，验收题与原生折叠保留",
+      "screenshot": "qa/screenshots/foundations-b2-stepper-nojs.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "四课三种环境共 12 次检查，页内锚点无断链；翻页与前置知识链接指向正确"
+      "evidence": "十课多种环境下页内锚点无断链；翻页与前置知识链接指向正确"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "权限位开关用空格键切换通过；首页面板系列切换支持方向键。未做完整 Tab 顺序走查"
+      "evidence": "权限位开关用空格键切换、逐行执行图滑杆用方向键回退均通过。未做完整 Tab 顺序走查"
     },
     {
       "id": "deployment-csp-pagefind",
@@ -102,12 +109,12 @@
   ],
   "screenshots": [
     "qa/screenshots/foundations-b1-category.png",
-    "qa/screenshots/foundations-b1-home-desktop.png",
-    "qa/screenshots/foundations-b1-lesson1-desktop-light.png",
-    "qa/screenshots/foundations-b1-lesson2-mobile.png",
-    "qa/screenshots/foundations-b1-lesson3-desktop-dark.png",
-    "qa/screenshots/foundations-b1-lesson4-print.png",
-    "qa/screenshots/foundations-b1-path-explorer-nojs.png",
-    "qa/screenshots/foundations-b1-permission-bits-reduced.png"
+    "qa/screenshots/foundations-b1-permission-bits-reduced.png",
+    "qa/screenshots/foundations-b2-home-panel.png",
+    "qa/screenshots/foundations-b2-lesson10-print.png",
+    "qa/screenshots/foundations-b2-lesson5-desktop-light.png",
+    "qa/screenshots/foundations-b2-lesson7-desktop-dark.png",
+    "qa/screenshots/foundations-b2-lesson8-mobile.png",
+    "qa/screenshots/foundations-b2-stepper-nojs.png"
   ]
 }

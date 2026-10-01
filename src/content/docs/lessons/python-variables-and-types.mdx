@@ -1,0 +1,334 @@
+---
+title: Python 一：运行模型、变量与类型
+description: 用交互模式和脚本两种方式运行 Python，认识四种基本类型，弄清变量名与值的关系，写出第一个能对话的脚本
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/python-variables-and-types.json';
+import namesTrace from '../../../data/steppers/python-names.json';
+
+export const writeSteps = [
+  { title: '进入练习目录', detail: '在终端执行 mkdir -p ~/lab/python 和 cd ~/lab/python。Python 课的文件都放在这里。' },
+  { title: '打开编辑器', detail: '执行 mousepad hello.py &。mousepad 是 Kali 自带的图形文本编辑器；末尾的 & 让它在后台运行，终端还能继续用。' },
+  { title: '输入代码并保存', detail: '把下面的两行代码敲进去，按 Ctrl + S 保存。编辑器窗口不用关，之后改代码还要用。' },
+  { title: '回到终端运行', detail: '执行 python3 hello.py。每次改完代码，都是保存、切回终端、按上方向键调出这条命令再回车。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 seconds.py，用 3725 和 59 测试，输出分别是 1 h 2 min 5 s 和 0 h 0 min 59 s。' },
+  { title: '摄氏度转华氏度', detail: '写 temp.py：读入一个摄氏温度，输出对应的华氏温度，公式是 c * 9 / 5 + 32。输入 100 应当输出 212.0。提示：温度可能有小数，用 float() 转换。' },
+  { title: '在交互模式里算一个大数', detail: '算出 2 的 64 次方，结果是 18446744073709551616。Python 的整数没有位数上限。' },
+  { title: '收集三种报错', detail: '在交互模式里各制造一次 NameError、TypeError 和 SyntaxError，把你输入的内容和报错的最后一行抄下来。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 05"
+  kicker="Interpreter, Types, Names, Input"
+  lines={[
+    { text: "Python 一" },
+    { text: "运行模型、变量与类型", accent: true },
+  ]}
+  summary="Python 是这个学期的第一门语言，之后写解题脚本、处理数据都用它。这一课弄清三件事：代码怎样被运行，值有哪些类型，变量名和值是什么关系。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：上节课那一行是什么
+
+上节课做 URL 编码时，照抄过这样一行：
+
+```text
+python3 -c "import urllib.parse; print(urllib.parse.quote('a b&c'))"
+```
+
+`python3` 是一个程序，叫 **Python 解释器**。它读入一段 Python 代码，逐句执行。`-c` 后面引号里的那段文字，就是交给它执行的代码。
+
+把代码塞在一行引号里只适合临时用一下。这一课学另外两种更常用的方式，并且从这一行里最基础的部分讲起：值、类型和名字。
+
+## 一、两种运行方式与四种类型
+
+### 1. 交互模式：问一句，答一句
+
+在终端里只输入 `python3` 回车，会看到版本信息和一个新的提示符 `>>>`。这是 Python 的**交互模式**：你输入一句，它立刻执行并显示结果。（来源：[Using the Python Interpreter](#source-py-interpreter)）
+
+<TerminalSession
+  title="把 Python 当计算器"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: '1 + 2', out: '3' },
+    { cmd: '7 / 2', out: '3.5', note: '/ 是除法，结果总是带小数点。' },
+    { cmd: '7 // 2', out: '3', note: '// 是整除：只要商的整数部分。' },
+    { cmd: '7 % 2', out: '1', note: '% 取余数。' },
+    { cmd: '2 ** 10', out: '1024', note: '** 是乘方。' },
+    { cmd: '"ab" + "cd"', out: "'abcd'", note: '用引号括起来的是文字。+ 把两段文字接起来。' },
+    { cmd: '"ha" * 3', out: "'hahaha'", note: '文字乘以整数是重复。' },
+  ]}
+/>
+
+（来源：[An Informal Introduction to Python](#source-py-introduction)）
+
+提示符是 `>>>` 时，你在和 Python 说话；提示符是 `$` 时，你在和 shell 说话。两边的语法互不相通，在 `>>>` 后面输入 `ls` 会报错。退出交互模式输入 `quit()` 回车，或按 `Ctrl` + `D`。
+
+### 2. 四种基本类型
+
+每个值都属于某种**类型**（type）。类型决定了这个值能做哪些运算。`type()` 可以查看一个值的类型：
+
+<TerminalSession
+  title="type() 看类型，int()、str()、float() 做转换"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'type(42)', out: "<class 'int'>" },
+    { cmd: 'type(3.14)', out: "<class 'float'>" },
+    { cmd: 'type("kali")', out: "<class 'str'>" },
+    { cmd: 'type(True)', out: "<class 'bool'>" },
+    { cmd: 'int("42") + 1', out: '43', note: 'int() 把文字 "42" 转成整数 42。' },
+    { cmd: 'str(42) + "!"', out: "'42!'", note: 'str() 把整数转成文字。' },
+    { cmd: 'float("3.5") * 2', out: '7.0' },
+  ]}
+/>
+
+<DataTable
+  caption="先记住这四种"
+  headers={["类型", "名字", "例子", "说明"]}
+  rows={[
+    ["整数", "int", "42、-7、0", "没有位数上限"],
+    ["浮点数", "float", "3.14、7.0", "带小数点的数。/ 的结果总是这种类型"],
+    ["字符串", "str", "\"kali\"、'a b'", "一段文字。单引号和双引号效果相同"],
+    ["布尔值", "bool", "True、False", "只有两个值，首字母大写。下一课用它做判断"],
+  ]}
+  columnRatios={[1, 0.8, 1.4, 2.4]}
+/>
+
+`"42"` 和 `42` 是两个不同的东西：前者是两个字符组成的文字，后者是一个数。上一课讲过，文字在计算机里是一串字节；类型就是告诉 Python 该把这些字节当成什么来用。
+
+### 3. 脚本：把代码存进文件
+
+交互模式里的代码关掉就没了。要反复运行的代码写进文件，这样的文件叫**脚本**，Python 脚本的扩展名是 `.py`。
+
+<StepList title="写出并运行第一个脚本" steps={writeSteps} />
+
+<CodeFile file="labs/python-variables-and-types/hello.py" />
+
+<TerminalSession
+  title="运行脚本"
+  steps={[
+    { cmd: 'cd ~/lab/python' },
+    { cmd: 'python3 hello.py', out: 'hello, kali\n3', note: '解释器从第一行开始，一行一行往下执行。' },
+  ]}
+/>
+
+`print()` 把括号里的值打印到屏幕上。交互模式会自动显示每个表达式的结果，脚本不会：脚本里只有写了 `print()` 的地方才有输出。
+
+<Callout variant="warning" title="写代码时用英文输入状态">
+代码里的引号、括号、冒号、逗号必须是英文的。中文输入法下打出的 `“`、`（`、`：` 是全角符号，Python 不认，会报 SyntaxError。写代码时保持英文输入状态；需要在引号里面写中文时再切过去，写完切回来。本学期的示例脚本为了省去来回切换，提示语都用英文。
+</Callout>
+
+## 二、变量、输入与输出
+
+### 1. 变量是贴在值上的名字
+
+`=` 的作用是**赋值**：先算出右边的值，再让左边的名字指向它。之后用这个名字，就是在用那个值。
+
+<TerminalSession
+  title="起名字，用名字"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'port = 8080', note: '赋值没有输出。' },
+    { cmd: 'port', out: '8080' },
+    { cmd: 'port + 1', out: '8081', note: 'port 本身没有变，这只是算了一个新值。' },
+  ]}
+/>
+
+在 Python 里，值是放在内存里的**对象**，变量是指向对象的**名字**。这个区别在连续赋值时会显出来。把下面五行存成 `names.py`，先自己猜最后一行打印什么：
+
+<CodeFile file="labs/python-variables-and-types/names.py" />
+
+<CodeStepper
+  client:visible
+  trace={namesTrace}
+  title="a = a + 1 之后，b 是多少"
+  intro="圈号代表对象。两个名字后面的圈号相同，说明它们指向同一个对象。"
+/>
+
+<TerminalSession
+  title="运行验证"
+  steps={[
+    { cmd: 'python3 names.py', out: '4 3 kali' },
+  ]}
+/>
+
+第三行 `a = a + 1` 做了两件事：算出新对象 4，把名字 a 改贴到 4 上。名字 b 没有出现在等号左边，所以它指向的对象没有变。`=` 不是数学里的「相等」，它是一个动作。（来源：[Data model](#source-py-datamodel)、[Execution model](#source-py-executionmodel)）
+
+变量名可以用字母、数字和下划线，不能以数字开头，区分大小写。（来源：[Lexical analysis](#source-py-lexical)）起名字的原则是让人一眼看出它装的是什么：`port`、`user_name` 比 `a`、`x1` 好。
+
+### 2. input()：从键盘读入
+
+<CodeFile file="labs/python-variables-and-types/age.py" />
+
+<TerminalSession
+  title="运行时输入名字和年龄"
+  steps={[
+    {
+      cmd: 'python3 age.py',
+      stdin: ['kali', '18'],
+      out: 'name: kali\nage: 18\nkali, next year you will be 19',
+      note: '程序在 name: 后面停下来等你输入，回车后继续。',
+    },
+  ]}
+/>
+
+三行代码里有三个新东西：
+
+- `input("name: ")` 先打印括号里的提示，再等你输入一行，然后把你输入的内容作为**字符串**交回来。
+- `int(...)` 把字符串转成整数。`input()` 交回来的永远是字符串，哪怕你输入的是数字；不转换就不能做加法。
+- `f"..."` 是**格式化字符串**：引号前加一个 f，花括号里可以写变量名或算式，运行时会被替换成它的值。
+
+（来源：[Built-in Functions](#source-py-functions)、[Input and Output](#source-py-inputoutput)）
+
+<TerminalSession
+  title="f-string 的花括号里可以放算式"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'name = "kali"' },
+    { cmd: 'age = 18' },
+    { cmd: 'f"{name} is {age}"', out: "'kali is 18'" },
+    { cmd: 'f"{age + 1}"', out: "'19'" },
+    { cmd: 'print(f"{name} is {age}")', out: 'kali is 18', note: '交互模式直接显示字符串时带引号，print() 打印时不带。' },
+  ]}
+/>
+
+## 三、读懂三种报错
+
+写程序的大部分时间在和报错打交道。Python 的报错信息很完整，读的顺序是**先看最后一行**。
+
+### 1. 脚本报错：Traceback
+
+`broken.py` 比 `age.py` 少了一个 `int()`：
+
+<CodeFile file="labs/python-variables-and-types/broken.py" mark="2" />
+
+<TerminalSession
+  title="一份完整的报错"
+  steps={[
+    {
+      cmd: 'python3 broken.py',
+      stdin: ['18'],
+      out: 'age: 18\nTraceback (most recent call last):\n  File "/home/kali/lab/python/broken.py", line 2, in <module>\n    print("next year you will be", age + 1)\n                                   ~~~~^~~\nTypeError: can only concatenate str (not "int") to str',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="从下往上读"
+  headers={["哪一行", "内容", "告诉你什么"]}
+  rows={[
+    ["最后一行", "TypeError: can only concatenate str (not \"int\") to str", "错误的类型和原因：字符串只能和字符串拼接，不能和 int 拼"],
+    ["倒数第二行", "~~~~^~~", "波浪线标出出错的那一小段：age + 1"],
+    ["倒数第三行", "print(\"next year you will be\", age + 1)", "出错的那一行代码"],
+    ["再往上", "File \"…/broken.py\", line 2", "哪个文件的第几行"],
+  ]}
+  columnRatios={[0.9, 2, 2]}
+/>
+
+原因现在很清楚：`age` 是 `input()` 交回来的字符串 `"18"`，不能和整数 1 相加。修法就是 `age.py` 里的写法，用 `int()` 转一下。
+
+### 2. 另外两种常见的错
+
+<TerminalSession
+  title="名字写错，以及语法写错"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'port = 8080' },
+    { cmd: 'port' , out: '8080' },
+    { cmd: 'port + 1', out: '8081' },
+    {
+      cmd: 'prot',
+      out: 'Traceback (most recent call last):\n  File "<python-input-3>", line 1, in <module>\n    prot\nNameError: name \'prot\' is not defined. Did you mean: \'print\'?',
+      note: 'NameError：用了一个没有赋过值的名字，通常是拼错了。后面的 Did you mean 是 Python 的猜测，这次猜的是 print，没猜中。',
+    },
+    {
+      cmd: '"3" + 4',
+      out: 'Traceback (most recent call last):\n  File "<python-input-4>", line 1, in <module>\n    "3" + 4\n    ~~~~^~~\nTypeError: can only concatenate str (not "int") to str',
+      note: 'TypeError：运算两边的类型对不上。',
+    },
+    {
+      cmd: 'print "hello"',
+      out: '  File "<python-input-5>", line 1\n    print "hello"\n    ^^^^^^^^^^^^^\nSyntaxError: Missing parentheses in call to \'print\'. Did you mean print(...)?',
+      note: 'SyntaxError：这一句不符合语法，Python 根本没开始执行。这里是 print 后面少了括号。',
+    },
+  ]}
+/>
+
+（来源：[Built-in Exceptions](#source-py-exceptions)）
+
+<DataTable
+  caption="本课的常见报错"
+  headers={["最后一行", "意思", "先检查什么"]}
+  rows={[
+    ["NameError: name 'xxx' is not defined", "这个名字没有被赋过值", "拼写和大小写；赋值语句是不是写在使用之前"],
+    ["TypeError: can only concatenate str (not \"int\") to str", "把字符串和整数相加了", "input() 的结果有没有用 int() 转换"],
+    ["SyntaxError: …", "这一句不符合语法", "括号和引号是否成对；有没有混进中文的括号或引号"],
+    ["ValueError: invalid literal for int() with base 10: 'eighteen'", "int() 收到了不是数字的文字", "运行时输入的内容"],
+    ["python3: can't open file '…': [Errno 2] No such file or directory", "找不到脚本文件", "pwd 确认所在目录，ls 确认文件名"],
+  ]}
+  columnRatios={[2, 1.3, 1.7]}
+/>
+
+边界：报错指出的行号是 Python **发现**问题的位置。多数时候错就在这一行；少了右括号或右引号时，Python 可能读到下一行甚至文件末尾才发现，这时要往上找。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'python3', description: '进入交互模式。quit() 或 Ctrl + D 退出。' },
+    { term: 'python3 文件.py', description: '运行脚本。' },
+    { term: '+ - * /', description: '加减乘除。/ 的结果总是 float。' },
+    { term: '// % **', description: '整除、取余、乘方。' },
+    { term: 'type(x)', description: '查看类型。' },
+    { term: 'int() float() str()', description: '类型转换。' },
+    { term: '名字 = 值', description: '赋值：让左边的名字指向右边算出的对象。' },
+    { term: 'print(a, b)', description: '打印，多个值之间用空格隔开。' },
+    { term: 'input("提示")', description: '读入一行，返回字符串。' },
+    { term: 'f"{名字} …"', description: '格式化字符串，花括号里放变量或算式。' },
+    { term: 'mousepad 文件 &', description: '用图形编辑器打开文件，不占住终端。' },
+  ]}
+/>
+
+<KeyTakeaway>
+解释器一行一行执行代码。每个值都有类型，类型决定它能做什么运算；`input()` 读进来的永远是字符串。变量是指向对象的名字，`=` 让等号左边的名字改指向右边算出的对象，别的名字不受影响。报错从最后一行读起。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

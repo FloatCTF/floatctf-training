@@ -404,8 +404,8 @@
       "title": "Python 一：运行模型、变量与类型",
       "summary": "写下第一个脚本，弄清变量名和值之间的关系。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-variables-and-types/",
       "prerequisites": [
         "shell-permissions-and-pipes"
       ],
@@ -419,8 +419,8 @@
       "title": "Python 二：条件与循环",
       "summary": "让程序做判断、重复做事，学会顺着执行流读代码。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-control-flow/",
       "prerequisites": [
         "python-variables-and-types"
       ],
@@ -434,8 +434,8 @@
       "title": "Python 三：函数、模块与虚拟环境",
       "summary": "把代码拆成函数，用 import 复用别人的代码，用 venv 隔离依赖。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-functions-and-modules/",
       "prerequisites": [
         "python-control-flow"
       ],
@@ -449,8 +449,8 @@
       "title": "Python 四：列表、字典与推导式",
       "summary": "用合适的容器组织数据，一行写完常见的筛选和变换。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-collections/",
       "prerequisites": [
         "python-functions-and-modules"
       ],
@@ -464,8 +464,8 @@
       "title": "Python 五：字符串、bytes 与编码",
       "summary": "分清文字和字节，熟练做十六进制、Base64 互转。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-strings-and-bytes/",
       "prerequisites": [
         "python-collections",
         "data-representation"
@@ -480,8 +480,8 @@
       "title": "Python 六：文件、异常与读报错",
       "summary": "读写文件，看懂 Traceback，自己定位出错的那一行。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-files-and-exceptions/",
       "prerequisites": [
         "python-strings-and-bytes"
       ],

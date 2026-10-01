@@ -1,0 +1,301 @@
+{
+  "lessonPlan": {
+    "audience": "已经会写用 input() 和 print() 对话的小脚本、还没学过分支与循环的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "执行流在 for 循环里的往返：逐行执行一段累加代码，观察高亮行在 for 行与循环体之间来回、循环变量和累计值每一圈怎样变化，以及没有缩进的那一行什么时候才执行",
+    "learningObjectives": [
+      "写出比较表达式，说出它的结果是 True 还是 False，并用 and、or、not 组合条件",
+      "用 if、elif、else 让程序按条件走不同的分支",
+      "说明缩进在 Python 里的作用，按缩进判断哪些行属于同一个代码块",
+      "用 while 写「条件成立就继续」的循环，用 for 和 range() 写「重复固定次数」的循环",
+      "用 break 提前结束循环，顺着执行流逐行推演一段循环代码的输出",
+      "识别缩进错误、把 == 写成 = 以及死循环，知道怎样中断"
+    ],
+    "prerequisites": [
+      "python-variables-and-types",
+      "会用 mousepad 写脚本并用 python3 运行"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-range",
+      "kind": "mechanism",
+      "title": "range(1, 5) 到底有几个数",
+      "question": "for i in range(1, 5) 的循环体会执行几次？i 依次取哪些值？为什么不包含 5？如果想让 i 从 1 取到 5，应该怎么写？",
+      "answer": "执行 4 次，i 依次是 1、2、3、4。range 的终点永远不包含在内：range(start, stop) 从 start 开始，到 stop 之前停下。这样设计的好处是 range(n) 正好产生 n 个数。要取到 5，写 range(1, 6)。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "check-trace-while",
+      "kind": "prediction",
+      "title": "推演一段 while 循环",
+      "question": "初始 n = 10、count = 0。循环条件是 n > 1；循环体里，n 是偶数就令 n = n // 2，否则令 n = n * 3 + 1，然后 count 加 1。循环结束后打印 count。在纸上列出每一圈之后 n 和 count 的值，写出最后打印的数。",
+      "answer": "打印 6。n 的变化是 10 → 5 → 16 → 8 → 4 → 2 → 1，一共走了 6 圈：10 是偶数，整除 2 得 5；5 是奇数，乘 3 加 1 得 16；之后 16、8、4、2 连续整除 2。n 变成 1 时条件 n > 1 不再成立，循环结束。推演的方法是每一圈都先检查条件，再按顺序执行循环体里的每一行。",
+      "sourceIds": [
+        "py-introduction",
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "check-sevens",
+      "kind": "practice",
+      "title": "数出能被 7 整除的数",
+      "question": "写一个脚本：统计 1 到 100 之间有多少个数能被 7 整除，并求出这些数的和，在一行里打印个数与和。",
+      "answer": "参考写法：先令 count = 0、total = 0；用 for i in range(1, 101) 遍历；循环体里用 if i % 7 == 0 判断，成立时 count 加 1、total 加上 i；循环结束后 print(count, total)。自查标准：输出 14 735。两个容易错的地方：range 的终点要写 101 才能取到 100；print 不能缩进到循环里面，否则会打印一百行。",
+      "sourceIds": [
+        "py-controlflow",
+        "py-introduction"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "条件与分支",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能说出 password_check.py 对三种输入各走哪一个分支。"
+    },
+    {
+      "kind": "动手",
+      "title": "while、for 与 break",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "login.py 输错三次后打印 locked，输对时打印 welcome。"
+    },
+    {
+      "kind": "进阶",
+      "title": "三种常见的错",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "能用 Ctrl + C 停下死循环，并修好缩进错误。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python 3.14 tutorial more control flow tools if for range break continue",
+      "Python 3.14 tutorial first steps while loop indentation grouping statements",
+      "Python built-in types comparisons boolean operations",
+      "Python built-in exceptions IndentationError KeyboardInterrupt SyntaxError",
+      "CS50P weeks conditionals loops"
+    ],
+    "notes": "课程顺序参考 CS50P 的条件与循环两周，正文与例子自写。语言行为绑定 Python 3.14 官方教程与标准库参考。全部脚本与交互模式的输入输出在 kalilinux/kali-rolling 容器（Python 3.14.7）里实际运行；逐行执行图的数据由 scripts/lab/py-trace.py 追踪 total.py 的真实执行生成。死循环示例被 Ctrl+C 中断时停在哪一行取决于按键时刻，正文已说明。"
+  },
+  "sources": [
+    {
+      "id": "py-controlflow",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 4. More Control Flow Tools",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/controlflow.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-if",
+        "claim-for-range",
+        "claim-break-continue"
+      ]
+    },
+    {
+      "id": "py-introduction",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 3. An Informal Introduction to Python",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/introduction.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-indentation",
+        "claim-while"
+      ]
+    },
+    {
+      "id": "py-stdtypes",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Types",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/stdtypes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-comparisons"
+      ]
+    },
+    {
+      "id": "py-functions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Functions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/functions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-len"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-loop-errors"
+      ]
+    },
+    {
+      "id": "cs50p",
+      "kind": "university-course",
+      "title": "CS50's Introduction to Programming with Python",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/python/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其周次顺序（函数与变量、条件、循环、异常、库、文件）。",
+      "supports": [
+        "claim-course-order"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-comparisons",
+      "text": "Python 有八种比较运算，优先级相同且高于布尔运算；布尔运算按优先级从低到高是 or、and、not。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-if",
+      "text": "if 语句可以有零个或多个 elif 部分，else 部分可选；elif 是 else if 的缩写。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-indentation",
+      "text": "循环体要缩进：缩进是 Python 组织语句分组的方式。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-while",
+      "text": "while 循环在条件保持为真时反复执行。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-for-range",
+      "text": "for 语句按顺序遍历序列里的每一项；range(5) 生成 0 到 4，给定的终点永远不在生成的序列里，range 可以指定起点和步长。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-break-continue",
+      "text": "break 跳出最内层的 for 或 while 循环；continue 直接进入循环的下一轮。",
+      "sourceIds": [
+        "py-controlflow"
+      ]
+    },
+    {
+      "id": "claim-len",
+      "text": "len() 返回对象的长度，也就是其中元素的个数。",
+      "sourceIds": [
+        "py-functions"
+      ]
+    },
+    {
+      "id": "claim-loop-errors",
+      "text": "IndentationError 是与缩进有关的语法错误，是 SyntaxError 的子类；用户按下中断键（通常是 Ctrl+C）时抛出 KeyboardInterrupt。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "claim-course-order",
+      "text": "CS50P 在函数与变量之后依次讲条件和循环。",
+      "sourceIds": [
+        "cs50p"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "password-check",
+      "path": "public/labs/python-control-flow/password_check.py",
+      "command": "python3 password_check.py",
+      "expectedResult": "输入 abc 输出 too short；输入 12345678 输出 too common；输入 kali-2026-ok 输出 ok。"
+    },
+    {
+      "id": "countdown",
+      "path": "public/labs/python-control-flow/countdown.py",
+      "command": "python3 countdown.py",
+      "expectedResult": "四行：3、2、1、go。"
+    },
+    {
+      "id": "total",
+      "path": "public/labs/python-control-flow/total.py",
+      "command": "python3 total.py",
+      "expectedResult": "6"
+    },
+    {
+      "id": "login",
+      "path": "public/labs/python-control-flow/login.py",
+      "command": "python3 login.py",
+      "expectedResult": "输入 kali123 输出 welcome；连续输错三次后输出 locked。"
+    },
+    {
+      "id": "bad-indent",
+      "path": "public/labs/python-control-flow/bad_indent.py",
+      "command": "python3 bad_indent.py",
+      "expectedResult": "IndentationError: expected an indented block after 'if' statement on line 2。这是故意留错的示例。"
+    },
+    {
+      "id": "endless-loop",
+      "path": "public/labs/python-control-flow/loop.py",
+      "command": "python3 loop.py",
+      "expectedResult": "一直运行不结束；按 Ctrl+C 后以 KeyboardInterrupt 终止。这是故意写成的死循环。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "loop-trace",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

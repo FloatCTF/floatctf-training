@@ -3,189 +3,189 @@
   "reviewedAt": "2026-10-01",
   "reviewer": "Claude",
   "mode": "add-topic",
-  "summary": "基础学期第 1 批四课（搭环境、命令行两课、数据表示）验收。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md。",
+  "summary": "基础学期第 1、2 批共十课验收（搭环境、命令行两课、数据表示、Python 六课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 与 qa/foundations-batch-2.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "三门工具课（环境、命令行两课）以 tool 为主模式，按「最小成功路径 → 机制 → 排错」展开；数据表示课以 concept 为主模式。原有十一课未改动。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "基础学期十课：环境与命令行三课以 tool 为主模式，数据表示以 concept 为主模式，Python 六课以 code 为主模式，按「运行模型、最小可运行示例、执行过程、常见错误、练习」展开。原有十一课未改动。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "四课各有三段节奏（必读、动手、进阶），分段用时之和等于 90 分钟；每课六条学习目标在正文都有对应小节，验收题覆盖机制、读数或预测、实践三个槽位。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "每课三段节奏，分段用时之和等于 90 分钟；学习目标在正文都有对应小节。Python 六课前后衔接：第 10 课的统计脚本逐行对应第 8、9 课的内容，并与第 3 课的管道得到相同结果。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "虚拟机比作「装在文件夹里的电脑」、快照比作「存档点」，都紧跟 VMware 的定义和适用边界（恢复会丢弃之后的改动）。其余三课未使用比喻。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "Python 课只用了一处比喻：变量是贴在值上的名字，随后用逐行执行图给出对象与绑定的精确说法。第 1 课的两处比喻见上一批记录。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "宿主机、客户机、快照、哈希值、终端、shell、提示符、路径、root、重定向、管道、进程、位、字节、十六进制、UTF-8、Base64、编码与加密等术语首次出现时加粗并给出定义。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "解释器、交互模式、脚本、类型、赋值、对象、缩进、函数、参数、返回值、None、局部变量、模块、虚拟环境、列表、字典、可变对象、推导式、str、bytes、异或、文件对象、异常、Traceback 等术语首次出现时加粗并给出定义。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "四课共 35 条来源，全部打开原始页面核对；manifest 中 claims、commands 与 sources 双向引用由门禁校验，正文来源锚点全部命中。第 1 课未在本机复现的部分已标 partial 并写明缺口。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "Python 六课的来源为 Python 3.14 官方教程、标准库参考与语言参考共 20 个页面，另有 Kali 官方文章、CS50P 与两份 RFC，全部打开原页核对；claims 与 sources 的双向引用由门禁校验。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "四课页面上的 109 条终端命令在 Kali 容器里按页面顺序重放：97 条输出逐字一致，12 条差异均为时间戳、进程号等已说明的可变项。roundtrip.sh 运行通过。PowerShell 示例与 VMware 图形界面步骤未复现，依据官方文档。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "Python 六课页面上的 194 条命令与交互语句在 Kali 容器里按页面顺序重放，193 条逐字一致，1 条差异是 pip 缓存提示。五个逐行执行图的数据由追踪真实执行生成。验收题与作业的预期输出用参考解答运行核对过。第 1 批四课的重放记录见 qa/foundations-batch-1.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "第 1 课用提示框写明 Kali 工具只用于自己的虚拟机、靶场和书面授权目标。access.log 中的 IP 全部取自文档保留地址段。四课的 safetyScope 为 not-applicable，不含攻击步骤。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "Python 课不含攻击步骤。登录示例注明密码写在源码里只用于练习；单字节异或一节注明它没有安全性；pip 一节明确不使用 --break-system-packages。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "三个交互各对应一个高理解成本点：路径解析（相对路径随当前目录变化）、权限位（rwx 与八进制互换）、编码转换（字节、Base64 分组与补位）。行为已在浏览器中核对。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "逐行执行图用在五个高理解成本点：名字与对象的绑定、循环中的执行流、函数调用与返回、可变对象的共享、异常发生时的跳转。第 9 课沿用编码转换器。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "四课没有播放类动画，交互均为即时反馈；顺序内容使用静态 StepList 与表格。visualNarrative 的动效计数与页面一致。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "逐行执行图只有上一步、下一步和滑杆，没有自动播放；每一步都改变高亮行、状态和解说，删掉控件信息就不完整。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "减少动态与关闭 JavaScript 时，三个交互组件均呈现静态对照表，文字完整，验收题答案的原生折叠可展开；首页分类卡与路线页为普通链接和静态列表。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "减少动态与关闭 JavaScript 时，逐行执行图显示终态和完整的逐步表（每步的代码行与解说），验收题答案的原生折叠可展开。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "交互控件全部是原生按钮和输入框；权限位开关用空格键切换通过，首页面板的系列切换支持方向键。未逐一做完整的 Tab 顺序走查。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "逐行执行图的按钮与滑杆是原生控件，方向键可以在滑杆上逐步回退；未逐一做完整的 Tab 顺序走查。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "四课在 390 与 1280 宽度、深浅主题下整页横向溢出为零；终端输出、字节表和 Base64 分组只在各自容器内横向滚动。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "Python 六课在 390 与 1280 宽度、深浅主题下共 18 次检查，整页横向溢出为零；长的 Traceback 与代码只在各自容器内横向滚动。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "打印媒体模拟下四课的三道验收题答案全部显示，终端会话保留，复制按钮与站点顶栏隐藏。纸张分页未验收。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "打印媒体模拟下六课的验收题答案、终端会话与代码清单全部显示，站点顶栏隐藏。纸张分页未验收。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "四课各有唯一 H1、专题刊头、目标与前置、分段安排、常见报错、速查卡、结论卡、验收题和来源列表；页内锚点无断链；路线内按路线顺序翻页。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "六课各有唯一 H1、专题刊头、目标与前置、分段安排、常见报错、速查卡、结论卡、验收题和来源列表；页内锚点无断链；路线页显示已上线 10 / 37，下一课为第 11 课。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "新组件沿用现有材质：终端会话用深色代码面板，探索器与 xor-explorer 同框，嵌套图基于 LessonDiagram。截图已核对桌面浅色、深色与手机；修掉了正文样式带进组件的列表与 pre 外边距。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "代码清单沿用站内代码围栏的外观并加下载链接；逐行执行图与其他探索器同框。截图核对了桌面浅色、深色与手机；修掉了代码清单标题栏与代码体之间多出的空隙。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "本地 npm run verify 通过，新增静态资源位于 public/labs/。生产 nginx 与 CSP 验收本轮未执行。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "本地 npm run verify 通过。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1-verification.json",
-      "note": "逐课打开页面检查表格全宽、标题层级、终端块与探索器；发现并修复 Base64 分组错位、终端输出上下空隙过大、ls -l 行空格被折叠三处问题。"
+      "evidenceFile": "qa/foundations-batch-2-verification.json",
+      "note": "逐课打开页面检查表格全宽、代码清单、终端会话与逐行执行图在桌面和手机上的排布。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "每条命令的输出与命令同屏呈现，来自实际运行；下载材料（access.log、roundtrip.sh）在页内可展开查看全文。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "每个脚本先展示完整源码，再展示运行命令与实际输出；交互模式的每条语句与结果同屏。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "每条 claim 只陈述来源页面确有的内容，例如 NAT 的说法绑定 VMware 网络配置文档的原句；社团给出的内存与磁盘建议在正文标明是建议值，不绑定来源。第 1 课 researchStatus 为 partial。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "每条 claim 对应官方文档中的具体语句，例如「简单赋值从不复制数据」绑定教程原句，Kali 上 pip 的限制绑定 Kali 官方文章。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "四课分别以「为什么不直接在 Windows 上学」「你现在在哪」「一份日志里谁在乱翻」「这串字符是什么」开头，后三课在课内回到开头的问题并解决。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "六课分别从上一课留下的东西切入：那一行 python3 -c、密码输错三次、print() 是什么、五个 IP 谁最多、那串字符用 Python 解、把管道写成 Python。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "嵌套层次图说明宿主机、虚拟机软件、客户机的包含关系；其余关系用可操作的探索器呈现。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "逐行执行图把「执行顺序」和「状态变化」这两件文字难以说清的事直接演示出来。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "日志统计与两层编码还原都是 CTF 与日常排查中的真实任务形态；练习目录 ~/lab 贯穿三课。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "示例围绕密码检查、登录重试、日志统计、编码还原与异或，和后续安全课程的任务形态一致。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "每课一张结论卡，另有速查卡汇总命令。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "每课一张结论卡和一张速查卡。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "四课不含播放类动效。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "逐行执行图由学员自己控制步进，没有定时动画。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "每课一个主要交互或图示，位置在对应机制讲解之后、动手环节之前。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "每课一个逐行执行图或转换器，位置在对应机制讲解处。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/foundations-batch-1.md",
-      "note": "本批没有用户提供的讲义或旧页面；公开教程只用于确定章节顺序。"
+      "evidenceFile": "qa/foundations-batch-2.md",
+      "note": "本批没有用户提供的讲义；公开课程只用于确定章节顺序。"
     }
   ]
 }

@@ -8,6 +8,7 @@ import { validateDeploymentConfig } from './validation/deploy.mjs';
 import { validateRoutingFixtures } from './validation/routing.mjs';
 import { validateQa } from './validation/qa.mjs';
 import { validateDataTableCss } from './validation/datatable.mjs';
+import { validateSteppers } from './validation/steppers.mjs';
 
 // 门禁入口：只负责加载数据、按域分派校验、汇总退出码。
 // 领域规则在 scripts/validation/*.mjs；共享断言与收集器在 util.mjs。
@@ -27,6 +28,7 @@ try {
   validateDeploymentConfig();
   validateRoutingFixtures();
   validateDataTableCss();
+  validateSteppers();
   validateQa();
 } catch (error) {
   console.error(`内容门禁异常：${error.stack || error.message}`);

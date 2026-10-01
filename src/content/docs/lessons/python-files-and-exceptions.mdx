@@ -1,0 +1,364 @@
+---
+title: Python 六：文件、异常与读报错
+description: 用 with open 读写文件，读懂多层调用的 Traceback，用 try 和 except 处理可预见的错误，写出统计日志的完整脚本
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import LabDownload from '../../../components/lab-download.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/python-files-and-exceptions.json';
+import tryTrace from '../../../data/steppers/python-try-except.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 count_404.py，输出应当是 4 198.51.100.7 和 1 192.0.2.44 两行。' },
+  { title: '把统计结果写进文件', detail: '统计 access.log 里每个状态码出现的次数，按状态码从小到大写进 status.txt，每行格式为「次数 状态码」。用 cat status.txt 检查，第一行应当是 12 200，一共五行。' },
+  { title: '让 top_ips.py 不怕找不到文件', detail: '给 top_ips.py 加上 try 和 except：access.log 不存在时打印一句提示，不出现 Traceback。先 cd /tmp 再运行它来测试。' },
+  { title: '收集三份 Traceback', detail: '分别制造 ValueError、IndexError 和 FileNotFoundError，把完整的 Traceback 抄下来，在每份旁边标出「直接出错的行」和「错误类型」。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 10"
+  kicker="Files, Tracebacks, try / except"
+  lines={[
+    { text: "Python 六" },
+    { text: "文件、异常与读报错", accent: true },
+  ]}
+  summary="前五课的数据都写在代码里。这一课让脚本读写真正的文件，并且认真对待出错这件事：报错怎么读，哪些错应该提前接住。学完这一课，Python 的基础部分就收尾了。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：把那条管道写成 Python
+
+第 3 课用一条管道统计了日志里每个 IP 的访问次数。第 8 课用字典做了同样的统计，但 IP 是手写在代码里的。
+
+现在把两者接起来：让 Python 自己去读 `access.log`。这需要一个新能力，读文件。而一旦涉及文件，程序就可能遇到自己控制不了的情况：文件不在、内容格式不对。所以这一课的另一半是处理错误。
+
+## 一、读文件与写文件
+
+### 1. 准备文件
+
+把第 3 课的日志复制到 Python 练习目录：
+
+<TerminalSession
+  title="把日志拿过来"
+  steps={[
+    { cmd: 'cd ~/lab/python' },
+    { cmd: 'cp ~/lab/access.log .', note: '第 3 课的文件不在了的话，从下面重新下载，放进 ~/lab/python。' },
+  ]}
+/>
+
+<LabDownload file="labs/python-files-and-exceptions/access.log" label="下载示例日志" />
+
+### 2. with open：打开，用完自动关
+
+<CodeFile file="labs/python-files-and-exceptions/read_log.py" />
+
+<TerminalSession
+  title="读出所有行"
+  steps={[
+    {
+      cmd: 'python3 read_log.py',
+      out: '20\n192.0.2.10 - - [01/Oct/2026:09:12:01 +0800] "GET / HTTP/1.1" 200 5123\n\n192.0.2.10 - - [01/Oct/2026:09:12:01 +0800] "GET / HTTP/1.1" 200 5123',
+      note: '第一次打印后面多了一个空行，第二次没有。',
+    },
+  ]}
+/>
+
+- `open("access.log")` 打开文件，得到一个**文件对象**。
+- `with … as f:` 把文件对象绑到名字 f 上。缩进块结束时，文件会被自动关闭，不管中间有没有出错。
+- `f.readlines()` 把所有行读成一个列表，每个元素是一行。
+
+多出来的空行说明了一件事：读进来的每一行**末尾都带着换行符**。`print` 自己还会再加一个换行，于是空了一行。第 9 课说过读入的行几乎总要先 `strip()`，原因就在这里。
+
+在交互模式里看得更清楚：
+
+<TerminalSession
+  title="一行的真实内容"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'f = open("access.log")' },
+    { cmd: 'first = f.readline()', note: 'readline 只读一行。' },
+    { cmd: 'first', out: '\'192.0.2.10 - - [01/Oct/2026:09:12:01 +0800] "GET / HTTP/1.1" 200 5123\\n\'', note: '末尾的 \\n 就是换行符。' },
+    { cmd: 'f.close()', note: '不用 with 的话，要自己关。' },
+    { cmd: 'open("access.log").read(10)', out: "'192.0.2.10'", note: 'read(10) 读前 10 个字符。默认是文本模式，得到 str。' },
+    { cmd: 'open("access.log", "rb").read(10)', out: "b'192.0.2.10'", note: '模式里加 b 是二进制模式，得到 bytes。读图片、压缩包这类非文字文件时用它。' },
+  ]}
+/>
+
+（来源：[Input and Output](#source-py-inputoutput)）
+
+### 3. 逐行处理：完整的统计脚本
+
+文件对象可以直接放进 `for`，每一圈拿到一行。把它和第 8 课的字典计数合在一起：
+
+<CodeFile file="labs/python-files-and-exceptions/top_ips.py" />
+
+<TerminalSession
+  title="和第 3 课的管道得到同样的结果"
+  steps={[
+    { cmd: 'python3 top_ips.py', out: '8 192.0.2.10\n6 198.51.100.7\n4 203.0.113.5\n2 192.0.2.44' },
+  ]}
+/>
+
+这段代码里没有新语法，每一行都来自前面的课：
+
+<DataTable
+  caption="top_ips.py 用到的东西"
+  headers={["代码", "做什么", "哪一课"]}
+  rows={[
+    ["with open(...) as f / for line in f", "打开文件，逐行读", "本课"],
+    ["line.split()[0]", "按空白切开，取第一段", "第 9 课"],
+    ["counts[ip] = counts.get(ip, 0) + 1", "字典计数", "第 8 课"],
+    ["sorted(counts, key=counts.get, reverse=True)", "按次数从大到小排", "第 8 课"],
+  ]}
+  columnRatios={[2, 1.6, 0.8]}
+/>
+
+管道一行就能做的事，为什么还要写成一个 Python 脚本？因为下一步的需求管道很快就接不住了：只统计某个时间段、同时统计两个字段、把结果存成别的格式。脚本可以一行一行地加。
+
+### 4. 写文件：w 覆盖，a 追加
+
+<CodeFile file="labs/python-files-and-exceptions/write_report.py" />
+
+<TerminalSession
+  title="运行两次，文件内容不变"
+  steps={[
+    { cmd: 'python3 write_report.py', note: '没有输出。结果在文件里。' },
+    { cmd: 'cat report.txt', out: '404 report\ncount: 5\nchecked by kali' },
+    { cmd: 'python3 write_report.py' },
+    { cmd: 'cat report.txt', out: '404 report\ncount: 5\nchecked by kali', note: '再运行一次，还是三行：第一个 open 用的是 w，把旧内容清空了。' },
+  ]}
+/>
+
+<DataTable
+  caption="open 的第二个参数"
+  headers={["模式", "含义", "文件已存在时", "对应的 shell 写法"]}
+  rows={[
+    ["\"r\"（默认）", "读", "正常读取", "< 文件"],
+    ["\"w\"", "写", "先清空再写。原内容会丢", "> 文件"],
+    ["\"a\"", "追加", "接在末尾", ">> 文件"],
+    ["加 b，如 \"rb\"", "二进制模式", "读写的是 bytes", ""],
+  ]}
+  columnRatios={[1.2, 1, 1.6, 1.2]}
+/>
+
+`f.write()` 不会自动加换行，需要自己写 `\n`。这一点和 `print` 相反。
+
+### 5. 相对路径相对于谁
+
+`open("access.log")` 里写的是相对路径。它相对的是**运行命令时你所在的目录**，和脚本文件放在哪无关：
+
+<TerminalSession
+  title="换一个目录运行同一个脚本"
+  steps={[
+    { cmd: 'cd /tmp' },
+    {
+      cmd: 'python3 ~/lab/python/top_ips.py',
+      out: 'Traceback (most recent call last):\n  File "/home/kali/lab/python/top_ips.py", line 2, in <module>\n    with open("access.log") as f:\n         ~~~~^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: \'access.log\'',
+      note: '脚本找到了，但它在 /tmp 里找 access.log，那里没有。',
+    },
+    { cmd: 'cd ~/lab/python' },
+  ]}
+/>
+
+这和第 2 课讲的规则完全一致：相对路径从当前目录算起。
+
+## 二、读懂 Traceback
+
+### 1. 多层调用时的报错
+
+前几课见到的 Traceback 只有一段。函数调用函数时，它会变长：
+
+<CodeFile file="labs/python-files-and-exceptions/crash.py" />
+
+<TerminalSession
+  title="三段 File，一层套一层"
+  steps={[
+    {
+      cmd: 'python3 crash.py',
+      out: '200\nTraceback (most recent call last):\n  File "/home/kali/lab/python/crash.py", line 9, in <module>\n    main()\n    ~~~~^^\n  File "/home/kali/lab/python/crash.py", line 7, in main\n    print(parse_status("broken line"))\n          ~~~~~~~~~~~~^^^^^^^^^^^^^^^\n  File "/home/kali/lab/python/crash.py", line 3, in parse_status\n    return int(parts[8])\n               ~~~~~^^^\nIndexError: list index out of range',
+    },
+  ]}
+/>
+
+第一行的 `200` 说明第一次调用是成功的，出错的是第二次。
+
+<DataTable
+  caption="从下往上读这份 Traceback"
+  headers={["顺序", "内容", "读出什么"]}
+  rows={[
+    ["1", "IndexError: list index out of range", "错误类型：下标越界"],
+    ["2", "line 3, in parse_status：return int(parts[8])", "直接出错的行。波浪线标在 parts[8] 上：parts 没有第 8 个元素"],
+    ["3", "line 7, in main：print(parse_status(\"broken line\"))", "谁调用的它，传了什么：传进去的是 \"broken line\"，切开只有两段"],
+    ["4", "line 9, in <module>：main()", "最外层：脚本的第 9 行调用了 main"],
+  ]}
+  columnRatios={[0.5, 2.6, 2.4]}
+/>
+
+第一行的 `most recent call last` 说的就是这个排列顺序：最近发生的调用排在最后。（来源：[Errors and Exceptions](#source-py-errors)）
+
+读 Traceback 的三步：
+
+1. 看最后一行，知道是哪一类错。
+2. 看它上面那一段，找到直接出错的行。
+3. 再往上看调用链，找出是哪里传来了有问题的数据。出错的行不一定是该改的行，这里该处理的是第 7 行传进来的那条不合格的日志。
+
+### 2. 常见的四种异常
+
+Python 把运行时的错误叫**异常**（exception）。每种异常有自己的名字，名字本身就在说明出了什么事。
+
+<TerminalSession
+  title="四种异常，四种原因"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    {
+      cmd: 'int("abc")',
+      out: 'Traceback (most recent call last):\n  File "<python-input-0>", line 1, in <module>\n    int("abc")\n    ~~~^^^^^^^\nValueError: invalid literal for int() with base 10: \'abc\'',
+      note: 'ValueError：类型对，值不对。int() 收到的是字符串，但内容不是数字。',
+    },
+    {
+      cmd: '1 / 0',
+      out: 'Traceback (most recent call last):\n  File "<python-input-1>", line 1, in <module>\n    1 / 0\n    ~~^~~\nZeroDivisionError: division by zero',
+    },
+    {
+      cmd: '[1, 2][5]',
+      out: 'Traceback (most recent call last):\n  File "<python-input-2>", line 1, in <module>\n    [1, 2][5]\n    ~~~~~~^^^\nIndexError: list index out of range',
+    },
+    {
+      cmd: 'open("nosuch.log")',
+      out: 'Traceback (most recent call last):\n  File "<python-input-3>", line 1, in <module>\n    open("nosuch.log")\n    ~~~~^^^^^^^^^^^^^^\nFileNotFoundError: [Errno 2] No such file or directory: \'nosuch.log\'',
+      note: 'FileNotFoundError：和 shell 里 cat 一个不存在的文件时看到的是同一句话。',
+    },
+  ]}
+/>
+
+（来源：[Built-in Exceptions](#source-py-exceptions)）
+
+## 三、用 try 和 except 处理错误
+
+### 1. 接住一个异常
+
+没人处理的异常会让程序立刻终止并打印 Traceback。有些错误是可以预见的：用户输入的不是数字，文件名打错了。对这类错误，可以提前写好「出了这种错该怎么办」。
+
+<CodeFile file="labs/python-files-and-exceptions/safe_number.py" />
+
+逐行走一遍，注意第 4 行有没有被执行：
+
+<CodeStepper
+  client:visible
+  trace={tryTrace}
+  view="values"
+  title="异常发生后，执行流跳到哪里"
+  intro="高亮行从第 3 行直接跳到第 5 行。第 4 行被跳过了。"
+/>
+
+<TerminalSession
+  title="运行验证"
+  steps={[
+    { cmd: 'python3 safe_number.py', out: 'not a number: abc\ndone' },
+  ]}
+/>
+
+规则是：先执行 `try` 块；一旦某一行抛出异常，`try` 块里剩下的代码全部跳过，Python 去找类型匹配的 `except`；找到就执行它，然后从整个 try 语句后面继续。没有发生异常时，`except` 块被跳过。（来源：[Errors and Exceptions](#source-py-errors)）
+
+### 2. 输错了就再问一次
+
+<CodeFile file="labs/python-files-and-exceptions/ask_port.py" />
+
+<TerminalSession
+  title="直到输入的是数字为止"
+  steps={[
+    {
+      cmd: 'python3 ask_port.py',
+      stdin: ['abc', '8080'],
+      out: 'port: abc\nplease enter a number\nport: 8080\nok: 8080',
+    },
+  ]}
+/>
+
+`while True` 是一个条件永远成立的循环，靠里面的 `break` 结束。输入不是数字时，`except` 块打印提示并 `continue`，回到循环开头重新问；输入合格时，执行到 `break` 跳出。第 5 课的 `age.py` 遇到 `eighteen` 会直接崩溃，现在你知道怎么修了。
+
+### 3. 文件不存在时给一句人话
+
+<CodeFile file="labs/python-files-and-exceptions/open_missing.py" />
+
+<TerminalSession
+  title="同一个脚本，文件在与不在"
+  steps={[
+    { cmd: 'python3 open_missing.py', stdin: ['access.log'], out: 'file: access.log\n20 lines' },
+    { cmd: 'python3 open_missing.py', stdin: ['nosuch.log'], out: 'file: nosuch.log\nno such file: nosuch.log', note: '没有 Traceback，程序正常结束。' },
+  ]}
+/>
+
+<Callout variant="warning" title="只接你知道怎么处理的异常">
+`except` 后面要写明具体的异常类型。只写一个光秃秃的 `except:` 会把所有错误都吞掉，包括你写错变量名这种本该立刻暴露的 bug，程序看起来在运行，结果却是错的。接住之后至少要打印一句说明，不要用空的 except 块把错误藏起来。
+</Callout>
+
+<DataTable
+  caption="本课的常见报错"
+  headers={["最后一行或现象", "原因", "处理"]}
+  rows={[
+    ["FileNotFoundError: [Errno 2] No such file or directory: 'access.log'", "当前目录里没有这个文件", "pwd 和 ls 确认；相对路径是相对于运行命令时所在的目录"],
+    ["打印出来的每行之间多一个空行", "读入的行末尾带着换行，print 又加了一个", "print(line.strip())"],
+    ["写文件后内容挤在一行", "write 不会自动换行", "在要换行的地方写 \\n"],
+    ["运行一次后文件原有内容没了", "用 \"w\" 模式打开了已有的文件", "追加用 \"a\"；重要文件先 cp 一份"],
+    ["IndexError: list index out of range（在 split 之后）", "这一行的字段数比预期少，可能是空行或格式不同的行", "先 print(parts) 看实际切出了什么；用 if len(parts) > 8 判断"],
+    ["ValueError: invalid literal for int() with base 10", "要转换的文字不是数字，或带着空白以外的多余字符", "print(repr(文字)) 看清它到底是什么"],
+  ]}
+  columnRatios={[2.1, 1.6, 1.8]}
+/>
+
+边界：`try` 和 `except` 处理的是运行时的异常。缩进错、括号不配对这类语法错误发生在程序开始执行之前，接不住，只能改代码。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'with open("f") as f:', description: '打开文件读，缩进块结束时自动关闭。' },
+    { term: 'for line in f:', description: '逐行读。每行末尾带换行，常配 strip()。' },
+    { term: 'f.read() / f.readlines()', description: '读成一个字符串 / 读成行的列表。' },
+    { term: 'open("f", "w") / "a" / "rb"', description: '覆盖写 / 追加 / 二进制读。' },
+    { term: 'f.write("文字\\n")', description: '写入。换行要自己加。' },
+    { term: 'Traceback', description: '从最后一行往上读：错误类型，直接出错的行，调用链。' },
+    { term: 'try: … except ValueError: …', description: '接住指定类型的异常。' },
+    { term: 'while True: … break', description: '循环到满足条件为止。' },
+    { term: 'ValueError / IndexError', description: '值不合适 / 下标越界。' },
+    { term: 'KeyError / FileNotFoundError', description: '字典里没有这个键 / 文件不存在。' },
+  ]}
+/>
+
+<KeyTakeaway>
+读文件用 `with open(...) as f` 加 `for line in f`，每行先 `strip()` 再处理；写文件分清 `"w"` 覆盖和 `"a"` 追加。报错从最后一行读起，再顺着调用链往上找原因。能预见的错误用 `try` 和 `except` 接住并给出提示，只接明确知道怎么处理的类型。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 70 分钟。Python 部分到这里告一段落，下一课开始学 Git，把这几课写的脚本管理起来。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

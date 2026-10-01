@@ -22,7 +22,8 @@
       "在终端里用四条命令确认当前用户、系统版本和默认 shell",
       "拍摄快照并恢复到快照，说明恢复后哪些改动会消失",
       "区分 NAT、桥接和仅主机三种网络模式的用途",
-      "用 apt 完成一次系统更新，并根据常见报错定位问题"
+      "用 apt 完成一次系统更新，并根据常见报错定位问题",
+      "安装中文输入法，并在中英文输入之间切换"
     ],
     "prerequisites": [
       "一台 64 位 Windows 10 或 Windows 11 电脑，有管理员权限",
@@ -77,15 +78,15 @@
       "kind": "动手",
       "title": "装好并开机",
       "heading": "二、",
-      "minutes": 45,
+      "minutes": 40,
       "checkpoint": "用 kali 账号登录，终端里 whoami 输出 kali。"
     },
     {
       "kind": "进阶",
-      "title": "快照、网络与更新",
+      "title": "快照、网络、更新与输入法",
       "heading": "三、",
-      "minutes": 25,
-      "checkpoint": "有一个名为 clean 的快照，并完成一次 apt 更新。"
+      "minutes": 30,
+      "checkpoint": "完成一次 apt 更新，能在终端里打出中文，并有一个名为 clean 的快照。"
     }
   ],
   "researchStatus": {
@@ -100,15 +101,17 @@
       "VMware Workstation Pro 26H1 snapshots take revert",
       "VMware Workstation Pro 26H1 bridged NAT host-only networking",
       "Microsoft Learn Get-FileHash SHA256",
-      "Microsoft Support enable virtualization on Windows UEFI"
+      "Microsoft Support enable virtualization on Windows UEFI",
+      "Fcitx 5 setup im-config Debian",
+      "Fcitx 5 configtool add input method"
     ],
-    "notes": "已核验：Kali 官方文档的镜像导入步骤、默认账号、更新命令和配置建议；Broadcom 文档中 Workstation Pro 的授权、快照与三种网络模式定义；微软文档的 Get-FileHash 用法与 UEFI 开启虚拟化的入口。终端命令在 kalilinux/kali-rolling 容器里以 kali 用户、交互式 zsh 实际运行并记录输出。未核验：没有在 Windows 上实际操作 VMware 的图形界面，安装与导入步骤完全依据上述官方文档；PowerShell 的输出格式引自微软文档示例，未在本机复现；容器不含桌面环境，登录界面与桌面外观未截图核对。因此标记为 partial。"
+    "notes": "已核验：Kali 官方文档的镜像导入步骤、默认账号、更新命令和配置建议；Broadcom 文档中 Workstation Pro 的授权、快照与三种网络模式定义；微软文档的 Get-FileHash 用法与 UEFI 开启虚拟化的入口。终端命令在 kalilinux/kali-rolling 容器里以 kali 用户、交互式 zsh 实际运行并记录输出。未核验：没有在 Windows 上实际操作 VMware 的图形界面，安装与导入步骤完全依据上述官方文档；PowerShell 的输出格式引自微软文档示例，未在本机复现；容器不含桌面环境，登录界面与桌面外观未截图核对。输入法部分：安装命令与 im-config -w fcitx5 在容器里实际运行通过；默认切换键 Ctrl+空格、配置工具里「Only Show Current Language」选项与 Pinyin 条目取自 fcitx5 5.1.21 安装后的程序文件；注销重登与在配置工具里添加拼音的图形界面操作依据 Fcitx 官方 wiki 和软件包自带的 README.Debian，未实际操作。因此标记为 partial。"
   },
   "versionInfo": {
     "targetVersion": "Kali Linux 2026.2 预装 VMware 镜像；VMware Workstation Pro 26H1",
     "environment": "Windows 10 或 Windows 11 宿主机。终端输出取自 kalilinux/kali-rolling 容器（os-release 报告 2026.3，zsh 5.9.2，apt 3.3.3），以 kali 用户登录的交互式 zsh。",
     "verifiedAt": "2026-10-01",
-    "knownDifferences": "Kali 是滚动发行版，更新后 VERSION_ID 与可升级包数量会变化；刚导入的 2026.2 镜像第一次更新时下载量远大于正文示例。VirtualBox 用户导入的是 .vbox 文件而不是 .vmx。VMware 界面语言不同，菜单文字不同，位置相同。"
+    "knownDifferences": "Kali 是滚动发行版，更新后 VERSION_ID 与可升级包数量会变化；刚导入的 2026.2 镜像第一次更新时下载量远大于正文示例。VirtualBox 用户导入的是 .vbox 文件而不是 .vmx。VMware 界面语言不同，菜单文字不同，位置相同。输入法版本为 fcitx5 5.1.21、fcitx5-chinese-addons 5.1.13、im-config 1.1；im-config 1.1 用 -w 写入配置，较早的版本用 -n。"
   },
   "sources": [
     {
@@ -299,6 +302,36 @@
       ]
     },
     {
+      "id": "fcitx-setup",
+      "kind": "official-doc",
+      "title": "Setup Fcitx 5",
+      "publisher": "Fcitx",
+      "url": "https://fcitx-im.org/wiki/Setup_Fcitx_5",
+      "publishedAt": "2023-12-07",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的最后编辑日期。",
+      "supports": [
+        "claim-im-config",
+        "cmd-install-fcitx5",
+        "cmd-im-config"
+      ]
+    },
+    {
+      "id": "fcitx-configtool",
+      "kind": "official-doc",
+      "title": "Configtool (Fcitx 5)",
+      "publisher": "Fcitx",
+      "url": "https://fcitx-im.org/wiki/Configtool_(Fcitx_5)",
+      "publishedAt": "2024-03-18",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的最后编辑日期。",
+      "supports": [
+        "claim-fcitx-configtool"
+      ]
+    },
+    {
       "id": "ms-get-filehash",
       "kind": "official-doc",
       "title": "Get-FileHash (Microsoft.PowerShell.Utility)",
@@ -410,6 +443,20 @@
       ]
     },
     {
+      "id": "claim-im-config",
+      "text": "在 Debian 及其衍生发行版上，用 im-config 选择 fcitx5，可以让它随图形界面登录自动启动并设置好所需的环境变量。",
+      "sourceIds": [
+        "fcitx-setup"
+      ]
+    },
+    {
+      "id": "claim-fcitx-configtool",
+      "text": "fcitx5-configtool 是 Fcitx 5 的图形配置工具；在它的 Qt 界面里，从右侧列表选中输入法后双击或点中间的添加按钮即可加入；切换输入法的按键在全局选项的热键配置里查看和修改。",
+      "sourceIds": [
+        "fcitx-configtool"
+      ]
+    },
+    {
       "id": "claim-file-hash",
       "text": "Get-FileHash 默认使用 SHA256；文件内容哪怕只改一个字符，哈希值也会改变，因此可以用哈希值确认下载的文件没有损坏或被替换。",
       "sourceIds": [
@@ -464,6 +511,22 @@
       "sourceIds": [
         "kali-updating",
         "kali-sudo"
+      ]
+    },
+    {
+      "id": "cmd-install-fcitx5",
+      "command": "sudo apt install -y fcitx5 fcitx5-chinese-addons",
+      "expectedResult": "安装输入法框架与拼音等中文输入法，结束后回到提示符。",
+      "sourceIds": [
+        "fcitx-setup"
+      ]
+    },
+    {
+      "id": "cmd-im-config",
+      "command": "im-config -w fcitx5",
+      "expectedResult": "没有输出；~/.xinputrc 里写入 run_im fcitx5，下次登录时生效。",
+      "sourceIds": [
+        "fcitx-setup"
       ]
     },
     {

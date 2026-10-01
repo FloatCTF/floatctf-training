@@ -41,10 +41,18 @@ export const importSteps = [
   { title: '登录', detail: '出现登录界面后，用户名输入 kali，密码输入 kali，都是小写。' },
 ];
 
+export const inputMethodSteps = [
+  { title: '注销并重新登录', detail: '输入法在登录图形界面时启动。从右上角的菜单注销，或者直接重启虚拟机，再用 kali 登录。' },
+  { title: '打开配置工具', detail: '在终端执行 fcitx5-configtool，会弹出一个设置窗口。左边是已启用的输入法，右边是可以添加的。' },
+  { title: '添加拼音', detail: '取消勾选右侧列表下方的 Only Show Current Language，然后在搜索框里输入 Pinyin，选中它，点中间的左箭头把它加到左边，最后点确定。系统语言是英文时，不取消那个勾选就看不到中文输入法。' },
+  { title: '试一下', detail: '打开终端，按 Ctrl + 空格切到拼音，输入 zhong 选「中」；再按一次 Ctrl + 空格切回英文。' },
+];
+
 export const homework = [
   { title: '改掉默认密码', detail: '在终端输入 passwd，先输一次当前密码 kali，再输两次新密码。输入时屏幕上不会显示任何字符，这是正常的。改完后把新密码记在可靠的地方。' },
   { title: '完成一次完整更新', detail: '执行 sudo apt update 和 sudo apt full-upgrade -y。第一次更新要下载的包很多，接好电源，等它回到提示符。' },
-  { title: '拍快照 clean', detail: '更新完成后拍一个名为 clean 的快照。之后的课上把环境弄乱了，就回到这里。' },
+  { title: '装好中文输入法', detail: '按第三节的步骤安装并配置 fcitx5，确认能在终端里用 Ctrl + 空格切换并打出中文。' },
+  { title: '拍快照 clean', detail: '更新和输入法都弄好之后，拍一个名为 clean 的快照。之后的课上把环境弄乱了，就回到这里。' },
   { title: '把结果发到群里', detail: '在终端执行 cat /etc/os-release，把输出截图发到社团群，作为环境搭好的凭证。' },
 ];
 
@@ -190,7 +198,7 @@ Kali 官方制作这份虚拟机时给它分了 2 GB 内存和 80 GB 的磁盘�
 
 Kali 默认以普通用户 kali 登录，日常操作没有管理员权限。需要管理员权限的命令在前面加 `sudo`，输入自己的密码后执行。（来源：[All about sudo](#source-kali-sudo)）
 
-## 三、快照、网络与更新
+## 三、快照、网络、更新与输入法
 
 ### 1. 快照：出错之前的存档点
 
@@ -248,7 +256,27 @@ Kali 的默认软件源是滚动更新的 `kali-rolling` 分支：里面的包�
 
 然后执行 `sudo apt full-upgrade -y` 完成升级。`-y` 表示对「是否继续」自动回答「是」。屏幕会滚动很多行，等它回到 `$` 提示符就结束了。（来源：[Updating Kali](#source-kali-updating)）
 
-更新完成后，拍下第一个快照，命名为 `clean`。
+### 4. 装中文输入法
+
+Kali 的预装镜像能显示中文，但没有中文输入法。之后的课会在终端和代码里用到中文，这里一次装好。用的是 **Fcitx 5**：`fcitx5` 是输入法框架，`fcitx5-chinese-addons` 提供拼音等中文输入法。
+
+<TerminalSession
+  title="安装并设为默认"
+  steps={[
+    { cmd: 'sudo apt install -y fcitx5 fcitx5-chinese-addons', note: '安装过程会滚动很多行，等它回到提示符。' },
+    { cmd: 'im-config -w fcitx5', note: '把 fcitx5 设为登录后自动启动的输入法。没有输出就是成功。' },
+  ]}
+/>
+
+<StepList title="让输入法生效" steps={inputMethodSteps} />
+
+（来源：[Setup Fcitx 5](#source-fcitx-setup)、[Configtool (Fcitx 5)](#source-fcitx-configtool)）
+
+<Callout variant="warning" title="敲命令和代码时切回英文">
+中文输入状态下打出来的括号、引号、冒号、逗号是全角符号，长得和英文的很像，但命令和代码都不认。养成习惯：只在需要打汉字时切到拼音，打完立刻用 Ctrl + 空格切回英文。
+</Callout>
+
+更新和输入法都弄好之后，拍下第一个快照，命名为 `clean`。
 
 ## 常见问题与排错
 
@@ -261,6 +289,7 @@ Kali 的默认软件源是滚动更新的 `kali-rolling` 分支：里面的包�
     ["登录提示密码错误", "用户名或密码输错，或开了大写锁定", "用户名和密码都是小写的 kali。"],
     ["输入 sudo 的密码时没有任何反应", "终端不回显密码", "正常现象。照常输入后按回车。"],
     ["apt update 报网络错误", "虚拟机没有连上网络", "在虚拟机设置里确认网络适配器是 NAT 且处于已连接状态，再确认 Windows 自己能上网。"],
+    ["按 Ctrl + 空格没有反应，打不出中文", "安装后没有重新登录，或没有在配置工具里添加 Pinyin", "注销重新登录；执行 fcitx5-configtool，确认左边的列表里有 Pinyin"],
     ["虚拟机非常卡", "宿主机内存不够，或同时开了太多程序", "关掉 Windows 上不用的程序；16 GB 内存的电脑可以把虚拟机内存调到 4 GB。"],
   ]}
   columnRatios={[1.3, 1.2, 2]}
@@ -278,6 +307,7 @@ Kali 的默认软件源是滚动更新的 `kali-rolling` 分支：里面的包�
     { term: 'sudo apt update', description: '刷新软件清单。' },
     { term: 'sudo apt full-upgrade -y', description: '升级全部已安装的软件。' },
     { term: 'Ctrl + Alt', description: '把鼠标从虚拟机还给 Windows。' },
+    { term: 'Ctrl + 空格', description: '在英文和中文拼音之间切换。敲命令和代码时保持英文。' },
     { term: '快照', description: 'VM › Snapshot › Take Snapshot 拍摄，Revert to Snapshot 恢复。' },
   ]}
 />
@@ -287,7 +317,7 @@ Kali 预装了大量扫描和攻击工具。它们只能用在三类目标上：
 </Callout>
 
 <KeyTakeaway>
-虚拟机是一台装在文件夹里的电脑：VMware 负责模拟，Kali 是装在里面的系统，快照让它随时回到过去。环境搭好的三个标志是：能用 kali 登录，`whoami` 输出 kali，有一个名为 clean 的快照。
+虚拟机是一台装在文件夹里的电脑：VMware 负责模拟，Kali 是装在里面的系统，快照让它随时回到过去。环境搭好的标志是：能用 kali 登录，`whoami` 输出 kali，能切出中文输入法，有一个名为 clean 的快照。
 </KeyTakeaway>
 
 ## 学习验收

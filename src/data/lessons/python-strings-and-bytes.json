@@ -1,0 +1,345 @@
+{
+  "lessonPlan": {
+    "audience": "学过数据表示一课、会用列表和函数的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "subtle",
+    "visualStory": "同一段文字在 str 与 bytes 两种类型之间的转换：字符经 encode 变成字节，字节写成十六进制与 Base64；沿用数据表示一课的编码转换器，对照 Python 里 encode、hex、b64encode 各自对应哪一层",
+    "learningObjectives": [
+      "用 split、join、strip、replace、startswith 和切片处理字符串",
+      "用 ord、chr、hex、bin、int(x, 16) 和格式说明在字符、数字与进制之间转换",
+      "区分 str 和 bytes，用 encode() 与 decode() 互相转换，解释两者长度为什么不同",
+      "用 bytes.fromhex、hex()、base64 和 urllib.parse 完成编码与解码",
+      "说明异或运算的性质，写出单字节异或函数",
+      "读懂 str 与 bytes 混用、解码失败和补位错误三类报错"
+    ],
+    "prerequisites": [
+      "python-collections",
+      "data-representation",
+      "知道 UTF-8、十六进制和 Base64 各是什么"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-str-bytes-length",
+      "kind": "mechanism",
+      "title": "两个长度为什么不一样",
+      "question": "s = \"中A\"。len(s) 是 2，len(s.encode()) 是 4。同一段内容为什么有两个长度？如果要把它写进文件或通过网络发出去，占用的是哪一个？",
+      "answer": "str 是字符的序列，len 数的是字符个数：「中」和 A，共 2 个。encode() 按 UTF-8 把字符变成字节，得到 bytes；bytes 是字节的序列，len 数的是字节个数：「中」占 3 个字节，A 占 1 个，共 4 个。文件和网络传输的都是字节，所以占用的是 4。凡是协议或文件格式里说到「长度」，默认指的是字节数。",
+      "sourceIds": [
+        "py-stdtypes",
+        "rfc3629"
+      ]
+    },
+    {
+      "id": "check-xor-by-hand",
+      "kind": "calculation",
+      "title": "手算一次异或",
+      "question": "把 0x41 和 0x20 各写成 8 位二进制，逐位做异或（两位相同得 0，不同得 1），写出结果的二进制、十六进制，以及它对应的 ASCII 字符。再回答：对结果再异或一次 0x20 会得到什么？",
+      "answer": "0x41 是 01000001，0x20 是 00100000。逐位异或得 01100001，也就是 0x61，对应小写字母 a。再异或一次 0x20 又回到 0x41，也就是大写 A。同一个数异或两次会抵消，这是异或能同时用于「加密」和「解密」的原因。顺带可以看出，ASCII 里大小写字母只差 0x20 这一位。核对：交互模式里 hex(0x41 ^ 0x20) 显示 '0x61'。",
+      "sourceIds": [
+        "py-expressions",
+        "rfc20"
+      ]
+    },
+    {
+      "id": "check-decode-three-layers",
+      "kind": "practice",
+      "title": "用 Python 解三层",
+      "question": "下面这串字符的生成过程是：原文先逐字节异或 0x13，结果写成十六进制字符串，再做 Base64：Nzg3MjdmN2E2ODYzNmE2NzdiN2M3ZDRjNzE2YTY3NzY2MDZl 。写一个 Python 脚本把它还原成原文。",
+      "answer": "解的顺序和生成相反。参考写法：import base64；定义 xor(data, key) 返回 bytes(b ^ key for b in data)；hex_text = base64.b64decode(密文).decode()，得到十六进制字符串；raw = bytes.fromhex(hex_text)，得到异或后的字节；print(xor(raw, 0x13).decode())。自查标准：输出 kali{python_bytes}。每一步都要清楚手里拿的是 str 还是 bytes：b64decode 给出 bytes，要 decode 成 str 才能交给 fromhex；fromhex 给出 bytes，才能逐字节异或。",
+      "sourceIds": [
+        "py-base64",
+        "py-stdtypes",
+        "py-expressions"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "字符串的常用操作",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能用 split 从一行日志里取出 IP 和状态码。"
+    },
+    {
+      "kind": "动手",
+      "title": "str 与 bytes",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "能说出 encode 和 decode 各把什么变成什么。"
+    },
+    {
+      "kind": "进阶",
+      "title": "编码、解码与异或",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "decode_layers.py 的最后一行输出 flag{hello}。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python built-in types str methods split join strip replace startswith",
+      "Python built-in types bytes immutable sequences of single bytes fromhex hex decode",
+      "Python built-in functions ord chr hex bin int base",
+      "Python format specification mini-language x b",
+      "Python base64 b64encode b64decode binascii.Error",
+      "Python urllib.parse quote unquote",
+      "Python expressions binary bitwise operations XOR"
+    ],
+    "notes": "语言行为绑定 Python 3.14 标准库参考与语言参考；UTF-8 与 ASCII 的规则沿用数据表示一课的 RFC。全部脚本与交互模式的输入输出在 kalilinux/kali-rolling 容器（Python 3.14.7）里实际运行。base64.b64decode 报错时的调用栈里含有标准库文件的路径与行号，随 Python 版本变化，正文已说明。"
+  },
+  "sources": [
+    {
+      "id": "py-stdtypes",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Types",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/stdtypes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-str",
+        "claim-bytes",
+        "claim-encode-decode",
+        "claim-hex-bytes"
+      ]
+    },
+    {
+      "id": "py-functions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Functions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/functions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-conversion-functions"
+      ]
+    },
+    {
+      "id": "py-string",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: string (Format Specification Mini-Language)",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/string.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-format-spec"
+      ]
+    },
+    {
+      "id": "py-base64",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: base64",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/base64.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-base64-module"
+      ]
+    },
+    {
+      "id": "py-urllib-parse",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: urllib.parse",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/urllib.parse.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-urllib-quote"
+      ]
+    },
+    {
+      "id": "py-expressions",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 6. Expressions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/expressions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-xor"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-unicode-decode-error"
+      ]
+    },
+    {
+      "id": "rfc3629",
+      "kind": "specification",
+      "title": "RFC 3629: UTF-8, a transformation format of ISO 10646",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc3629",
+      "publishedAt": "2003-11-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-utf8-ascii"
+      ]
+    },
+    {
+      "id": "rfc20",
+      "kind": "specification",
+      "title": "RFC 20: ASCII format for network interchange",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc20",
+      "publishedAt": "1969-10-16",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "supports": [
+        "claim-utf8-ascii"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-str",
+      "text": "str 是由 Unicode 码点组成的不可变序列。split() 按分隔符把字符串拆成列表，join() 把一组字符串连接起来，strip() 去掉首尾的字符，replace() 返回替换后的副本，这些方法都返回新字符串。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-bytes",
+      "text": "bytes 是由单个字节组成的不可变序列；字面值里只允许 ASCII 字符，大于 127 的值要用转义写出；它的行为像整数的不可变序列，每个值在 0 到 255 之间。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-encode-decode",
+      "text": "str.encode() 把字符串编码成 bytes，默认编码是 utf-8；bytes.decode() 按指定编码把字节解码成字符串。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-hex-bytes",
+      "text": "bytes.fromhex() 把每字节两位的十六进制字符串解码成 bytes；bytes.hex() 返回每个字节两位十六进制的字符串。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-conversion-functions",
+      "text": "ord() 返回字符的 Unicode 码点，chr() 返回码点对应的字符；hex() 和 bin() 把整数转成带 0x、0b 前缀的字符串；int(string, base) 按指定进制把字符串转成整数。",
+      "sourceIds": [
+        "py-functions"
+      ]
+    },
+    {
+      "id": "claim-format-spec",
+      "text": "格式说明里 x 表示以小写十六进制输出整数，b 表示以二进制输出。",
+      "sourceIds": [
+        "py-string"
+      ]
+    },
+    {
+      "id": "claim-base64-module",
+      "text": "base64.b64encode() 对字节做 Base64 编码并返回 bytes；b64decode() 解码并返回 bytes，输入补位不正确时抛出 binascii.Error。",
+      "sourceIds": [
+        "py-base64"
+      ]
+    },
+    {
+      "id": "claim-urllib-quote",
+      "text": "urllib.parse.quote() 用 %xx 转义替换字符串里的特殊字符，字母、数字和 _.-~ 不会被转义；unquote() 把 %xx 换回对应的字符，默认按 utf-8 解码。",
+      "sourceIds": [
+        "py-urllib-parse"
+      ]
+    },
+    {
+      "id": "claim-xor",
+      "text": "^ 运算符对两个整数做按位异或。",
+      "sourceIds": [
+        "py-expressions"
+      ]
+    },
+    {
+      "id": "claim-unicode-decode-error",
+      "text": "解码过程中出现与 Unicode 有关的错误时抛出 UnicodeDecodeError；把运算用到类型不合适的对象上时抛出 TypeError。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    },
+    {
+      "id": "claim-utf8-ascii",
+      "text": "UTF-8 用 1 到 4 个字节表示一个字符，U+0800 到 U+FFFF 的字符占 3 个字节；ASCII 里 A 是 65，a 是 97。",
+      "sourceIds": [
+        "rfc3629",
+        "rfc20"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "parse-log",
+      "path": "public/labs/python-strings-and-bytes/parse_log.py",
+      "command": "python3 parse_log.py",
+      "expectedResult": "五行：198.51.100.7、/backup.zip、404、True、True。"
+    },
+    {
+      "id": "decode-layers",
+      "path": "public/labs/python-strings-and-bytes/decode_layers.py",
+      "command": "python3 decode_layers.py",
+      "expectedResult": "三行：b'666c61677b68656c6c6f7d'、b'flag{hello}'、flag{hello}。"
+    },
+    {
+      "id": "xor",
+      "path": "public/labs/python-strings-and-bytes/xor.py",
+      "command": "python3 xor.py",
+      "expectedResult": "三行：b'LFKMQREXW'、4c464b4d5152455857、b'flag{xor}'。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "encoding-layers",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}
