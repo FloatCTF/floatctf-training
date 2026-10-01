@@ -795,6 +795,12 @@
 }
 
 /* 专题页正文给 pre 设了上下外边距（lesson.css），终端输出紧跟在命令下面，不需要 */
+.terminal-session__out--box,
+.terminal-session__out--box samp {
+  font-family: 'DejaVu Sans Mono', 'Noto Sans Mono', 'Cascadia Mono', Consolas, Menlo, 'Liberation Mono', monospace;
+  line-height: 1.2;
+}
+
 .page-lesson .sl-markdown-content .terminal-session__out {
   margin: 0;
 }

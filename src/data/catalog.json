@@ -329,8 +329,8 @@
       "title": "网络基础：IP、端口、DNS 与 TCP",
       "summary": "一台机器怎样找到另一台，并和它上面的某个程序说话。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/network-basics/",
       "prerequisites": [
         "shell-permissions-and-pipes"
       ],
@@ -344,8 +344,8 @@
       "title": "HTTP：请求、响应、Cookie 与会话",
       "summary": "用 curl 和开发者工具逐行读懂一次请求和响应。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/http-basics/",
       "prerequisites": [
         "network-basics"
       ],
@@ -359,8 +359,8 @@
       "title": "HTML、CSS 与 DOM 最小集",
       "summary": "浏览器怎样把一段文本变成一棵可操作的树。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/html-css-dom/",
       "prerequisites": [
         "http-basics"
       ],
@@ -374,8 +374,8 @@
       "title": "浏览器里的 JavaScript",
       "summary": "事件、DOM 操作与 fetch，认识同源策略。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/javascript-in-the-browser/",
       "prerequisites": [
         "html-css-dom"
       ],
@@ -389,8 +389,8 @@
       "title": "SQL 基础：用 SQLite 学查询",
       "summary": "建表、增删改查、JOIN 和 UNION，在本地数据库里练熟。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/sql-basics/",
       "prerequisites": [
         "shell-files-and-paths"
       ],
@@ -495,8 +495,8 @@
       "title": "Python 七：用 requests 和 socket 写脚本",
       "summary": "让脚本代替浏览器发请求，自动化重复操作。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/python-network-scripting/",
       "prerequisites": [
         "python-files-and-exceptions",
         "http-basics"

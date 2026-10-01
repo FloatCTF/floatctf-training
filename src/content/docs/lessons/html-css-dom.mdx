@@ -1,0 +1,414 @@
+---
+title: HTML、CSS 与 DOM 最小集
+description: 读懂 HTML 的元素、属性和嵌套，看清浏览器怎样把文本解析成 DOM 树，在控制台里查找和修改元素，认识三种 CSS 选择器和表单的 GET 提交
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/html-css-dom.json';
+
+export const openSteps = [
+  { title: '打开页面', detail: '在虚拟机的 Firefox 地址栏输入 http://127.0.0.1:8000/ 并回车。' },
+  { title: '打开开发者工具', detail: '按 F12。工具出现在窗口下方，上面一排是各个面板的名字。' },
+  { title: '看 Inspector（查看器）', detail: '点 Inspector。左边是这个页面的 DOM 树，可以点小三角一层层展开；把鼠标移到某一行上，页面里对应的部分会高亮。' },
+  { title: '切到 Console（控制台）', detail: '点 Console，或者直接按 Ctrl + Shift + K。最下面 >> 后面是输入框，在这里输入一行 JavaScript，回车就执行。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '做出 about.html，并按题目里的自查标准逐项检查。' },
+  { title: '在 Inspector 里找三个元素', detail: '在 Inspector 里依次点开 html、body、ul，找到内容是 dig 的那个 li，在它上面点右键看看有哪些操作。把它的完整标签抄下来。' },
+  { title: '改页面，再还原', detail: '用控制台把三个 li 的文字都改成大写（提示：对每个元素写一次 .textContent = "…"），截图或抄下页面的样子，然后刷新，确认它们恢复原样。' },
+  { title: '看一次表单提交', detail: '在页面的搜索框里输入 nc，点 Search。记下地址栏里的网址、终端 A 里新增的日志行，以及网络面板里这个请求的方法和状态码。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="WEB / LESSON 16"
+  kicker="HTML, CSS, DOM"
+  lines={[
+    { text: "HTML、CSS 与 DOM" },
+    { text: "最小集", accent: true },
+  ]}
+  summary="服务器发回来的是一段带尖括号的文字，你在浏览器里看到的却是标题、列表和按钮。这一课看清中间那一步：浏览器怎样把文字变成一棵树，又怎样照着这棵树把页面画出来。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：同一份响应，为什么长得不一样
+
+第 14 课你用 `curl` 请求过练习站的首页，终端里打印出来的是一段夹着 `<h1>`、`<form>` 的文字。用浏览器打开同一个地址，看到的是一个大标题和一个能填的表单。
+
+服务器给两者的内容一模一样。区别只在于：`curl` 把收到的文字原样打印，浏览器却读懂了这段文字，并且照着它画出了页面。
+
+那段文字遵守的规矩叫 HTML。这一课学会读它，并且看清浏览器读完之后在内存里留下了什么。
+
+## 一、HTML：带标记的文本
+
+### 1. 一个最小的网页
+
+新建练习目录，用 `mousepad` 把下面两个文件照着写出来（或者下载），保存在 `~/lab/site` 里：
+
+<CodeFile file="labs/html-css-dom/index.html" note="保存为 ~/lab/site/index.html。缩进只是为了好读，浏览器不在乎。" />
+
+<CodeFile file="labs/html-css-dom/style.css" note="保存为 ~/lab/site/style.css。它的内容第三节再讲。" />
+
+<TerminalSession
+  title="准备目录"
+  steps={[
+    { cmd: 'mkdir ~/lab/site' },
+    { cmd: 'cd ~/lab/site' },
+    { cmd: 'ls', setup: 'cp ~/lab/python/index.html ~/lab/python/style.css .', out: 'index.html  style.css', note: '两个文件保存好之后，ls 应当看到它们。' },
+  ]}
+/>
+
+### 2. 元素、标签、属性
+
+HTML 用**标签**把内容包起来，告诉浏览器「这一段是什么」。看第 9 行：
+
+```html
+<h1 id="title">My Toolbox</h1>
+```
+
+<DataTable
+  caption="一个元素的各部分"
+  headers={["部分", "这里是", "说明"]}
+  rows={[
+    ["开始标签", "<h1 id=\"title\">", "尖括号里是元素的名字。h1 表示一级标题"],
+    ["属性", "id=\"title\"", "写在开始标签里的额外信息，格式是 名字=\"值\""],
+    ["内容", "My Toolbox", "被包起来的东西，可以是文字，也可以是别的元素"],
+    ["结束标签", "</h1>", "名字前面多一个斜杠"],
+  ]}
+  columnRatios={[0.8, 1.2, 2.6]}
+/>
+
+从开始标签到结束标签，整个算一个**元素**。（来源：[MDN: Basic HTML syntax](#source-mdn-html-syntax)）
+
+这个页面用到的元素：
+
+<DataTable
+  caption="本课用到的元素"
+  headers={["元素", "含义", "备注"]}
+  rows={[
+    ["html、head、body", "整个文档、页面信息、可见内容", "每个网页都有这三层"],
+    ["title", "标签页上显示的标题", "放在 head 里，不出现在页面正文"],
+    ["meta charset", "这份文件用什么编码", "第 4 课讲过的 UTF-8。没有结束标签"],
+    ["link", "引用另一个文件", "这里引用样式表 style.css。没有结束标签"],
+    ["h1", "一级标题", "还有 h2 到 h6"],
+    ["p", "段落", ""],
+    ["a", "链接", "href 属性是要去的地址"],
+    ["ul、li", "列表、列表里的一项", "li 写在 ul 里面"],
+    ["form、input、button", "表单、输入框、按钮", "第三节讲"],
+  ]}
+  columnRatios={[1.1, 1.5, 2]}
+/>
+
+有两个属性几乎所有元素都能用，后面要靠它们来找元素：
+
+- `id`：给一个元素起一个独一无二的名字。一个页面里同一个 `id` 只应当出现一次。
+- `class`：给元素贴一个或几个类别标记，多个之间用空格隔开。第 15 行的 `class="tool done"` 就贴了两个。
+
+### 3. 嵌套成一棵树
+
+元素可以放在别的元素里面。`li` 在 `ul` 里，`ul` 在 `body` 里，`body` 在 `html` 里。把这种「谁在谁里面」画出来，是一棵树：
+
+```text
+html
+├── head
+│   ├── meta
+│   ├── title ── "Toolbox"
+│   └── link
+└── body
+    ├── h1 ── "My Toolbox"
+    ├── p
+    │   └── a ── "Kali"
+    ├── ul
+    │   ├── li ── "curl"
+    │   ├── li ── "nc"
+    │   └── li ── "dig"
+    └── form
+        ├── input
+        └── button ── "Search"
+```
+
+这和第 2 课的目录树是同一种结构：每个元素有一个上级，可以有若干下级。
+
+### 4. 把它放到服务器上
+
+<TerminalSession
+  environment="KALI 终端 A"
+  replay="skip"
+  title="用第 13 课的办法提供这个目录"
+  steps={[
+    { cmd: 'cd ~/lab/site' },
+    { cmd: 'python3 -m http.server 8000', out: 'Serving HTTP on 0.0.0.0 port 8000 (http://0.0.0.0:8000/) ...' },
+  ]}
+/>
+
+<TerminalSession
+  title="终端 B：curl 眼里的网页"
+  steps={[
+    {
+      cmd: 'curl http://127.0.0.1:8000/',
+      setup: 'cd ~/lab/site && (setsid python3 -m http.server 8000 >/dev/null 2>&1 &); sleep 1',
+      out: '<!doctype html>\n<html lang="en">\n<head>\n  <meta charset="utf-8">\n  <title>Toolbox</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <h1 id="title">My Toolbox</h1>\n  <p class="intro">Small tools I use in <a href="https://www.kali.org/">Kali</a>.</p>\n  <ul>\n    <li class="tool">curl</li>\n    <li class="tool">nc</li>\n    <li class="tool done">dig</li>\n  </ul>\n  <form action="/index.html" method="get">\n    <input name="q" placeholder="search">\n    <button>Search</button>\n  </form>\n</body>\n</html>',
+      note: '请求 / 时，这个服务器会返回目录里的 index.html。拿到的和你写的文件一字不差。',
+    },
+    { cmd: "curl -s http://127.0.0.1:8000/ | grep -c '<li '", out: '3', note: '对 curl 来说它只是文本，可以照第 3 课的办法用管道处理：三行里有 <li 。' },
+  ]}
+/>
+
+现在用虚拟机里的 Firefox 打开 `http://127.0.0.1:8000/`。你会看到暗红色的标题、一段带链接的文字、三项列表和一个搜索框。
+
+回头看终端 A 的日志：
+
+```text
+127.0.0.1 - - [01/Oct/2026 17:01:21] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Oct/2026 17:01:21] "GET /style.css HTTP/1.1" 200 -
+127.0.0.1 - - [01/Oct/2026 17:01:21] code 404, message File not found
+127.0.0.1 - - [01/Oct/2026 17:01:21] "GET /favicon.ico HTTP/1.1" 404 -
+```
+
+你只打开了一个网址，浏览器却发了三个请求。它读到第 6 行的 `<link … href="style.css">`，就自己再去要 `style.css`；`favicon.ico` 是标签页上的小图标，浏览器总会去要，这里没有所以是 404。**一个网页通常由很多个请求拼成。**
+
+## 二、DOM：浏览器内存里的树
+
+### 1. 打开开发者工具
+
+浏览器收到 HTML 文本之后，把它解析成上一节画的那棵树，存在内存里。这棵树叫 **DOM**。页面是照着 DOM 画出来的，页面里的脚本操作的也是 DOM。（来源：[MDN: Introduction to the DOM](#source-mdn-dom-intro)）
+
+<StepList title="两个要用的面板" steps={openSteps} />
+
+（来源：[Open the Inspector](#source-firefox-inspector)、[Web Console](#source-firefox-console)、[The JavaScript input interpreter](#source-firefox-console-input)）
+
+<Callout variant="info" title="第一次粘贴会被拦住">
+往控制台里粘贴内容时，Firefox 会先显示一段警告，要求你手动输入 `allow pasting` 才放行。这是为了防止有人骗你粘贴看不懂的代码。本课的语句都很短，建议直接手敲。
+</Callout>
+
+### 2. 在控制台里读这棵树
+
+控制台里可以用 JavaScript 直接查询 DOM。JavaScript 是下一课的内容，这里只用两个现成的写法，把它们当命令敲就行。`document` 代表整个页面。
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="用选择器找元素"
+  steps={[
+    { cmd: 'document.title', out: '"Toolbox"', note: 'head 里 title 元素的内容。结果是字符串时，控制台给它加上双引号。' },
+    { cmd: 'document.querySelector("h1").textContent', out: '"My Toolbox"', note: 'querySelector 按括号里的写法找到第一个匹配的元素；.textContent 取它里面的文字。' },
+    { cmd: 'document.querySelectorAll("li").length', out: '3', note: 'querySelectorAll 找出全部匹配的元素；.length 是个数。' },
+    { cmd: 'document.querySelector("li").textContent', out: '"curl"', note: '有三个 li，querySelector 只给第一个。' },
+    { cmd: 'document.querySelector("a").href', out: '"https://www.kali.org/"', note: '属性可以直接用点取。' },
+    { cmd: 'document.querySelector(".done").textContent', out: '"dig"', note: '点开头表示按 class 找：带有 done 这个类的元素。' },
+    { cmd: 'document.querySelector("#title").tagName', out: '"H1"', note: '井号开头表示按 id 找。tagName 是元素的名字。' },
+    { cmd: 'document.querySelector("li").parentElement.tagName', out: '"UL"', note: '沿着树往上走一层：li 的上级是 ul。' },
+    { cmd: 'document.querySelector("ul").children.length', out: '3', note: '往下看：ul 有三个下级。' },
+  ]}
+/>
+
+括号里的 `"h1"`、`".done"`、`"#title"` 叫**选择器**，一共三种基本写法：直接写元素名，点加类名，井号加 id。第三节会看到，CSS 用的是同一套写法。（来源：[MDN: querySelector()](#source-mdn-queryselector)）
+
+### 3. 改这棵树
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="改内容，删元素"
+  steps={[
+    { cmd: 'document.querySelector("h1").textContent = "Changed in the console"', out: '"Changed in the console"', note: '给 textContent 赋值。页面上的标题立刻变了。' },
+    { cmd: 'document.querySelector(".done").remove()', out: 'undefined', note: '把 dig 那一项从树上摘掉，页面上的列表少了一行。undefined 表示这个操作没有返回值。' },
+    { cmd: 'document.querySelectorAll("li").length', out: '2' },
+  ]}
+/>
+
+现在按 `F5` 刷新页面，再查一次：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="刷新之后"
+  steps={[
+    { cmd: 'document.querySelector("h1").textContent', out: '"My Toolbox"' },
+    { cmd: 'document.querySelectorAll("li").length', out: '3', note: '全都回来了。' },
+  ]}
+/>
+
+这三者要分清：
+
+<DataTable
+  caption="文件、DOM 和页面"
+  headers={["", "在哪里", "谁能改"]}
+  rows={[
+    ["HTML 文件", "服务器的硬盘上", "能改服务器上文件的人"],
+    ["DOM", "你的浏览器的内存里。每次加载页面，从 HTML 重新解析出一棵", "这个页面里运行的脚本，以及你在控制台里敲的命令"],
+    ["页面", "屏幕上", "不能直接改。它永远是照着 DOM 画的"],
+  ]}
+  columnRatios={[0.7, 2.4, 2]}
+/>
+
+你在控制台里的改动只发生在自己的浏览器里，刷新就没了，别人也看不到。
+
+## 三、CSS 与表单
+
+### 1. CSS：给选中的元素定样子
+
+HTML 只说「这是标题、这是列表」，不管它长什么样。样子由 **CSS** 决定。一条 CSS 规则分两部分：先用选择器选出一批元素，再在花括号里写它们的样式。（来源：[MDN: What is CSS?](#source-mdn-css-what)）
+
+回头读 `style.css`：
+
+<DataTable
+  caption="style.css 的五条规则"
+  headers={["规则", "选择器的种类", "选中了谁", "效果"]}
+  rows={[
+    ["body { … }", "元素名", "body 元素", "无衬线字体，四周留白"],
+    ["h1 { color: darkred; }", "元素名", "所有 h1", "暗红色"],
+    [".tool { color: navy; }", "类", "所有 class 里有 tool 的元素，三个 li", "藏青色"],
+    [".done { text-decoration: line-through; }", "类", "class 里有 done 的元素，最后一个 li", "删除线"],
+    ["#title { border-bottom: … }", "id", "id 是 title 的那个元素", "下边框"],
+  ]}
+  columnRatios={[2, 0.9, 1.9, 1]}
+/>
+
+（来源：[MDN: Basic CSS selectors](#source-mdn-css-selectors)）
+
+最后一个 `li` 同时被 `.tool` 和 `.done` 两条规则选中，所以它既是藏青色又有删除线。
+
+浏览器把所有规则算完之后，每个元素最终用什么样式，可以在控制台里问出来：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="问浏览器：这个元素最终是什么颜色"
+  steps={[
+    { cmd: 'getComputedStyle(document.querySelector("h1")).color', out: '"rgb(139, 0, 0)"', note: 'darkred 这个颜色名对应的红、绿、蓝三个数值。' },
+    { cmd: 'getComputedStyle(document.querySelector(".tool")).color', out: '"rgb(0, 0, 128)"', note: 'navy。' },
+    { cmd: 'getComputedStyle(document.querySelector("p")).color', out: '"rgb(0, 0, 0)"', note: '没有规则管 p 的颜色，用的是默认的黑色。' },
+    { cmd: 'getComputedStyle(document.querySelector(".done")).textDecorationLine', out: '"line-through"' },
+    { cmd: 'document.querySelector("h1").style.color = "green"', out: '"green"', note: '样式也是 DOM 的一部分，同样可以在控制台里改。标题变绿了，刷新后恢复。' },
+    { cmd: 'getComputedStyle(document.querySelector("h1")).color', out: '"rgb(0, 128, 0)"' },
+  ]}
+/>
+
+在 Inspector 里点中一个元素，右边的 Rules（规则）一栏会列出作用在它身上的所有 CSS 规则，比在控制台里一条条问更直观。
+
+### 2. 表单：让用户发请求
+
+第 14 课说过，表单是让用户填数据再提交给服务器的东西。看 `index.html` 的第 17 到 20 行：
+
+```html
+<form action="/index.html" method="get">
+  <input name="q" placeholder="search">
+  <button>Search</button>
+</form>
+```
+
+<DataTable
+  caption="表单的三个要素"
+  headers={["写在哪", "这里的值", "决定了什么"]}
+  rows={[
+    ["form 的 action", "/index.html", "提交到哪个路径"],
+    ["form 的 method", "get", "用什么方法。get 把数据拼在网址后面，post 把数据放进请求正文"],
+    ["input 的 name", "q", "这一项数据的名字。用户填的内容是它的值"],
+  ]}
+  columnRatios={[1, 1, 3]}
+/>
+
+在搜索框里输入 `kali`，点 Search。地址栏变成了 `http://127.0.0.1:8000/index.html?q=kali`，终端 A 多了一行 `GET /index.html?q=kali`。浏览器把 `名字=值` 拼成了第 14 课讲的查询参数。
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/index.html?q=kali"
+  title="提交之后，在新页面的控制台里"
+  steps={[
+    { cmd: 'location.search', out: '"?q=kali"', note: 'location 代表当前网址，search 是其中问号开始的那一段。' },
+    { cmd: 'document.querySelector("form").method', out: '"get"' },
+    { cmd: 'document.querySelector("input").name', out: '"q"' },
+  ]}
+/>
+
+（来源：[MDN: Sending form data](#source-mdn-form-data)）
+
+这个练习服务器只会原样返回文件，不会处理 `q`，所以页面没有变化。让服务器根据提交的数据做事，是 PHP 那几课的内容。练完之后回到终端 A，按 `Ctrl` + `C` 停掉服务器。
+
+## 常见报错与排错
+
+在控制台里找一个不存在的元素：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="选择器没有匹配到任何元素"
+  steps={[
+    { cmd: 'document.querySelector("h2")', out: 'null', note: '页面里没有 h2。找不到时返回 null，这一步不报错。' },
+    { cmd: 'document.querySelector("h2").textContent', out: 'Uncaught TypeError: can\'t access property "textContent", document.querySelector(...) is null', note: '对 null 再取属性才报错。看到这句话，先回头检查选择器。' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["TypeError: … document.querySelector(...) is null", "选择器写错了，或者元素不存在", "核对拼写：类名前要有点，id 前要有井号"],
+    ["页面没有样式，标题是黑色的", "style.css 没加载到：文件名或 href 写错，或者没放在同一个目录", "看终端 A 的日志里 GET /style.css 是 200 还是 404"],
+    ["改了文件，浏览器里没变化", "没有保存，或者没有刷新", "保存后按 F5。日志里出现 304 属于正常，表示文件没变、浏览器接着用手里那份"],
+    ["页面上直接显示出了尖括号和标签名", "文件没有以 .html 结尾，或者标签没写完整", "检查文件名，检查每个 < 都有对应的 >"],
+    ["后面的内容全都变成了链接或标题的样子", "漏了结束标签，例如 </a> 或 </h1>", "在 Inspector 里看树的形状，嵌套会和你预想的不一样"],
+    ["直接双击文件打开，地址栏是 file:// 开头", "没有经过服务器，浏览器直接读了硬盘上的文件", "本课要看请求，请通过 http://127.0.0.1:8000/ 访问"],
+  ]}
+  columnRatios={[1.7, 1.7, 1.8]}
+/>
+
+边界：浏览器对写错的 HTML 非常宽容，漏了结束标签也会尽量猜出一棵树来，不会报错。所以「页面显示出来了」不等于「HTML 写对了」，拿不准时到 Inspector 里看它实际解析成了什么。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '<名字 属性="值">内容</名字>', description: '一个元素：开始标签、属性、内容、结束标签。' },
+    { term: 'id / class', description: '独一无二的名字 / 可以多个元素共用的类别标记。' },
+    { term: 'F12 → Inspector', description: '看 DOM 树和每个元素的 CSS 规则。' },
+    { term: 'F12 → Console', description: '输入 JavaScript 查询和修改 DOM。' },
+    { term: 'document.querySelector("选择器")', description: '第一个匹配的元素，没有则是 null。' },
+    { term: 'document.querySelectorAll("选择器").length', description: '匹配的元素有几个。' },
+    { term: '元素.textContent', description: '元素里的文字，可读可改。' },
+    { term: 'h1 / .tool / #title', description: '选择器：按元素名 / 按类 / 按 id。' },
+    { term: '选择器 { 属性: 值; }', description: '一条 CSS 规则。' },
+    { term: '<form action method> + <input name>', description: '表单：提交到哪、用什么方法、数据叫什么名字。' },
+  ]}
+/>
+
+<KeyTakeaway>
+HTML 是一段用标签标出结构的文本。浏览器把它解析成一棵树，叫 DOM，再照着 DOM 画出页面；CSS 用选择器选中树上的元素并规定它们的样子。在开发者工具里可以看到这棵树，也可以用同样的选择器查找和修改它。改的只是自己浏览器内存里的 DOM，服务器上的文件不变，刷新即恢复。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

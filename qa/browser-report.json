@@ -3,7 +3,7 @@
   "testedAt": "2026-10-02",
   "target": "http://localhost:4321/",
   "browser": "Playwright Chromium",
-  "scope": "基础学期第 1 到 3 批十二课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json、qa/foundations-batch-2-verification.json 与 qa/foundations-batch-3-verification.json。本次实测的是第 3 批两课与站点层面的入口，前十课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
+  "scope": "基础学期第 1 到 4 批十八课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 到 qa/foundations-batch-4-verification.json。本次实测的是第 4 批六课与站点层面的入口，前十二课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
     "/categories/cs-foundations/",
@@ -12,14 +12,20 @@
     "/lessons/data-representation/",
     "/lessons/git-branches-and-collaboration/",
     "/lessons/git-local-workflow/",
+    "/lessons/html-css-dom/",
+    "/lessons/http-basics/",
+    "/lessons/javascript-in-the-browser/",
+    "/lessons/network-basics/",
     "/lessons/python-collections/",
     "/lessons/python-control-flow/",
     "/lessons/python-files-and-exceptions/",
     "/lessons/python-functions-and-modules/",
+    "/lessons/python-network-scripting/",
     "/lessons/python-strings-and-bytes/",
     "/lessons/python-variables-and-types/",
     "/lessons/shell-files-and-paths/",
     "/lessons/shell-permissions-and-pipes/",
+    "/lessons/sql-basics/",
     "/lessons/vm-kali-setup/",
     "/paths/freshman/"
   ],
@@ -27,32 +33,32 @@
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口：已上线 12，下一课 13；工程工具面板默认停在 Git，2 条可进入",
+      "evidence": "首页入口：已上线 18，下一课 19；计算机基础分类 6 条全部可进入",
       "screenshot": "qa/screenshots/foundations-b3-home-panel.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 12 课深色主题整页，无横向溢出",
-      "screenshot": "qa/screenshots/foundations-b3-lesson12-desktop-dark.png"
+      "evidence": "第 17 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b4-lesson17-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 11 课桌面浅色整页：刊头、终端会话、提交图、警示与速查卡",
-      "screenshot": "qa/screenshots/foundations-b3-lesson11-desktop-light.png"
+      "evidence": "第 14 课桌面浅色整页：刊头、终端会话、两个报文拆解图、警示与速查卡",
+      "screenshot": "qa/screenshots/foundations-b4-lesson14-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下 Git 两课整页溢出为零；前十课沿用上一轮读数",
-      "screenshot": "qa/screenshots/foundations-b3-lesson12-mobile.png"
+      "evidence": "390 宽度下第 4 批六课整页溢出为零；前十二课沿用上一轮读数",
+      "screenshot": "qa/screenshots/foundations-b4-lesson18-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 12 课手机整页：提交图三栏单列排布，分支标签换到提交说明下一行",
-      "screenshot": "qa/screenshots/foundations-b3-git-graph-mobile.png"
+      "evidence": "第 14 课手机宽度：报文拆解图的请求和响应上下排布，长行在块内滚动",
+      "screenshot": "qa/screenshots/foundations-b4-http-exchange-mobile.png"
     },
     {
       "id": "category-page",
@@ -63,35 +69,35 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页已上线十二课为链接，规划课为纯文本；「下一课」标在第 13 课"
+      "evidence": "路线页已上线十八课为链接，规划课为纯文本；「下一课」标在第 19 课"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "打印媒体模拟：Git 两课验收答案与终端会话可见，提交图转为逐步表；纸张分页未验收",
-      "screenshot": "qa/screenshots/foundations-b3-lesson11-print.png"
+      "evidence": "打印媒体模拟：第 4 批六课验收答案、终端会话与代码清单可见，报文拆解图转为对照表；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b4-lesson13-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "提交图在减少动态设置下为 static，显示最终状态与逐步表；其余探索器见上一轮",
-      "screenshot": "qa/screenshots/foundations-b3-git-graph-nojs.png"
+      "evidence": "报文拆解图在减少动态设置下为 static，显示逐项对照表",
+      "screenshot": "qa/screenshots/foundations-b4-http-exchange-nojs.png"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "关闭 JavaScript 后提交图显示最终状态与逐步表，验收题的原生折叠保留",
-      "screenshot": "qa/screenshots/foundations-b3-git-graph-nojs.png"
+      "evidence": "关闭 JavaScript 后报文拆解图显示逐项对照表，验收题的原生折叠保留",
+      "screenshot": "qa/screenshots/foundations-b4-http-exchange-nojs.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "Git 两课多种环境下页内锚点无断链；第 10 课的下一课指向第 11 课，第 11 课的前置知识链接指向第 10 课与第 3 课"
+      "evidence": "第 4 批六课多种环境下页内锚点无断链；翻页链接按路线顺序首尾相接，前置知识链接指向正确"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "提交图滑杆用方向键回退、「回到开头」按钮均通过。未做完整 Tab 顺序走查"
+      "evidence": "报文拆解图用 Tab 加回车选中各部分通过；流程图滑杆用方向键步进通过。未做完整 Tab 顺序走查"
     },
     {
       "id": "deployment-csp-pagefind",
@@ -101,7 +107,7 @@
     {
       "id": "console",
       "status": "pass",
-      "evidence": "第 3 批全部检查过程中控制台与页面错误为零"
+      "evidence": "第 4 批全部检查过程中控制台与页面错误为零"
     },
     {
       "id": "performance",
@@ -124,6 +130,12 @@
     "qa/screenshots/foundations-b3-lesson11-desktop-light.png",
     "qa/screenshots/foundations-b3-lesson11-print.png",
     "qa/screenshots/foundations-b3-lesson12-desktop-dark.png",
-    "qa/screenshots/foundations-b3-lesson12-mobile.png"
+    "qa/screenshots/foundations-b3-lesson12-mobile.png",
+    "qa/screenshots/foundations-b4-http-exchange-mobile.png",
+    "qa/screenshots/foundations-b4-http-exchange-nojs.png",
+    "qa/screenshots/foundations-b4-lesson13-print.png",
+    "qa/screenshots/foundations-b4-lesson14-desktop-light.png",
+    "qa/screenshots/foundations-b4-lesson17-desktop-dark.png",
+    "qa/screenshots/foundations-b4-lesson18-mobile.png"
   ]
 }

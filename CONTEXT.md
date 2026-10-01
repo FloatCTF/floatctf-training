@@ -41,6 +41,12 @@
 - **GitGraph**（`git-graph.tsx`）——Git 三个区与提交图。数据在 `src/data/git-traces/<名字>.json`，由 `scripts/lab/git-trace.py` 执行场景文件（`scripts/lab/git-scenarios/<名字>.json`）里的真实 git 命令后读取状态生成；不手画提交图。它固定了作者与提交时间，所以哈希可复现，并且与页面终端会话里的哈希相同。门禁（`steppers.mjs`）校验数据里的命令与场景文件一致，改了场景必须重新生成。
 - 一门课接着上一门课的现场做时，在 `scripts/lab/preludes/<课 id>.txt` 写前置步骤：普通行是重放前悄悄执行的 shell 命令（清理目录、固定 git 提交时间），`@replay <另一课 id>` 先把那一课页面上的命令悄悄跑一遍。
 - 终端输出里因机器而异的进度与统计（如 git push 的对象数、线程数、速度）在页面上用一行以「…」开头的说明代替。比对时这一行匹配任意多行，其余行仍须逐字一致。
+- **HttpExchange**（`http-exchange.tsx`）——HTTP 报文拆解图。数据在 `src/data/http/<名字>.json`，由 `scripts/lab/http-trace.py` 按场景文件（`scripts/lab/http-scenarios/<名字>.json`）向练习服务器发真实请求后拆分生成；门禁校验数据里的请求与场景文件一致。
+- 需要服务器的课用两个终端：`environment="KALI 终端 A"` 的会话在第二个 shell 里执行，放一直运行的服务器；其余命令在主终端里执行。服务器在后面几类会话里也要用时，改由前置脚本的 `@each` 行在后台启动，页面上那一块标 `replay="skip"`。步骤的 `setup` 字段是重放时在这一步之前悄悄执行的命令。
+- 交互界面的会话按 `environment` 的开头分类重放：`PYTHON 交互模式`、`SQLITE 交互界面 · xxx.db`（末尾是数据库文件）、`FIREFOX 控制台`（另用 `page` 属性给出页面地址）。浏览器控制台的语句由 `scripts/lab/firefox-console.py` 在 Kali 容器的 Firefox ESR 里实跑；只放结果是字符串、数字、布尔值的语句，对象和 DOM 节点改用 `.length`、`.textContent` 这类写法。
+- 时间戳、耗时、客户端临时端口、随机会话编号这几类每次都变的字段，比对时按形状处理（`terminal-replay.mjs` 的 `volatile` 表），页面照实写出某一次运行的值并注明「与你的不同」。
+- 练习用的服务器一律只用标准库、只监听 `127.0.0.1`，放在 `public/labs/<课 id>/` 里随课下载。
+- 采集环境的宿主机会劫持 DNS：涉及域名解析的课，在前置脚本里用 `@copy` 和 `@root` 装上 `scripts/lab/doh-forwarder.py`，否则 `dig` 拿到的是占位地址。
 - 中文输入法在第 1 课统一安装（fcitx5，Ctrl + 空格切换）。示例脚本的标识符、提示语仍用英文，省去学员写代码时来回切换输入法、打出全角符号的麻烦；确实要演示汉字的地方（如 UTF-8 的字节数）直接写中文。
 - 交互模式（`>>>`）的会话用 `TerminalSession` 加 `environment="PYTHON 交互模式"`，只放单行语句，每个会话块对应一个全新的解释器。重放一门课用 `sh scripts/lab/replay-lesson.sh <课 id>`。
 - 学习路线上的课按路线顺序翻页：`paths.ts` 的 `pathPosition()` 给出上一课、下一课，分页与验收题的「下一课」都用它；不在任何路线上的课沿用分类内顺序。

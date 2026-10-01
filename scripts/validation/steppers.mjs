@@ -43,4 +43,26 @@ export function validateSteppers() {
       if (JSON.stringify(expected) !== JSON.stringify(actual)) report(file, null, 'steps.commands', `数据里的命令与场景文件 ${trace.scenario} 不一致。`, '场景改动后用 scripts/lab/git-trace.py 重新生成数据。');
     }
   }
+  // HttpExchange 的数据（src/data/http/*.json）由 scripts/lab/http-trace.py 向练习服务器发真实请求生成。
+  // 门禁只查形状：场景文件存在，请求与场景一致，每一部分都有解说。
+  for (const file of walk(paths.httpTraceDir).filter((item) => extname(item) === '.json')) {
+    const trace = readJson(file);
+    const scenario = resolveInsideRoot(trace.scenario);
+    if (!scenario || !existsSync(scenario)) {
+      report(file, null, 'scenario', `找不到生成数据所用的场景文件：${trace.scenario}`, '用 scripts/lab/http-trace.py 从场景文件重新生成。');
+      continue;
+    }
+    const request = readJson(scenario).request || {};
+    const start = (trace.request || []).find((part) => part.kind === 'start');
+    const sent = [start?.tokens?.[0]?.text, start?.tokens?.[1]?.text, ...(trace.request || []).filter((part) => part.kind === 'header').map((part) => `${part.name}: ${part.value}`), (trace.request || []).find((part) => part.kind === 'body')?.text ?? ''];
+    const expected = [request.method, request.target, ...(request.headers || []).map(([name, value]) => `${name}: ${value}`), request.body ?? ''];
+    if (JSON.stringify(sent) !== JSON.stringify(expected)) report(file, null, 'request', `数据里的请求与场景文件 ${trace.scenario} 不一致。`, '场景改动后用 scripts/lab/http-trace.py 重新生成数据。');
+    for (const side of ['request', 'response']) {
+      for (const [index, part] of (trace[side] || []).entries()) {
+        const notes = part.kind === 'start' ? (part.tokens || []).map((token) => token.note) : [part.note];
+        if (notes.some((note) => typeof note !== 'string' || !note.trim())) report(file, null, `${side}.${index}.note`, '报文的这一部分缺少解说。', '在场景文件的 notes 里补上后重新生成。');
+      }
+      if (!(trace[side] || []).length) report(file, null, side, '缺少请求或响应。', '用 scripts/lab/http-trace.py 重新生成。');
+    }
+  }
 }

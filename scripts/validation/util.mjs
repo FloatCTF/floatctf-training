@@ -13,6 +13,7 @@ export const paths = {
   lessonDir: join(root, 'src', 'data', 'lessons'),
   stepperDir: join(root, 'src', 'data', 'steppers'),
   gitTraceDir: join(root, 'src', 'data', 'git-traces'),
+  httpTraceDir: join(root, 'src', 'data', 'http'),
   docsDir: join(root, 'src', 'content', 'docs'),
   homePagePath: join(root, 'src', 'content', 'docs', 'index.mdx'),
   qaPath: join(root, 'qa-report.json'),

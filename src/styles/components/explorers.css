@@ -2471,3 +2471,104 @@ button.trace-step:focus-visible {
 .git-graph__ledger-command {
   display: block;
 }
+
+/* HTTP 报文拆解：一次真实的请求与响应，点任意一部分看它是什么 */
+.http-exchange {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+  padding-block-end: 1.3rem;
+}
+
+.http-exchange__messages {
+  display: grid;
+  gap: 1rem 1.2rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 1rem 1.4rem 0;
+}
+
+.http-exchange__message {
+  min-width: 0;
+}
+
+.http-exchange__side {
+  border-block-end: 0.0625rem solid var(--training-heading);
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.92rem;
+  font-weight: 800;
+  margin: 0 0 0.45rem;
+  padding-block-end: 0.3rem;
+}
+
+.http-exchange__side small {
+  color: var(--training-muted);
+  font-family: var(--training-font-body);
+  font-size: 0.68rem;
+  font-weight: 500;
+  margin-inline-start: 0.6rem;
+}
+
+.http-exchange__lines {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  padding: 0.6rem 0.7rem;
+}
+
+.http-exchange__line {
+  display: flex;
+  gap: 0.45rem;
+  margin: 0;
+  white-space: pre;
+}
+
+.http-exchange__line + .http-exchange__line {
+  margin-block-start: 0.15rem;
+}
+
+.http-exchange__piece {
+  background: transparent;
+  border: 0.0625rem solid transparent;
+  border-radius: var(--training-radius-sm);
+  color: inherit;
+  font: inherit;
+  margin: 0;
+  padding: 0.12rem 0.35rem;
+  text-align: start;
+  white-space: pre;
+}
+
+button.http-exchange__piece {
+  cursor: pointer;
+}
+
+button.http-exchange__piece:hover {
+  border-color: color-mix(in srgb, var(--training-code-text) 45%, transparent);
+}
+
+button.http-exchange__piece[aria-pressed='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-surface-bg);
+}
+
+button.http-exchange__piece:focus-visible {
+  outline: 0.125rem solid var(--training-code-text);
+  outline-offset: 0.0625rem;
+}
+
+.http-exchange__piece--blank {
+  color: color-mix(in srgb, var(--training-code-text) 55%, transparent);
+  font-family: var(--training-font-body);
+  font-size: 0.7rem;
+}
+
+.http-exchange__ledger .code-stepper__ledger-row {
+  grid-template-columns: 2.4rem minmax(0, 1fr) minmax(0, 1.5fr);
+}

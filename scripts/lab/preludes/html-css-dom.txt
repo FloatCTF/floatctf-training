@@ -1,0 +1,4 @@
+# 第 16 课：页面文件由重放脚本放在默认工作目录，页面流程里再复制进 ~/lab/site（模拟学员用编辑器保存）。
+# 页面上「终端 A」那一块不重放；浏览器控制台那一类会话开始之前，在 ~/lab/site 里把服务器启动起来。
+rm -rf ~/lab/site; pkill -f 'http.serve[r]'; pkill -f 'server.p[y]'; true
+@each pkill -f 'http.serve[r]'; cd ~/lab/site 2>/dev/null && (setsid python3 -m http.server 8000 >/dev/null 2>&1 &); sleep 1; cd ~

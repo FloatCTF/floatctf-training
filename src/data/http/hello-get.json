@@ -1,0 +1,102 @@
+{
+ "scenario": "scripts/lab/http-scenarios/hello-get.json",
+ "request": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "GET",
+     "label": "方法",
+     "note": "想做什么。GET 是「把这个东西给我」，只取不改。"
+    },
+    {
+     "text": "/hello?name=kali",
+     "label": "目标",
+     "note": "要的是哪个东西。问号前面的 /hello 是路径，后面的 name=kali 是查询参数，带给服务器的额外信息。"
+    },
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "用的是 HTTP 的哪个版本。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Host",
+   "value": "127.0.0.1:8000",
+   "note": "这个请求是发给哪个主机和端口的。一台服务器上可以放很多个网站，靠它区分。"
+  },
+  {
+   "kind": "header",
+   "name": "User-Agent",
+   "value": "curl/8.21.0",
+   "note": "客户端的自我介绍。这里是 curl 和它的版本号，浏览器会写自己的名字。"
+  },
+  {
+   "kind": "header",
+   "name": "Accept",
+   "value": "*/*",
+   "note": "客户端愿意接收哪些类型的内容。*/* 表示都行。"
+  },
+  {
+   "kind": "blank",
+   "note": "一个空行，表示头部到此结束。GET 请求没有正文，所以空行之后什么都没有。"
+  }
+ ],
+ "response": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "服务器用的 HTTP 版本。"
+    },
+    {
+     "text": "200",
+     "label": "状态码",
+     "note": "状态码，三位数字。200 表示成功。"
+    },
+    {
+     "text": "OK",
+     "label": "原因短语",
+     "note": "给人看的简短说明，程序只认前面的数字。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Server",
+   "value": "PracticeSite/1.0",
+   "note": "服务器软件的自我介绍。"
+  },
+  {
+   "kind": "header",
+   "name": "Date",
+   "value": "Thu, 01 Oct 2026 16:53:45 GMT",
+   "note": "服务器生成这个响应的时间，用的是格林尼治时间。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "text/plain; charset=utf-8",
+   "note": "正文是什么类型的内容。text/plain 是纯文本，charset=utf-8 说明它用 UTF-8 编码。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "13",
+   "note": "正文有多少个字节。Hello, kali! 加一个换行，一共 13 个。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行，头部结束，下面是正文。"
+  },
+  {
+   "kind": "body",
+   "text": "Hello, kali!",
+   "note": "正文，也就是你真正要的内容。"
+  }
+ ]
+}

@@ -1,0 +1,3 @@
+# 第 18 课：清掉上次的练习目录，把练习数据和脚本放到「下载」目录，模拟学员用浏览器下载之后的状态。
+rm -rf ~/lab/sql; mkdir -p ~/Downloads; cp ~/lab/python/shop.sql ~/lab/python/find_user.py ~/Downloads/; true
+@workdir /home/kali/lab/sql

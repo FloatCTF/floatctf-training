@@ -10,7 +10,7 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
     apt-get update -qq &&
     apt-get install -y -qq --no-install-recommends zsh sudo man-db manpages less nano file xxd \\
       python3 curl procps iproute2 iputils-ping kali-defaults locales ca-certificates \\
-      command-not-found tree vim-tiny &&
+      command-not-found tree vim-tiny bind9-dnsutils netcat-traditional sqlite3 firefox-esr python3-websockets &&
     apt-get update -qq &&
     sed -i "s/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/" /etc/locale.gen && locale-gen &&
     useradd -m -s /usr/bin/zsh -G sudo kali && echo kali:kali | chpasswd'
@@ -19,15 +19,24 @@ scripts/lab/terminal-replay.mjs 负责从课程页面取命令、把采集结果
 用法：
   python3 scripts/lab/kali-session.py commands.txt > record.json
   python3 scripts/lab/kali-session.py --python sessions.txt > record.json
+  python3 scripts/lab/kali-session.py --sqlite sessions.txt > record.json
 
   commands.txt 每行一条 shell 命令，以 ## 开头的行是注释。程序运行中需要键盘输入时，
   把这一行写成 JSON：{"cmd": "python3 age.py", "stdin": ["18"]}，stdin 里的每一项会在程序等待时依次输入。
   stdin 里写 "^C" 表示按下 Ctrl+C。
   以「##! 」开头的行是准备动作：照常执行但不记录。
+  JSON 行里带 "terminal": "A" 的命令在另一个终端（第二个 shell）里执行，用来放一直占着终端的
+  服务器程序：命令两秒内没有回到提示符就视为仍在运行，脚本接着执行后面的命令；全部命令执行完后
+  对它按 Ctrl+C，这期间终端 A 打印的全部内容记为这条命令的输出。
 
   --python 模式记录 Python 交互模式（>>>）里的输入输出。sessions.txt 每行一条语句，
   以「## session」开头的行表示另开一个全新的解释器；输出是按会话分组的二维数组。
   只支持单行语句，多行代码请写成脚本文件用 shell 模式运行。
+
+  --sqlite 模式记录 sqlite3 命令行（sqlite>）里的输入输出，格式同上；「## session shop.db」
+  里的文件名是这个会话打开的数据库。每条语句写在一行里。
+
+  交互模式的会话在环境变量 KALI_WORKDIR 指定的目录里启动，默认 ~/lab/python。
 
   命令运行前需要的脚本和数据文件，先用 docker cp 放进容器里对应的目录。
   容器名用环境变量 KALI_CONTAINER 指定，默认 kali-lab。
@@ -42,8 +51,10 @@ import sys
 import pexpect
 
 CONTAINER = os.environ.get('KALI_CONTAINER', 'kali-lab')
+WORKDIR = os.environ.get('KALI_WORKDIR', '~/lab/python')
 MARK = '@@READY@@'
-ANSI = re.compile(r'\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07]*\x07|\x1b[=>]|\x1b\(B')
+# 最后两项之前的一项是 OSC 序列（如 curl 给 Location 头加的终端超链接），以 BEL 或 ESC \ 结束
+ANSI = re.compile(r'\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[=>]|\x1b\(B')
 
 
 def overlay(line):
@@ -81,7 +92,7 @@ def settle(child, quiet=0.8):
             return buffer
 
 
-def record_shell(path):
+def marked_shell():
     child = spawn_shell()
     # 把提示符换成容易识别的标记
     child.sendline(
@@ -90,6 +101,27 @@ def record_shell(path):
     )
     child.expect(MARK)
     child.expect(MARK)
+    return child
+
+
+def transcript(collected):
+    lines = clean(collected).split('\n')
+    # 第一行是 zsh 对输入的回显
+    return '\n'.join(lines[1:]).rstrip('\n')
+
+
+def record_shell(path):
+    child = marked_shell()
+    side = None      # 终端 A：放服务器这类一直占着终端的程序
+    running = None   # 终端 A 里还没结束的那条命令对应的记录
+
+    def finish_running():
+        nonlocal running
+        if running is not None:
+            side.sendcontrol('c')
+            side.expect(MARK)
+            running['out'] = transcript(side.before)
+            running = None
 
     records = []
     for raw in open(path, encoding='utf-8'):
@@ -104,6 +136,19 @@ def record_shell(path):
             continue
         entry = json.loads(line) if line.startswith('{') else {'cmd': line}
         command = entry['cmd']
+        if entry.get('terminal') == 'A':
+            if side is None:
+                side = marked_shell()
+            finish_running()
+            side.sendline(command)
+            record = {'cmd': command, 'out': '', 'terminal': 'A'}
+            try:
+                side.expect(MARK, timeout=2)
+                record['out'] = transcript(side.before)
+            except pexpect.TIMEOUT:
+                running = record
+            records.append(record)
+            continue
         child.sendline(command)
         collected = ''
         for typed in entry.get('stdin', []):
@@ -132,32 +177,61 @@ def record_shell(path):
                 collected += child.before
             except pexpect.TIMEOUT:
                 break
-        lines = clean(collected).split('\n')
-        # 第一行是 zsh 对输入的回显
-        records.append({'cmd': command, 'out': '\n'.join(lines[1:]).rstrip('\n')})
+        records.append({'cmd': command, 'out': transcript(collected)})
 
-    child.sendline('exit')
-    child.close()
+    finish_running()
+    for shell in (side, child):
+        if shell is not None:
+            shell.sendline('exit')
+            shell.close()
+    return records
+
+
+def read_sessions(path):
+    """会话文件：「## session [参数]」开一个新会话，其余非注释行是会话里的语句。返回 [(参数, [语句])]。"""
+    sessions = []
+    for raw in open(path, encoding='utf-8'):
+        line = raw.rstrip('\n')
+        if line.startswith('## session'):
+            sessions.append((line[len('## session'):].strip(), []))
+        elif line.strip() and not line.startswith('##'):
+            if not sessions:
+                sessions.append(('', []))
+            sessions[-1][1].append(line)
+    return [session for session in sessions if session[1]]
+
+
+def record_sqlite(path):
+    """sqlite3 命令行：每个会话重新打开一次数据库文件，记录每条语句之后打印的内容。"""
+    records = []
+    for database, statements in read_sessions(path):
+        child = spawn_shell()
+        child.sendline(f'cd {WORKDIR} 2>/dev/null; sqlite3 {database}')
+        child.expect('sqlite> ')
+        session = []
+        for statement in statements:
+            child.sendline(statement)
+            if statement.strip() in ('.quit', '.exit'):
+                session.append({'cmd': statement, 'out': ''})
+                break
+            child.expect('sqlite> ')
+            lines = clean(child.before).split('\n')
+            # 第一行是对输入的回显
+            session.append({'cmd': statement, 'out': '\n'.join(lines[1:]).rstrip('\n')})
+        else:
+            child.sendline('.quit')
+        settle(child, 0.4)
+        child.close()
+        records.append(session)
     return records
 
 
 def record_python(path):
     """Python 交互模式：每个会话开一个新的解释器，记录每条语句之后打印的内容。"""
-    sessions = [[]]
-    for raw in open(path, encoding='utf-8'):
-        line = raw.rstrip('\n')
-        if line.startswith('## session'):
-            if sessions[-1]:
-                sessions.append([])
-        elif line.strip() and not line.startswith('##'):
-            sessions[-1].append(line)
-
     records = []
-    for statements in sessions:
-        if not statements:
-            continue
+    for _, statements in read_sessions(path):
         child = spawn_shell()
-        child.sendline('cd ~/lab/python 2>/dev/null; python3')
+        child.sendline(f'cd {WORKDIR} 2>/dev/null; python3')
         settle(child, 1.5)
         session = []
         for statement in statements:
@@ -176,11 +250,11 @@ def record_python(path):
 
 def main():
     args = sys.argv[1:]
-    python_mode = '--python' in args
     paths = [arg for arg in args if not arg.startswith('--')]
     if len(paths) != 1:
         sys.exit(__doc__)
-    records = record_python(paths[0]) if python_mode else record_shell(paths[0])
+    recorder = record_python if '--python' in args else record_sqlite if '--sqlite' in args else record_shell
+    records = recorder(paths[0])
     json.dump(records, sys.stdout, ensure_ascii=False, indent=1)
     sys.stdout.write('\n')
 

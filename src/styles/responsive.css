@@ -727,8 +727,17 @@
     padding-inline: 0.9rem;
   }
 
-  .git-graph__areas {
+  .git-graph__areas,
+  .http-exchange__messages {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .http-exchange__messages {
+    padding-inline: 0.9rem;
+  }
+
+  .http-exchange__ledger .code-stepper__ledger-row {
+    grid-template-columns: 2.4rem minmax(0, 1fr);
   }
 
   .git-graph__command {

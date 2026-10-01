@@ -1,0 +1,341 @@
+{
+  "lessonPlan": {
+    "audience": "会用命令行和 Python、还没有接触过数据库的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "concept",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "三张小表摆在一起：一条 SELECT 怎样先选表、再筛行、再挑列；JOIN 怎样按编号把订单表里的数字换成另外两张表里的名字",
+    "learningObjectives": [
+      "说出数据库、表、行、列各是什么，用 sqlite3 打开数据库并查看表结构",
+      "用 SELECT 配合 WHERE、ORDER BY、LIMIT 查出想要的行和列",
+      "用 INSERT、UPDATE、DELETE 修改数据，并说出漏写 WHERE 的后果",
+      "用 COUNT、SUM 和 GROUP BY 做统计",
+      "用 JOIN 把多张表连起来查，用 UNION 把两个查询的结果合在一起",
+      "在 Python 里用占位符把用户输入交给 SQL"
+    ],
+    "prerequisites": [
+      "shell-permissions-and-pipes",
+      "python-files-and-exceptions"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-where-missing",
+      "kind": "mechanism",
+      "title": "少写了一个 WHERE",
+      "question": "你想把 dave 的城市改成 Beijing，结果敲成了 UPDATE users SET city = 'Beijing'; 就回车了。users 表现在是什么样？为什么数据库没有拦你？以后怎样避免？",
+      "answer": "四个用户的 city 全都变成了 Beijing。UPDATE 的含义是「对表里符合条件的每一行做这个修改」，条件由 WHERE 给出；没有 WHERE，就等于每一行都符合。这是一条完全合法的语句，数据库照做，不会提示。DELETE 同理：DELETE FROM users; 会删光整张表。避免的办法是先把同样的 WHERE 条件写成 SELECT 执行一遍，确认选中的正是想改的那几行，再把 SELECT 换成 UPDATE 或 DELETE。练习时还可以先复制一份数据库文件。",
+      "sourceIds": [
+        "sqlite-update",
+        "sqlite-delete"
+      ]
+    },
+    {
+      "id": "check-predict-queries",
+      "kind": "prediction",
+      "title": "预测四个查询的结果",
+      "question": "对本课的 shop.db（刚导入时的原始数据），预测下面四条语句各返回几行、是什么。一、SELECT name FROM items WHERE price < 50 ORDER BY price;。二、SELECT COUNT(*) FROM orders WHERE user_id = 2;。三、SELECT role, COUNT(*) FROM users GROUP BY role;。四、SELECT name FROM users WHERE city = 'chengdu';。",
+      "answer": "一、三行，依次是 sticker、handbook、usb-drive：价格小于 50 的有 5、35、45 三个，按价格从小到大排。二、一行，值是 2：bob 的编号是 2，他有两条订单。三、两行：admin 1，member 3。四、零行。SQLite 里用等号比较字符串时区分大小写，表里存的是 Chengdu，和 chengdu 不相等。没有匹配的行不是错误，只是结果为空。",
+      "sourceIds": [
+        "sqlite-select",
+        "sqlite-expr"
+      ]
+    },
+    {
+      "id": "check-write-queries",
+      "kind": "practice",
+      "title": "回答三个问题",
+      "question": "用 SQL 回答下面三个问题，每个写一条语句。一、最贵的两件商品是什么，各多少钱？二、每个城市有几个用户？三、谁买过 sticker，各买了几个？",
+      "answer": "参考写法。一、SELECT name, price FROM items ORDER BY price DESC LIMIT 2; 结果是 keyboard 120、t-shirt 80。二、SELECT city, COUNT(*) FROM users GROUP BY city; 结果是三行：NULL 1、Chengdu 2、Wuhan 1（没有填城市的 dave 单独算一组）。三、SELECT users.name, orders.quantity FROM orders JOIN users ON orders.user_id = users.id JOIN items ON orders.item_id = items.id WHERE items.name = 'sticker'; 结果是 bob 10、carol 3。自查标准：三条语句都不报错，结果与上面一致。",
+      "sourceIds": [
+        "sqlite-select"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "表、行、列与 SELECT",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能写出一条带 WHERE 和 ORDER BY 的查询。"
+    },
+    {
+      "kind": "动手",
+      "title": "增、改、删与统计",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "新增一行、改一行、删一行之后，COUNT(*) 仍然是 4。"
+    },
+    {
+      "kind": "进阶",
+      "title": "多表查询，以及从 Python 里查",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "用 JOIN 查出每条订单是谁买了什么。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "SQLite about serverless single disk file",
+      "SQLite command line shell dot-commands .tables .schema continuation prompt",
+      "SQLite SELECT WHERE ORDER BY LIMIT compound select UNION same number of result columns",
+      "SQLite CREATE TABLE INSERT UPDATE DELETE without WHERE",
+      "SQLite expressions string literal two single quotes LIKE IS NULL",
+      "Python sqlite3 placeholders SQL injection"
+    ],
+    "notes": "数据集是 public/labs/sql-basics/shop.sql。shell 命令和 sqlite3 交互界面里的全部语句在 kalilinux/kali-rolling 容器（SQLite 3.53.4）里实际运行，页面输出取自运行记录。这个版本的 sqlite3 在终端里默认用圆角表格显示结果并把空值显示成 NULL；旧版本默认是用竖线分隔的列表，页面已注明。报错信息里的 near line N 是这条语句在本次会话里的序号。验收题的预期结果用同一数据库执行核对过。sqlite3 命令行是 Kali 默认桌面安装自带的。"
+  },
+  "sources": [
+    {
+      "id": "sqlite-about",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: About SQLite",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/about.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-sqlite"
+      ]
+    },
+    {
+      "id": "sqlite-cli",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: Command Line Shell For SQLite",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/cli.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-cli",
+        "claim-dot-commands"
+      ]
+    },
+    {
+      "id": "sqlite-select",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: SELECT",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_select.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-select",
+        "claim-union-columns"
+      ]
+    },
+    {
+      "id": "sqlite-createtable",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: CREATE TABLE",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_createtable.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-create-table"
+      ]
+    },
+    {
+      "id": "sqlite-insert",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: INSERT",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_insert.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-insert"
+      ]
+    },
+    {
+      "id": "sqlite-update",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: UPDATE",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_update.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-update-where"
+      ]
+    },
+    {
+      "id": "sqlite-delete",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: DELETE",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_delete.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-delete-where"
+      ]
+    },
+    {
+      "id": "sqlite-expr",
+      "kind": "official-doc",
+      "title": "SQLite Documentation: SQL Language Expressions",
+      "publisher": "SQLite",
+      "url": "https://www.sqlite.org/lang_expr.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-string-literal",
+        "claim-like-is"
+      ]
+    },
+    {
+      "id": "py-sqlite3",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: sqlite3",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/sqlite3.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-placeholders"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-sqlite",
+      "text": "SQLite 是一个进程内的库，实现了自包含、无服务器、零配置的 SQL 数据库引擎；整个数据库放在一个磁盘文件里。",
+      "sourceIds": [
+        "sqlite-about"
+      ]
+    },
+    {
+      "id": "claim-cli",
+      "text": "sqlite3 是 SQLite 提供的命令行程序，可以对一个 SQLite 数据库交互地执行 SQL 语句。SQL 语句以分号结束；没有输入分号时，它给出续行提示符，等你把语句写完。",
+      "sourceIds": [
+        "sqlite-cli"
+      ]
+    },
+    {
+      "id": "claim-dot-commands",
+      "text": "以点开头的是 sqlite3 自己的特殊命令：.tables 列出表名，.schema 显示建表语句，.mode 设置输出格式。",
+      "sourceIds": [
+        "sqlite-cli"
+      ]
+    },
+    {
+      "id": "claim-select",
+      "text": "SELECT 语句用来查询数据库，结果是零行或多行数据，每行有固定数目的列；SELECT 不会改动数据库。",
+      "sourceIds": [
+        "sqlite-select"
+      ]
+    },
+    {
+      "id": "claim-create-table",
+      "text": "CREATE TABLE 命令在数据库里新建一张表，并指定表名、每一列的名字和类型等属性。",
+      "sourceIds": [
+        "sqlite-createtable"
+      ]
+    },
+    {
+      "id": "claim-insert",
+      "text": "带 VALUES 的 INSERT 语句在已有的表里新建一行或多行。",
+      "sourceIds": [
+        "sqlite-insert"
+      ]
+    },
+    {
+      "id": "claim-update-where",
+      "text": "UPDATE 语句没有 WHERE 子句时，表里的所有行都会被修改；有 WHERE 时只影响条件为真的那些行。",
+      "sourceIds": [
+        "sqlite-update"
+      ]
+    },
+    {
+      "id": "claim-delete-where",
+      "text": "DELETE 命令从表里删除记录；没有 WHERE 子句时，表里的全部记录都会被删除。",
+      "sourceIds": [
+        "sqlite-delete"
+      ]
+    },
+    {
+      "id": "claim-string-literal",
+      "text": "字符串字面量写在单引号里；字符串内部的单引号用连续两个单引号表示。",
+      "sourceIds": [
+        "sqlite-expr"
+      ]
+    },
+    {
+      "id": "claim-like-is",
+      "text": "LIKE 运算符做模式匹配，模式里的百分号匹配任意长度的任意字符；IS 和 IS NOT 的作用与 = 和 != 相同，区别在于它们能正确处理操作数为 NULL 的情况。",
+      "sourceIds": [
+        "sqlite-expr"
+      ]
+    },
+    {
+      "id": "claim-union-columns",
+      "text": "用 UNION 等运算符组成复合 SELECT 时，各个 SELECT 必须返回相同数目的结果列。",
+      "sourceIds": [
+        "sqlite-select"
+      ]
+    },
+    {
+      "id": "claim-placeholders",
+      "text": "在 Python 的 sqlite3 模块里，应当用占位符把 Python 的值绑定到 SQL 语句上，而不是用字符串格式化，以避免 SQL 注入攻击。",
+      "sourceIds": [
+        "py-sqlite3"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "shop-dataset",
+      "path": "public/labs/sql-basics/shop.sql",
+      "command": "sqlite3 shop.db < shop.sql，然后 sqlite3 shop.db 'SELECT COUNT(*) FROM users;'",
+      "expectedResult": "生成 shop.db；查询结果是一个只有一格的表，值为 4。"
+    },
+    {
+      "id": "find-user",
+      "path": "public/labs/sql-basics/find_user.py",
+      "command": "python3 find_user.py",
+      "expectedResult": "输入 alice 打印 alice is admin；输入 nobody 打印 no such user。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "tables-and-joins",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

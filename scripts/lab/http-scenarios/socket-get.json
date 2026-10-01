@@ -1,0 +1,26 @@
+{
+  "server": "public/labs/http-basics/server.py",
+  "address": ["127.0.0.1", 8000],
+  "request": {
+    "method": "GET",
+    "target": "/hello?name=socket",
+    "headers": [["Host", "127.0.0.1:8000"], ["Connection", "close"]]
+  },
+  "notes": {
+    "method": "脚本里那个字符串的开头。和 curl、浏览器发的没有区别。",
+    "target": "路径和查询参数。用 requests 时这一段是它根据 params 替你拼的，这里要自己写对。",
+    "version": "HTTP 的版本。后面跟着 \\r\\n，表示这一行结束。",
+    ">Host": "HTTP/1.1 规定必须有的头部。requests 会根据网址自动填上。",
+    ">Connection": "告诉服务器：答完这一次就把连接关掉。这样 recv 才会收到「没有更多数据」的信号，循环才能结束。",
+    "blank": "字符串末尾连续两个 \\r\\n：第一个结束上一行，第二个就是这个空行。少了它，服务器会一直等下去。",
+    "<version": "从这里开始是 recv 收到的字节，解码成文字之后的样子。",
+    "status": "状态码。用 requests 时它在 r.status_code 里，这里要自己从文字里找。",
+    "reason": "给人看的简短说明。",
+    "<Server": "服务器软件的自我介绍。",
+    "<Date": "响应生成的时间。",
+    "<Content-Type": "正文的类型和编码。requests 靠它决定怎样把字节解码成 r.text。",
+    "<Content-Length": "正文的字节数。",
+    "<blank": "空行。前面是头部，后面是正文，自己解析时要从这里切开。",
+    "<body": "正文。用 requests 时它在 r.text 里。"
+  }
+}

@@ -1,0 +1,4 @@
+# 第 17 课：三个文件由重放脚本放在默认工作目录，页面流程里再复制进 ~/lab/js（模拟学员用编辑器保存）。
+# 页面上「终端 A」「终端 C」两块不重放；浏览器控制台那一类会话开始之前，把 8000 和 8001 两个服务器都启动起来。
+rm -rf ~/lab/js; pkill -f 'http.serve[r]'; pkill -f 'server.p[y]'; true
+@each pkill -f 'server.p[y]'; cd ~/lab/js 2>/dev/null && (setsid python3 server.py >/dev/null 2>&1 &) && (setsid python3 server.py 8001 >/dev/null 2>&1 &); sleep 1; cd ~

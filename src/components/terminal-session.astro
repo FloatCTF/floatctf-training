@@ -7,6 +7,8 @@ interface Step {
   out?: string;
   /** 这一步之后的一句解释，写给第一次见到这条输出的人。 */
   note?: string;
+  /** 重放时在这一步之前悄悄执行的 shell 命令。页面不渲染，供 scripts/lab 使用。 */
+  setup?: string;
   /** 程序运行中学员从键盘输入的内容。页面不单独渲染（out 里已经包含回显），供 scripts/lab 重放时使用。 */
   stdin?: string[];
 }
@@ -14,6 +16,10 @@ interface Step {
 interface Props {
   title: string;
   steps: Step[];
+  /** 浏览器控制台会话所在的页面地址。页面不渲染，供 scripts/lab 重放时打开这个页面。 */
+  page?: string;
+  /** 写 "skip" 表示这一块不参与重放（例如服务器已由 prelude 在后台启动）。页面不渲染。 */
+  replay?: 'skip';
   /** 提示符：Kali 终端用 $，Windows PowerShell 用 PS>。 */
   prompt?: string;
   /** 环境标签，显示在标题栏左侧。 */
@@ -22,6 +28,8 @@ interface Props {
 
 const { title, steps, prompt = '$', environment = 'KALI 终端' } = Astro.props;
 const commands = steps.map((step) => step.cmd).join('\n');
+// 表格边框这类制表符不在站点的代码字体里。整块换成系统自带的等宽字体，免得边框和文字来自两种宽度不同的字体而对不齐。
+const boxDrawing = /[\u2500-\u257f]/;
 ---
 <figure class="terminal-session not-content" aria-label={title}>
   <figcaption class="terminal-session__bar">
@@ -37,7 +45,7 @@ const commands = steps.map((step) => step.cmd).join('\n');
           <span class="terminal-session__prompt" aria-hidden="true">{prompt}</span>
           <kbd>{step.cmd}</kbd>
         </p>
-        {step.out && <pre class="terminal-session__out"><samp>{step.out}</samp></pre>}
+        {step.out && <pre class:list={['terminal-session__out', { 'terminal-session__out--box': boxDrawing.test(step.out) }]}><samp>{step.out}</samp></pre>}
         {step.note && <p class="terminal-session__note">{step.note}</p>}
       </div>
     ))}
