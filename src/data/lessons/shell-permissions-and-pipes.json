@@ -1,0 +1,393 @@
+{
+  "lessonPlan": {
+    "audience": "已经会用 cd、ls、cat 在 Kali 里操作文件的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "subtle",
+    "visualStory": "九个权限开关与三位八进制数的对应：逐个拨动 r、w、x，观察字母串、数字和 chmod 命令同步变化；管道部分用逐段加长的同一条命令展示每一段的输出怎样成为下一段的输入",
+    "learningObjectives": [
+      "逐列读懂 ls -l 的输出，说出 rwx 三组权限分别属于谁",
+      "在 rwx 字母和三位数字之间互相换算，用 chmod 修改权限",
+      "说明 sudo 做了什么，以及什么时候需要它",
+      "用 >、>> 和 2> 把输出和报错存进文件",
+      "用管道把 grep、cut、sort、uniq、head 接起来，从一份日志里统计出结论",
+      "查看、放到后台和结束一个进程，并用 apt 安装一个软件"
+    ],
+    "prerequisites": [
+      "shell-files-and-paths",
+      "~/lab 目录里有 notes/first.txt"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-execute-bit",
+      "kind": "mechanism",
+      "title": "能看不能跑",
+      "question": "hello.sh 的权限是 -rw-r--r--。这时 cat hello.sh 能打印出内容，./hello.sh 却报 permission denied，而 sh hello.sh 又能正常运行。三条命令对同一个文件，为什么结果不同？",
+      "answer": "cat 只需要读文件内容，所有者有 r 权限，所以成功。./hello.sh 是把这个文件本身当作程序来运行，需要 x 权限，现在三组都没有 x，所以被拒绝；chmod +x 之后就能运行。sh hello.sh 运行的程序是 sh，hello.sh 只是交给它读的输入，只需要 r 权限。",
+      "sourceIds": [
+        "coreutils-mode-structure"
+      ]
+    },
+    {
+      "id": "check-predict-mode",
+      "kind": "prediction",
+      "title": "两次 chmod 之后",
+      "question": "依次执行 chmod 640 hello.sh 和 chmod u+x hello.sh。写出每次执行后 ls -l hello.sh 最左边的十个字符，再写出最终权限对应的三位数字。",
+      "answer": "第一次之后是 -rw-r-----：6 是 4+2，所有者可读可写；4 是同组只读；0 是其他人没有权限。第二次只给所有者加上 x，变成 -rwxr-----，对应数字 740。数字写法一次设定全部九位，u+x 这种符号写法只改指定的那一位，其余不动。",
+      "sourceIds": [
+        "coreutils-numeric-modes"
+      ]
+    },
+    {
+      "id": "check-log-pipeline",
+      "kind": "practice",
+      "title": "从日志里找出在探测目录的 IP",
+      "question": "用 access.log 完成：统计所有返回 404 的请求分别来自哪个 IP，按次数从多到少排列。写出你的命令和输出，并判断哪个 IP 最可疑，依据是什么。",
+      "answer": "命令：grep ' 404 ' access.log | cut -d' ' -f1 | sort | uniq -c | sort -rn。输出两行：4 次来自 198.51.100.7，1 次来自 192.0.2.44。198.51.100.7 最可疑：它在半分钟内请求了 /backup.zip、/.git/config、/phpmyadmin/、/www.tar.gz 四个不存在的敏感路径，此前还访问了 /robots.txt 和 /admin/，这是在猜测网站上有没有遗留的备份和管理入口。192.0.2.44 的那一次 404 是浏览器自动请求的 /favicon.ico，属于正常访问。自查标准：第一行的次数是 4。",
+      "sourceIds": [
+        "missing-semester-shell",
+        "zsh-grammar"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "权限：谁能对文件做什么",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "看到 -rwxr-x--- 能说出三组用户各能做什么，并写出对应数字。"
+    },
+    {
+      "kind": "动手",
+      "title": "重定向与管道",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "用一条管道命令统计出请求最多的 IP。"
+    },
+    {
+      "kind": "进阶",
+      "title": "进程与装软件",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "装上 htop 并能结束一个后台进程。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "GNU Coreutils manual structure of file mode bits",
+      "GNU Coreutils manual numeric modes octal",
+      "zsh manual redirection > >> 2>",
+      "zsh manual shell grammar pipeline standard output standard input",
+      "zsh manual jobs and signals & job number",
+      "Debian manpages apt(8) update install full-upgrade",
+      "Kali docs all about sudo default non-root user",
+      "MIT Missing Semester 2026 shell pipes sort uniq -c"
+    ],
+    "notes": "日志统计的例子借鉴 MIT Missing Semester 2026 中用 sort | uniq -c 分析登录日志的思路，日志内容与命令自写；access.log 是为本课编写的 20 行示例，IP 全部取自 RFC 5737 文档保留地址段。全部命令在 kalilinux/kali-rolling 容器里以 kali 用户（已加入 sudo 组）、交互式 zsh 实际运行，页面输出取自运行记录。apt install 的输出做了截取，省略了下载与安装进度行。进程号、日期和可升级包数量因环境而异，正文已说明。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali Linux（kali-rolling，2026.2 镜像及其后续更新）；zsh 5.9.2；GNU coreutils 9.10；apt 3.3.3；sudo 1.9.17p2",
+    "environment": "kalilinux/kali-rolling 容器（os-release 报告 2026.3），用户 kali 属于 sudo 组，登录 shell 为 zsh，配置来自 kali-defaults，区域设置 en_US.UTF-8，终端宽 80 列。",
+    "verifiedAt": "2026-10-01",
+    "knownDifferences": "在线的 GNU Coreutils 手册对应 9.12，Kali 当前打包 9.10。新文件的初始权限由 umask 决定：容器里登录 shell 的 umask 是 002，新文件显示 -rw-rw-r--，其他环境可能是 -rw-r--r--，所以正文在读权限之前先用 chmod 把权限设成确定的值。Debian 在线手册页的 apt 版本与 Kali 打包的版本不同，本课用到的子命令在 apt 3.3.3 上运行过；旧版 apt 的报错以 E: 开头而不是 Error:。"
+  },
+  "sources": [
+    {
+      "id": "coreutils-mode-structure",
+      "kind": "official-doc",
+      "title": "GNU Coreutils Manual: Structure of File Mode Bits",
+      "publisher": "Free Software Foundation",
+      "url": "https://www.gnu.org/software/coreutils/manual/html_node/Mode-Structure.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，页面未标注修订日期，publishedAt 记录核验快照日期。访问时在线手册对应 9.12 版。",
+      "supports": [
+        "claim-three-permissions",
+        "claim-three-classes",
+        "cmd-chmod-x"
+      ]
+    },
+    {
+      "id": "coreutils-numeric-modes",
+      "kind": "official-doc",
+      "title": "GNU Coreutils Manual: Numeric Modes",
+      "publisher": "Free Software Foundation",
+      "url": "https://www.gnu.org/software/coreutils/manual/html_node/Numeric-Modes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，页面未标注修订日期，publishedAt 记录核验快照日期。访问时在线手册对应 9.12 版。",
+      "supports": [
+        "claim-numeric-modes",
+        "cmd-chmod-640"
+      ]
+    },
+    {
+      "id": "zsh-redirection",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Redirection",
+      "publisher": "Zsh Development Group",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Redirection.html",
+      "publishedAt": "2026-07-12",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为手册标注的 zsh 5.9.2 发布日期。",
+      "supports": [
+        "claim-redirection",
+        "cmd-redirect-append"
+      ]
+    },
+    {
+      "id": "zsh-grammar",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Shell Grammar",
+      "publisher": "Zsh Development Group",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Shell-Grammar.html",
+      "publishedAt": "2026-07-12",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为手册标注的 zsh 5.9.2 发布日期。",
+      "supports": [
+        "claim-pipeline",
+        "cmd-top-ip"
+      ]
+    },
+    {
+      "id": "zsh-jobs",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Jobs & Signals",
+      "publisher": "Zsh Development Group",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Jobs-_0026-Signals.html",
+      "publishedAt": "2026-07-12",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为手册标注的 zsh 5.9.2 发布日期。",
+      "supports": [
+        "claim-background-jobs",
+        "cmd-background"
+      ]
+    },
+    {
+      "id": "apt-manpage",
+      "kind": "official-doc",
+      "title": "apt(8) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/trixie/apt/apt.8.en.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，页面未标注修订日期，publishedAt 记录核验快照日期。页面对应 Debian trixie 打包的 apt。",
+      "supports": [
+        "claim-apt-subcommands",
+        "cmd-apt-install"
+      ]
+    },
+    {
+      "id": "kali-sudo",
+      "kind": "official-doc",
+      "title": "All about sudo",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/general-use/sudo/",
+      "publishedAt": "2025-06-18",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-sudo",
+        "cmd-sudo-whoami"
+      ]
+    },
+    {
+      "id": "rfc9110",
+      "kind": "specification",
+      "title": "RFC 9110: HTTP Semantics",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份（2022 年 6 月），日期记为当月 1 日。本课只引用 200 与 404 两个状态码的定义。",
+      "supports": [
+        "claim-status-codes"
+      ]
+    },
+    {
+      "id": "missing-semester-shell",
+      "kind": "university-course",
+      "title": "The Missing Semester of Your CS Education (2026): Course Overview + Introduction to the Shell",
+      "publisher": "MIT",
+      "url": "https://missing.csail.mit.edu/2026/course-shell/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。内容以 CC BY-NC-SA 4.0 授权；本课只借鉴其日志统计的思路。",
+      "supports": [
+        "claim-log-pipeline-idea",
+        "cmd-top-ip"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-three-permissions",
+      "text": "文件有读、写、执行三种权限；对目录而言，读是列出内容，写是在其中创建和删除文件，执行是访问其中的文件。",
+      "sourceIds": [
+        "coreutils-mode-structure"
+      ]
+    },
+    {
+      "id": "claim-three-classes",
+      "text": "权限分别授予三类用户：文件的所有者、所属组里的其他用户、其余所有人。",
+      "sourceIds": [
+        "coreutils-mode-structure"
+      ]
+    },
+    {
+      "id": "claim-numeric-modes",
+      "text": "每类用户的三个权限各占一位二进制，合成一位八进制数字：读记 4，写记 2，执行记 1；664 等价于 ug=rw,o=r。数字写法只能整体设定权限。",
+      "sourceIds": [
+        "coreutils-numeric-modes"
+      ]
+    },
+    {
+      "id": "claim-sudo",
+      "text": "Kali 默认用户不是 root；用 sudo 执行命令时输入的是自己的密码。",
+      "sourceIds": [
+        "kali-sudo"
+      ]
+    },
+    {
+      "id": "claim-redirection",
+      "text": "> 把标准输出写入文件，文件不存在则创建，已存在则先清空；>> 以追加方式写入；在重定向符号前加数字可以指定文件描述符，2> 重定向的是标准错误。",
+      "sourceIds": [
+        "zsh-redirection"
+      ]
+    },
+    {
+      "id": "claim-pipeline",
+      "text": "用 | 连接的命令组成管道：前一条命令的标准输出接到后一条命令的标准输入。",
+      "sourceIds": [
+        "zsh-grammar"
+      ]
+    },
+    {
+      "id": "claim-background-jobs",
+      "text": "命令末尾加 & 会在后台启动一个作业，shell 打印形如 [1] 1234 的一行，分别是作业号和进程号；%1 可以用来指代 1 号作业。",
+      "sourceIds": [
+        "zsh-jobs"
+      ]
+    },
+    {
+      "id": "claim-apt-subcommands",
+      "text": "apt update 从软件源下载包信息；apt install 安装指定的包；apt full-upgrade 在升级全部已装包时允许按需移除旧包。",
+      "sourceIds": [
+        "apt-manpage"
+      ]
+    },
+    {
+      "id": "claim-status-codes",
+      "text": "状态码 200 表示请求成功；404 表示服务器没有找到目标资源，或不愿意透露它是否存在。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-log-pipeline-idea",
+      "text": "把 sort 和 uniq -c 接在提取字段的命令后面，可以统计一份日志里每个取值出现的次数。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-chmod-x",
+      "command": "chmod +x hello.sh",
+      "expectedResult": "没有输出；之后 ls -l hello.sh 显示 -rwxr-xr-x，./hello.sh 输出 it works。",
+      "sourceIds": [
+        "coreutils-mode-structure"
+      ]
+    },
+    {
+      "id": "cmd-chmod-640",
+      "command": "chmod 640 hello.sh",
+      "expectedResult": "没有输出；之后 ls -l hello.sh 显示 -rw-r-----。",
+      "sourceIds": [
+        "coreutils-numeric-modes"
+      ]
+    },
+    {
+      "id": "cmd-sudo-whoami",
+      "command": "sudo whoami",
+      "expectedResult": "询问 kali 的密码后输出 root。",
+      "sourceIds": [
+        "kali-sudo"
+      ]
+    },
+    {
+      "id": "cmd-redirect-append",
+      "command": "echo 'checked by kali' >> notfound.txt",
+      "expectedResult": "没有输出；notfound.txt 末尾多出一行 checked by kali，原有内容保留。",
+      "sourceIds": [
+        "zsh-redirection"
+      ]
+    },
+    {
+      "id": "cmd-top-ip",
+      "command": "cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 1",
+      "expectedResult": "      8 192.0.2.10",
+      "sourceIds": [
+        "zsh-grammar",
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "cmd-background",
+      "command": "sleep 300 &",
+      "expectedResult": "打印一行 [1] 加进程号，提示符立刻回来；jobs 显示 running。",
+      "sourceIds": [
+        "zsh-jobs"
+      ]
+    },
+    {
+      "id": "cmd-apt-install",
+      "command": "sudo apt install -y htop",
+      "expectedResult": "列出将要安装的包并完成安装；之后 which htop 输出 /usr/bin/htop。",
+      "sourceIds": [
+        "apt-manpage"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "access-log-sample",
+      "path": "public/labs/shell-permissions-and-pipes/access.log",
+      "command": "cut -d' ' -f1 access.log | sort | uniq -c | sort -rn",
+      "expectedResult": "四行，依次是 8 192.0.2.10、6 198.51.100.7、4 203.0.113.5、2 192.0.2.44。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "permission-bits",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

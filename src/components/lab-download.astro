@@ -2,14 +2,19 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { withBase } from '../lib/base-url';
-interface Props { file: 'sql-binding-check.mjs' | 'sql-audit-sample.txt'; label: string }
+
+// 课程材料下载：文件放在 public/ 下，页面同时提供下载链接和可复制的全文。
+// 新材料一律放 public/labs/<课 id>/；两份 SQL 材料是拆分目录之前留下的，保留原路径。
+interface Props { file: string; label: string }
 const { file, label } = Astro.props;
-const allowed = new Set(['sql-binding-check.mjs', 'sql-audit-sample.txt']);
-if (!allowed.has(file)) throw new Error('Unknown lesson material');
+const legacy = new Set(['sql-binding-check.mjs', 'sql-audit-sample.txt']);
+const inLabs = /^labs\/[a-z0-9-]+\/[A-Za-z0-9._-]+$/.test(file) && !file.includes('..');
+if (!legacy.has(file) && !inLabs) throw new Error(`Unknown lesson material: ${file}`);
 const source = readFileSync(resolve('public', file), 'utf8');
+const name = file.split('/').pop() || file;
 ---
 <section class="lab-download not-content" aria-label={label}>
-  <p><a href={withBase(`/${file}`)} download={file}>{label} · {file}</a></p>
+  <p><a href={withBase(`/${file}`)} download={name}>{label} · {name}</a></p>
   <details>
     <summary>查看与复制完整文件</summary>
     <button type="button" data-copy-material>复制完整文件</button>

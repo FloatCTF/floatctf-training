@@ -210,8 +210,8 @@
       "title": "搭环境：虚拟机与 Kali",
       "summary": "装好虚拟机，学会快照和网络模式，之后所有课都在这里做。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/vm-kali-setup/",
       "prerequisites": [],
       "order": 1
     },
@@ -223,8 +223,8 @@
       "title": "命令行一：文件、路径与求助",
       "summary": "在终端里走动、看文件、查帮助，不再依赖图形界面。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/shell-files-and-paths/",
       "prerequisites": [
         "vm-kali-setup"
       ],
@@ -238,8 +238,8 @@
       "title": "命令行二：权限、管道与进程",
       "summary": "读懂 rwx，用管道把小命令接起来，会装软件、会结束进程。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/shell-permissions-and-pipes/",
       "prerequisites": [
         "shell-files-and-paths"
       ],
@@ -314,8 +314,8 @@
       "title": "数据怎样表示：二进制、十六进制与编码",
       "summary": "同一串字节怎样变成数字、文字、Base64 和 URL 编码。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/data-representation/",
       "prerequisites": [
         "shell-files-and-paths"
       ],

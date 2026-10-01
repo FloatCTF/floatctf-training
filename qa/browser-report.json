@@ -1,117 +1,113 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-09-12",
-  "target": "http://localhost:4322/",
-  "browser": "Playwright CLI Chromium",
-  "scope": "用户评审十八项修复；本地预览与关键组件抽查，详见 qa/user-review-fixes.md",
+  "testedAt": "2026-10-01",
+  "target": "http://localhost:4321/",
+  "browser": "Playwright Chromium",
+  "scope": "基础学期第 1 批四课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
-    "/lessons/machine-learning-foundations/",
-    "/lessons/neural-network-foundations/",
-    "/lessons/ai-literacy/",
-    "/lessons/agent-harness-engineering/",
-    "/lessons/ai-engineering-landscape/",
-    "/lessons/ai-security-essentials/",
-    "/lessons/sql-injection/",
-    "/lessons/sql-injection-advanced/",
-    "/lessons/ssrf/",
-    "/lessons/xss/",
-    "/lessons/rce/"
+    "/paths/freshman/",
+    "/categories/engineering-tools/",
+    "/categories/cs-foundations/",
+    "/lessons/vm-kali-setup/",
+    "/lessons/shell-files-and-paths/",
+    "/lessons/shell-permissions-and-pipes/",
+    "/lessons/data-representation/"
   ],
   "checks": [
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页桌面卡片层级与已上线计数截图；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-home-desktop.png"
+      "evidence": "首页入口与分类卡：已上线 4，下一课 05；qa/foundations-batch-1-verification.json",
+      "screenshot": "qa/screenshots/foundations-b1-home-desktop.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "注意力矩阵深色屏蔽纹理截图；此项为组件范围；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-attention-dark.png"
+      "evidence": "第 3 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b1-lesson3-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "SQL 代码双栏顶部相同、代码栏溢出为零；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-sql-code.png"
+      "evidence": "第 1 课桌面浅色整页：刊头、目标与前置、分段、嵌套图、终端会话",
+      "screenshot": "qa/screenshots/foundations-b1-lesson1-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "首页 390 宽度截图；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-home-mobile.png"
+      "evidence": "390 宽度下四课整页溢出为零",
+      "screenshot": "qa/screenshots/foundations-b1-lesson2-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "十一课 390 宽度溢出为零；注意力局部滚动；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-attention-mobile.png"
+      "evidence": "第 2 课手机整页：终端输出在块内横向滚动，路径解析器单列排布",
+      "screenshot": "qa/screenshots/foundations-b1-lesson2-mobile.png"
     },
     {
       "id": "category-page",
-      "status": "not-run",
-      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
+      "status": "pass",
+      "evidence": "工程工具分类页按系列分段，已上线三课可进入、规划课无链接",
+      "screenshot": "qa/screenshots/foundations-b1-category.png"
     },
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "首页已上线卡片在前，规划卡片压缩，计数展示已上线课程；qa/user-review-verification.json"
+      "evidence": "路线页已上线课为链接、整行可点，规划课为纯文本；首页面板默认停在有课上线的系列"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "神经网络课打印媒体模拟三题答案显示；未验证纸张分页；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-print.png"
+      "evidence": "打印媒体模拟：四课验收答案可见，复制按钮与顶栏隐藏；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b1-lesson4-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "pass",
-      "evidence": "XOR data-presentation=static；qa/user-review-verification.json"
+      "evidence": "三个探索器在减少动态设置下为 static，显示对照表",
+      "screenshot": "qa/screenshots/foundations-b1-permission-bits-reduced.png"
     },
     {
       "id": "no-javascript",
       "status": "pass",
-      "evidence": "神经网络课无 JS 三步 XOR 与三题习题保留，原生折叠可打开；qa/user-review-verification.json",
-      "screenshot": "qa/screenshots/user-review-no-js.png"
+      "evidence": "关闭 JavaScript 后探索器为静态对照表，验收题三道与原生折叠保留",
+      "screenshot": "qa/screenshots/foundations-b1-path-explorer-nojs.png"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "十一课双宽度页内锚点全部可解析；qa/user-review-verification.json"
+      "evidence": "四课三种环境共 12 次检查，页内锚点无断链；翻页与前置知识链接指向正确"
     },
     {
       "id": "lesson-keyboard",
       "status": "pass",
-      "evidence": "Ctrl+K 打开搜索、Esc 关闭、焦点返回通过；qa/user-review-verification.json"
+      "evidence": "权限位开关用空格键切换通过；首页面板系列切换支持方向键。未做完整 Tab 顺序走查"
     },
     {
       "id": "deployment-csp-pagefind",
       "status": "not-run",
-      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
+      "reason": "本轮只做本地构建与开发服务器检查，未在 nginx 与 CSP 下验收"
     },
     {
       "id": "console",
       "status": "pass",
-      "evidence": "22 次课程页面检查未捕获 pageerror；未全面审计第三方警告；qa/user-review-verification.json"
+      "evidence": "全部检查过程中控制台与页面错误为零"
     },
     {
       "id": "performance",
       "status": "not-run",
-      "reason": "本轮未执行该项完整验收；仅记录实际覆盖范围。"
+      "reason": "本轮未做性能测量"
     }
   ],
   "screenshots": [
-    "qa/screenshots/user-review-attention-dark.png",
-    "qa/screenshots/user-review-attention-mobile.png",
-    "qa/screenshots/user-review-fit-desktop.png",
-    "qa/screenshots/user-review-home-desktop.png",
-    "qa/screenshots/user-review-home-mobile.png",
-    "qa/screenshots/user-review-no-js.png",
-    "qa/screenshots/user-review-print.png",
-    "qa/screenshots/user-review-search-empty.png",
-    "qa/screenshots/user-review-sql-code.png",
-    "qa/screenshots/user-review-xor.png"
+    "qa/screenshots/foundations-b1-category.png",
+    "qa/screenshots/foundations-b1-home-desktop.png",
+    "qa/screenshots/foundations-b1-lesson1-desktop-light.png",
+    "qa/screenshots/foundations-b1-lesson2-mobile.png",
+    "qa/screenshots/foundations-b1-lesson3-desktop-dark.png",
+    "qa/screenshots/foundations-b1-lesson4-print.png",
+    "qa/screenshots/foundations-b1-path-explorer-nojs.png",
+    "qa/screenshots/foundations-b1-permission-bits-reduced.png"
   ]
 }

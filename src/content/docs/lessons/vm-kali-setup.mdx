@@ -1,0 +1,303 @@
+---
+title: 搭环境：虚拟机与 Kali
+description: 在 Windows 上用 VMware 导入 Kali 预装虚拟机，学会快照、网络模式和系统更新
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import NestedLayers from '../../../components/nested-layers.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import manifest from '../../../data/lessons/vm-kali-setup.json';
+
+export const layers = [
+  { role: 'HOST / 宿主机', name: '你的电脑，运行 Windows', detail: '真实的 CPU、内存、硬盘和网卡都在这一层。' },
+  { role: 'HYPERVISOR / 虚拟机软件', name: 'VMware Workstation Pro', detail: 'Windows 里的一个普通程序。它从宿主机划出一部分 CPU、内存和磁盘，模拟出一台完整的电脑。' },
+  { role: 'GUEST / 客户机', name: 'Kali Linux', detail: '装在那台模拟电脑里的另一套操作系统。它有自己的文件、账号和网络地址，弄坏了不影响 Windows。' },
+  { role: 'YOU ARE HERE / 上课的地方', name: 'Kali 里的终端', detail: '之后所有课的命令都在这里输入。' },
+];
+
+export const installSteps = [
+  { title: '注册 Broadcom 账号', detail: '打开 Broadcom 支持门户注册并登录。个人信息如实填写，官方说明乱填的资料可能通不过出口合规审查，导致无法下载。' },
+  { title: '下载安装包', detail: '在门户里找到 VMware Workstation Pro，下载 Windows 版的最新版本。本课以 26H1 为准。' },
+  { title: '安装', detail: '双击安装包，一路使用默认选项。免费版不需要许可证密钥，遇到授权页面时选择免费使用的选项完成安装。' },
+  { title: '打开一次', detail: '从开始菜单启动 VMware Workstation Pro，能看到主界面就算装好。' },
+];
+
+export const importSteps = [
+  { title: '安装 7-Zip', detail: 'Kali 的虚拟机镜像是 .7z 压缩包，Windows 自带的解压功能打不开，需要先装官方的 7-Zip。' },
+  { title: '解压镜像', detail: '在下载好的 .7z 文件上点右键，用 7-Zip 解压到一个你找得到的位置，例如 D:\\VMs。Windows 11 的右键菜单要先点「显示更多选项」才能看到 7-Zip。解压出来是一个文件夹，里面有一个 .vmx 文件和若干磁盘文件。' },
+  { title: '在 VMware 里打开', detail: '在 VMware 主界面选择打开虚拟机（Open a Virtual Machine），找到刚才的文件夹，选中里面的 .vmx 文件。' },
+  { title: '检查配置后开机', detail: '左侧会出现这台虚拟机和它的内存、处理器、磁盘配置。内存在 8 GB 的电脑上保持 2 GB，16 GB 的电脑可以调到 4 GB。然后点击开机。' },
+  { title: '登录', detail: '出现登录界面后，用户名输入 kali，密码输入 kali，都是小写。' },
+];
+
+export const homework = [
+  { title: '改掉默认密码', detail: '在终端输入 passwd，先输一次当前密码 kali，再输两次新密码。输入时屏幕上不会显示任何字符，这是正常的。改完后把新密码记在可靠的地方。' },
+  { title: '完成一次完整更新', detail: '执行 sudo apt update 和 sudo apt full-upgrade -y。第一次更新要下载的包很多，接好电源，等它回到提示符。' },
+  { title: '拍快照 clean', detail: '更新完成后拍一个名为 clean 的快照。之后的课上把环境弄乱了，就回到这里。' },
+  { title: '把结果发到群里', detail: '在终端执行 cat /etc/os-release，把输出截图发到社团群，作为环境搭好的凭证。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="ENV / LESSON 01"
+  kicker="Virtual Machine, Kali, Snapshot"
+  lines={[
+    { text: "搭环境" },
+    { text: "虚拟机与 Kali", accent: true },
+  ]}
+  summary="在 Windows 里用 VMware 开出一台独立的电脑，装上 Kali Linux。之后整个学期的命令、代码和实验都在这台虚拟机里做，弄坏了一键恢复。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：为什么不直接在 Windows 上学
+
+这个学期要做三类事：在命令行里操作文件和程序，写代码并运行，搭起有漏洞的网站再去分析它。这些事直接在自己的 Windows 上做会遇到三个麻烦。
+
+- **弄坏了很难恢复。** 改错一个系统配置、删错一个目录，可能要重装系统。
+- **工具和教程对不上。** 比赛环境、服务器和绝大多数安全工具运行在 Linux 上，命令和路径都和 Windows 不同。
+- **实验对象不该放在日常环境里。** 故意留了漏洞的程序应当关在一个隔离的地方。
+
+虚拟机同时解决这三件事：它是一台装在文件夹里的电脑，可以随时存档、随时恢复，里面装什么系统由你决定。
+
+## 一、虚拟机是什么
+
+### 1. 一台电脑里再开一台电脑
+
+**虚拟机**（virtual machine）是用软件模拟出来的一台完整电脑。运行这个软件的真实电脑叫**宿主机**（host），装在虚拟机里的操作系统叫**客户机**（guest）。
+
+<NestedLayers
+  eyebrow="LAYERS / 谁运行在谁里面"
+  title="四层关系：从你的电脑到上课用的终端"
+  layers={layers}
+  note="越往里的层越容易重来：终端关掉重开，Kali 可以恢复快照，虚拟机整个删掉也只是删了一个文件夹。"
+/>
+
+客户机以为自己独占一台电脑。它看到的硬盘其实是宿主机上的几个大文件，它看到的网卡是虚拟机软件模拟的。这带来两个直接的好处：整台电脑可以复制、备份、删除；客户机里发生的事被挡在这几个文件里面。
+
+### 2. 这门课要装的两样东西
+
+<DataTable
+  caption="本课安装的软件"
+  headers={["名称", "它是什么", "从哪来", "费用"]}
+  rows={[
+    ["VMware Workstation Pro", "虚拟机软件，负责模拟出一台电脑", "Broadcom 支持门户，需要注册账号", "免费，不需要许可证密钥"],
+    ["Kali Linux 预装虚拟机镜像", "已经装好系统和常用工具的一台虚拟机，解压就能用", "kali.org 的 Get Kali 页面，Virtual Machines 一栏", "免费"],
+  ]}
+  columnRatios={[1.2, 1.6, 1.5, 1.1]}
+/>
+
+VMware Workstation Pro 自 2024 年 11 月 11 日起对个人、教育和商业用户免费。（来源：[Broadcom 知识库 368667](#source-vmware-desktop-hypervisor-kb)）
+
+**Kali Linux** 是一个面向安全测试的 Linux 发行版，官方为 VMware、VirtualBox 等平台各准备了一份预装镜像。选预装镜像是因为它省掉了分区、选包这些安装步骤，全社团的环境也因此一致。访问本页核验时的当前版本是 2026.2。（来源：[Get Kali](#source-kali-get-kali)）
+
+<Callout variant="info" title="用 VirtualBox 的同学">
+VirtualBox 也可以用。区别只有两处：下载 VirtualBox 版的镜像，导入时用「添加」选中 .vbox 文件。本课其余内容相同。（来源：[Import Pre-Made Kali VirtualBox VM](#source-kali-import-virtualbox)）
+</Callout>
+
+### 3. 电脑够不够用
+
+Kali 官方制作这份虚拟机时给它分了 2 GB 内存和 80 GB 的磁盘上限；带桌面的 Kali 建议至少 2 GB 内存、20 GB 磁盘。（来源：[Kali inside VMware](#source-kali-vmware-guest)、[Installing Kali Linux](#source-kali-requirements)）
+
+虚拟机用掉的内存是从 Windows 手里分出去的，所以宿主机的内存要比这个数字大得多。社团的建议是：
+
+<DataTable
+  caption="宿主机配置建议（社团建议值）"
+  headers={["宿主机内存", "给 Kali 分多少", "体验"]}
+  rows={[
+    ["8 GB", "2 GB", "够上本学期的课。开虚拟机时少开浏览器标签页。"],
+    ["16 GB 及以上", "4 GB", "流畅。下学期用到 Burp Suite 这类工具时更从容，官方建议这类程序至少 8 GB。"],
+    ["4 GB", "不建议", "Windows 自己就不够用。先和社团联系，借用机房电脑。"],
+  ]}
+  columnRatios={[1, 1, 2.4]}
+/>
+
+磁盘方面预留 40 GB 可用空间，给镜像、之后的更新和快照留出余地。
+
+## 二、装好并开机
+
+### 1. 安装 VMware Workstation Pro
+
+<StepList title="安装 VMware Workstation Pro" steps={installSteps} />
+
+多数电脑出厂时已经开启了硬件虚拟化。如果之后开机时 VMware 提示虚拟化功能被禁用，需要重启进入 UEFI（BIOS）设置把它打开，各品牌的入口不同，微软的说明页列出了主要厂商的操作文档。只改这一项，别动其他设置。（来源：[Enable Virtualization on Windows](#source-ms-enable-virtualization)）
+
+### 2. 下载并校验 Kali 镜像
+
+打开 kali.org 的 Get Kali 页面，进入 Virtual Machines，下载 VMware 的 64 位镜像。文件名形如 `kali-linux-2026.2-vmware-amd64.7z`，体积较大，校园网下载要一段时间。
+
+下载完先确认文件完整。**哈希值**是根据文件内容算出来的一串字符，内容哪怕只差一个字节，算出来的结果也完全不同。把自己算的值和官网公布的值比对，就能知道文件有没有在下载中损坏或被替换。
+
+在开始菜单里搜索 PowerShell（Windows 自带的命令行）并打开，先输入 `cd $HOME\Downloads` 进入下载目录（文件存在别处就换成对应的路径），再输入：
+
+<TerminalSession
+  title="在 Windows 上计算镜像的 SHA256"
+  environment="WINDOWS POWERSHELL"
+  prompt="PS>"
+  steps={[
+    {
+      cmd: 'Get-FileHash .\\kali-linux-2026.2-vmware-amd64.7z -Algorithm SHA256 | Format-List',
+      out: 'Algorithm : SHA256\nHash      : （64 个十六进制字符）\nPath      : C:\\Users\\你的用户名\\Downloads\\kali-linux-2026.2-vmware-amd64.7z',
+      note: '输出格式引自微软文档。Hash 一行要和 Kali 下载页上这个文件的 SHA256 逐位相同，大小写不影响。不一致就重新下载。',
+    },
+  ]}
+/>
+
+（来源：[Get-FileHash](#source-ms-get-filehash)）
+
+### 3. 解压并导入
+
+<StepList title="把 Kali 导入 VMware" steps={importSteps} />
+
+（来源：[Import Pre-Made Kali VMware VM](#source-kali-import-vmware)、[Kali's Default Credentials](#source-kali-default-credentials)）
+
+登录后看到的是 Kali 的桌面。鼠标点进虚拟机窗口后，键盘输入就进了 Kali；按 `Ctrl` + `Alt` 可以把鼠标还给 Windows。（来源：[Default Hot-Key Combinations](#source-vmware-hotkeys)）
+
+### 4. 在终端里确认环境
+
+在 Kali 桌面的面板上找到终端图标点开，或在应用菜单里搜索 terminal。**终端**是一个输入命令的窗口，本学期大部分操作都在这里完成。先输入四条命令，每输完一条按一次回车：
+
+<TerminalSession
+  title="确认自己是谁、在什么系统里"
+  steps={[
+    { cmd: 'whoami', out: 'kali', note: '当前登录的用户名。' },
+    { cmd: 'echo $SHELL', out: '/usr/bin/zsh', note: '替你解释命令的程序叫 shell，Kali 默认用的是 zsh。' },
+    { cmd: 'uname -m', out: 'x86_64', note: '处理器架构：64 位的 Intel 或 AMD。' },
+    {
+      cmd: 'cat /etc/os-release',
+      out: 'PRETTY_NAME="Kali GNU/Linux Rolling"\nNAME="Kali GNU/Linux"\nVERSION_ID="2026.3"\nVERSION="2026.3"\nVERSION_CODENAME=kali-rolling\nID=kali\nID_LIKE=debian\nHOME_URL="https://www.kali.org/"\nSUPPORT_URL="https://forums.kali.org/"\nBUG_REPORT_URL="https://bugs.kali.org/"\nANSI_COLOR="1;31"',
+      note: 'VERSION_ID 取决于镜像版本和更新状态：刚导入的镜像显示 2026.2，更新后会变成更新的数字。',
+    },
+  ]}
+/>
+
+你的终端里，命令前面显示的是两行提示符，形如 `┌──(kali㉿kali)-[~]` 和 `└─$`。它的读法留到下一课，现在只需要知道：看到 `$` 就表示终端在等你输入。本站的示例统一把提示符简写成一个 `$`。
+
+Kali 默认以普通用户 kali 登录，日常操作没有管理员权限。需要管理员权限的命令在前面加 `sudo`，输入自己的密码后执行。（来源：[All about sudo](#source-kali-sudo)）
+
+## 三、快照、网络与更新
+
+### 1. 快照：出错之前的存档点
+
+**快照**（snapshot）把虚拟机此刻的状态整个存下来。VMware 的定义是：快照包含虚拟机的内存内容、虚拟机设置和所有虚拟磁盘的状态，之后可以反复回到这个状态。（来源：[Taking Snapshots of Virtual Machines](#source-vmware-snapshots)）
+
+<DataTable
+  caption="快照的两个操作（菜单以英文界面为准，其他语言在相同位置）"
+  headers={["操作", "菜单路径", "结果"]}
+  rows={[
+    ["拍摄快照", "VM › Snapshot › Take Snapshot，填写名称后确定", "保存当前状态。名称写清楚这是什么时候的环境，例如 clean。"],
+    ["恢复快照", "VM › Snapshot › Revert to Snapshot", "回到上一个快照。拍快照之后的所有改动都会消失。"],
+    ["选择任意快照", "VM › Snapshot，在列表里选中一个，点 Go To", "回到选中的那个快照。"],
+  ]}
+  columnRatios={[1, 2, 2]}
+/>
+
+两条使用习惯：
+
+- 环境调好之后立刻拍一个，之后每次做没把握的操作前再拍一个。
+- 恢复之前，把想留下的文件先拷到虚拟机外面。恢复会连同磁盘上的新文件一起撤销。
+
+### 2. 网络模式：虚拟机怎么上网
+
+虚拟机的网卡是模拟出来的，它怎样连到外面由**网络模式**决定。在虚拟机设置的网络适配器一项里可以切换。
+
+<DataTable
+  caption="VMware 的三种常用网络模式"
+  headers={["模式", "虚拟机拿到什么", "能和谁通信", "什么时候用"]}
+  rows={[
+    ["NAT（默认）", "宿主机内部一个私有网络的地址，在外部网络上没有自己的 IP", "能通过宿主机上网；外面的机器看不到它", "平时上课、上网、装软件"],
+    ["桥接（Bridged）", "通过宿主机的网卡直接接入宿主机所在的网络", "和同一网络里的其他机器互相可见", "需要让队友的电脑访问你虚拟机里的服务时"],
+    ["仅主机（Host-only）", "只存在于宿主机内部的网络", "只能和宿主机以及同一网络里的其他虚拟机通信，不能上网", "靶机只想让自己访问、完全不联网时"],
+  ]}
+  columnRatios={[1, 1.7, 1.6, 1.5]}
+/>
+
+（来源：[Understanding Common Networking Configurations](#source-vmware-networking)）
+
+本学期保持默认的 NAT。要记住的结论只有一条：默认的 NAT 模式下，别人的电脑不能主动连到你的虚拟机。
+
+### 3. 第一次更新系统
+
+Kali 的默认软件源是滚动更新的 `kali-rolling` 分支：里面的包持续更新，镜像只是某一时刻打包好的状态。所以装好后先更新一次。更新分两步，先刷新「有哪些新版本」的清单，再真正下载安装。
+
+<TerminalSession
+  title="刷新软件清单"
+  steps={[
+    {
+      cmd: 'sudo apt update',
+      out: '[sudo] password for kali: \nHit:1 http://http.kali.org/kali kali-rolling InRelease\n2 packages can be upgraded. Run \'apt list --upgradable\' to see them.',
+      note: '输入密码时屏幕上什么都不显示，输完按回车即可。最后一行的数字因人而异，刚导入的镜像可升级的包会多得多。',
+    },
+  ]}
+/>
+
+然后执行 `sudo apt full-upgrade -y` 完成升级。`-y` 表示对「是否继续」自动回答「是」。屏幕会滚动很多行，等它回到 `$` 提示符就结束了。（来源：[Updating Kali](#source-kali-updating)）
+
+更新完成后，拍下第一个快照，命名为 `clean`。
+
+## 常见问题与排错
+
+<DataTable
+  caption="开机和登录阶段的常见问题"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["开机时提示虚拟化被禁用（VT-x 或 AMD-V）", "主板固件里没有开启硬件虚拟化", "重启进入 UEFI（BIOS），找到虚拟化选项并开启，保存后重启。只改这一项。"],
+    ["解压后的文件夹里找不到 .vmx 文件", "下载的是 VirtualBox、Hyper-V 或安装版镜像", "回到 Get Kali 页面，确认下载的是 Virtual Machines 里的 VMware 版本。"],
+    ["登录提示密码错误", "用户名或密码输错，或开了大写锁定", "用户名和密码都是小写的 kali。"],
+    ["输入 sudo 的密码时没有任何反应", "终端不回显密码", "正常现象。照常输入后按回车。"],
+    ["apt update 报网络错误", "虚拟机没有连上网络", "在虚拟机设置里确认网络适配器是 NAT 且处于已连接状态，再确认 Windows 自己能上网。"],
+    ["虚拟机非常卡", "宿主机内存不够，或同时开了太多程序", "关掉 Windows 上不用的程序；16 GB 内存的电脑可以把虚拟机内存调到 4 GB。"],
+  ]}
+  columnRatios={[1.3, 1.2, 2]}
+/>
+
+课上解决不了的问题，把报错原文截图发到群里。描述问题时带上三样东西：你做了什么操作，屏幕上的原文是什么，你的电脑内存多大。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '默认账号', description: '用户名 kali，密码 kali。装好后用 passwd 改掉。' },
+    { term: 'whoami', description: '打印当前用户名。' },
+    { term: 'cat /etc/os-release', description: '查看系统名称和版本。' },
+    { term: 'sudo 命令', description: '以管理员身份执行这一条命令，会询问你自己的密码。' },
+    { term: 'sudo apt update', description: '刷新软件清单。' },
+    { term: 'sudo apt full-upgrade -y', description: '升级全部已安装的软件。' },
+    { term: 'Ctrl + Alt', description: '把鼠标从虚拟机还给 Windows。' },
+    { term: '快照', description: 'VM › Snapshot › Take Snapshot 拍摄，Revert to Snapshot 恢复。' },
+  ]}
+/>
+
+<Callout variant="warning" title="Kali 里的工具用在哪">
+Kali 预装了大量扫描和攻击工具。它们只能用在三类目标上：你自己的虚拟机、社团提供的靶场和比赛环境、得到书面授权的系统。对校园网和任何公网目标运行这些工具都是违规甚至违法的，本学期的课程也不需要这样做。
+</Callout>
+
+<KeyTakeaway>
+虚拟机是一台装在文件夹里的电脑：VMware 负责模拟，Kali 是装在里面的系统，快照让它随时回到过去。环境搭好的三个标志是：能用 kali 登录，`whoami` 输出 kali，有一个名为 clean 的快照。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟，大部分是等待下载。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

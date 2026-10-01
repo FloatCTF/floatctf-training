@@ -1,0 +1,62 @@
+---
+// 终端会话：把「你输入的命令」和「终端打印的输出」分开呈现，输出来自真实环境的运行记录。
+// 复制按钮只复制命令，不带提示符和输出，避免学员把整段粘进终端。
+interface Step {
+  cmd: string;
+  /** 终端打印的内容；没有输出的命令（如 cd、mkdir）省略。 */
+  out?: string;
+  /** 这一步之后的一句解释，写给第一次见到这条输出的人。 */
+  note?: string;
+}
+
+interface Props {
+  title: string;
+  steps: Step[];
+  /** 提示符：Kali 终端用 $，Windows PowerShell 用 PS>。 */
+  prompt?: string;
+  /** 环境标签，显示在标题栏左侧。 */
+  environment?: string;
+}
+
+const { title, steps, prompt = '$', environment = 'KALI 终端' } = Astro.props;
+const commands = steps.map((step) => step.cmd).join('\n');
+---
+<figure class="terminal-session not-content" aria-label={title}>
+  <figcaption class="terminal-session__bar">
+    <span class="terminal-session__env">{environment}</span>
+    <span class="terminal-session__title">{title}</span>
+    <button type="button" class="terminal-session__copy" data-copy-commands={commands} hidden>复制命令</button>
+    <span class="terminal-session__status" role="status"></span>
+  </figcaption>
+  <div class="terminal-session__body" tabindex="0" role="group" aria-label={`${title}：命令与输出，可横向滚动`}>
+    {steps.map((step) => (
+      <div class="terminal-session__step">
+        <p class="terminal-session__cmd">
+          <span class="terminal-session__prompt" aria-hidden="true">{prompt}</span>
+          <kbd>{step.cmd}</kbd>
+        </p>
+        {step.out && <pre class="terminal-session__out"><samp>{step.out}</samp></pre>}
+        {step.note && <p class="terminal-session__note">{step.note}</p>}
+      </div>
+    ))}
+  </div>
+  <p class="terminal-session__legend">
+    <span><b aria-hidden="true">{prompt}</b> 后面是你输入的命令</span>
+    <span>其余是终端打印的输出</span>
+  </p>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-commands]').forEach((button) => {
+    const status = button.parentElement?.querySelector<HTMLElement>('[role="status"]');
+    button.hidden = false;
+    button.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(button.dataset.copyCommands || '');
+        if (status) status.textContent = '已复制命令';
+      } catch {
+        if (status) status.textContent = '复制失败，请手动选中命令';
+      }
+    });
+  });
+</script>

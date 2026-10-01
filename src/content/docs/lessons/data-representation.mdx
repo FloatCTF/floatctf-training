@@ -1,0 +1,310 @@
+---
+title: 数据怎样表示：二进制、十六进制与编码
+description: 从位和字节出发，用 xxd 看清文字怎样变成字节，掌握十六进制、UTF-8、Base64 与 URL 编码的互相转换
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import LabDownload from '../../../components/lab-download.astro';
+import EncodingExplorer from '../../../components/encoding-explorer';
+import manifest from '../../../data/lessons/data-representation.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用一条管道命令解开那串两层编码，输出应当以 kali{ 开头。' },
+  { title: '逐字节解释一个文件', detail: '执行 xxd ~/lab/notes/first.txt，对照 ASCII 说出 11 个字节各是什么字符，并指出哪一个字节是换行。' },
+  { title: '改脚本再跑一遍', detail: '在 ~/lab 里输入 mousepad roundtrip.sh，用图形界面的文本编辑器打开脚本，把 text 的值改成自己名字的拼音，保存后重新运行 sh roundtrip.sh，最后一行仍然应当是 PASS。' },
+  { title: '给同学出一道题', detail: '把一句话先转成十六进制、再做 Base64，把结果发给同学，让对方用管道解出来。互相检查答案。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="DATA / LESSON 04"
+  kicker="Bits, Bytes, Hex, Base64"
+  lines={[
+    { text: "数据怎样表示" },
+    { text: "二进制、十六进制与编码", accent: true },
+  ]}
+  summary="文件、网络数据包、内存里的变量，底层都是一串字节。同一串字节可以写成二进制、十六进制、Base64 或 URL 编码，它们只是写法不同。看懂这些写法，是之后读代码、抓包和做题的共同基础。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：这串字符是什么
+
+入门的 CTF 题目里经常出现这样的字符串：
+
+```text
+NjY2YzYxNjc3YjY4NjU2YzZjNmY3ZA==
+```
+
+它看起来像乱码，实际上是一句普通的话被换了两次写法。这一课结束时，你会用一条命令把它还原，并且知道每一步发生了什么。
+
+线索有两个：结尾的 `==`，以及只出现大小写字母和数字。先记住这两个特征，第三节回来解它。
+
+## 一、位、字节与三种进制
+
+### 1. 位和字节
+
+计算机里最小的存储单位是**位**（bit），只有 0 和 1 两种状态。8 个位组成一个**字节**（byte）。（来源：[CS50x Week 0](#source-cs50-week0)）
+
+8 个位一共有 2⁸ = 256 种组合，所以一个字节能表示 0 到 255 之间的一个数。文件大小、网络流量、内存容量，数的都是字节。上节课 `ls -l` 显示 `first.txt` 的大小是 11，意思就是这个文件由 11 个字节组成。
+
+### 2. 同一个数的三种写法
+
+人习惯用十进制，计算机内部是二进制，而二进制写出来太长。于是有了**十六进制**：用 0 到 9 和 a 到 f 共 16 个符号，每个符号正好对应 4 个位。（来源：[RFC 4648](#source-rfc4648)）
+
+一个字节是 8 个位，写成十六进制正好是两个符号。这就是十六进制到处出现的原因。
+
+<DataTable
+  caption="同一个字节的三种写法"
+  headers={["十进制", "二进制（8 位）", "十六进制", "怎么读十六进制"]}
+  rows={[
+    ["0", "00000000", "00", "0×16 + 0"],
+    ["10", "00001010", "0a", "0×16 + 10"],
+    ["65", "01000001", "41", "4×16 + 1"],
+    ["75", "01001011", "4b", "4×16 + 11"],
+    ["255", "11111111", "ff", "15×16 + 15"],
+  ]}
+  columnRatios={[1, 1.5, 1, 1.6]}
+/>
+
+十六进制和二进制之间不用算，直接查：每个十六进制符号展开成 4 个位。`4b` 的 `4` 是 `0100`，`b` 是 `1011`，拼起来就是 `01001011`。
+
+为了和十进制区分，十六进制数前面常加 `0x`，例如 `0x41`。
+
+### 3. 让终端替你换算
+
+<TerminalSession
+  title="三种进制互相换"
+  steps={[
+    { cmd: 'cd ~/lab', note: '本课的命令都在练习目录里执行。' },
+    { cmd: "printf '%d\\n' 0x41", out: '65', note: '%d 表示按十进制打印。0x41 是十六进制写法。' },
+    { cmd: "printf '%x\\n' 255", out: 'ff', note: '%x 表示按十六进制打印。' },
+    { cmd: 'echo $((2#01000001))', out: '65', note: '$(( )) 是算术表达式，2# 表示后面是二进制。' },
+    { cmd: 'echo $((16#ff))', out: '255', note: '16# 表示后面是十六进制。' },
+    { cmd: 'echo $((0xff + 1))', out: '256', note: '可以直接参与计算。' },
+  ]}
+/>
+
+## 二、文字怎样变成字节
+
+### 1. ASCII：给每个字符一个编号
+
+字节只能存数。要存文字，就得约定「哪个数代表哪个字符」。最早被广泛使用的约定是 **ASCII**：它给英文字母、数字、标点和一些控制符号各分配了一个 0 到 127 之间的编号。大写 A 是 65，小写 a 是 97。（来源：[RFC 20](#source-rfc20)）
+
+`xxd` 能把数据的每个字节打印出来：
+
+<TerminalSession
+  title="用 xxd 看字节"
+  steps={[
+    { cmd: "printf 'A' | xxd", out: '00000000: 41                                       A', note: 'printf 原样输出文字，不会自动加换行。一个字符，一个字节，值是 0x41。' },
+    { cmd: "printf 'A' | xxd -b", out: '00000000: 01000001                                               A', note: '-b 把每个字节显示成 8 个二进制位。' },
+    { cmd: "printf 'Hi\\n' | xxd", out: '00000000: 4869 0a                                  Hi.', note: '\\n 是换行符，它也是一个字节，值是 0x0a。' },
+    { cmd: 'xxd notes/first.txt', out: '00000000: 6865 6c6c 6f20 6b61 6c69 0a              hello kali.', note: '10 个可见字符加 1 个换行，一共 11 个字节，和 ls -l 显示的大小一致。' },
+  ]}
+/>
+
+`xxd` 的输出分三栏：
+
+<DataTable
+  caption="xxd 输出的三栏"
+  headers={["栏", "例子", "含义"]}
+  rows={[
+    ["左", "00000000:", "这一行第一个字节在文件里的位置（偏移），十六进制"],
+    ["中", "6865 6c6c 6f20 …", "每个字节的十六进制值，每两个字节空一格"],
+    ["右", "hello kali.", "把这些字节当文字显示。显示不出来的字节（如换行）用 . 代替"],
+  ]}
+  columnRatios={[0.6, 1.6, 3]}
+/>
+
+（来源：[xxd(1)](#source-xxd-manpage)）
+
+### 2. UTF-8：让一个字符占多个字节
+
+ASCII 只有 128 个编号，放不下中文。**Unicode** 给世界上的每个字符分配了一个编号，叫码点，写作 `U+` 加十六进制，例如「中」是 U+4E2D。**UTF-8** 规定了怎样把码点存成字节：编号小的字符用 1 个字节，大的用 2 到 4 个。
+
+<DataTable
+  caption="UTF-8 用几个字节"
+  headers={["码点范围", "字节数", "例子"]}
+  rows={[
+    ["U+0000 到 U+007F", "1", "英文字母、数字、常用标点。和 ASCII 完全相同"],
+    ["U+0080 到 U+07FF", "2", "带重音的拉丁字母、希腊字母等"],
+    ["U+0800 到 U+FFFF", "3", "绝大多数汉字"],
+    ["U+10000 到 U+10FFFF", "4", "表情符号、生僻字"],
+  ]}
+  columnRatios={[1.4, 0.7, 2.6]}
+/>
+
+（来源：[RFC 3629](#source-rfc3629)）
+
+<TerminalSession
+  title="一个汉字，三个字节"
+  steps={[
+    { cmd: "printf '中' | xxd", out: '00000000: e4b8 ad                                  ...', note: '三个字节：e4 b8 ad。右栏显示成三个点，因为 xxd 按单个字节显示，认不出多字节的字符。' },
+    { cmd: "printf '中' | wc -c", out: '3', note: 'wc -c 数字节。' },
+    { cmd: "printf '中' | wc -m", out: '1', note: 'wc -m 数字符。' },
+    { cmd: "printf 'a中' | xxd", out: '00000000: 61e4 b8ad                                a...', note: 'a 占 1 个字节，中占 3 个，共 4 个。' },
+  ]}
+/>
+
+字符数和字节数是两回事。程序里凡是涉及「长度」的地方，都要先问清楚数的是哪一个。
+
+下面的工具把这几层放在一起。改一改文字，看字节怎么变：
+
+<EncodingExplorer client:visible />
+
+## 三、Base64 与 URL 编码
+
+### 1. 十六进制字符串
+
+把每个字节写成两个十六进制字符、连在一起，就得到十六进制字符串。它只含 0 到 9 和 a 到 f，可以放心地复制粘贴。代价是长度翻倍。
+
+<TerminalSession
+  title="字节与十六进制字符串互转"
+  steps={[
+    { cmd: "printf 'hello' | xxd -p", out: '68656c6c6f', note: '-p 只输出连续的十六进制，不带偏移和文本栏。' },
+    { cmd: 'echo 68656c6c6f | xxd -r -p', out: 'hello', note: '-r 反向转换：把十六进制还原成字节。' },
+  ]}
+/>
+
+### 2. Base64：每 3 个字节写成 4 个字符
+
+很多场合只能传输文字，例如邮件正文、网页里的一段文本。要在这些地方传递任意字节，就需要把字节换成一组安全的字符。**Base64** 用 64 个字符：大小写字母 52 个、数字 10 个，加上 `+` 和 `/`。
+
+64 = 2⁶，每个字符正好表示 6 个位。规则是：把输入每 3 个字节（24 位）分成一组，切成 4 个 6 位，每个 6 位查表换成一个字符。最后一组不足 3 个字节时，用 `=` 补齐到 4 个字符。（来源：[RFC 4648](#source-rfc4648)）
+
+<TerminalSession
+  title="补位的三种情况"
+  steps={[
+    { cmd: "printf 'Man' | base64", out: 'TWFu', note: '正好 3 个字节，4 个字符，不需要补位。' },
+    { cmd: "printf 'Ma' | base64", out: 'TWE=', note: '剩 2 个字节：3 个字符加一个 =。' },
+    { cmd: "printf 'M' | base64", out: 'TQ==', note: '剩 1 个字节：2 个字符加两个 =。' },
+    { cmd: "echo 'aGVsbG8=' | base64 -d", out: 'hello', note: '-d 是解码。' },
+  ]}
+/>
+
+所以结尾的一两个 `=` 是 Base64 最明显的特征。长度方面，3 个字节变 4 个字符，大约膨胀到原来的三分之四。
+
+### 3. URL 编码：%XX
+
+URL 里有些字符有特殊含义，例如 `&` 分隔参数、`=` 连接名和值、空格则根本不允许出现。要把这些字符当作普通数据放进 URL，就把对应的字节写成 `%` 加两位十六进制。中文先按 UTF-8 变成字节，再逐个字节这样写。（来源：[RFC 3986](#source-rfc3986)）
+
+终端里没有专门的命令，这里借用 Python 的一行写法，先照抄，Python 从下一课开始学：
+
+<TerminalSession
+  title="URL 编码与解码"
+  steps={[
+    { cmd: "python3 -c \"import urllib.parse; print(urllib.parse.quote('a b&c=中'))\"", out: 'a%20b%26c%3D%E4%B8%AD', note: '空格是 %20，& 是 %26，= 是 %3D。「中」的三个字节 e4 b8 ad 变成 %E4%B8%AD。' },
+    { cmd: "python3 -c \"import urllib.parse; print(urllib.parse.unquote('flag%7Burl%7D'))\"", out: 'flag{url}', note: '%7B 和 %7D 是一对花括号。' },
+  ]}
+/>
+
+### 4. 编码不是加密
+
+<Callout variant="warning" title="看不懂不等于安全">
+十六进制、Base64、URL 编码都是**编码**：规则公开，不需要密钥，任何人都能还原。它们的作用是让数据能在某种场合安全地传输和显示。**加密**需要密钥，没有密钥的人还原不了。把密码做一次 Base64 存起来，等于明文存放。
+</Callout>
+
+下载这个脚本，它把一段文字依次变成十六进制和 Base64，再原样变回来：
+
+<LabDownload file="labs/data-representation/roundtrip.sh" label="下载往返脚本" />
+
+<TerminalSession
+  title="往返一次，内容分毫不差"
+  steps={[
+    { cmd: 'mv ~/Downloads/roundtrip.sh .', note: '把下载的脚本搬进当前的练习目录。' },
+    {
+      cmd: 'sh roundtrip.sh',
+      out: '原文      : flag{hello}\n十六进制  : 666c61677b68656c6c6f7d\n再 Base64 : NjY2YzYxNjc3YjY4NjU2YzZjNmY3ZA==\n解 Base64 : 666c61677b68656c6c6f7d\n还原文字  : flag{hello}\nPASS 往返一致：编码可以无损还原，它不是加密',
+      note: '11 个字节的原文，十六进制后是 22 个字符，再做 Base64 后是 32 个字符。',
+    },
+  ]}
+/>
+
+### 5. 回到开头那串字符
+
+脚本输出的第三行，就是课首那串字符。它是先转十六进制、再做 Base64 得到的，所以解的时候反过来：先解 Base64，再把十六进制还原。
+
+<TerminalSession
+  title="一层一层解"
+  steps={[
+    { cmd: "echo 'NjY2YzYxNjc3YjY4NjU2YzZjNmY3ZA==' | base64 -d", out: '666c61677b68656c6c6f7d', note: '解出来只有 0 到 9 和 a 到 f，是十六进制字符串。' },
+    { cmd: "echo 'NjY2YzYxNjc3YjY4NjU2YzZjNmY3ZA==' | base64 -d | xxd -r -p", out: 'flag{hello}', note: '再接一段，把十六进制还原成文字。' },
+  ]}
+/>
+
+<DataTable
+  caption="凭外观猜编码"
+  headers={["看到的样子", "多半是", "用什么解"]}
+  rows={[
+    ["只有 0 到 9 和 a 到 f，长度是偶数", "十六进制字符串", "xxd -r -p"],
+    ["大小写字母、数字、+ 和 /，结尾可能有一两个 =", "Base64", "base64 -d"],
+    ["夹着很多 %，后面跟两位十六进制", "URL 编码", "urllib.parse.unquote"],
+    ["只有 0 和 1，8 个一组", "二进制写出的字节", "每 8 位换成一个字节"],
+  ]}
+  columnRatios={[2, 1.2, 1.2]}
+/>
+
+## 常见错误与边界
+
+<DataTable
+  caption="本课最容易踩的坑"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["echo 'Man' | base64 得到 TWFuCg==，和预期的 TWFu 不一样", "echo 会在末尾加一个换行，换行也被编码了进去", "编码时用 printf，或 echo -n"],
+    ["base64: invalid input", "输入里有不属于 Base64 字符表的字符，或者复制时丢了一截", "检查是否多复制了空格、引号，或少了结尾的 ="],
+    ["xxd -r -p 的结果少了最后一个字符", "十六进制字符串的长度是奇数，最后半个字节被丢掉", "两个十六进制字符才是一个字节，检查是否漏了一位"],
+    ["中文的长度对不上", "把字符数当成了字节数", "wc -m 数字符，wc -c 数字节"],
+    ["把 Base64 解出来还是看不懂", "可能不止一层编码，也可能本来就不是文字", "先用 xxd 看字节，再按上表的特征判断下一层"],
+  ]}
+  columnRatios={[1.6, 1.6, 1.5]}
+/>
+
+边界：凭外观判断编码只是经验。一串十六进制字符同时也是合法的 Base64，判断错了解出来的是乱码。每解一层都看一眼结果是否合理，再决定下一步。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '1 字节 = 8 位', description: '能表示 0 到 255，写成十六进制正好两个字符。' },
+    { term: "printf '%d\\n' 0x41", description: '十六进制转十进制。%x 反过来。' },
+    { term: 'echo $((2#1010))', description: '二进制转十进制。16# 是十六进制。' },
+    { term: 'xxd / xxd -b', description: '看字节的十六进制 / 二进制。' },
+    { term: 'xxd -p / xxd -r -p', description: '转成纯十六进制字符串 / 还原。' },
+    { term: 'base64 / base64 -d', description: 'Base64 编码 / 解码。' },
+    { term: 'wc -c / wc -m', description: '数字节 / 数字符。' },
+    { term: 'printf 与 echo', description: 'printf 不加换行，echo 会加。编码时用 printf。' },
+    { term: 'UTF-8', description: '英文 1 字节，绝大多数汉字 3 字节。' },
+    { term: '%XX', description: 'URL 编码：一个字节写成 % 加两位十六进制。' },
+  ]}
+/>
+
+<KeyTakeaway>
+一切数据都是字节。十六进制是字节最直接的写法，两个字符一个字节；UTF-8 决定文字变成哪些字节；Base64 把每 3 个字节写成 4 个字符，结尾用 = 补齐。这些都是编码，规则公开、可以无损还原，不提供任何保密性。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

@@ -1,6 +1,7 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
 import { completedTopicsByCategory, findCategory, findTopic } from '../data/catalog';
+import { pathPosition } from '../data/paths';
 import { withBase } from '../lib/base-url';
 
 const route = (Astro.locals as unknown as {
@@ -22,19 +23,34 @@ if (entryId.startsWith('lessons/')) {
   const lessonId = entryId.replace(/^lessons\//, '');
   const topic = findTopic(lessonId);
   const category = topic ? findCategory(topic.categoryId) : undefined;
+  const position = pathPosition(lessonId);
   const siblings = topic ? completedTopicsByCategory(topic.categoryId) : [];
   const index = siblings.findIndex((item) => item.id === lessonId);
   const previousTopic = index > 0 ? siblings[index - 1] : undefined;
   const nextTopic = index >= 0 ? siblings[index + 1] : undefined;
-  if (previousTopic?.pagePath) {
-    prev = { href: withBase(previousTopic.pagePath), label: previousTopic.title };
-  } else if (category) {
-    prev = { href: withBase(category.pagePath), label: category.name };
-  }
-  if (nextTopic?.pagePath) {
-    next = { href: withBase(nextTopic.pagePath), label: nextTopic.title };
-  } else if (category) {
-    endNote = `《${category.name}》已上线的课到这里。显示为规划中的分类还没有可进入的课。`;
+  if (position) {
+    // 学习路线上的课按路线顺序翻页：路线横跨多个分类，分类内的相邻课不一定是下一次课的内容。
+    prev = position.previous?.pagePath
+      ? { href: withBase(position.previous.pagePath), label: position.previous.title }
+      : { href: withBase(position.path.pagePath), label: position.path.title };
+    if (position.next?.pagePath && position.next.id === position.upcoming?.id) {
+      next = { href: withBase(position.next.pagePath), label: position.next.title };
+    } else if (position.upcoming) {
+      endNote = `《${position.path.title}》的下一课《${position.upcoming.title}》还在准备中。`;
+    } else {
+      endNote = `《${position.path.title}》到这里全部学完。`;
+    }
+  } else {
+    if (previousTopic?.pagePath) {
+      prev = { href: withBase(previousTopic.pagePath), label: previousTopic.title };
+    } else if (category) {
+      prev = { href: withBase(category.pagePath), label: category.name };
+    }
+    if (nextTopic?.pagePath) {
+      next = { href: withBase(nextTopic.pagePath), label: nextTopic.title };
+    } else if (category) {
+      endNote = `《${category.name}》已上线的课到这里。显示为规划中的分类还没有可进入的课。`;
+    }
   }
 }
 ---

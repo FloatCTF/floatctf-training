@@ -1,0 +1,36 @@
+---
+// 嵌套层次图：由外到内一层套一层，用来说明「谁运行在谁里面」（宿主机 ⊃ 虚拟机软件 ⊃ 客户机）。
+// 纯静态 HTML，打印、无 JavaScript 与减少动态状态下内容相同。
+import LessonDiagram from './lesson-diagram.astro';
+
+interface Layer {
+  /** 等宽小标签，说明这一层的角色，如 HOST / 宿主机。 */
+  role: string;
+  name: string;
+  detail: string;
+}
+
+interface Props {
+  eyebrow?: string;
+  title?: string;
+  /** 由外到内排列。 */
+  layers: Layer[];
+  note?: string;
+  nested?: boolean;
+}
+
+const { eyebrow = '', title = '', layers, note, nested = false } = Astro.props;
+const [outer, ...inner] = layers;
+---
+{nested ? (
+  <div class="nested-layers__layer">
+    <p class="nested-layers__role">{outer.role}</p>
+    <p class="nested-layers__name">{outer.name}</p>
+    <p class="nested-layers__detail">{outer.detail}</p>
+    {inner.length > 0 && <Astro.self layers={inner} nested />}
+  </div>
+) : (
+  <LessonDiagram eyebrow={eyebrow} title={title} ariaLabel={title} class="nested-layers" note={note}>
+    <Astro.self layers={layers} nested />
+  </LessonDiagram>
+)}

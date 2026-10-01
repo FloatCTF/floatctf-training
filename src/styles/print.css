@@ -322,4 +322,16 @@
   a[href^='http']::after { overflow-wrap: anywhere; font-size: 0.76em; content: ' (' attr(href) ')';
     color: var(--training-muted);
   }
+  .terminal-session,
+  .nested-layers,
+  .path-explorer,
+  .permission-bits,
+  .encoding-explorer {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  .terminal-session__body { overflow: visible; }
+  .terminal-session__out { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .terminal-session__copy { display: none !important; }
+  .encoding-explorer__scroll { overflow: visible; }
 }

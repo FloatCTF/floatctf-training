@@ -1,0 +1,294 @@
+{
+  "lessonPlan": {
+    "audience": "已经装好 Kali 虚拟机、第一次使用命令行的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "subtle",
+    "visualStory": "同一个路径表达式从不同的当前目录出发会指向不同的位置：用一棵固定的目录树，逐段展示 shell 解析路径的过程，对比绝对路径、相对路径、~、. 与 ..",
+    "learningObjectives": [
+      "读懂 Kali 终端的提示符，说出一条命令由命令名、选项和参数三部分组成",
+      "用 pwd、ls、cd 在文件系统里移动，并随时说出自己在哪",
+      "区分绝对路径和相对路径，正确使用 ~、. 和 ..",
+      "用 mkdir、cp、mv、rm、cat 完成创建、复制、改名、删除和查看",
+      "用 man、--help 和 Tab 补全自己查到命令的用法",
+      "根据报错原文判断是命令写错、路径不对还是对象类型不对"
+    ],
+    "prerequisites": [
+      "vm-kali-setup",
+      "能用 kali 账号登录虚拟机并打开终端"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-relative-path",
+      "kind": "mechanism",
+      "title": "同一条命令为什么换个地方就失效",
+      "question": "在 ~/lab 里执行 cat notes/first.txt 能打印出内容。执行 cd web 之后，同样的命令却报 No such file or directory。文件没有被动过，为什么会这样？写出两种在 web 目录里仍然能读到这个文件的写法。",
+      "answer": "notes/first.txt 不以 / 开头，是相对路径，shell 从当前目录开始找。在 ~/lab 里它指向 ~/lab/notes/first.txt；进入 web 之后，它指向 ~/lab/web/notes/first.txt，这个位置不存在。两种写法：cat ../notes/first.txt，先用 .. 回到上一级再往下走；或者 cat ~/lab/notes/first.txt，从家目录写起，和当前位置无关。",
+      "sourceIds": [
+        "missing-semester-shell",
+        "zsh-expansion"
+      ]
+    },
+    {
+      "id": "check-predict-pwd",
+      "kind": "prediction",
+      "title": "走完四步之后在哪",
+      "question": "依次执行 cd ~/lab/notes、cd ../..、cd ./lab、cd ..，最后执行 pwd。先在纸上一步步写出每条命令之后所在的目录，再写出 pwd 的输出，然后到终端里核对。",
+      "answer": "pwd 输出 /home/kali。逐步是：cd ~/lab/notes 到 /home/kali/lab/notes；cd ../.. 连退两级到 /home/kali；cd ./lab 从当前目录进入 lab，到 /home/kali/lab；cd .. 再退一级回到 /home/kali。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "check-build-tree",
+      "kind": "practice",
+      "title": "照着图建一棵目录树",
+      "question": "在 ~/lab 下建出这样的结构：hw1 目录里有 src 和 docs 两个目录；src 里有 main.py，内容是一行 print(\"hi\")；docs 里有 backup.py，内容和 main.py 相同。要求 backup.py 通过复制再改名得到，不能重新手写内容。完成后执行 tree ~/lab/hw1 自查。",
+      "answer": "一种做法：mkdir -p ~/lab/hw1/src ~/lab/hw1/docs；echo 'print(\"hi\")' > ~/lab/hw1/src/main.py；cp ~/lab/hw1/src/main.py ~/lab/hw1/docs/main-backup.py；mv ~/lab/hw1/docs/main-backup.py ~/lab/hw1/docs/backup.py。自查标准：tree ~/lab/hw1 的最后一行是 3 directories, 2 files，docs 下只有 backup.py，src 下只有 main.py；cat ~/lab/hw1/docs/backup.py 输出 print(\"hi\")。",
+      "sourceIds": [
+        "coreutils-manual"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "提示符、命令与路径",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "给出一个路径和当前目录，能说出它指向哪里。"
+    },
+    {
+      "kind": "动手",
+      "title": "建、看、复制、改名、删除",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "tree 的输出与页面一致。"
+    },
+    {
+      "kind": "进阶",
+      "title": "自己查帮助、读报错",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "用 man 查到一个没讲过的选项并用出来。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "MIT Missing Semester 2026 course overview introduction to the shell",
+      "GNU Coreutils manual ls invocation long format",
+      "GNU Coreutils manual rm invocation directories",
+      "zsh manual filename expansion tilde",
+      "Filesystem Hierarchy Standard 3.0 /home /etc /tmp",
+      "Kali Linux 2020.4 release zsh default shell"
+    ],
+    "notes": "章节顺序参考 MIT Missing Semester 2026 的 shell 一讲（提示符、路径、man），正文与例子自写。全部命令在 kalilinux/kali-rolling 容器里以 kali 用户、交互式 zsh 实际运行，页面输出取自运行记录；Tab 补全在同一环境里按键验证。提示符样式取自该环境 kali-defaults 提供的 zsh 配置。时间戳、新文件的初始权限与学员环境可能不同，正文已说明。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali Linux（kali-rolling，2026.2 镜像及其后续更新）；zsh 5.9.2；GNU coreutils 9.10",
+    "environment": "kalilinux/kali-rolling 容器（os-release 报告 2026.3），用户 kali，登录 shell 为 zsh，配置来自 kali-defaults，区域设置 en_US.UTF-8，终端宽 80 列。",
+    "verifiedAt": "2026-10-01",
+    "knownDifferences": "在线的 GNU Coreutils 手册对应 9.12，Kali 当前打包 9.10，本课用到的选项均在 9.10 上运行过。ls -l 的日期是执行命令的时间；新文件的初始权限由 umask 决定，容器里显示 -rw-rw-r--，其他环境可能是 -rw-r--r--。未安装 command-not-found 的系统，输错命令时只显示 command not found，不会建议安装。"
+  },
+  "sources": [
+    {
+      "id": "missing-semester-shell",
+      "kind": "university-course",
+      "title": "The Missing Semester of Your CS Education (2026): Course Overview + Introduction to the Shell",
+      "publisher": "MIT",
+      "url": "https://missing.csail.mit.edu/2026/course-shell/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。内容以 CC BY-NC-SA 4.0 授权；本课只参考其章节顺序。",
+      "supports": [
+        "claim-prompt-meaning",
+        "claim-absolute-relative",
+        "claim-man-help",
+        "cmd-pwd",
+        "cmd-man-f"
+      ]
+    },
+    {
+      "id": "coreutils-manual",
+      "kind": "official-doc",
+      "title": "GNU Coreutils Manual",
+      "publisher": "Free Software Foundation",
+      "url": "https://www.gnu.org/software/coreutils/manual/html_node/index.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，页面未标注修订日期，publishedAt 记录核验快照日期。访问时在线手册对应 9.12 版。",
+      "supports": [
+        "claim-ls",
+        "claim-rm-directories",
+        "cmd-ls-long",
+        "cmd-cat-absolute",
+        "cmd-rm-directory"
+      ]
+    },
+    {
+      "id": "zsh-expansion",
+      "kind": "official-doc",
+      "title": "The Z Shell Manual: Expansion",
+      "publisher": "Zsh Development Group",
+      "url": "https://zsh.sourceforge.io/Doc/Release/Expansion.html",
+      "publishedAt": "2026-07-12",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为手册标注的 zsh 5.9.2 发布日期。",
+      "supports": [
+        "claim-tilde"
+      ]
+    },
+    {
+      "id": "fhs-3",
+      "kind": "specification",
+      "title": "Filesystem Hierarchy Standard 3.0",
+      "publisher": "The Linux Foundation",
+      "url": "https://refspecs.linuxfoundation.org/FHS_3.0/fhs/index.html",
+      "publishedAt": "2015-03-19",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "supports": [
+        "claim-fhs-directories",
+        "cmd-cat-absolute"
+      ]
+    },
+    {
+      "id": "kali-2020-4-release",
+      "kind": "release-note",
+      "title": "Kali Linux 2020.4 Release (ZSH, Bash, CME, MOTD, AWS, Docs, Win-KeX & Vagrant)",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/blog/kali-linux-2020-4-release/",
+      "publishedAt": "2020-11-18",
+      "accessedAt": "2026-10-01",
+      "supports": [
+        "claim-zsh-default"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-prompt-meaning",
+      "text": "提示符告诉你当前用户、所在机器和当前工作目录；~ 是家目录的简写，$ 表示当前不是 root 用户。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "claim-absolute-relative",
+      "text": "以 / 开头的路径是绝对路径，从文件系统根目录写起；其余是相对路径，第一段从当前工作目录找起。pwd 打印当前工作目录。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "claim-tilde",
+      "text": "zsh 会把单独出现的 ~ 替换成 $HOME 的值，也就是当前用户的家目录。",
+      "sourceIds": [
+        "zsh-expansion"
+      ]
+    },
+    {
+      "id": "claim-ls",
+      "text": "ls 默认列出目录内容并略过以 . 开头的名字；-l 输出长格式，包含文件类型、权限位、硬链接数、所有者、所属组、大小和时间戳。",
+      "sourceIds": [
+        "coreutils-manual"
+      ]
+    },
+    {
+      "id": "claim-rm-directories",
+      "text": "rm 默认不删除目录。",
+      "sourceIds": [
+        "coreutils-manual"
+      ]
+    },
+    {
+      "id": "claim-man-help",
+      "text": "man 可以查看系统里任一命令的说明；多数命令加 --help 会打印一份简短帮助。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "claim-fhs-directories",
+      "text": "FHS 3.0 约定：/home 放用户的家目录，/etc 放本机的系统配置，/tmp 放临时文件，/bin 放所有用户都要用的基本命令，/root 是 root 用户的家目录。",
+      "sourceIds": [
+        "fhs-3"
+      ]
+    },
+    {
+      "id": "claim-zsh-default",
+      "text": "Kali 桌面镜像自 2020.4 起默认 shell 是 zsh。",
+      "sourceIds": [
+        "kali-2020-4-release"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-pwd",
+      "command": "pwd",
+      "expectedResult": "打印当前目录的绝对路径；在 ~/lab 里执行输出 /home/kali/lab。",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    },
+    {
+      "id": "cmd-ls-long",
+      "command": "ls -l notes",
+      "expectedResult": "先是一行 total，然后每个文件一行：权限位、链接数、所有者、所属组、大小、时间、文件名。",
+      "sourceIds": [
+        "coreutils-manual"
+      ]
+    },
+    {
+      "id": "cmd-cat-absolute",
+      "command": "cat /etc/hostname",
+      "expectedResult": "kali",
+      "sourceIds": [
+        "coreutils-manual",
+        "fhs-3"
+      ]
+    },
+    {
+      "id": "cmd-rm-directory",
+      "command": "rm notes",
+      "expectedResult": "rm: cannot remove 'notes': Is a directory",
+      "sourceIds": [
+        "coreutils-manual"
+      ]
+    },
+    {
+      "id": "cmd-man-f",
+      "command": "man -f cp",
+      "expectedResult": "cp (1)               - copy files and directories",
+      "sourceIds": [
+        "missing-semester-shell"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "path-resolution",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

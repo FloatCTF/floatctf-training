@@ -34,7 +34,10 @@
 - 一课对应一次 90 分钟的线下培训，`segments` 三段为讲解（必读）、当堂跟做（动手）、收尾与作业（进阶）。
 - 学生环境是 Windows 上的虚拟机加 Kali Linux（社团统一教装 Kali，默认 shell 是 zsh）；页面上的命令和输出必须在 Kali 环境里实际跑过。
 - 验收题三个槽位：机制判断、读数（`calculation` 或 `prediction` 二选一）、小型实践。语言与工具课用 `prediction`（预测输出）。
-- 工具课用 `versioned-tool` 档案并填写 `versionInfo`；语言与概念课用 `stable-technical` 并提供 `examples/` 下的可运行示例。
+- 工具课用 `versioned-tool` 档案并填写 `versionInfo`；语言与概念课用 `stable-technical` 并提供可运行示例。
+- 命令与输出用 `TerminalSession`（`terminal-session.astro`）呈现，一步一条命令、一段输出、一句解释。采集与核对走 `scripts/lab/`：`kali-session.py` 在 Kali 容器的真实交互式 zsh 里执行并记录，`terminal-replay.mjs` 从页面取命令、把记录与页面逐条比对。这两个脚本依赖 docker，不进 `verify`。
+- 下载材料放 `public/labs/<课 id>/`，页面用 `LabDownload` 引用。
+- 学习路线上的课按路线顺序翻页：`paths.ts` 的 `pathPosition()` 给出上一课、下一课，分页与验收题的「下一课」都用它；不在任何路线上的课沿用分类内顺序。
 
 ## 已知边界
 

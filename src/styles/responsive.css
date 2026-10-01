@@ -695,6 +695,44 @@
   }
 }
 
+@media (max-width: 48rem) {
+  .terminal-session__body {
+    font-size: 0.74rem;
+    padding: 0.9rem 0.9rem 1rem;
+  }
+
+  .path-explorer__controls,
+  .path-explorer__layout,
+  .permission-bits__grid,
+  .permission-bits__presets,
+  .encoding-explorer__controls,
+  .encoding-explorer__body {
+    padding-inline: 0.9rem;
+  }
+
+  .permission-bits__readout,
+  .permission-bits__ledger {
+    margin-inline: 0.9rem;
+  }
+
+  .path-explorer__layout,
+  .permission-bits__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .path-explorer__label {
+    flex-basis: 100%;
+  }
+
+  .path-explorer__input {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .permission-bits__ledger-row {
+    grid-template-columns: 3rem 6.6rem minmax(0, 1fr);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .flow-node,
   .scroll-reveal { opacity: 1 !important; transform: none !important; }

@@ -57,3 +57,32 @@ export function pathLessons(path: LearningPath): PathLesson[] {
 export function nextLesson(path: LearningPath): PathLesson | undefined {
   return pathLessons(path).find((lesson) => lesson.topic.status !== 'completed');
 }
+
+export interface PathPosition {
+  path: LearningPath;
+  number: number;
+  /** 路线上前一门已上线的课。 */
+  previous?: CatalogTopic;
+  /** 路线上后一门已上线的课。 */
+  next?: CatalogTopic;
+  /** 紧接着的下一课，不论是否上线；用于说明「下一课还在准备」。 */
+  upcoming?: CatalogTopic;
+}
+
+/** 一门课在学习路线中的位置；不在任何路线上时为 undefined，调用方退回分类内的顺序。 */
+export function pathPosition(topicId: string): PathPosition | undefined {
+  for (const path of learningPaths) {
+    const lessons = pathLessons(path);
+    const index = lessons.findIndex((lesson) => lesson.topic.id === topicId);
+    if (index < 0) continue;
+    const isOnline = (lesson: PathLesson) => lesson.topic.status === 'completed' && Boolean(lesson.topic.pagePath);
+    return {
+      path,
+      number: lessons[index].number,
+      previous: lessons.slice(0, index).reverse().find(isOnline)?.topic,
+      next: lessons.slice(index + 1).find(isOnline)?.topic,
+      upcoming: lessons[index + 1]?.topic,
+    };
+  }
+  return undefined;
+}

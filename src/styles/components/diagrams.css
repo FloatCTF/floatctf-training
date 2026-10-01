@@ -1618,3 +1618,54 @@
   cursor: not-allowed;
   opacity: 0.45;
 }
+
+/* 嵌套层次图：每一层是一个框，里面套着下一层 */
+.nested-layers__layer {
+  border: 0.0625rem solid color-mix(in srgb, var(--training-border) 70%, transparent);
+  border-radius: var(--training-radius-md);
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.nested-layers > .nested-layers__layer {
+  background: color-mix(in srgb, var(--training-page-bg) 70%, var(--training-surface-bg));
+}
+
+.nested-layers__layer .nested-layers__layer {
+  background: color-mix(in srgb, var(--training-surface-bg) 86%, var(--training-heading) 4%);
+  margin-block-start: 0.8rem;
+}
+
+.nested-layers__layer .nested-layers__layer .nested-layers__layer {
+  background: var(--training-surface-bg);
+}
+
+.nested-layers__layer:not(:has(.nested-layers__layer)) {
+  border-color: var(--training-accent);
+}
+
+.nested-layers__role {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+
+.nested-layers__name {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.nested-layers__detail {
+  color: var(--training-text);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  margin: 0;
+}

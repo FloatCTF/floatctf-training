@@ -395,8 +395,8 @@ const directoryRows = (categoryId: string): DirectoryRow[] => {
             button.append(name, count);
             panelSeries.append(button);
           });
-          // 默认停在第一个还没学完的系列，全部上线后回到第一个
-          const initial = series.find((item) => item.completed < item.count) || series[0];
+          // 默认停在最靠后的、已有课上线的系列：打开面板先看到能点进去的课；都没上线时停在第一个
+          const initial = [...series].reverse().find((item) => item.completed > 0) || series[0];
           showSeries(category, initial.name, false);
         }
 

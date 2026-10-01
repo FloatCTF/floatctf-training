@@ -1,191 +1,191 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-09-12",
-  "reviewer": "Codex",
-  "mode": "validate-site",
-  "summary": "用户评审十八项修复验收，证据与边界见 qa/user-review-fixes.md。",
+  "reviewedAt": "2026-10-01",
+  "reviewer": "Claude",
+  "mode": "add-topic",
+  "summary": "基础学期第 1 批四课（搭环境、命令行两课、数据表示）验收。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "保留课程模式；本轮按用户评审改善教学交互与阅读结构。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "三门工具课（环境、命令行两课）以 tool 为主模式，按「最小成功路径 → 机制 → 排错」展开；数据表示课以 concept 为主模式。原有十一课未改动。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "六门 AI 课增加分段节奏与三题验收，manifest 结构门禁通过。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "四课各有三段节奏（必读、动手、进阶），分段用时之和等于 90 分钟；每课六条学习目标在正文都有对应小节，验收题覆盖机制、读数或预测、实践三个槽位。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "拟合评价补充训练、验证与独立测试集区别；XOR 明确坐标变换与线性可分关系。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "虚拟机比作「装在文件夹里的电脑」、快照比作「存档点」，都紧跟 VMware 的定义和适用边界（恢复会丢弃之后的改动）。其余三课未使用比喻。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "完整六层和本课五层统一口径；先修课使用真实课名。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "宿主机、客户机、快照、哈希值、终端、shell、提示符、路径、root、重定向、管道、进程、位、字节、十六进制、UTF-8、Base64、编码与加密等术语首次出现时加粗并给出定义。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "来源日期拆分为发布与快照语义；习题来源 ID 通过验证。历史外部来源日期保留。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "四课共 35 条来源，全部打开原始页面核对；manifest 中 claims、commands 与 sources 双向引用由门禁校验，正文来源锚点全部命中。第 1 课未在本机复现的部分已标 partial 并写明缺口。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "npm run verify 通过；下载后的 SQL 防御脚本五组 PASS。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "四课页面上的 109 条终端命令在 Kali 容器里按页面顺序重放：97 条输出逐字一致，12 条差异均为时间戳、进程号等已说明的可变项。roundtrip.sh 运行通过。PowerShell 示例与 VMware 图形界面步骤未复现，依据官方文档。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "可执行新增材料仅覆盖内存 SQLite 参数绑定防御；审计样本为只读文本。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "第 1 课用提示框写明 Kali 工具只用于自己的虚拟机、靶场和书面授权目标。access.log 中的 IP 全部取自文档保留地址段。四课的 safetyScope 为 not-applicable，不含攻击步骤。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "拟合评价反映两组误差；注意力完整行读数辅助检查零权重与屏蔽。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "三个交互各对应一个高理解成本点：路径解析（相对路径随当前目录变化）、权限位（rwx 与八进制互换）、编码转换（字节、Base64 分组与补位）。行为已在浏览器中核对。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "XOR 在减少动态效果设置下呈现 static；交互预算结构检查通过。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "四课没有播放类动画，交互均为即时反馈；顺序内容使用静态 StepList 与表格。visualNarrative 的动效计数与页面一致。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "神经网络课无 JS 时保留 XOR 三步与三题验收，答案原生折叠可打开。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "减少动态与关闭 JavaScript 时，三个交互组件均呈现静态对照表，文字完整，验收题答案的原生折叠可展开；首页分类卡与路线页为普通链接和静态列表。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "搜索 Ctrl+K、Esc 和焦点返回通过；无 JS 原生答案折叠可操作。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "交互控件全部是原生按钮和输入框；权限位开关用空格键切换通过，首页面板的系列切换支持方向键。未逐一做完整的 Tab 顺序走查。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "十一课在 390 与 1280 宽度下整页溢出为零；注意力宽图保持局部滚动。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "四课在 390 与 1280 宽度、深浅主题下整页横向溢出为零；终端输出、字节表和 Base64 分组只在各自容器内横向滚动。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "神经网络课打印媒体模拟下三题答案全部显示；纸张分页未验收。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "打印媒体模拟下四课的三道验收题答案全部显示，终端会话保留，复制按钮与站点顶栏隐藏。纸张分页未验收。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "22 页构建通过，十一课双宽度 H1 和页内锚点检查通过。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "四课各有唯一 H1、专题刊头、目标与前置、分段安排、常见报错、速查卡、结论卡、验收题和来源列表；页内锚点无断链；路线内按路线顺序翻页。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "新增蓝橙类别 token、形状区分和注意力 SVG 纹理；已检查首页、打印和关键组件截图。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "新组件沿用现有材质：终端会话用深色代码面板，探索器与 xor-explorer 同框，嵌套图基于 LessonDiagram。截图已核对桌面浅色、深色与手机；修掉了正文样式带进组件的列表与 pre 外边距。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本地构建与搜索已验证；生产 nginx/CSP 验收未执行。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "本地 npm run verify 通过，新增静态资源位于 public/labs/。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "首页卡片层级、代码双栏对齐和宽图局部滚动检查通过，范围见修复记录。"
+      "evidenceFile": "qa/foundations-batch-1-verification.json",
+      "note": "逐课打开页面检查表格全宽、标题层级、终端块与探索器；发现并修复 Base64 分组错位、终端输出上下空隙过大、ls -l 行空格被折叠三处问题。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "新增完整 SQL 防御文件页内展示与下载，六课验收含答案。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "每条命令的输出与命令同屏呈现，来自实际运行；下载材料（access.log、roundtrip.sh）在页内可展开查看全文。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "修正拟合结论、XOR 图线分组与六层/五层口径；来源 ID 门禁通过。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "每条 claim 只陈述来源页面确有的内容，例如 NAT 的说法绑定 VMware 网络配置文档的原句；社团给出的内存与磁盘建议在正文标明是建议值，不绑定来源。第 1 课 researchStatus 为 partial。"
     },
     {
       "id": "opening-question",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "四课分别以「为什么不直接在 Windows 上学」「你现在在哪」「一份日志里谁在乱翻」「这串字符是什么」开头，后三课在课内回到开头的问题并解决。"
     },
     {
       "id": "diagram-value",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "嵌套层次图说明宿主机、虚拟机软件、客户机的包含关系；其余关系用可操作的探索器呈现。"
     },
     {
       "id": "authentic-example",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "日志统计与两层编码还原都是 CTF 与日常排查中的真实任务形态；练习目录 ~/lab 贯穿三课。"
     },
     {
       "id": "review-card",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "每课一张结论卡，另有速查卡汇总命令。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "四课不含播放类动效。"
     },
     {
       "id": "visual-focus",
       "level": "should",
-      "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "status": "pass",
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "每课一个主要交互或图示，位置在对应机制讲解之后、动手环节之前。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/user-review-fixes.md",
-      "note": "本轮未改动该项，历史评审保存在 prior-qa-report.json；本报告限定为用户评审修复验收。"
+      "evidenceFile": "qa/foundations-batch-1.md",
+      "note": "本批没有用户提供的讲义或旧页面；公开教程只用于确定章节顺序。"
     }
   ]
 }
