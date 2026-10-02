@@ -23,8 +23,8 @@
       "沿完整生成链路说明上下文、采样和外部验证怎样影响输出"
     ],
     "prerequisites": [
-      "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》",
-      "已完成 neural-network-foundations《神经网络：从神经元到架构》",
+      "machine-learning-foundations",
+      "neural-network-foundations",
       "理解向量、概率与函数的基本含义"
     ],
     "safetyScope": "not-applicable",

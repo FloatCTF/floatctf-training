@@ -1,0 +1,541 @@
+{
+  "lessonPlan": {
+    "audience": "学过 C 和 PHP、第一次接触 Java 的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一个 Java 程序从源码到输出的六步：javac 把 .java 编译成字节码 .class，java 启动虚拟机按类名加载它，从 main 开始执行；和第 19 课 C 的编译流水线对照，差别在中间多了一层虚拟机",
+    "learningObjectives": [
+      "说出 JDK、JVM、字节码各是什么，以及 Java 和 C、Python 运行方式的区别",
+      "用 javac 编译、用 java 运行一个程序，读懂文件名与类名不一致、类找不到这两类报错",
+      "写出带类型的变量、数组、循环和静态方法，读懂编译期的类型错误和运行时的异常",
+      "定义一个带 private 字段、构造方法和方法的类，用 new 创建对象，说出两个变量指向同一个对象意味着什么"
+    ],
+    "prerequisites": [
+      "c-types-and-control-flow",
+      "php-objects-and-serialization"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-jvm",
+      "kind": "mechanism",
+      "title": "同一个 .class 文件",
+      "question": "你在 Kali 里 javac Hello.java 得到 Hello.class，把它拷给用 Windows 的同学，他装了 Java 就能用 java Hello 运行；而第 19 课 gcc 编译出来的 hello 拷过去就运行不了。为什么？另外，同学说「java Hello.class 报错，是不是文件坏了」，你怎么回答？",
+      "answer": "gcc 生成的是给当前操作系统和 CPU 用的机器码，格式和系统调用都和 Linux 绑定；javac 生成的是字节码，是给 Java 虚拟机的指令，不直接给 CPU。每个系统上的 JVM 负责把同一份字节码解释执行或即时编译成本机的机器码，所以 .class 文件可以拿到任何装了 Java 运行环境的系统上运行。java 命令后面写的是类名，不是文件名：java Hello.class 会去找一个名叫 Hello.class 的类，当然找不到，报 Could not find or load main class Hello.class。文件没坏，写成 java Hello 就行。",
+      "sourceIds": [
+        "jv-jvms",
+        "jv-java",
+        "jv-javac"
+      ]
+    },
+    {
+      "id": "check-predict-java",
+      "kind": "prediction",
+      "title": "预测输出",
+      "question": "不运行，写出下面每一行的输出：一、System.out.println(7 / 2 + \" \" + 7 / 2.0);。二、int[] a = {1, 2, 3}; System.out.println(a.length + a[2]);。三、Student x = new Student(\"dan\", 50); Student y = x; y.addBonus(20); System.out.println(x + \" \" + x.passed() + \" \" + (x == y));（Student 是本课的类）。四、在第二行之后接着执行 System.out.println(a[3]); 会怎样？",
+      "answer": "一、3 3.5：两个 int 相除是整数除法，和 C 一样舍掉小数；有一边是 double 就按小数算；数字和字符串用 + 连起来变成字符串。二、6：a.length 是 3，a[2] 是 3，两个 int 相加，结果才被打印。三、dan(70) true true：y = x 没有复制对象，两个变量指向同一个对象，通过 y 加的分 x 也看得到；== 比较两个引用是不是同一个对象。四、抛出 java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3，并打印出错的位置，程序以退出码 1 结束。和 C 不同，Java 每次访问数组都检查下标，越界不会悄悄读到别的数据。",
+      "sourceIds": [
+        "jv-primitive",
+        "jv-arrays",
+        "jv-jls15",
+        "jv-aioobe"
+      ]
+    },
+    {
+      "id": "check-book-class",
+      "kind": "practice",
+      "title": "写一个 Book 类",
+      "question": "在 ~/lab/java 里写 Book.java：private 字段 title（String）和 pages（int），构造方法接收这两个值，方法 isLong() 在 pages 大于 300 时返回 true，toString() 返回 《书名》 300p 这样的格式。再写 Shelf.java，在 main 里创建三本书放进 ArrayList，逐本打印，最后打印长书的数量。用 javac Shelf.java 编译、java Shelf 运行。",
+      "answer": "参考：Book.java 里 public class Book { private String title; private int pages; public Book(String title, int pages) { this.title = title; this.pages = pages; } public boolean isLong() { return pages > 300; } @Override public String toString() { return \"《\" + title + \"》 \" + pages + \"p\"; } }；Shelf.java 里 import java.util.ArrayList;，main 中 ArrayList<Book> list = new ArrayList<>();，add 三本，for (Book b : list) System.out.println(b);，再用一个 int 计数 isLong() 为 true 的书并打印。自查：javac Shelf.java 会顺带编译 Book.java，ls 能看到 Book.class 和 Shelf.class；在 Shelf 里直接写 b.pages 会得到 pages has private access in Book。",
+      "sourceIds": [
+        "jv-classes",
+        "jv-constructors",
+        "jv-access",
+        "jv-arraylist"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "JDK、JVM 与第一个程序",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "javac Hello.java 生成 Hello.class，java Hello 打印 Hello, Java!。"
+    },
+    {
+      "kind": "动手",
+      "title": "和 C 很像的部分",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "java Basics 的四行输出和页面一致，并能解释 average=84。"
+    },
+    {
+      "kind": "进阶",
+      "title": "类与对象",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "java School 打印出 alice(73) true，并能说出为什么是 73。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "dev.java getting started JDK JRE compile run first program",
+      "JVM specification introduction class file bytecode platform independence",
+      "javac java javap command JDK 25 manual source-file mode Xint JIT",
+      "JLS 7.6 public class file name restriction",
+      "dev.java creating classes objects constructors access modifiers private",
+      "JLS 15.21.3 reference equality ==; ArrayIndexOutOfBoundsException"
+    ],
+    "notes": "全部命令在 Kali 容器（kalilinux/kali-rolling）里以 kali 用户实际运行，JDK 为 Kali 源里的 default-jdk-headless（OpenJDK 25.0.4.1）。Kali 默认安装（kali-linux-default）依赖链里只有 default-jre、openjdk-25-jre（运行 Burp Suite 等工具所需），没有 javac，已用 apt-cache depends 核对；学员按页面装 default-jdk。dev.java 已不再把 JRE 作为独立下载提供，Debian/Kali 仍分开打包，页面按 Kali 的实际情况说明。"
+  },
+  "sources": [
+    {
+      "id": "jv-getting-started",
+      "kind": "official-doc",
+      "title": "Dev.java: Getting Started with Java",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/first-steps/first-java-code/getting-started/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-jdk",
+        "claim-javac"
+      ]
+    },
+    {
+      "id": "jv-jvms",
+      "kind": "specification",
+      "title": "The Java Virtual Machine Specification, Java SE 25 Edition: Chapter 1. Introduction",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/javase/specs/jvms/se25/html/jvms-1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-jvm"
+      ]
+    },
+    {
+      "id": "jv-javac",
+      "kind": "official-doc",
+      "title": "The javac Command (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javac.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-javac"
+      ]
+    },
+    {
+      "id": "jv-java",
+      "kind": "official-doc",
+      "title": "The java Command (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/java.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-java"
+      ]
+    },
+    {
+      "id": "jv-javap",
+      "kind": "official-doc",
+      "title": "The javap Command (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javap.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-javap"
+      ]
+    },
+    {
+      "id": "jv-jep330",
+      "kind": "specification",
+      "title": "JEP 330: Launch Single-File Source-Code Programs",
+      "publisher": "OpenJDK",
+      "url": "https://openjdk.org/jeps/330",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-source-mode"
+      ]
+    },
+    {
+      "id": "jv-launch-source",
+      "kind": "official-doc",
+      "title": "Dev.java: Launching Simple Source-Code Java Programs",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/first-steps/first-java-code/launch-simple-source-code-programs/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-source-mode"
+      ]
+    },
+    {
+      "id": "jv-jls7",
+      "kind": "specification",
+      "title": "The Java Language Specification, Java SE 25 Edition: Chapter 7. Packages and Modules",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-7.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-public-file"
+      ]
+    },
+    {
+      "id": "jv-primitive",
+      "kind": "official-doc",
+      "title": "Dev.java: Primitive Types",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/constructs/basics/primitive-types/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-static-typing"
+      ]
+    },
+    {
+      "id": "jv-arrays",
+      "kind": "official-doc",
+      "title": "Dev.java: Arrays",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/constructs/basics/arrays/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-array"
+      ]
+    },
+    {
+      "id": "jv-aioobe",
+      "kind": "official-doc",
+      "title": "ArrayIndexOutOfBoundsException (Java SE 25 API)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/ArrayIndexOutOfBoundsException.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-array"
+      ]
+    },
+    {
+      "id": "jv-exceptions",
+      "kind": "official-doc",
+      "title": "Dev.java: What Is an Exception?",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/annotations-exceptions/exceptions/what-is-an-exception/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-exception"
+      ]
+    },
+    {
+      "id": "jv-classes",
+      "kind": "official-doc",
+      "title": "Dev.java: Creating Classes",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/oop/classes-objects/creating-classes/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-class-object"
+      ]
+    },
+    {
+      "id": "jv-objects",
+      "kind": "official-doc",
+      "title": "Dev.java: Creating and Using Objects",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/oop/classes-objects/creating-objects/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-class-object"
+      ]
+    },
+    {
+      "id": "jv-constructors",
+      "kind": "official-doc",
+      "title": "Dev.java: Providing Constructors for your Classes",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/oop/classes-objects/defining-constructors/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-class-object",
+        "claim-constructor"
+      ]
+    },
+    {
+      "id": "jv-access",
+      "kind": "official-doc",
+      "title": "Dev.java: More on Classes",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/oop/classes-objects/more-on-classes/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-private"
+      ]
+    },
+    {
+      "id": "jv-object",
+      "kind": "official-doc",
+      "title": "Object (Java SE 25 API)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/lang/Object.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-tostring"
+      ]
+    },
+    {
+      "id": "jv-jls15",
+      "kind": "specification",
+      "title": "The Java Language Specification, Java SE 25 Edition: Chapter 15. Expressions",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/javase/specs/jls/se25/html/jls-15.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-reference-eq"
+      ]
+    },
+    {
+      "id": "jv-arraylist",
+      "kind": "official-doc",
+      "title": "ArrayList (Java SE 25 API)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/java.base/java/util/ArrayList.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-arraylist"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-jdk",
+      "text": "编译和运行 Java 程序要用 JDK 里的工具；JRE 是 JDK 的一个子集，只包含运行 Java 程序所需的东西，不能用它编译代码。",
+      "sourceIds": [
+        "jv-getting-started"
+      ]
+    },
+    {
+      "id": "claim-jvm",
+      "text": "Java 虚拟机是一台抽象的计算机，有自己的指令集；它只认 class 文件格式，class 文件里装的是 JVM 指令（字节码）。JVM 让 Java 程序与硬件和操作系统无关，写一次就能在任何提供 Java 运行环境的机器上运行。",
+      "sourceIds": [
+        "jv-jvms"
+      ]
+    },
+    {
+      "id": "claim-javac",
+      "text": "javac 读取扩展名为 .java 的源文件，把它们编译成在 JVM 上运行的 class 文件；没有指定源码路径时，它也会在类路径里查找用到的其他类的源文件。编译出错时不生成 .class 文件。",
+      "sourceIds": [
+        "jv-javac",
+        "jv-getting-started"
+      ]
+    },
+    {
+      "id": "claim-java",
+      "text": "java 命令启动 JVM，加载指定的类，调用它的 main 方法；main 必须是 public static void，接收一个 String 数组。默认情况下字节码会被即时编译（JIT）成机器码执行，-Xint 让它只用解释器执行。",
+      "sourceIds": [
+        "jv-java"
+      ]
+    },
+    {
+      "id": "claim-javap",
+      "text": "javap 反汇编 class 文件，-c 选项打印每个方法的字节码指令。",
+      "sourceIds": [
+        "jv-javap"
+      ]
+    },
+    {
+      "id": "claim-source-mode",
+      "text": "从 JDK 11 起，java 可以直接运行一个 .java 源文件：效果相当于先把它编译到内存里，再执行其中的第一个类，不会在磁盘上留下 .class 文件。",
+      "sourceIds": [
+        "jv-jep330",
+        "jv-launch-source"
+      ]
+    },
+    {
+      "id": "claim-public-file",
+      "text": "如果类是 public 的，编译器可以要求它必须放在以类名加 .java 命名的文件里，javac 就是这样做的。",
+      "sourceIds": [
+        "jv-jls7"
+      ]
+    },
+    {
+      "id": "claim-static-typing",
+      "text": "Java 是静态类型语言，所有变量在使用前都必须先声明类型和名字。",
+      "sourceIds": [
+        "jv-primitive"
+      ]
+    },
+    {
+      "id": "claim-array",
+      "text": "数组是一个容器对象，装着固定个数的同一类型的值，长度在创建时确定，之后不能改变；用越界的下标访问数组会抛出 ArrayIndexOutOfBoundsException。",
+      "sourceIds": [
+        "jv-arrays",
+        "jv-aioobe"
+      ]
+    },
+    {
+      "id": "claim-exception",
+      "text": "异常是程序执行中发生的、打断正常执行流程的事件；出错的方法创建一个异常对象交给运行时系统，对象里记录着错误的类型和发生时程序的状态。",
+      "sourceIds": [
+        "jv-exceptions"
+      ]
+    },
+    {
+      "id": "claim-class-object",
+      "text": "类是创建对象的蓝图，类体里写字段、构造方法和方法；new 运算符创建对象，后面跟着对构造方法的调用来初始化它。只声明一个引用变量并不会创建对象。",
+      "sourceIds": [
+        "jv-classes",
+        "jv-objects",
+        "jv-constructors"
+      ]
+    },
+    {
+      "id": "claim-constructor",
+      "text": "构造方法的写法像方法，但名字和类名相同，并且没有返回值类型。",
+      "sourceIds": [
+        "jv-constructors"
+      ]
+    },
+    {
+      "id": "claim-private",
+      "text": "private 修饰的成员只能在它所在的类里访问。",
+      "sourceIds": [
+        "jv-access"
+      ]
+    },
+    {
+      "id": "claim-tostring",
+      "text": "每个类都继承自 Object，Object 的 toString 返回对象的字符串表示，类可以重写它。",
+      "sourceIds": [
+        "jv-object"
+      ]
+    },
+    {
+      "id": "claim-reference-eq",
+      "text": "对两个引用使用 ==，只有当它们都为 null 或者指向同一个对象（或数组）时结果才是 true。",
+      "sourceIds": [
+        "jv-jls15"
+      ]
+    },
+    {
+      "id": "claim-arraylist",
+      "text": "ArrayList 是用可变大小的数组实现的列表。",
+      "sourceIds": [
+        "jv-arraylist"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "hello",
+      "path": "public/labs/java-jvm-and-objects/Hello.java",
+      "command": "javac Hello.java && java Hello",
+      "expectedResult": "打印 Hello, Java!。"
+    },
+    {
+      "id": "basics",
+      "path": "public/labs/java-jvm-and-objects/Basics.java",
+      "command": "javac Basics.java && java Basics",
+      "expectedResult": "四行：kali has 3 items, total 28.5, ok=true；sum=253, average=84；square(12)=144；KALI 4。"
+    },
+    {
+      "id": "crash",
+      "path": "public/labs/java-jvm-and-objects/Crash.java",
+      "command": "javac Crash.java && java Crash",
+      "expectedResult": "打印 90、75、88 后抛出 ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3，退出码 1。"
+    },
+    {
+      "id": "broken",
+      "path": "public/labs/java-jvm-and-objects/Broken.java",
+      "command": "javac Broken.java",
+      "expectedResult": "Broken.java:3: error: incompatible types: String cannot be converted to int"
+    },
+    {
+      "id": "school",
+      "path": "public/labs/java-jvm-and-objects/School.java",
+      "command": "javac School.java && java School",
+      "expectedResult": "七行输出，第三行是 alice(73) true，最后一行是 3 students；同时生成 Student.class。"
+    },
+    {
+      "id": "peek",
+      "path": "public/labs/java-jvm-and-objects/Peek.java",
+      "command": "javac Peek.java",
+      "expectedResult": "Peek.java:4: error: score has private access in Student"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "compile-pipeline",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

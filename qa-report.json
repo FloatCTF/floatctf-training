@@ -3,188 +3,188 @@
   "reviewedAt": "2026-10-02",
   "reviewer": "Claude",
   "mode": "add-topic",
-  "summary": "基础学期第 1 到 6 批共三十二课验收（起步四课、Python 七课、Git 两课、网络与 Web 五课、C 八课、PHP 六课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。",
+  "summary": "基础学期 37 课全部验收（起步四课、Python 七课、Git 两课、网络与 Web 五课、C 八课、PHP 六课、Docker 两课、Java 两课、综合项目），五门 Web 安全课与六门 AI 课的前置知识改为指向基础课的链接。原有十一课正文未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 到 qa/foundations-batch-7.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "PHP 六课：第 27 课以 mechanism 为主，讲清一次请求里 PHP 做了什么；其余五课以 code 为主，每课一组可运行的脚本或页面。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "第 7 批五课：Docker 两课以 tool 为主，Java 一以 code 为主，Java 二以 code 为主、读项目为线索，综合项目以 project 为主。每课一组可运行的材料。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "六课各 90 分钟三段。顺序沿着一个网站长大的过程：生成页面、处理类型、接收表单和登录、拆成多个文件并写文件、接数据库、用对象组织代码。第 29 课把第 14 课的 Python 练习站用 PHP 重写，第 31 课沿用第 18 课的数据集。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课各 90 分钟三段。顺序是先会用别人的镜像，再把自己的程序做成镜像并用 Compose 组合；Java 两课先对照 C 和 PHP 认识语言，再读一个 Web 项目；最后的留言板把 Git、PHP、SQLite、Docker 串成一个完整项目。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "PHP 六课不用比喻，直接对照学过的 Python、C 和第 14 课的练习站。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "不用比喻：Docker 一把容器放进第 1 课「电脑、虚拟机、Kali」的嵌套图里；Java 一用表格对照 C、Python、PHP 的运行方式。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "超全局变量、类型转换、类型声明、会话、预处理语句、占位符、类、对象、属性、方法、魔术方法、序列化等术语首次出现时加粗并定义。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "镜像、容器、镜像仓库、端口发布、绑定挂载、卷、构建上下文、层、服务名、JDK、JRE、JVM、字节码、类、对象、构造方法、包、POM、生命周期、路由、处理者、注解、Post/Redirect/Get 等术语首次出现时加粗或列表定义。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "PHP 六课的来源为 PHP 官方手册 53 页，全部打开原页核对；PHP 8 前后有变化的规则都按手册注明了版本。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课共 73 个来源：Docker 官方文档、dev.java、JDK 25 手册与 API、JVM 规范、JLS、Maven 官方指南、Spring 官方指南、PHP 手册、RFC 9110、MDN、Pro Git。全部打开原页核对，逐条论断对得上原文。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "PHP 六课页面上的 84 条命令在 Kali 容器里按页面顺序重放，全部一致（15 条只在时间、端口、会话编号、散列上不同）；内置服务器由重放工具在第二个终端里真实启动。验收题与作业的预期结果用参考解答运行核对过。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "第 7 批五课 142 条命令在 Kali 里按页面顺序重放全部一致（15 条只在编号、时间、耗时、地址上不同）；Docker 课在带守护进程的采集容器里真实拉取镜像、构建、启动。因为改了录制器，37 课全量重放了一遍：第 5 到 32 课 743 条中 742 条一致（剩下一条是页面已注明的 DNS 地址顺序），第 1 到 4 课在干净容器里的差异与第 1 批登记的同类。验收题的预期结果用参考解答实跑核对过。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "PHP 六课不含攻击步骤。输出转义、预处理语句、文件名单、不对外部数据 unserialize 四条都以正确写法和成因讲解，示例输入只有 <b> 标签和带单引号的普通名字；XSS、SQL 注入、反序列化只点名为下学期专题。练习服务器只监听 127.0.0.1，账号密码以散列存储。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课不含攻击步骤。Docker 一写明 docker 组等于 root 权限；Docker 二提醒运行来路不明的靶场前先读 compose.yaml、放在练习虚拟机里；留言板只讲服务器端校验、预处理语句、输出转义、Post/Redirect/Get 的正确写法，示例输入只有 <b> 标签和带单引号的普通名字。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "第 27 课用流程图呈现一次请求里 PHP 的四步；其余各课的互动在学员自己的两个终端里进行，页面没有另加交互组件。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 二、Java 一、Java 二、留言板各一个六步流程图，分别对应一次请求在两个容器间的路线、Java 从源码到输出、请求在项目里的调用链、一条留言从表单到页面；其余互动在学员自己的终端里进行。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "本批没有新增动画或交互。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本批没有新增动画组件，四个流程图沿用已有的 FlowSimulator。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "本批唯一的流程图在减少动态与关闭 JavaScript 时直接显示全部四步；验收题答案的原生折叠可展开。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "四个流程图在减少动态与关闭 JavaScript 时直接显示全部步骤；验收题答案的原生折叠可展开。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "流程图滑杆可用方向键步进；终端会话可聚焦后横向滚动。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "流程图滑杆可用方向键步进，四个流程图都用键盘走完了六步；终端会话可聚焦后横向滚动。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "PHP 六课在 390 与 1280 宽度、深浅主题下共 18 次检查，整页横向溢出为零。已知问题：宽输出的终端会话里，解释文字随整块横向滚动。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课在 390 与 1280 宽度、深浅主题下共 15 次检查，整页横向溢出为零。已知问题：宽输出的终端会话里，解释文字随整块横向滚动。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "打印媒体模拟下六课的验收题答案、终端会话与代码清单全部显示。纸张分页未验收。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "打印媒体模拟下五课的验收题答案、终端会话与代码清单全部显示。纸张分页未验收。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "六课结构与前二十六课一致；路线页显示已上线 32 / 37，下一课为第 33 课。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课结构与前三十二课一致；路线页显示已上线 37 / 37，没有规划中的课。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "沿用已有的终端会话、代码清单、表格、警示与速查卡，没有新增样式。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "沿用已有的终端会话、代码清单、表格、嵌套层图、流程图、警示与速查卡，没有新增样式。代码清单的行标亮此前一直没有生效，本批修复后在浅色和深色主题下核对了效果。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
-      "evidenceFile": "qa/foundations-batch-6.md",
+      "evidenceFile": "qa/foundations-batch-7.md",
       "note": "本地 npm run verify 通过。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6-verification.json",
-      "note": "逐课打开页面检查了表格全宽、代码清单与终端会话在桌面和手机上的排布。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "逐课打开页面检查了表格全宽、代码清单（含 Maven 项目的子目录标题）与终端会话在桌面和手机上的排布；修复行标亮后逐一核对了全部 64 处标亮行，改正了三处行号。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "每个脚本先给出完整源码，再给出命令与实际输出；服务器日志在需要对照的地方单独列出。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "每个材料先给出完整源码，再给出命令与实际输出；docker build、docker compose 的进度给出刷新结束后屏幕上的内容，无关的行用「…」注明省略。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "每条 claim 对应手册中的具体语句，例如内置服务器「不应在公共网络上使用」、预处理语句「参数不需要加引号」、unserialize「不要传入不可信的用户输入」都是手册原意。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "每条 claim 对应原文中的具体语句，例如 docker 组「相当于 root 级别的权限」、EXPOSE「并不真正发布端口」、HttpServer 按「最长匹配前缀」找处理者、客户端校验「不能当作完整的安全措施」都是原文原意。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "六课的引导问题：同一个网址为什么每个人看到的不一样、\"5\" 加 3 等于几、把第 14 课的练习站翻过来、改一处导航要改几个文件、一个带单引号的名字、会话里存的东西长什么样。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课的引导问题：怎样把一个环境原样交给别人、靶场目录里的那几个文件、编译好的程序能不能拿到别的系统上运行、从哪个文件开始读、一个最小的网站要哪几样东西。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "只在第 27 课用了一张流程图，其余用表格逐行拆解代码。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 一用嵌套层图把容器放回第 1 课的结构；另外四课各一个流程图，其余用表格逐项拆解配置与代码。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "例子是一个会逐步长大的小网站：问候页、登录与会话、多页布局、留言本、商品查询，正是下学期 Web 安全专题要面对的结构。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "例子是真实工作里的形状：nginx 反向代理加 PHP 的两容器项目、标准目录结构的 Maven 项目、可以部署的留言板；留言板下学期会作为本地练习对象继续使用。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "六课各一张结论卡和一张速查卡。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课各一张结论卡和一张速查卡；留言板另有一张交作业前的验收清单。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "本批没有定时动画。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本批没有定时动画。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-6.md",
-      "note": "第 27 课的流程图放在标签讲解之后，其余各课以代码清单为视觉中心。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 一以嵌套层图为视觉中心，其余各课以代码清单和流程图为中心。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/foundations-batch-6.md",
+      "evidenceFile": "qa/foundations-batch-7.md",
       "note": "本批没有用户提供的讲义；公开课程只用于确定章节顺序。"
     }
   ]

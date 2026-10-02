@@ -24,9 +24,10 @@
       "结合公开 CVE 说明日志查找与框架数据绑定如何通向 RCE"
     ],
     "prerequisites": [
-      "Linux 基本命令",
-      "一种后端语言的进程调用 API",
-      "HTTP 输入如何到达服务端"
+      "shell-permissions-and-pipes",
+      "http-basics",
+      "php-request-lifecycle",
+      "一种后端语言的进程调用 API"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-07-23"

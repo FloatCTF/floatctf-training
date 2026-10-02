@@ -1,0 +1,306 @@
+---
+title: Docker 二：Dockerfile 与 Compose
+description: 用 Dockerfile 把一个 PHP 小程序做成镜像，用 compose.yaml 把它和 nginx 写成一整套服务，一条命令启动、查看、停止；弄清服务名、卷和 --build 各管什么
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import FlowSimulator from '../../../components/flow-simulator';
+import composeRequest from '../../../data/flows/compose-request.json';
+import manifest from '../../../data/lessons/docker-compose-labs.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '改端口、改输出内容、用 --build 重新部署，再用 logs 找到自己的请求。' },
+  { title: '给镜像换个基础', detail: '把 Dockerfile 的 FROM 改成 php:8.3-cli-alpine，重新 docker build -t counter:8.3 .，运行起来，用 docker exec 容器名 php -v 确认版本。说出这次构建为什么没有用上缓存。' },
+  { title: '画出这套服务', detail: '在纸上画出 curl、本机 8080、web、app、卷 compose_data 之间的关系，标出每一段用的是哪个端口、哪个名字。下次课抽人讲。' },
+  { title: '读一页官方文档', detail: '读 Docker 官方的 Networking in Compose 的前两节，说明 Compose 的网络名字是怎么来的。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="DOCKER / LESSON 34"
+  kicker="Dockerfile and Compose"
+  lines={[
+    { text: "Docker 二" },
+    { text: "Dockerfile 与 Compose", accent: true },
+  ]}
+  summary="上节课用的都是别人做好的镜像。这节课把自己写的 PHP 程序做成镜像，再把它和一个 nginx 写进同一个文件，一条命令把整套服务起起来。下学期发到你手里的靶场，大多就是这样一个目录。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：靶场目录里的那几个文件
+
+下学期你会拿到这样的目录：里面有程序代码，还有一个 `Dockerfile` 和一个 `compose.yaml`。说明只有一句：进入目录，执行 `docker compose up -d`，然后访问某个端口。
+
+这一条命令做了很多事：把代码做成镜像，起好几个容器，把它们连起来，把端口发布出来，给数据库准备好存储。这节课用一个很小的项目，把这些事一件一件看清楚。
+
+## 一、用 Dockerfile 做镜像
+
+### 1. 项目里的四个文件
+
+在 Kali 里建好目录 `~/lab/compose`，把下面四个文件下载进去（每个文件下方有下载链接）。第一个是一个 PHP 小程序：每访问一次，往 SQLite 数据库里记一行，再报告一共访问了多少次。第 31 课的 PDO 写法这里都用得上。
+
+<CodeFile file="labs/docker-compose-labs/index.php" mark="4" note="数据库文件在 /data 目录里，后面会看到为什么放在这里。" />
+
+<TerminalSession
+  title="进入项目目录"
+  steps={[
+    { cmd: 'cd ~/lab/compose' },
+    { cmd: 'ls', out: 'compose.yaml  Dockerfile  index.php  nginx.conf' },
+  ]}
+/>
+
+### 2. Dockerfile：做镜像的步骤
+
+<CodeFile file="labs/docker-compose-labs/Dockerfile" lang="dockerfile" />
+
+`Dockerfile` 这个文件名没有扩展名，首字母大写。它从上到下写着做镜像的步骤，每一步一条指令：
+
+<DataTable
+  caption="本课用到的六条指令"
+  headers={["指令", "作用", "这里的写法"]}
+  rows={[
+    ["FROM", "在哪个镜像的基础上做。必须是第一条", "官方 PHP 镜像的 8.4 命令行版，Alpine 系统"],
+    ["RUN", "在构建时执行一条命令，结果留在镜像里", "建一个 /data 目录"],
+    ["WORKDIR", "设定镜像里的工作目录，后面的指令和容器里的程序都在这里", "/app"],
+    ["COPY", "把构建目录里的文件复制进镜像", "index.php 复制到 /app"],
+    ["EXPOSE", "说明程序监听哪个端口。只是说明，不会真的发布端口", "8000"],
+    ["CMD", "用这个镜像启动容器时，默认运行的命令", "php -S 0.0.0.0:8000"],
+  ]}
+  columnRatios={[0.8, 2.6, 2]}
+/>
+
+（来源：[Writing a Dockerfile](#source-dk-writing-dockerfile)、[Dockerfile reference](#source-dk-dockerfile-ref)、[php - Official Image](#source-dk-php-image)）
+
+### 3. 构建
+
+<TerminalSession
+  title="把当前目录做成一个叫 counter 的镜像"
+  steps={[
+    {
+      cmd: 'docker build -t counter .',
+      out: "[+] Building 0.6s (9/9) FINISHED                                 docker:default\n…（读取 Dockerfile、准备基础镜像，这里省略）\n => [2/4] RUN mkdir /data                                                  0.1s\n => [3/4] WORKDIR /app                                                     0.0s\n => [4/4] COPY index.php .                                                 0.0s\n…\n => => naming to docker.io/library/counter                                 0.0s",
+      note: '-t 给镜像起名字；最后的点是「构建目录」，COPY 就是从这里取文件。第一次构建时本机还没有 php:8.4-cli-alpine，会先下载它，大约 110 MB。',
+    },
+    { cmd: "docker images counter --format '{{.Repository}}:{{.Tag}}'", out: 'counter:latest' },
+  ]}
+/>
+
+构建过程中终端里的进度会原地刷新，结束后留在屏幕上的就是上面这样一份清单。`[2/4]`、`[3/4]`、`[4/4]` 对应 `Dockerfile` 里 FROM 之后的三条指令（EXPOSE 和 CMD 只记录信息，不单独占一步）。每条指令在镜像里形成一层，这一点第三节还会用到。（来源：[docker buildx build](#source-dk-build)、[Understanding the image layers](#source-dk-layers)）
+
+### 4. 运行自己的镜像
+
+<TerminalSession
+  title="和上节课一样用 docker run"
+  steps={[
+    { cmd: 'docker run -d --name counter -p 8000:8000 counter', out: 'f2240de0b147694a5c01ab44502443aae623f277a337a7d22779b586f7f8287a' },
+    { cmd: 'curl -s http://127.0.0.1:8000/', out: 'visit #1' },
+    { cmd: 'curl -s http://127.0.0.1:8000/', out: 'visit #2' },
+    { cmd: 'docker rm -f counter', out: 'counter' },
+    { cmd: 'docker run -d --name counter -p 8000:8000 counter', out: '59f0d87cd5ed13d130032b7fdb234fc2e083052174f32d9739f1bc0fe7b8b8f8' },
+    { cmd: 'curl -s http://127.0.0.1:8000/', out: 'visit #1', note: '又从 1 开始了：数据库文件在容器自己的那一层里，随着旧容器一起删掉了。和上节课改过的网页一样。' },
+    { cmd: 'docker rm -f counter', out: 'counter' },
+  ]}
+/>
+
+### 5. 为什么是 0.0.0.0
+
+`CMD` 里写的是 `0.0.0.0:8000`，而第 27 课在 Kali 里写的是 `127.0.0.1:8000`。把它改回 127.0.0.1 试一下：在镜像名后面再写一条命令，就会代替 CMD 运行。
+
+<TerminalSession
+  title="让 PHP 只监听容器里的 127.0.0.1"
+  steps={[
+    { cmd: 'docker run -d --name wrong -p 8001:8000 counter php -S 127.0.0.1:8000', out: '7e50eac51604ead78f191ac08082dbfa4aba68cfce0c4aa05dbbea32ed6db9fe' },
+    { cmd: 'curl -sS http://127.0.0.1:8001/', out: 'curl: (56) Recv failure: Connection reset by peer', note: '-sS 不显示进度，但出错时照样打印错误。' },
+    { cmd: 'docker rm -f wrong', out: 'wrong' },
+  ]}
+/>
+
+每个容器有自己的一套网络：一块网卡、一个地址、自己的 127.0.0.1。（来源：[Networking overview](#source-dk-networking)）从发布的端口转进来的请求，到达的是容器网卡上的地址，不是它的 127.0.0.1。只监听 127.0.0.1 的程序收不到这些请求。所以**容器里的服务要监听 0.0.0.0**，也就是这个容器的所有地址。
+
+## 二、用 Compose 起一整套服务
+
+### 1. compose.yaml
+
+一个真实的网站往往不止一个程序。这里在 PHP 前面再放一个 nginx：请求先到 nginx，nginx 再转给 PHP。两个容器、一个网络、一个卷，用 `docker run` 要敲好几条长命令，Compose 把它们写进一个文件。
+
+<CodeFile file="labs/docker-compose-labs/compose.yaml" lang="yaml" />
+
+<DataTable
+  caption="compose.yaml 里的每一项"
+  headers={["写法", "含义"]}
+  rows={[
+    ["services:", "下面列出这套服务里的每一个服务。这里有两个：app 和 web"],
+    ["build: .", "app 的镜像用当前目录的 Dockerfile 现场构建"],
+    ["image: nginx:alpine", "web 直接用现成的镜像"],
+    ["ports: - \"8080:80\"", "同 docker run -p。只有 web 发布了端口，app 不对外"],
+    ["volumes: - data:/data", "把名为 data 的卷挂到 app 容器的 /data，数据库文件就在这里"],
+    ["- ./nginx.conf:/etc/nginx/conf.d/default.conf:ro", "绑定挂载：用本机的 nginx.conf 作为 nginx 的配置，只读"],
+    ["depends_on: - app", "先启动 app，再启动 web"],
+    ["最下面的 volumes: data:", "声明这个项目要用的卷"],
+  ]}
+  columnRatios={[2.2, 3]}
+/>
+
+YAML 用缩进表示层级，同一层必须对齐，只能用空格，不能用 Tab。（来源：[What is Docker Compose?](#source-dk-compose)、[Compose file reference: Services](#source-dk-compose-services)、[Compose file reference: Volumes](#source-dk-compose-volumes)）
+
+<CodeFile file="labs/docker-compose-labs/nginx.conf" lang="nginx" mark="5" note="nginx 收到的请求都转给 app 的 8000 端口。" />
+
+### 2. 一次请求经过哪里
+
+<FlowSimulator client:visible title="curl 一次 8080 的旅程" steps={composeRequest} motionLevel="explanatory" />
+
+关键在第三步。Compose 给这个项目建了一个网络，两个服务的容器都在里面，**互相用服务名就能找到对方**。容器每次重建，地址可能变，名字不变，所以配置里写名字，不写地址。（来源：[Networking in Compose](#source-dk-compose-networking)）
+
+### 3. 启动、查看、访问
+
+<TerminalSession
+  title="一条命令起两个服务"
+  steps={[
+    {
+      cmd: 'docker compose up -d',
+      out: "[+] Building 0.2s (11/11) FINISHED\n…（构建 app 的镜像。步骤和刚才 docker build 的一模一样，都显示 CACHED，直接用了缓存）\n[+] Running 5/5\n ✔ compose-app              Built                                          0.0s\n ✔ Network compose_default  Created                                        0.0s\n ✔ Volume compose_data      Created                                        0.0s\n ✔ Container compose-app-1  Started                                        0.1s\n ✔ Container compose-web-1  Started                                        0.2s",
+      note: '名字都带着 compose 这个前缀：Compose 把所在目录的名字当作项目名。',
+    },
+    { cmd: "docker compose ps --format 'table {{.Service}}\\t{{.State}}\\t{{.Ports}}'", out: 'SERVICE   STATE     PORTS\napp       running   8000/tcp\nweb       running   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp', note: 'app 的 8000 只在项目网络里可见，没有发布到本机。' },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'visit #1' },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'visit #2' },
+    { cmd: 'docker compose exec web wget -qO- http://app:8000/', out: 'visit #3', note: '在 web 容器里直接按名字访问 app。wget 是 Alpine 里自带的下载工具，作用和 curl 差不多。' },
+    { cmd: 'docker compose logs app | tail -n 3', out: 'app-1  | [Fri Oct  2 14:45:33 2026] 172.19.0.3:60274 Accepted\napp-1  | [Fri Oct  2 14:45:33 2026] 172.19.0.3:60274 [200]: GET /\napp-1  | [Fri Oct  2 14:45:33 2026] 172.19.0.3:60274 Closing', note: '发请求的是 172.19.0.3，也就是 web 容器，不是你的 curl。你的地址和时间会不同。' },
+  ]}
+/>
+
+`docker compose` 的子命令和上节课的 `docker` 很像，只是操作对象从「某个容器」变成了「这个项目里的某个服务」，所以要在 compose.yaml 所在的目录里执行。（来源：[docker compose up](#source-dk-compose-up)、[docker compose logs](#source-dk-compose-logs)、[docker compose exec](#source-dk-compose-exec)）
+
+### 4. 停掉，再起来
+
+<TerminalSession
+  title="down 删除容器和网络，卷留着"
+  steps={[
+    { cmd: 'docker compose down', out: "[+] Running 3/3\n ✔ Container compose-web-1  Removed                                        0.2s\n ✔ Container compose-app-1  Removed                                       10.1s\n ✔ Network compose_default  Removed                                        0.2s", note: 'app 要等 10 秒左右，见下面的说明。' },
+    { cmd: 'docker compose up -d', out: "[+] Running 3/3\n ✔ Network compose_default  Created                                        0.0s\n ✔ Container compose-app-1  Started                                        0.2s\n ✔ Container compose-web-1  Started                                        0.2s" },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'visit #4', note: '接着往下数：容器是新的，卷 compose_data 还是原来那个。' },
+  ]}
+/>
+
+`down` 删掉了两个容器和网络，但默认不删卷，所以计数还在。要连数据一起清掉，用 `docker compose down -v`。（来源：[docker compose down](#source-dk-compose-down)）
+
+<Callout variant="note" title="为什么 app 要等 10 秒">
+停止容器时，Docker 先给容器里的主进程发一个「请退出」的信号（SIGTERM），等一段宽限期（默认 10 秒）还没退出，再强制结束它（SIGKILL）。PHP 的内置服务器在容器里不理会第一个信号，所以每次都要等满 10 秒。nginx 会正常退出，所以 web 很快。这不是出错了，等一会就好。
+</Callout>
+
+（来源：[docker container stop](#source-dk-stop)）
+
+## 三、改了代码以后
+
+把 `index.php` 最后一行的输出改一改。下面用 `sed -i 's/旧/新/' 文件名` 在文件里做一次替换，效果和用编辑器打开、修改、保存一样。
+
+<TerminalSession
+  title="改完代码，up -d 不够"
+  steps={[
+    { cmd: "sed -i 's/visit #/visits so far: /' index.php" },
+    { cmd: 'docker compose up -d', out: "[+] Running 2/2\n ✔ Container compose-app-1  Running                                        0.0s\n ✔ Container compose-web-1  Running                                        0.0s" },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'visit #5', note: '还是旧的输出。' },
+    {
+      cmd: 'docker compose up -d --build',
+      out: "[+] Building 0.2s (11/11) FINISHED\n…\n => CACHED [2/4] RUN mkdir /data                                           0.0s\n => CACHED [3/4] WORKDIR /app                                              0.0s\n => [4/4] COPY index.php .                                                 0.0s\n…\n[+] Running 3/3\n ✔ compose-app              Built                                          0.0s\n ✔ Container compose-app-1  Started                                       10.2s\n ✔ Container compose-web-1  Running                                        0.0s",
+      note: 'RUN 和 WORKDIR 两步直接用了缓存，只有 COPY 重新做。app 用新镜像重建，web 没动。',
+    },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'visits so far: 6', note: '新代码生效，计数仍然接着数：重建容器不影响卷。' },
+    { cmd: 'docker compose down -v', out: "[+] Running 4/4\n ✔ Container compose-web-1  Removed                                        0.2s\n ✔ Container compose-app-1  Removed                                       10.1s\n…（还有 Volume compose_data 和 Network compose_default 两行 Removed，这两行同时进行，先后顺序每次可能不同）", note: '这次卷也删掉了。' },
+  ]}
+/>
+
+为什么第一次 `up -d` 没变化？容器里运行的是**镜像里的** index.php，是构建时 COPY 进去的那一份。你改的是本机的文件，镜像没变，Compose 看到配置和镜像都和原来一样，就让容器继续运行。加上 `--build`，Compose 先重新构建镜像；镜像变了，它就用新镜像重建 app。（来源：[docker compose up](#source-dk-compose-up)）
+
+构建时为什么只有 COPY 重做？每条指令对应一层，某一层变了，它和它后面的层都要重做，前面的层直接用缓存。这里变的是 index.php，所以从 COPY 开始重做。这也是为什么 Dockerfile 里把很少变的步骤写在前面、经常变的代码放在后面。（来源：[Docker build cache](#source-dk-build-cache)）
+
+<DataTable
+  caption="拿到一个靶场目录，先看这几处"
+  headers={["看哪里", "回答什么问题"]}
+  rows={[
+    ["compose.yaml 的 services", "有几个服务，各是什么（网站、数据库、……）"],
+    ["每个服务的 build 或 image", "是现场从代码构建，还是用现成镜像"],
+    ["ports", "访问哪个端口。冒号左边是本机的"],
+    ["volumes", "数据放在哪里；down -v 会清掉什么"],
+    ["docker compose ps、docker compose logs 服务名", "起来了没有；没起来，报的什么错"],
+  ]}
+  columnRatios={[2, 3]}
+/>
+
+## 常见报错与排错
+
+<TerminalSession
+  title="不在项目目录里"
+  steps={[
+    { cmd: 'cd ~' },
+    { cmd: 'docker compose ps', out: 'no configuration file provided: not found', note: '当前目录里没有 compose.yaml。' },
+    { cmd: 'cd ~/lab/compose' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["no configuration file provided: not found", "不在 compose.yaml 所在的目录", "cd 到项目目录再执行"],
+    ["改了代码，页面没变", "容器运行的是镜像里的旧文件", "docker compose up -d --build"],
+    ["curl: (56) Recv failure: Connection reset by peer", "容器里的程序只监听 127.0.0.1", "让它监听 0.0.0.0"],
+    ["502 Bad Gateway", "nginx 连不上后面的服务：服务没起来，或者 proxy_pass 写了 127.0.0.1", "docker compose ps、logs 看 app；proxy_pass 写服务名"],
+    ["yaml: line 8: did not find expected key 这类报错", "YAML 缩进不对，或者用了 Tab", "按层级对齐，只用空格"],
+    ["COPY 报 not found", "要复制的文件不在构建目录里，或者名字写错", "确认文件和 Dockerfile 在同一个目录"],
+    ["down 时 app 要等 10 秒", "程序不响应停止信号，Docker 等满宽限期才强制结束", "正常现象，等一会"],
+    ["计数没有清零", "down 默认不删卷", "要清数据用 down -v"],
+  ]}
+  columnRatios={[2, 2.2, 2]}
+/>
+
+边界：PHP 的内置服务器只适合开发和练习，正式的网站会用 nginx 加 PHP-FPM 或者 Apache。本课的项目是为了把 Dockerfile 和 Compose 的用法讲清楚，下节课的综合项目会沿用这套写法。下学期运行来路不明的靶场时，先读一遍它的 compose.yaml，看清楚它要挂载本机的哪些目录、发布哪些端口，并且放在练习虚拟机里运行。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'FROM / RUN / WORKDIR / COPY / EXPOSE / CMD', description: '基础镜像 / 构建时执行 / 工作目录 / 复制文件 / 说明端口 / 默认启动命令。' },
+    { term: 'docker build -t 名字 .', description: '用当前目录的 Dockerfile 做镜像。' },
+    { term: 'docker compose up -d', description: '按 compose.yaml 启动整套服务。' },
+    { term: 'docker compose up -d --build', description: '改了代码之后：先重新构建再启动。' },
+    { term: 'docker compose ps / logs 服务名', description: '服务状态 / 某个服务的输出。' },
+    { term: 'docker compose exec 服务名 命令', description: '在服务的容器里执行命令。' },
+    { term: 'docker compose down / down -v', description: '删除容器和网络 / 连卷一起删。' },
+    { term: '服务名', description: '同一个项目里的容器互相访问用的名字。' },
+    { term: '0.0.0.0', description: '容器里的服务要监听的地址。' },
+  ]}
+/>
+
+<KeyTakeaway>
+Dockerfile 从一个基础镜像开始，用 RUN、WORKDIR、COPY 一层层加上自己的东西，用 CMD 说明容器启动时运行什么；docker build 把它做成镜像，改动只会让那一层和后面的层重做。容器里的服务要监听 0.0.0.0。compose.yaml 把几个服务、它们的端口和卷写在一起，docker compose up -d 一条命令全部启动；同一个项目里的容器在同一个网络里，用服务名互相访问。down 删除容器和网络，卷默认保留；改了代码要加 --build。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

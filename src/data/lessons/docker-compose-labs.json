@@ -1,0 +1,483 @@
+{
+  "lessonPlan": {
+    "audience": "学过 Docker 一、会写简单 PHP 和 SQL、还没有自己做过镜像的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一次请求在两个容器之间走一遍：本机 8080 端口进入 web 容器，nginx 按服务名 app 转发给另一个容器里的 PHP，PHP 把计数写进卷里的数据库，响应原路返回；curl 自始至终只和 web 打交道",
+    "learningObjectives": [
+      "读懂一个 Dockerfile 里 FROM、RUN、WORKDIR、COPY、EXPOSE、CMD 各做什么，用 docker build 做出镜像",
+      "说出容器里的服务为什么要监听 0.0.0.0 而不是 127.0.0.1",
+      "读懂 compose.yaml 的 services、build、image、ports、volumes、depends_on",
+      "用 docker compose up -d、ps、logs、exec、down 管理一整套服务，说出 down 和 down -v 的区别",
+      "解释容器之间为什么能用服务名互相访问，改了代码以后为什么要加 --build"
+    ],
+    "prerequisites": [
+      "docker-images-and-containers",
+      "php-pdo-database"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-names",
+      "kind": "mechanism",
+      "title": "为什么写 app 而不是 127.0.0.1",
+      "question": "nginx.conf 里写的是 proxy_pass http://app:8000;。有同学觉得 app 和 nginx 都在同一台 Kali 上，于是改成 proxy_pass http://127.0.0.1:8000;。重启之后访问 8080 会怎样？为什么？顺带说明 Dockerfile 里的 CMD 为什么要写 0.0.0.0:8000。",
+      "answer": "会得到 nginx 的 502 Bad Gateway 一类错误。每个容器有自己独立的网络，只看到一块有自己地址的网卡；web 容器里的 127.0.0.1 指的是 web 容器自己，里面并没有程序在 8000 端口监听。app 是 Compose 里另一个服务的名字，两个服务在同一个网络 compose_default 里，Docker 会把 app 解析成 app 容器当前的地址，所以要写服务名，而且容器重建之后地址会变，名字不变。CMD 写 0.0.0.0 也是同一个道理：从 web 或者从发布的端口转进来的请求，到达的是 app 容器网卡上的地址，不是它的 127.0.0.1；只监听 127.0.0.1 的程序收不到这些请求，本课演示里 curl 得到的是 Connection reset by peer。",
+      "sourceIds": [
+        "dk-compose-networking",
+        "dk-networking"
+      ]
+    },
+    {
+      "id": "check-predict-compose",
+      "kind": "prediction",
+      "title": "预测计数",
+      "question": "在 ~/lab/compose 里从头开始：docker compose up -d，curl 两次 8080。然后依次执行下面四步，每步之后再 curl 一次，写出每次看到的内容：一、docker compose down，再 docker compose up -d。二、把 index.php 里的 visit # 改成 visits so far: ，执行 docker compose up -d。三、docker compose up -d --build。四、docker compose down -v，再 docker compose up -d。",
+      "answer": "前两次是 visit #1、visit #2。一、visit #3：down 删了容器和网络，但卷 compose_data 还在，新的 app 容器挂上同一个卷，数据库里已经有两行。二、visit #4：up -d 看到服务的配置和镜像都没变，容器继续运行，改的只是本机的 index.php，镜像里还是旧文件。三、visits so far: 5：--build 重新构建镜像（COPY 之前的层直接用缓存，COPY 重新执行），镜像变了，Compose 停掉旧的 app 容器、用新镜像重建，卷保留。四、visits so far: 1：down -v 把卷也删了，数据库从空的开始。",
+      "sourceIds": [
+        "dk-compose-up",
+        "dk-compose-down",
+        "dk-build-cache"
+      ]
+    },
+    {
+      "id": "check-own-compose",
+      "kind": "practice",
+      "title": "改端口、改内容、重新部署",
+      "question": "修改 ~/lab/compose 里的项目：让页面输出 hello from 你的名字, visit #N，并且改成从本机的 9090 端口访问。重新部署，用 curl 验证两次，再用 docker compose logs app 找到这两次请求，最后用 docker compose down -v 清理干净。",
+      "answer": "参考做法：index.php 最后一行改成 echo \"hello from zhangsan, visit #$count\\n\";；compose.yaml 里 web 的 ports 改成 - \"9090:80\"（只改冒号左边，nginx 在容器里仍然监听 80）；执行 docker compose up -d --build。curl -s http://127.0.0.1:9090/ 两次看到 hello from zhangsan, visit #1 和 #2（如果卷里有旧数据，编号会接着往下数）。docker compose logs app 里能看到两条 [200]: GET /，发起请求的地址是 web 容器的地址，不是本机。docker compose down -v 之后 docker ps -a 和 docker volume ls 里都没有这个项目的东西。自查：docker compose ps 里 web 的 PORTS 是 0.0.0.0:9090->80/tcp。",
+      "sourceIds": [
+        "dk-compose-services",
+        "dk-compose-up",
+        "dk-compose-logs"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "用 Dockerfile 做镜像",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "docker build 做出 counter 镜像，curl 8000 端口看到 visit #1。"
+    },
+    {
+      "kind": "动手",
+      "title": "用 Compose 起一整套服务",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "docker compose up -d 起来两个服务，curl 8080 的计数在 down 和 up 之后接着往下数。"
+    },
+    {
+      "kind": "进阶",
+      "title": "改了代码以后",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "改完 index.php，用 --build 重新部署后看到新内容。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "Docker docs writing a Dockerfile FROM RUN WORKDIR COPY EXPOSE CMD",
+      "Docker build cache layer invalidation COPY",
+      "Docker Compose services build image ports volumes depends_on",
+      "Networking in Compose service name discovery project name",
+      "docker compose up recreate when image changed, docker compose down --volumes",
+      "docker container stop SIGTERM grace period SIGKILL",
+      "php official image cli alpine extensions pdo_sqlite"
+    ],
+    "notes": "全部命令在专门的 Kali 容器（kali-docker）里实际运行，与第 33 课相同：Kali 打包的 docker.io、docker-buildx、docker-compose，守护进程在同一个容器里。php:8.4-cli-alpine 镜像里已带 PDO 和 pdo_sqlite（php -m 核对）。docker build 和 docker compose 的进度显示在终端里原地刷新，页面给出的是刷新结束后屏幕上留下的内容，省略了与本课无关的行；每一步的耗时、构建上下文大小、镜像摘要、容器地址每次不同，比对时按形状处理。app 容器停止要等约 10 秒，是实际观察到的现象：php -S 不响应 Docker 发出的停止信号，Docker 等满宽限期后强制结束。"
+  },
+  "versionInfo": {
+    "targetVersion": "docker.io 28.5.2、docker-buildx 0.29.1、docker-compose 2.40.3（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali（在 docker 组里），交互式 zsh；docker.io 28.5.2、docker-buildx 0.29.1、docker-compose 2.40.3（Kali 打包版本），守护进程在同一个容器里运行。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "php:8.4-cli-alpine、nginx:alpine 会随上游更新，PHP 的小版本号可能不同。docker build 的进度显示随 buildx 版本略有差别，步骤编号（[2/4] 这类）和 CACHED 标记的含义不变。Compose 用目录名作项目名，项目目录不叫 compose 时，容器、网络、卷的名字前缀随之不同。旧版的独立命令 docker-compose（带连字符）语法基本相同，本课统一用 docker compose。"
+  },
+  "sources": [
+    {
+      "id": "dk-writing-dockerfile",
+      "kind": "official-doc",
+      "title": "Docker Docs: Writing a Dockerfile",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-dockerfile",
+        "cmd-build"
+      ]
+    },
+    {
+      "id": "dk-dockerfile-ref",
+      "kind": "official-doc",
+      "title": "Docker Docs: Dockerfile reference",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/dockerfile/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-expose"
+      ]
+    },
+    {
+      "id": "dk-build",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker buildx build",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/buildx/build/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-build",
+        "cmd-build"
+      ]
+    },
+    {
+      "id": "dk-layers",
+      "kind": "official-doc",
+      "title": "Docker Docs: Understanding the image layers",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/building-images/understanding-image-layers/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-cache"
+      ]
+    },
+    {
+      "id": "dk-build-cache",
+      "kind": "official-doc",
+      "title": "Docker Docs: Docker build cache",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/build/cache/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-cache"
+      ]
+    },
+    {
+      "id": "dk-php-image",
+      "kind": "official-doc",
+      "title": "php - Official Image",
+      "publisher": "Docker Hub",
+      "url": "https://hub.docker.com/_/php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-php-image"
+      ]
+    },
+    {
+      "id": "dk-networking",
+      "kind": "official-doc",
+      "title": "Docker Docs: Networking overview",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/engine/network/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-container-network"
+      ]
+    },
+    {
+      "id": "dk-compose",
+      "kind": "official-doc",
+      "title": "Docker Docs: What is Docker Compose?",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose"
+      ]
+    },
+    {
+      "id": "dk-compose-services",
+      "kind": "official-doc",
+      "title": "Docker Docs: Compose file reference: Services",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/compose-file/services/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-keys"
+      ]
+    },
+    {
+      "id": "dk-compose-volumes",
+      "kind": "official-doc",
+      "title": "Docker Docs: Compose file reference: Volumes",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/compose-file/volumes/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-keys"
+      ]
+    },
+    {
+      "id": "dk-compose-networking",
+      "kind": "official-doc",
+      "title": "Docker Docs: Networking in Compose",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/compose/how-tos/networking/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-network",
+        "cmd-compose-exec"
+      ]
+    },
+    {
+      "id": "dk-compose-up",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose up",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/up/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-up",
+        "cmd-compose-up"
+      ]
+    },
+    {
+      "id": "dk-compose-down",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose down",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/down/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-down",
+        "cmd-compose-down"
+      ]
+    },
+    {
+      "id": "dk-compose-logs",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose logs",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/logs/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-logs-exec"
+      ]
+    },
+    {
+      "id": "dk-compose-exec",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose exec",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/exec/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose-logs-exec",
+        "cmd-compose-exec"
+      ]
+    },
+    {
+      "id": "dk-stop",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker container stop",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/container/stop/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-stop"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-dockerfile",
+      "text": "Dockerfile 是一个文本文件，写着做镜像的步骤：FROM 指定在哪个基础镜像上扩展，WORKDIR 指定镜像里的工作目录，COPY 把宿主机上的文件复制进镜像，RUN 执行一条命令，EXPOSE 说明程序监听的端口，CMD 是用这个镜像启动容器时默认运行的命令。",
+      "sourceIds": [
+        "dk-writing-dockerfile"
+      ]
+    },
+    {
+      "id": "claim-expose",
+      "text": "EXPOSE 告诉 Docker 容器运行时监听哪个端口，但它并不真正发布端口，只是写镜像的人和运行容器的人之间的一种说明；真正发布端口要在运行时指定。",
+      "sourceIds": [
+        "dk-dockerfile-ref"
+      ]
+    },
+    {
+      "id": "claim-build",
+      "text": "docker build 是 docker buildx build 的别名，用 BuildKit 构建镜像，参数是构建上下文的路径；-t 给镜像起名字和标签。",
+      "sourceIds": [
+        "dk-build"
+      ]
+    },
+    {
+      "id": "claim-cache",
+      "text": "Dockerfile 里的每条指令对应镜像的一层；某一层变了就要重新构建，并且它后面的所有层都要重新执行。例如改了被 COPY 的文件，COPY 这一层的缓存失效，之后的层全部重做。",
+      "sourceIds": [
+        "dk-build-cache",
+        "dk-layers"
+      ]
+    },
+    {
+      "id": "claim-php-image",
+      "text": "Docker Hub 上的官方 php 镜像可以作为 Dockerfile 的 FROM，把项目文件 COPY 进去再用 CMD 运行；镜像里已经编译好了许多扩展，可以用 php -m 查看。",
+      "sourceIds": [
+        "dk-php-image"
+      ]
+    },
+    {
+      "id": "claim-container-network",
+      "text": "容器只看到一块带 IP 地址的网卡、一个网关、路由表和 DNS 服务；容器每连到一个 Docker 网络，就从这个网络的子网里分到一个地址。",
+      "sourceIds": [
+        "dk-networking"
+      ]
+    },
+    {
+      "id": "claim-compose",
+      "text": "用 Docker Compose 可以把全部容器和它们的配置写在一个 YAML 文件里；把这个文件放进代码仓库，别人克隆下来用一条命令就能运行。改了文件之后再次执行 docker compose up，Compose 会把改动应用上去。",
+      "sourceIds": [
+        "dk-compose"
+      ]
+    },
+    {
+      "id": "claim-compose-keys",
+      "text": "compose 文件里 build 指定从源码构建镜像的配置，image 指定启动容器用的镜像，ports 定义宿主机和容器之间的端口映射，depends_on 控制服务启动和停止的先后顺序；顶层的 volumes 声明可以被多个服务使用的具名卷，服务要在自己的 volumes 里显式挂上它。",
+      "sourceIds": [
+        "dk-compose-services",
+        "dk-compose-volumes"
+      ]
+    },
+    {
+      "id": "claim-compose-network",
+      "text": "Compose 默认为应用建一个网络，每个服务的容器都加入这个网络，可以被同一网络里的其他容器用服务名找到；容器重建后地址会变，服务名不变，所以应当用服务名而不是地址。网络的名字来自项目名，项目名默认取所在目录的名字。",
+      "sourceIds": [
+        "dk-compose-networking"
+      ]
+    },
+    {
+      "id": "claim-compose-up",
+      "text": "docker compose up 构建、创建（或重建）、启动服务的容器，-d 让它们在后台运行，--build 在启动前先构建镜像；如果服务的配置或镜像在容器创建之后变了，up 会停掉并重建这些容器，挂载的卷保留。",
+      "sourceIds": [
+        "dk-compose-up"
+      ]
+    },
+    {
+      "id": "claim-compose-down",
+      "text": "docker compose down 停止并删除 up 创建的容器和网络；默认不删除卷，加 -v（--volumes）才会删除 compose 文件 volumes 一节声明的具名卷。",
+      "sourceIds": [
+        "dk-compose-down"
+      ]
+    },
+    {
+      "id": "claim-compose-logs-exec",
+      "text": "docker compose logs 显示各服务的输出；docker compose exec 相当于对某个服务的容器执行 docker exec。",
+      "sourceIds": [
+        "dk-compose-logs",
+        "dk-compose-exec"
+      ]
+    },
+    {
+      "id": "claim-stop",
+      "text": "停止容器时，容器里的主进程先收到 SIGTERM，过了宽限期还没退出就收到 SIGKILL。",
+      "sourceIds": [
+        "dk-stop"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-build",
+      "command": "docker build -t counter .",
+      "expectedResult": "最后几行是 [2/4] RUN、[3/4] WORKDIR、[4/4] COPY 和 naming to docker.io/library/counter；docker images 里出现 counter:latest。",
+      "sourceIds": [
+        "dk-build",
+        "dk-writing-dockerfile"
+      ]
+    },
+    {
+      "id": "cmd-compose-up",
+      "command": "docker compose up -d",
+      "expectedResult": "构建 compose-app 镜像，创建网络 compose_default、卷 compose_data，启动 compose-app-1 和 compose-web-1 两个容器。",
+      "sourceIds": [
+        "dk-compose-up"
+      ]
+    },
+    {
+      "id": "cmd-compose-exec",
+      "command": "docker compose exec web wget -qO- http://app:8000/",
+      "expectedResult": "在 web 容器里按服务名访问 app，拿到 visit #N。",
+      "sourceIds": [
+        "dk-compose-exec",
+        "dk-compose-networking"
+      ]
+    },
+    {
+      "id": "cmd-compose-down",
+      "command": "docker compose down -v",
+      "expectedResult": "删除两个容器、网络和卷 compose_data。",
+      "sourceIds": [
+        "dk-compose-down"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "compose-request",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

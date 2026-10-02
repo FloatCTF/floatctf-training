@@ -24,7 +24,7 @@
       "说明部署后需要持续监控数据、特征、模型、系统与反馈"
     ],
     "prerequisites": [
-      "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》"
+      "machine-learning-foundations"
     ],
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"

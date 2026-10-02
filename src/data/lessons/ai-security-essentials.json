@@ -24,9 +24,10 @@
       "在 CTF 场景中沿四步框架分析 AI 题目"
     ],
     "prerequisites": [
-      "已完成 ai-engineering-landscape《AI 工程全景：从一次调用到生产系统》",
-      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
-      "了解 HTTP 请求与网页抓取的角色分工"
+      "ai-engineering-landscape",
+      "ai-literacy",
+      "http-basics",
+      "python-network-scripting"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-08-28"

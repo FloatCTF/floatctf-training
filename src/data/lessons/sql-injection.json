@@ -24,9 +24,9 @@
       "说明联合查询、盲注等类型的适用条件与验证思路"
     ],
     "prerequisites": [
-      "基础 SQL SELECT/WHERE",
-      "HTTP 表单与查询参数",
-      "一种后端语言的数据库访问代码阅读能力"
+      "sql-basics",
+      "php-forms-and-sessions",
+      "php-pdo-database"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-07-23"

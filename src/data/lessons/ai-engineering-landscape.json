@@ -24,8 +24,10 @@
       "说明可观测性、AI 网关与成本优化怎样支撑生产运行，并计算提示缓存的收支平衡"
     ],
     "prerequisites": [
-      "已完成 agent-harness-engineering《AI Agent 工程方法：从 Prompt 到执行图》",
-      "了解 HTTP API、JSON 与数据库的基本概念"
+      "agent-harness-engineering",
+      "http-basics",
+      "python-network-scripting",
+      "sql-basics"
     ],
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"

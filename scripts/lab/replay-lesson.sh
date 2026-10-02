@@ -8,6 +8,7 @@
 #   普通行           一条 shell 命令，例如清理目录、固定 git 的提交时间、在后台启动练习用的服务器
 #   @replay <id>     先把另一门课页面上的全部 shell 命令悄悄跑一遍，用来重建前一课留下的现场
 #   @labs <id>       把另一门课的材料 public/labs/<id>/ 也复制进工作目录
+#   @container <名字>  这门课在另一个容器里重放（写在前置脚本的任意一行，重放开始时就读取），例如 Docker 课用 kali-docker
 #   @workdir <目录>  Python、sqlite3 这类交互会话在这个目录里启动（默认与材料所在的工作目录相同）
 #   @each <命令>     同普通行，但在每一类会话重放之前都执行一遍（例如重新启动练习服务器）
 #   @root <命令>     以 root 身份在容器里执行一条命令（装采集环境的补丁用，不是课程内容）
@@ -18,6 +19,11 @@ id="$1"
 workdir="${2:-/home/kali/lab/python}"
 container="${KALI_CONTAINER:-kali-lab}"
 root="$(cd "$(dirname "$0")/../.." && pwd)"
+if [ -f "$root/scripts/lab/preludes/$id.txt" ]; then
+  wanted="$(sed -n 's/^@container //p' "$root/scripts/lab/preludes/$id.txt" | head -n 1)"
+  if [ -n "$wanted" ]; then container="$wanted"; fi
+fi
+export KALI_CONTAINER="$container"
 tmp="$(mktemp -d)"
 export KALI_WORKDIR="$workdir"
 docker exec "$container" sh -c "rm -rf '$workdir' && mkdir -p '$workdir'"
@@ -31,6 +37,7 @@ if [ -f "$prelude" ]; then
       ''|'#'*) ;;
       '@replay '*) node "$root/scripts/lab/terminal-replay.mjs" extract "${line#@replay }" | sed 's/^/##! /' >> "$tmp/shell.txt" ;;
       '@labs '*) docker cp "$root/public/labs/${line#@labs }/." "$container:$workdir/" ;;
+      '@container '*) ;;
       '@workdir '*) KALI_WORKDIR="${line#@workdir }"; export KALI_WORKDIR ;;
       '@each '*) printf '##! %s\n' "${line#@each }" | tee -a "$tmp/each.txt" >> "$tmp/shell.txt" ;;
       '@root '*) docker exec -u root "$container" sh -c "${line#@root }" ;;

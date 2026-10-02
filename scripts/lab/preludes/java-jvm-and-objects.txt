@@ -1,0 +1,3 @@
+# Java 课在 ~/lab/java 里做。每次重放从空目录开始，把这一课的材料放进去（模拟学员下载好了文件）。
+rm -rf ~/lab/java; mkdir -p ~/lab/java; cp -r ~/lab/python/. ~/lab/java/; true
+@workdir /home/kali/lab/java

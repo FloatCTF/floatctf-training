@@ -1,0 +1,478 @@
+{
+  "lessonPlan": {
+    "audience": "学完本学期 Git、PHP、SQL、Docker 课程，第一次独立完成一个完整小项目的新生",
+    "durationMinutes": 90,
+    "primaryMode": "project",
+    "supportingModes": [
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "project",
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一条留言从表单到页面的六步：POST 到 post.php，服务器重新校验，预处理语句写进 SQLite，303 跳回首页，首页查询后逐段转义输出；同一份代码先在 php -S 上跑通、用 Git 提交，再用 Docker Compose 部署，数据放在卷里",
+    "learningObjectives": [
+      "把一个小需求拆成数据表、页面、处理提交三部分，写出可以运行的留言板",
+      "在服务器端校验输入，用预处理语句写数据库，用 htmlspecialchars 转义输出，并能说明各自防住的是什么问题",
+      "用 Post/Redirect/Get 处理表单提交，用 curl 和 sqlite3 验证每一步",
+      "用 Git 分步提交项目，用 .gitignore 排除数据文件",
+      "写出 Dockerfile 和 compose.yaml，把留言板部署到容器里，数据放进卷"
+    ],
+    "prerequisites": [
+      "git-branches-and-collaboration",
+      "php-pdo-database",
+      "docker-compose-labs"
+    ],
+    "safetyScope": "localhost",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-three-defenses",
+      "kind": "mechanism",
+      "title": "三道关各管什么",
+      "question": "留言板里有三处处理用户输入的代码：post.php 里的长度和非空检查、INSERT 用的预处理语句、index.php 输出时的 e()。如果分别去掉其中一处（另外两处保留），各会出现什么问题？浏览器表单上已经有 required 和 maxlength，为什么服务器还要再查？",
+      "answer": "去掉服务器端检查：空留言、超长留言都能存进数据库。表单上的 required 和 maxlength 只约束浏览器，本课用 curl 直接发 POST 就完全绕开了表单，所以校验必须在服务器上再做一遍。去掉预处理语句、改成把文字拼进 SQL：名字里带单引号（比如 O'Brien）时 SQL 文本被截断，语句出错或者含义被改变，第 31 课已经看到过；预处理语句让 SQL 的结构和数据分开，引号只是数据。去掉 e()：留言里的 <b> 会被浏览器当成标签，把后面的字变成粗体，说明用户输入的文字变成了页面结构的一部分；转义之后尖括号变成 &lt; &gt;，只显示为字符。三处分别守住了「存什么」「SQL 怎么解释」「HTML 怎么解释」，互相不能代替。",
+      "sourceIds": [
+        "mdn-form-validation",
+        "php-pdo-prepared",
+        "php-htmlspecialchars"
+      ]
+    },
+    {
+      "id": "check-predict-guestbook",
+      "kind": "prediction",
+      "title": "预测结果",
+      "question": "本地服务器上已有 kali 和 lee 两条留言（lee 的留言是 <b>not bold</b>）。依次执行，写出每一步的结果：一、curl -s -w '%{http_code}\\n' -d 'name=amy&body=   ' http://127.0.0.1:8000/post.php。二、sqlite3 data/guestbook.db 'SELECT body FROM messages WHERE id = 2'。三、docker compose up -d --build 之后 curl -s http://127.0.0.1:8080/ | grep 条留言。四、docker compose down 再 up -d 之后同一条命令。",
+      "answer": "一、名字和留言都不能为空…的提示，状态码 400：trim 把三个空格去掉后 body 是空字符串。二、<b>not bold</b>：数据库里存的是原文，转义只发生在输出到 HTML 的那一刻，存进库时不改动。三、<p>0 条留言</p>：容器里的数据库在卷 guestbook_messages 里，是新的；Dockerfile 只复制 *.php，本机 data 目录里的数据库不会进镜像。四、取决于在三和四之间有没有提交过留言：没有就还是 0 条；有的话条数保留，因为 down 不删除卷。",
+      "sourceIds": [
+        "php-pdo-prepared",
+        "php-htmlspecialchars",
+        "dk-compose-down"
+      ]
+    },
+    {
+      "id": "check-extend",
+      "kind": "practice",
+      "title": "加上留言时间",
+      "question": "数据表里已经有 created_at 列（默认是写入时的 UTC 时间）。修改 index.php，让每条留言显示成 kali（2026-10-02 07:15:03）：hello 的样子。改完先用 php -S 在本地验证，用 git diff 检查改动，提交一次；再用 docker compose up -d --build 部署，确认容器里也生效。",
+      "answer": "参考做法：index.php 的查询改成 SELECT name, body, created_at FROM messages ORDER BY id DESC；输出改成 <b><?= e($m['name']) ?></b>（<?= e($m['created_at']) ?>）：<?= e($m['body']) ?>，时间虽然来自数据库，同样经过 e() 输出是好习惯。本地 curl 首页能看到时间后，git diff 只显示 index.php 的两处改动，git add index.php 再 git commit -m \"Show message time\"。部署时必须加 --build，否则容器里运行的还是旧的 index.php（第 34 课）。卷里的旧留言同样有 created_at，所以也会显示时间。",
+      "sourceIds": [
+        "php-pdo-sqlite",
+        "progit-recording",
+        "dk-compose-up"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "需求与设计",
+      "heading": "一、",
+      "minutes": 20,
+      "checkpoint": "能说出四个文件各负责什么，以及一条留言经过的六步。"
+    },
+    {
+      "kind": "动手",
+      "title": "在本机跑通并提交",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "curl 能发出留言，首页显示转义后的内容，git log 里有第一次提交。"
+    },
+    {
+      "kind": "进阶",
+      "title": "部署到容器",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "8080 端口上的留言板能用，down 再 up 之后留言还在，git log 里有两次提交。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual htmlspecialchars ENT_QUOTES; PDO prepared statements",
+      "PHP manual header Location response code; http_response_code; iconv_strlen",
+      "MDN client-side form validation server-side validation",
+      "RFC 9110 303 See Other",
+      "Pro Git recording changes; gitignore",
+      "Docker Compose up down volumes"
+    ],
+    "notes": "整个项目在 kali-docker 容器里按页面顺序实际完成：PHP 8.4.24（Kali 打包，php8.4-cli 与 php8.4-sqlite3）运行本地版本，Git 2.53 提交（固定了提交时间，所以页面上的提交编号可复现；学员的编号会不同），Docker 28.5.2 与 Compose 2.40.3 部署容器版本，镜像里是 php:8.4-cli-alpine。Kali 的 PHP 默认没有 mbstring 扩展，所以长度检查用 iconv_strlen（Kali 和官方镜像里都有），已在两边核对一个汉字计为一个字符。本课只讲正确做法：服务器端校验、预处理语句、输出转义、Post/Redirect/Get；这些做法防住的具体攻击方式留到下学期的安全课。"
+  },
+  "sources": [
+    {
+      "id": "php-webserver",
+      "kind": "official-doc",
+      "title": "PHP Manual: Built-in web server",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/features.commandline.webserver.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-php-server"
+      ]
+    },
+    {
+      "id": "php-post",
+      "kind": "official-doc",
+      "title": "PHP Manual: $_POST",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/reserved.variables.post.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-post"
+      ]
+    },
+    {
+      "id": "php-htmlspecialchars",
+      "kind": "official-doc",
+      "title": "PHP Manual: htmlspecialchars",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-htmlspecialchars"
+      ]
+    },
+    {
+      "id": "php-pdo-prepared",
+      "kind": "official-doc",
+      "title": "PHP Manual: Prepared statements and stored procedures",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.prepared-statements.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-prepared"
+      ]
+    },
+    {
+      "id": "php-pdo-sqlite",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO_SQLITE DSN",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/ref.pdo-sqlite.connection.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-pdo-sqlite"
+      ]
+    },
+    {
+      "id": "php-iconv-strlen",
+      "kind": "official-doc",
+      "title": "PHP Manual: iconv_strlen",
+      "publisher": "The PHP Group",
+      "url": "https://www.php.net/manual/en/function.iconv-strlen.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-iconv-strlen"
+      ]
+    },
+    {
+      "id": "php-header",
+      "kind": "official-doc",
+      "title": "PHP Manual: header",
+      "publisher": "The PHP Group",
+      "url": "https://www.php.net/manual/en/function.header.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-status"
+      ]
+    },
+    {
+      "id": "php-http-response-code",
+      "kind": "official-doc",
+      "title": "PHP Manual: http_response_code",
+      "publisher": "The PHP Group",
+      "url": "https://www.php.net/manual/en/function.http-response-code.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-status"
+      ]
+    },
+    {
+      "id": "mdn-form-validation",
+      "kind": "official-doc",
+      "title": "MDN: Client-side form validation",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Form_validation",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-client-validation"
+      ]
+    },
+    {
+      "id": "rfc9110",
+      "kind": "specification",
+      "title": "RFC 9110: HTTP Semantics",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-303"
+      ]
+    },
+    {
+      "id": "progit-recording",
+      "kind": "textbook",
+      "title": "Pro Git: 2.2 Recording Changes to the Repository",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-gitignore"
+      ]
+    },
+    {
+      "id": "gitignore",
+      "kind": "official-doc",
+      "title": "Git Reference: gitignore",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/gitignore",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的手册页，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-gitignore"
+      ]
+    },
+    {
+      "id": "dk-writing-dockerfile",
+      "kind": "official-doc",
+      "title": "Docker Docs: Writing a Dockerfile",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/building-images/writing-a-dockerfile/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-dockerfile"
+      ]
+    },
+    {
+      "id": "dk-compose",
+      "kind": "official-doc",
+      "title": "Docker Docs: What is Docker Compose?",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-docker-compose/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose"
+      ]
+    },
+    {
+      "id": "dk-compose-up",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose up",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/up/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose"
+      ]
+    },
+    {
+      "id": "dk-compose-down",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker compose down",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/compose/down/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-compose"
+      ]
+    },
+    {
+      "id": "dk-volumes",
+      "kind": "official-doc",
+      "title": "Docker Docs: Volumes",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/engine/storage/volumes/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-volume"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-php-server",
+      "text": "PHP 内置的 Web 服务器（php -S）用于开发和测试，不适合用在公开的网络上。",
+      "sourceIds": [
+        "php-webserver"
+      ]
+    },
+    {
+      "id": "claim-post",
+      "text": "用 POST 提交、内容类型为 application/x-www-form-urlencoded 或 multipart/form-data 的表单数据，在 PHP 里以关联数组 $_POST 的形式提供。",
+      "sourceIds": [
+        "php-post"
+      ]
+    },
+    {
+      "id": "claim-dockerfile",
+      "text": "Dockerfile 里 FROM 指定基础镜像，WORKDIR 指定工作目录，COPY 把文件复制进镜像，RUN 在构建时执行命令，CMD 指定容器启动时默认运行的命令。",
+      "sourceIds": [
+        "dk-writing-dockerfile"
+      ]
+    },
+    {
+      "id": "claim-client-validation",
+      "text": "浏览器端的表单校验很容易被绕过，不能当作完整的安全措施；所有提交的数据都应在服务器端再校验一遍。",
+      "sourceIds": [
+        "mdn-form-validation"
+      ]
+    },
+    {
+      "id": "claim-iconv-strlen",
+      "text": "与按字节计数的 strlen 不同，iconv_strlen 按指定的字符集统计字符个数。",
+      "sourceIds": [
+        "php-iconv-strlen"
+      ]
+    },
+    {
+      "id": "claim-status",
+      "text": "http_response_code 设置响应状态码；header 发送 Location 头时默认回 302，第三个参数可以指定其他状态码。",
+      "sourceIds": [
+        "php-http-response-code",
+        "php-header"
+      ]
+    },
+    {
+      "id": "claim-303",
+      "text": "303 See Other 表示服务器把用户代理引向 Location 头里给出的另一个资源，作为对原请求的间接响应；用户代理接着对它发 GET（或 HEAD）请求。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-prepared",
+      "text": "预处理语句的参数不需要加引号，由驱动处理；只要查询的其他部分只用预处理语句来构造，就不会出现 SQL 注入。",
+      "sourceIds": [
+        "php-pdo-prepared"
+      ]
+    },
+    {
+      "id": "claim-htmlspecialchars",
+      "text": "htmlspecialchars 把 HTML 里有特殊含义的字符转换成 HTML 实体，例如 < 变成 &lt;，> 变成 &gt;；使用 ENT_QUOTES 时单引号和双引号也会转换。",
+      "sourceIds": [
+        "php-htmlspecialchars"
+      ]
+    },
+    {
+      "id": "claim-pdo-sqlite",
+      "text": "PDO 连接 SQLite 的 DSN 以 sqlite: 开头，访问磁盘上的数据库要在后面接上它的绝对路径。",
+      "sourceIds": [
+        "php-pdo-sqlite"
+      ]
+    },
+    {
+      "id": "claim-gitignore",
+      "text": ".gitignore 里列出的路径会被 Git 有意忽略，未被跟踪的匹配文件不会出现在 git status 里，也不会被 git add 加进来。",
+      "sourceIds": [
+        "gitignore",
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-compose",
+      "text": "docker compose up 按 compose 文件构建并启动服务，--build 先构建镜像；down 删除容器和网络，默认保留卷，加 -v 才删除卷。",
+      "sourceIds": [
+        "dk-compose",
+        "dk-compose-up",
+        "dk-compose-down"
+      ]
+    },
+    {
+      "id": "claim-volume",
+      "text": "卷是 Docker 创建和管理的持久存储，数据的生存期独立于使用它的容器。",
+      "sourceIds": [
+        "dk-volumes"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "guestbook-local",
+      "path": "public/labs/guestbook-capstone/index.php",
+      "command": "mkdir -p data && php -S 127.0.0.1:8000，然后 curl -s http://127.0.0.1:8000/",
+      "expectedResult": "返回留言板页面，其中有 <p>0 条留言</p>。"
+    },
+    {
+      "id": "guestbook-post",
+      "path": "public/labs/guestbook-capstone/post.php",
+      "command": "curl -s -i -d 'name=kali&body=hello' http://127.0.0.1:8000/post.php",
+      "expectedResult": "HTTP/1.1 303 See Other，Location: index.php；空留言返回 400，GET 返回 405。"
+    },
+    {
+      "id": "guestbook-db",
+      "path": "public/labs/guestbook-capstone/db.php",
+      "command": "被 index.php 和 post.php require",
+      "expectedResult": "打开 data/guestbook.db，没有 messages 表时建表；提供输出转义函数 e()。"
+    },
+    {
+      "id": "guestbook-compose",
+      "path": "public/labs/guestbook-capstone/compose.yaml",
+      "command": "docker compose up -d --build",
+      "expectedResult": "构建 guestbook-web 镜像，在 8080 端口提供留言板，留言存在卷 guestbook_messages 里。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "message-journey",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

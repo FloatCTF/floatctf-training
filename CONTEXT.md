@@ -52,6 +52,10 @@
 - 采集环境的宿主机会劫持 DNS：涉及域名解析的课，在前置脚本里用 `@copy` 和 `@root` 装上 `scripts/lab/doh-forwarder.py`，否则 `dig` 拿到的是占位地址。
 - 中文输入法在第 1 课统一安装（fcitx5，Ctrl + 空格切换）。示例脚本的标识符、提示语仍用英文，省去学员写代码时来回切换输入法、打出全角符号的麻烦；确实要演示汉字的地方（如 UTF-8 的字节数）直接写中文。
 - 交互模式（`>>>`）的会话用 `TerminalSession` 加 `environment="PYTHON 交互模式"`，只放单行语句，每个会话块对应一个全新的解释器。重放一门课用 `sh scripts/lab/replay-lesson.sh <课 id>`。
+- Docker 课和综合项目在另一个采集容器 `kali-docker` 里重放：它以特权模式运行，里面装着 Kali 打包的 docker.io、docker-buildx、docker-compose，守护进程在容器内运行，镜像存在卷 `kali-docker-data` 里。前置脚本第一行写 `@container kali-docker`，再用 `@root` 确保 dockerd 在运行；每次重放前删掉本课的容器、卷、镜像和构建缓存（`docker builder prune -af`），让页面上的拉取和构建步骤真实发生。
+- `docker build`、`docker compose` 的进度在终端里原地刷新。`kali-session.py` 用一个小型屏幕模拟（光标上移、清行、回车覆盖）只保留刷新结束后屏幕上的内容；页面照这个最终画面写，无关的行用「…」省略。每步耗时、构建上下文大小、截短的镜像摘要、Docker 网络分配的 172.16/12 地址按形状比对。
+- Java 课在 `~/lab/java`（第 35 课）和 `~/lab/notes-app`（第 36 课，Maven 项目）里做。`~/lab` 下的目录名各课不能重复：`notes`、`web` 是第 2 课建的，`toolbox` 是 Git 课的，`docker`、`compose`、`guestbook` 是第 33、34、37 课的。Maven 项目的文件放在子目录里，`CodeFile` 的标题显示课程目录之下的相对路径，提示学员按这个结构存放。
+- `CodeFile` 的 `mark` 写行号，例如 `"4-7,13"`；组件把它换成 Expressive Code 的行标记（直接传字符串会被当成「要标出的文字」，什么也标不出来）。改了材料文件要检查标亮的行还对不对。
 - 学习路线上的课按路线顺序翻页：`paths.ts` 的 `pathPosition()` 给出上一课、下一课，分页与验收题的「下一课」都用它；不在任何路线上的课沿用分类内顺序。
 
 ## 已知边界

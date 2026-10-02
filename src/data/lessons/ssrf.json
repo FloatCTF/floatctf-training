@@ -23,8 +23,9 @@
       "设计覆盖解析、重定向、网络出口和日志的分层防御"
     ],
     "prerequisites": [
-      "HTTP 请求与 URL 基础",
-      "服务端与客户端的角色差异"
+      "network-basics",
+      "http-basics",
+      "php-request-lifecycle"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-07-23"

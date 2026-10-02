@@ -1,0 +1,331 @@
+---
+title: Java 二：读懂一个 Java Web 项目
+description: 认识 Maven 项目的目录结构和 pom.xml，用 mvn package 构建、java -jar 运行一个小型 Web 服务；沿着入口、路由、处理者、数据这条线，看清一个 HTTP 请求怎样走到某个方法，再对照 Spring 的写法
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import FlowSimulator from '../../../components/flow-simulator';
+import routing from '../../../data/flows/java-request-routing.json';
+import manifest from '../../../data/lessons/java-web-project-reading.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '给 notes 项目加 /stats 路由，重新构建、重启、验证。' },
+  { title: '画调用链', detail: '在纸上画出 GET /hello?name=kali 从进入服务器到 curl 打印出结果，依次经过了哪些类的哪些方法。' },
+  { title: '读一个真实的项目', detail: '打开 Spring 官方指南 Building a RESTful Web Service，只读 GreetingController 那一段，回答：路由写在哪里？name 参数从哪里来？没有 name 时用什么？' },
+  { title: '复习异常栈', detail: '在服务器运行时再执行一次 java -jar target/notes-1.0.jar，把异常栈里属于项目自己的那一行抄下来，说出它指向的代码在做什么。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="JAVA / LESSON 36"
+  kicker="Reading a Java Web Project"
+  lines={[
+    { text: "Java 二" },
+    { text: "读懂一个 Java Web 项目", accent: true },
+  ]}
+  summary="下学期你会拿到成百上千个文件的 Java 项目，要回答「访问这个网址，执行的是哪段代码」。这节课用一个只有五个类的小项目，练一遍读项目的顺序：先认目录，再找入口、路由、处理者，最后看数据。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：从哪个文件开始读
+
+打开一个 Java 项目，往往是一层套一层的目录，最里面才是 `.java` 文件。逐个文件从头读到尾，读不完，也串不起来。
+
+换个问法会好得多：浏览器访问 `/notes`，服务器执行的是哪个方法？顺着这个问题，只需要找到四样东西：程序从哪里启动，路径在哪里登记，谁处理这个路径，数据存在哪里。
+
+## 一、Maven 项目长什么样
+
+### 1. 安装 Maven
+
+Java 项目几乎都用构建工具管理，最常见的是 Maven 和 Gradle。本课用 Maven。
+
+<TerminalSession
+  replay="skip"
+  title="安装 Maven（只需一次）"
+  steps={[
+    { cmd: 'sudo apt install -y maven', note: '需要先装好上节课的 JDK。' },
+  ]}
+/>
+
+本课的项目文件在下面各节的代码下方，按代码标题里的路径存放到 `~/lab/notes-app` 里，目录要一层层建好，例如 `mkdir -p ~/lab/notes-app/src/main/java/club/floatctf/notes`。
+
+### 2. 目录结构
+
+<TerminalSession
+  title="进入项目，看一眼结构"
+  steps={[
+    { cmd: 'cd ~/lab/notes-app' },
+    { cmd: 'mvn -v | head -n 1', out: 'Apache Maven 3.9.12' },
+    { cmd: 'tree', out: '.\n├── pom.xml\n└── src\n    └── main\n        └── java\n            └── club\n                └── floatctf\n                    └── notes\n                        ├── App.java\n                        ├── HelloHandler.java\n                        ├── NotesHandler.java\n                        ├── NoteStore.java\n                        └── Responses.java\n\n7 directories, 6 files' },
+  ]}
+/>
+
+<DataTable
+  caption="Maven 项目的标准目录"
+  headers={["位置", "放什么"]}
+  rows={[
+    ["pom.xml", "项目的说明书：叫什么、第几版、依赖哪些库、怎么构建"],
+    ["src/main/java", "程序的源码"],
+    ["src/main/resources", "配置文件等资源（本项目没有）"],
+    ["src/test/java", "测试代码（本项目没有）"],
+    ["target", "构建产生的一切：.class 文件、打好的 jar。可以随时删掉重新构建，不要手改"],
+  ]}
+  columnRatios={[1.4, 4]}
+/>
+
+所有 Maven 项目都是这个结构，所以拿到一个陌生项目，源码一定在 `src/main/java` 下面。（来源：[Introduction to the Standard Directory Layout](#source-mv-layout)）
+
+`src/main/java` 下面那串 `club/floatctf/notes`，对应的是**包名** `club.floatctf.notes`。每个源文件第一行都写着 `package club.floatctf.notes;`。包把相关的类归在一起，避免和别人的类重名；习惯上用倒过来的域名开头。类的全名是包名加类名，例如 `club.floatctf.notes.App`。（来源：[Packages](#source-jv-packages)、[The javac Command](#source-jv-javac)）
+
+### 3. pom.xml
+
+<CodeFile file="labs/java-web-project-reading/pom.xml" mark="8-10,14,30" />
+
+<DataTable
+  caption="读 pom.xml 先看这几处"
+  headers={["元素", "这里写的", "含义"]}
+  rows={[
+    ["groupId、artifactId、version", "club.floatctf、notes、1.0", "项目的坐标。打出来的包叫 notes-1.0.jar"],
+    ["maven.compiler.release", "25", "按 Java 25 编译"],
+    ["dependencies", "（没有）", "依赖的第三方库。真实项目这里往往很长，能看出它用了哪个框架"],
+    ["build/plugins", "maven-jar-plugin 的 mainClass", "打包时写明入口类，jar 才能用 java -jar 直接运行"],
+  ]}
+  columnRatios={[1.8, 1.8, 3]}
+/>
+
+（来源：[Introduction to the POM](#source-mv-pom)、[Maven Archiver](#source-mv-jar-manifest)）
+
+### 4. 构建
+
+<TerminalSession
+  title="编译、打包"
+  steps={[
+    {
+      cmd: 'mvn package',
+      out: "WARNING: A terminally deprecated method in sun.misc.Unsafe has been called\n…（同一个警告的另外三行）\n[INFO] Scanning for projects...\n[INFO]\n[INFO] ------------------------< club.floatctf:notes >-------------------------\n[INFO] Building notes 1.0\n[INFO]   from pom.xml\n[INFO] --------------------------------[ jar ]---------------------------------\n…\n[INFO] --- compiler:3.13.0:compile (default-compile) @ notes ---\n[INFO] Recompiling the module because of changed source code.\n[INFO] Compiling 5 source files with javac [debug release 25] to target/classes\n…\n[INFO] --- surefire:2.17:test (default-test) @ notes ---\n[INFO] No tests to run.\n[INFO]\n[INFO] --- jar:3.4.2:jar (default-jar) @ notes ---\n[INFO] Building jar: /home/kali/lab/notes-app/target/notes-1.0.jar\n[INFO] ------------------------------------------------------------------------\n[INFO] BUILD SUCCESS\n…",
+      note: '第一次运行要从网上下载 Maven 的插件，会刷出很多 Downloading 行，等一两分钟。',
+    },
+    { cmd: 'jar tf target/notes-1.0.jar', out: 'META-INF/\nMETA-INF/MANIFEST.MF\nclub/\nclub/floatctf/\nclub/floatctf/notes/\nMETA-INF/maven/\nMETA-INF/maven/club.floatctf/\nMETA-INF/maven/club.floatctf/notes/\nclub/floatctf/notes/NoteStore.class\nclub/floatctf/notes/App.class\nclub/floatctf/notes/NotesHandler.class\nclub/floatctf/notes/HelloHandler.class\nclub/floatctf/notes/Responses.class\nMETA-INF/maven/club.floatctf/notes/pom.xml\nMETA-INF/maven/club.floatctf/notes/pom.properties', note: 'jar 就是一个 zip 包：编译好的 .class 文件按包名放在目录里，加上一份清单 MANIFEST.MF。' },
+  ]}
+/>
+
+`mvn package` 依次执行了 Maven 生命周期里 package 之前的各个阶段：编译源码（compile）、跑测试（test，本项目没有测试）、打包（package）。看到 `BUILD SUCCESS` 就是成功了；失败时是 `BUILD FAILURE`，原因写在后面的 `[ERROR]` 行里。（来源：[Introduction to the Build Lifecycle](#source-mv-lifecycle)、[Maven in 5 Minutes](#source-mv-5min)、[The jar Command](#source-jv-jar)、[JAR File Specification](#source-jv-jarspec)）
+
+<Callout variant="note" title="开头那几行 WARNING">
+Kali 打包的 Maven 在 Java 25 上运行时，开头会打印四行 sun.misc.Unsafe 的警告。它来自 Maven 自己用到的一个库，和你的项目无关，可以不管。以 [WARNING] 或 [ERROR] 开头的行才是 Maven 对你的项目说的话。
+</Callout>
+
+## 二、一个请求怎样走到某个方法
+
+### 1. 运行起来
+
+服务器会一直占着终端，所以再开一个终端（下面称终端 A）来运行它：
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动服务器"
+  steps={[
+    { cmd: 'cd ~/lab/notes-app' },
+    { cmd: 'java -jar target/notes-1.0.jar', out: 'listening on http://127.0.0.1:8080\n…', note: '一直运行，直到按 Ctrl+C。' },
+  ]}
+/>
+
+<TerminalSession
+  title="在原来的终端里访问"
+  steps={[
+    { cmd: "curl -s 'http://127.0.0.1:8080/hello?name=kali'", out: 'Hello, kali!' },
+    { cmd: 'curl -s http://127.0.0.1:8080/hello', out: 'Hello, stranger!' },
+    { cmd: 'curl -s http://127.0.0.1:8080/notes', out: '(no notes yet)' },
+    { cmd: "curl -s -X POST -d 'buy milk' http://127.0.0.1:8080/notes", out: 'created #1', note: '-X POST 用 POST 方法，-d 后面是请求正文。' },
+    { cmd: "curl -s -X POST -d 'read chapter 7' http://127.0.0.1:8080/notes", out: 'created #2' },
+    { cmd: 'curl -s http://127.0.0.1:8080/notes', out: '1. buy milk\n2. read chapter 7' },
+    { cmd: 'curl -s -i -X DELETE http://127.0.0.1:8080/notes', out: 'HTTP/1.1 405 Method Not Allowed\nDate: Fri, 02 Oct 2026 15:15:47 GMT\nContent-type: text/plain; charset=utf-8\nContent-length: 19\n\nmethod not allowed', note: '-i 连响应头一起显示。405：这个路径不支持这个方法。' },
+    { cmd: 'curl -s -i http://127.0.0.1:8080/nothing', out: 'HTTP/1.1 404 Not Found\nContent-Length: 50\nContent-Type: text/html\nConnection: close\n\n<h1>404 Not Found</h1>No context found for request', note: '这个 404 不是项目代码写的，是服务器找不到处理者时自己回的。' },
+  ]}
+/>
+
+现在的问题是：每个请求分别是哪段代码处理的？
+
+### 2. 第一步：找入口
+
+<TerminalSession
+  title="main 方法在哪"
+  steps={[
+    { cmd: 'grep -rn "static void main" src', out: 'src/main/java/club/floatctf/notes/App.java:7:    public static void main(String[] args) throws Exception {', note: 'grep -rn：在目录里递归搜索，显示文件名和行号。' },
+  ]}
+/>
+
+<CodeFile file="labs/java-web-project-reading/src/main/java/club/floatctf/notes/App.java" mark="9-12" />
+
+`main` 做了三件事：创建一个在 127.0.0.1:8080 上监听的 HTTP 服务器，登记两条路由，启动。
+
+### 3. 第二步：找路由
+
+`createContext("/hello", new HelloHandler())` 就是一条路由：请求路径以 `/hello` 开头的，交给这个 `HelloHandler` 对象处理。在大项目里，用 grep 把所有路由一次找出来：
+
+<TerminalSession
+  title="所有登记过的路径"
+  steps={[
+    { cmd: 'grep -rn "createContext" src', out: 'src/main/java/club/floatctf/notes/App.java:11:        server.createContext("/hello", new HelloHandler());\nsrc/main/java/club/floatctf/notes/App.java:12:        server.createContext("/notes", new NotesHandler(store));' },
+    { cmd: 'grep -rn "implements HttpHandler" src', out: 'src/main/java/club/floatctf/notes/HelloHandler.java:7:public class HelloHandler implements HttpHandler {\nsrc/main/java/club/floatctf/notes/NotesHandler.java:8:public class NotesHandler implements HttpHandler {', note: '所有处理者类。implements HttpHandler 表示这个类承诺提供 handle 方法。' },
+  ]}
+/>
+
+服务器收到请求时，拿路径去和登记过的前缀比，选匹配得最长的那个；比较是逐字的，区分大小写。一个都没匹配上，就回刚才看到的 404。（来源：[HttpServer](#source-jv-httpserver)）
+
+<FlowSimulator client:visible title="POST /notes 在项目里走过的路" steps={routing} motionLevel="explanatory" />
+
+### 4. 第三步：读处理者
+
+<CodeFile file="labs/java-web-project-reading/src/main/java/club/floatctf/notes/NotesHandler.java" mark="17,18,20-22,24" />
+
+服务器对每个请求调用一次 `handle(exchange)`。`exchange` 把这次请求和要回的响应装在一起：`getRequestMethod()` 取方法，`getRequestURI()` 取路径和查询字符串，`getRequestBody()` 读正文。`NotesHandler` 里按方法分成三支，刚才 DELETE 得到的 405 就是最后那个 else。（来源：[HttpHandler](#source-jv-httphandler)、[HttpExchange](#source-jv-httpexchange)）
+
+<CodeFile file="labs/java-web-project-reading/src/main/java/club/floatctf/notes/HelloHandler.java" mark="11-15" note="查询字符串的解析是手写的，验收第 2 题会追问它。" />
+
+### 5. 第四步：看数据
+
+<CodeFile file="labs/java-web-project-reading/src/main/java/club/floatctf/notes/NoteStore.java" />
+
+<CodeFile file="labs/java-web-project-reading/src/main/java/club/floatctf/notes/Responses.java" />
+
+`NoteStore` 是数据层，这里只是内存里的一个列表，服务器一重启就清空；真实项目在这一层访问数据库，第 31 课的 SQL 就写在这样的类里。`Responses` 是一个工具类，把「设置响应头、发状态码、写正文」包成一个方法，几个处理者共用。`synchronized` 让多个请求同时到达时不会把列表改乱，现在知道它的作用就够了。
+
+<DataTable
+  caption="读一个 Web 项目的顺序"
+  headers={["步", "找什么", "本项目里", "怎么找"]}
+  rows={[
+    ["1", "入口", "App.main", "grep -rn \"static void main\" src"],
+    ["2", "路由", "两次 createContext", "搜路径字符串，例如 grep -rn '\"/notes\"' src"],
+    ["3", "处理者", "NotesHandler.handle", "顺着路由里的类名打开文件"],
+    ["4", "数据", "NoteStore", "看处理者调用了谁"],
+  ]}
+  columnRatios={[0.4, 0.9, 1.6, 2.6]}
+/>
+
+## 三、换成框架以后
+
+真实项目很少直接用 HttpServer，常见的是 Spring 这样的框架。写法不同，要找的还是那四样东西。下面是 Spring 官方入门指南里的控制器（只摘了关键部分）：
+
+```java title="GreetingController.java（摘自 Spring 官方指南）"
+@RestController
+public class GreetingController {
+
+	@GetMapping("/greeting")
+	public Greeting greeting(@RequestParam(defaultValue = "World") String name) {
+		return new Greeting(counter.incrementAndGet(), template.formatted(name));
+	}
+}
+```
+
+<DataTable
+  caption="同一件事的两种写法"
+  headers={["要找的", "本课的 notes 项目", "Spring 项目"]}
+  rows={[
+    ["处理请求的类", "implements HttpHandler", "类上标着 @RestController"],
+    ["路由", "createContext(\"/notes\", ...) 集中写在 App 里", "写在每个方法头上：@GetMapping(\"/greeting\")"],
+    ["按方法区分", "handle 里自己 if 判断 GET、POST", "@GetMapping、@PostMapping、@DeleteMapping 分别标在不同方法上"],
+    ["取查询参数", "自己从 getQuery() 里截取", "@RequestParam 自动把 name 参数的值交给方法，没有时用 defaultValue"],
+    ["怎么找路由", "grep -rn createContext src", "grep -rn '@GetMapping\\|@PostMapping\\|@RequestMapping' src"],
+  ]}
+  columnRatios={[1.2, 2.2, 2.6]}
+/>
+
+以 `@` 开头的叫**注解**，是贴在类和方法上的标记，框架启动时读取它们，自动完成本课 App 里手写的那些登记工作。所以读 Spring 项目时，路由不在一个集中的地方，而是散在各个控制器的方法头上，用 grep 搜注解最快。（来源：[Building a RESTful Web Service](#source-sp-rest)、[Mapping Requests](#source-sp-requestmapping)）
+
+### 读异常栈
+
+服务器还在终端 A 里运行。在原来的终端里再启动一次：
+
+<TerminalSession
+  title="同一个端口启动第二次"
+  steps={[
+    {
+      cmd: 'java -jar target/notes-1.0.jar',
+      out: 'Exception in thread "main" java.net.BindException: Address already in use\n\tat java.base/sun.nio.ch.Net.bind0(Native Method)\n\tat java.base/sun.nio.ch.Net.bind(Net.java:522)\n\tat java.base/sun.nio.ch.ServerSocketChannelImpl.netBind(ServerSocketChannelImpl.java:335)\n\tat java.base/sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:297)\n\tat java.base/sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:80)\n\tat jdk.httpserver/sun.net.httpserver.ServerImpl.<init>(ServerImpl.java:145)\n\tat jdk.httpserver/sun.net.httpserver.HttpServerImpl.<init>(HttpServerImpl.java:45)\n\tat jdk.httpserver/sun.net.httpserver.DefaultHttpServerProvider.createHttpServer(DefaultHttpServerProvider.java:35)\n\tat jdk.httpserver/com.sun.net.httpserver.HttpServer.create(HttpServer.java:152)\n\tat club.floatctf.notes.App.main(App.java:9)',
+    },
+  ]}
+/>
+
+第一行是结论：`BindException: Address already in use`，地址已被占用，和第 13 课讲的端口占用是一回事。下面每个 `at` 是调用栈上的一个方法，**最上面是出错的地方，最下面是最开始的调用者**。读的时候跳过 `java.base/`、`jdk.httpserver/` 开头的 JDK 内部代码，找第一个属于项目自己包名的行：`club.floatctf.notes.App.main(App.java:9)`，也就是 App.java 第 9 行创建服务器的那一句。真实项目的异常栈常常有上百行，找自己包名这个办法同样管用。（来源：[What Is an Exception?](#source-jv-exceptions)）
+
+## 常见报错与排错
+
+<TerminalSession
+  title="不在项目目录里构建"
+  steps={[
+    { cmd: 'cd ~' },
+    {
+      cmd: 'mvn package',
+      out: "WARNING: A terminally deprecated method in sun.misc.Unsafe has been called\n…\n[INFO] BUILD FAILURE\n…\n[ERROR] The goal you specified requires a project to execute but there is no POM in this directory (/home/kali). Please verify you invoked Maven from the correct directory. -> [Help 1]\n…",
+      note: '当前目录没有 pom.xml。',
+    },
+    { cmd: 'cd ~/lab/notes-app' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["there is no POM in this directory", "不在 pom.xml 所在的目录", "cd 到项目根目录"],
+    ["第一次 mvn package 停在 Downloading 很久", "在下载插件；网络慢", "耐心等；反复失败时检查虚拟机网络"],
+    ["no main manifest attribute, in xxx.jar", "jar 里没写入口类", "检查 pom.xml 里 maven-jar-plugin 的 mainClass"],
+    ["BindException: Address already in use", "端口已经被占用，常见原因是旧的服务器没关", "到终端 A 按 Ctrl+C，或者换端口"],
+    ["curl: (7) Failed to connect", "服务器没在运行", "看终端 A，重新 java -jar"],
+    ["404 No context found for request", "路径没有登记，或者大小写不对", "grep 路由，核对路径"],
+    ["改了代码没效果", "没有重新构建，或者旧的服务器还在运行", "Ctrl+C 停掉，mvn package，再 java -jar"],
+  ]}
+  columnRatios={[2.2, 2.2, 2]}
+/>
+
+边界：本课的项目为了讲清楚请求的去向，用的是 JDK 自带的简易服务器，查询字符串的解析也是手写的，并不严谨（验收第 2 题）。真实项目用框架处理这些细节。Gradle 项目的源码目录和 Maven 一样，描述文件换成 build.gradle。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'pom.xml / src/main/java / target', description: '项目说明 / 源码 / 构建输出。' },
+    { term: 'package a.b.c;', description: '源文件在 a/b/c 目录里。' },
+    { term: 'mvn package', description: '编译、测试、打包，输出在 target。' },
+    { term: 'jar tf x.jar', description: '看 jar 里有什么。' },
+    { term: 'java -jar x.jar', description: '运行写了入口类的 jar。' },
+    { term: '入口 → 路由 → 处理者 → 数据', description: '读 Web 项目的顺序。' },
+    { term: 'grep -rn 关键词 src', description: '在源码里定位。' },
+    { term: '@RestController / @GetMapping / @RequestParam', description: 'Spring 里的处理者 / 路由 / 参数。' },
+    { term: '异常栈', description: '第一行看原因，at 行里找自己的包名。' },
+  ]}
+/>
+
+<KeyTakeaway>
+Maven 项目的源码在 src/main/java，目录层次就是包名；pom.xml 写着项目坐标、依赖和构建方式，mvn package 把代码编译打包进 target 里的 jar。读 Web 项目按入口、路由、处理者、数据的顺序：找到 main，找到路径登记在哪里，顺着找到处理者的方法，再看它调用的数据层。框架把路由写成方法上的注解，找法不变。读异常栈时先看第一行的原因，再找第一行属于项目自己包名的 at。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

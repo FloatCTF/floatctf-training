@@ -1,0 +1,10 @@
+# 综合项目在 kali-docker 里重放：这个容器同时有 PHP、SQLite、Git 和 Docker。项目放在 ~/lab/guestbook（模拟学员写好了六个文件）。
+@container kali-docker
+@root pgrep -x dockerd >/dev/null || (dockerd > /var/log/dockerd.log 2>&1 &); sleep 3
+# 清掉上次留下的容器、卷、镜像和服务器；固定 Git 身份和提交时间，让页面上的提交编号可复现。
+cd ~/lab/guestbook 2>/dev/null && docker compose down -v -t 0 >/dev/null 2>&1; cd ~; docker rmi -f guestbook-web >/dev/null 2>&1; docker builder prune -af >/dev/null 2>&1; pkill -f 'S 127.0.0.1:800[0]'; true
+git config --global user.name "Kali Student"; git config --global user.email student@example.com; git config --global init.defaultBranch main
+export GIT_AUTHOR_DATE=2026-10-02T10:00:00+08:00 GIT_COMMITTER_DATE=2026-10-02T10:00:00+08:00
+docker pull -q php:8.4-cli-alpine >/dev/null; true
+rm -rf ~/lab/guestbook; mkdir -p ~/lab/guestbook; cp -r ~/lab/python/. ~/lab/guestbook/; cd ~; true
+@workdir /home/kali/lab/guestbook

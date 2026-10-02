@@ -61,17 +61,76 @@ MARK = '@@READY@@'
 ANSI = re.compile(r'\x1b\[[0-9;?]*[ -/]*[@-~]|\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[=>]|\x1b\(B')
 
 
-def overlay(line):
-    """终端里 \\r 把光标拉回行首，后写的内容覆盖先写的；还原成屏幕上最终看到的一行。"""
-    screen = ''
-    for segment in line.split('\r'):
-        screen = segment + screen[len(segment):]
-    return screen.rstrip()
+CSI = re.compile(r'\x1b\[([0-9;?]*)([ -/]*)([@-~])')
+
+
+def render(text):
+    """把一段终端输出还原成屏幕上最终留下的样子。
+
+    \\r 把光标拉回行首，后写的内容覆盖先写的；docker build、docker compose 的进度显示
+    用「光标上移若干行、清掉这一行」原地刷新，只有最后一帧留在屏幕上。
+    这里只模拟这几种光标动作，其余控制序列（颜色、光标显隐等）直接去掉。
+    """
+    text = re.sub(r'\x1b\][^\x07\x1b]*(?:\x07|\x1b\\)|\x1b[=>]|\x1b\(B', '', text)
+    lines, row, col = [''], 0, 0
+
+    def put(ch):
+        nonlocal col
+        line = lines[row].ljust(col)
+        lines[row] = line[:col] + ch + line[col + 1:]
+        col += 1
+
+    i = 0
+    while i < len(text):
+        ch = text[i]
+        if ch == '\x1b':
+            m = CSI.match(text, i)
+            if not m:
+                i += 1
+                continue
+            params, _, final = m.groups()
+            n = int(params) if params.isdigit() else None
+            if final == 'A':
+                row = max(0, row - (n or 1))
+            elif final == 'B':
+                row += n or 1
+            elif final == 'C':
+                col += n or 1
+            elif final == 'D':
+                col = max(0, col - (n or 1))
+            elif final == 'G':
+                col = max(0, (n or 1) - 1)
+            elif final == 'K' and not params.startswith('?'):
+                if params == '2':
+                    lines[row] = ''
+                elif params == '1':
+                    lines[row] = ' ' * col + lines[row][col:]
+                else:
+                    lines[row] = lines[row][:col]
+            elif final == 'J' and not params.startswith('?') and params in ('', '0'):
+                lines[row] = lines[row][:col]
+                del lines[row + 1:]
+            while len(lines) <= row:
+                lines.append('')
+            i = m.end()
+            continue
+        if ch == '\r':
+            col = 0
+        elif ch == '\n':
+            row += 1
+            col = 0
+            while len(lines) <= row:
+                lines.append('')
+        elif ch == '\b':
+            col = max(0, col - 1)
+        elif ch >= ' ' or ch == '\t':
+            put(ch)
+        i += 1
+    return '\n'.join(line.rstrip() for line in lines)
 
 
 def clean(text):
-    text = ANSI.sub('', text).replace('\r\n', '\n')
-    return '\n'.join(overlay(line) for line in text.split('\n'))
+    return render(text.replace('\r\n', '\n'))
 
 
 def spawn_shell():

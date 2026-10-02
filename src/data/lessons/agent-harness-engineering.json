@@ -24,8 +24,10 @@
       "用节点、边、共享状态、并行、汇合和人工检查点解释 Agent 执行图，并判断何时不需要图"
     ],
     "prerequisites": [
-      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
-      "了解 API、JSON、Git 与自动化测试的基本概念"
+      "ai-literacy",
+      "python-network-scripting",
+      "git-local-workflow",
+      "了解自动化测试的基本概念"
     ],
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"

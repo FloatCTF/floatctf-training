@@ -1,0 +1,284 @@
+---
+title: 综合项目：留言板
+description: 把这学期学过的 Git、PHP、SQLite、Docker 串起来，写一个能发留言、能看留言的留言板：服务器端校验、预处理语句、输出转义、Post/Redirect/Get，用 Git 分步提交，再用 Docker Compose 部署
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import FlowSimulator from '../../../components/flow-simulator';
+import journey from '../../../data/flows/guestbook-journey.json';
+import manifest from '../../../data/lessons/guestbook-capstone.json';
+
+export const requirements = [
+  { title: '看留言', detail: '首页列出全部留言，新的在前，上方显示一共几条。' },
+  { title: '写留言', detail: '首页有表单，填名字和留言提交。名字最多 20 个字，留言最多 200 个字，都不能为空；不合格时告诉用户原因。' },
+  { title: '存得住', detail: '留言存在 SQLite 数据库里。部署到容器后，删掉容器重新启动，留言还在。' },
+  { title: '显示的就是写的', detail: '留言里写什么就显示什么，包括引号和尖括号，不会变成页面的一部分。' },
+  { title: '有记录', detail: '代码用 Git 管理，至少两次有意义的提交；数据库文件不进仓库。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '给每条留言加上时间，本地验证、提交、重新部署。' },
+  { title: '推到社团仓库', detail: '按第 12 课的流程，把留言板推到社团仓库你自己的分支上，开一个 PR，请同学按本页的验收清单逐项检查。' },
+  { title: '再加一个功能', detail: '从本页「可以继续做的」里选一项完成，单独提交一次，提交说明写清楚做了什么。' },
+  { title: '写一页说明', detail: '在项目里加一个 README.md：怎么在本机运行、怎么用 Docker 部署、数据存在哪里。也提交进去。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="CAPSTONE / LESSON 37"
+  kicker="Guestbook Capstone"
+  lines={[
+    { text: "综合项目" },
+    { text: "留言板", accent: true },
+  ]}
+  summary="这学期的最后一课，用学过的东西从头做一个完整的小网站：PHP 写页面，SQLite 存数据，Git 记录每一步，Docker 一条命令部署。它也是下学期安全课的起点：我们会在自己写的这个留言板上讨论，少了哪一道关会出什么问题。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：一个最小的网站要哪几样东西
+
+一个留言板看起来简单：一个表单，一列留言。真把它做出来，要回答的问题不少：数据存在哪？用户提交的文字怎么存、怎么显示才安全？提交之后刷新页面会不会重复提交？代码怎么保存历史？换一台机器怎么跑起来？
+
+这些问题这学期都分别学过。这节课把它们放进同一个项目里。
+
+## 一、需求与设计
+
+### 1. 要做成什么样
+
+<StepList title="留言板的需求" steps={requirements} />
+
+### 2. 文件怎么分
+
+<DataTable
+  caption="项目里的六个文件"
+  headers={["文件", "负责什么", "用到的课"]}
+  rows={[
+    ["db.php", "打开数据库、建表；提供输出转义函数 e()", "第 30 课 include、第 31 课 PDO"],
+    ["index.php", "首页：查出全部留言，显示表单和列表", "第 27 课、第 29 课表单"],
+    ["post.php", "处理提交：校验、写库、跳回首页", "第 29 课、第 31 课预处理语句"],
+    [".gitignore", "让 Git 忽略 data 目录里的数据库", "第 11 课"],
+    ["Dockerfile", "把程序做成镜像", "第 34 课"],
+    ["compose.yaml", "一条命令启动，数据放在卷里", "第 33、34 课"],
+  ]}
+  columnRatios={[1.1, 3, 2.2]}
+/>
+
+下面给出的是一份参考实现。最好先合上页面自己写一遍，写不出来的地方再对照。
+
+### 3. 一条留言经过的路
+
+<FlowSimulator client:visible title="从表单到页面" steps={journey} motionLevel="explanatory" />
+
+## 二、在本机跑通并提交
+
+### 1. 代码
+
+<CodeFile file="labs/guestbook-capstone/db.php" mark="5,18-21" note="数据库文件路径用 __DIR__ 拼成绝对路径，从哪个目录启动都能找到。" />
+
+<CodeFile file="labs/guestbook-capstone/index.php" mark="3,17" note="名字和留言都经过 e() 再输出。" />
+
+<CodeFile file="labs/guestbook-capstone/post.php" mark="4-7,13-16,19-20,23" />
+
+`post.php` 里每一段都有用处：
+
+- **只接受 POST**：直接在地址栏打开 post.php 是 GET 请求，回 405。
+- **服务器端校验**：表单上的 `required`、`maxlength` 只约束浏览器，不经过表单直接发请求（比如用 curl）就绕开了，所以服务器必须再查一遍。`iconv_strlen` 按字符数计算，一个汉字算一个。（来源：[Client-side form validation](#source-mdn-form-validation)、[iconv_strlen](#source-php-iconv-strlen)）
+- **预处理语句**：SQL 里只有问号，名字和留言作为参数单独交给数据库，里面有引号也只是数据。（来源：[Prepared statements](#source-php-pdo-prepared)）
+- **303 跳转**：存好之后回 303 和 `Location: index.php`，浏览器接着用 GET 打开首页。这叫 Post/Redirect/Get：用户刷新的是首页，不会把同一条留言再提交一次。（来源：[RFC 9110 §15.4.4](#source-rfc9110)、[header](#source-php-header)）
+
+### 2. 建仓库
+
+<TerminalSession
+  title="进入项目目录，初始化 Git"
+  steps={[
+    { cmd: 'cd ~/lab/guestbook' },
+    { cmd: 'ls -A', out: 'compose.yaml  db.php  Dockerfile  .gitignore  index.php  post.php' },
+    { cmd: 'git init', out: 'Initialized empty Git repository in /home/kali/lab/guestbook/.git/' },
+    { cmd: 'git status --short', out: '?? .gitignore\n?? Dockerfile\n?? compose.yaml\n?? db.php\n?? index.php\n?? post.php' },
+  ]}
+/>
+
+### 3. 在本机运行
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动 PHP 内置服务器"
+  steps={[
+    { cmd: 'cd ~/lab/guestbook' },
+    { cmd: 'mkdir -p data', note: '数据库文件放在这里，第一次访问时自动创建。' },
+    { cmd: 'php -S 127.0.0.1:8000', out: '[Fri Oct  2 15:24:07 2026] PHP 8.4.24 Development Server (http://127.0.0.1:8000) started\n…', note: '之后每个请求都会在这里记一笔。' },
+  ]}
+/>
+
+<TerminalSession
+  title="在原来的终端里逐项验证"
+  steps={[
+    { cmd: 'curl -s http://127.0.0.1:8000/ | grep 条留言', out: '<p>0 条留言</p>' },
+    { cmd: "curl -s -i -d 'name=kali&body=hello' http://127.0.0.1:8000/post.php | grep -E '^HTTP|^Location'", out: 'HTTP/1.1 303 See Other\nLocation: index.php', note: '-d 发 POST 请求，内容和表单提交的一样。' },
+    { cmd: "curl -s -d 'name=lee' --data-urlencode 'body=<b>not bold</b>' http://127.0.0.1:8000/post.php", note: '--data-urlencode 先把 < > 这类字符编码再发送，和浏览器提交表单时做的一样。' },
+    { cmd: "curl -s http://127.0.0.1:8000/ | grep -E '条留言|msg'", out: '<p>2 条留言</p>\n<div class="msg"><b>lee</b>：&lt;b&gt;not bold&lt;/b&gt;</div>\n<div class="msg"><b>kali</b>：hello</div>', note: '新的在前。lee 的留言里的尖括号变成了 &lt; 和 &gt;，浏览器会把它显示成字符本身。' },
+    { cmd: "curl -s -w '%{http_code}\\n' -d 'name=kali&body=' http://127.0.0.1:8000/post.php", out: '名字和留言都不能为空，名字最多 20 个字，留言最多 200 个字\n400', note: '-w 在最后打印状态码。' },
+    { cmd: "curl -s -w '%{http_code}\\n' http://127.0.0.1:8000/post.php", out: '只接受 POST\n405' },
+    { cmd: "sqlite3 data/guestbook.db 'SELECT id, name, body FROM messages'", out: '╭────┬──────┬─────────────────╮\n│ id │ name │      body       │\n╞════╪══════╪═════════════════╡\n│  1 │ kali │ hello           │\n│  2 │ lee  │ <b>not bold</b> │\n╰────┴──────┴─────────────────╯', note: '数据库里存的是原文。转义只发生在输出到 HTML 的那一刻。' },
+  ]}
+/>
+
+最后两条值得多看一眼：同一段文字，在数据库里是 `<b>not bold</b>`，在网页里是 `&lt;b&gt;not bold&lt;/b&gt;`。存的时候保持原样，输出到哪里就按哪里的规则处理：放进 SQL 用预处理语句，放进 HTML 用 `htmlspecialchars`。（来源：[htmlspecialchars](#source-php-htmlspecialchars)）
+
+用浏览器打开 `http://127.0.0.1:8000/` 也试一下：提交一条留言，刷新页面，留言没有重复。
+
+### 4. 第一次提交
+
+<CodeFile file="labs/guestbook-capstone/.gitignore" note="只有一行：让 Git 忽略 data 目录。文件名以点开头，ls 要加 -a 才看得到。" />
+
+<TerminalSession
+  title="只提交程序，不提交数据"
+  steps={[
+    { cmd: 'git status --short', out: '?? .gitignore\n?? Dockerfile\n?? compose.yaml\n?? db.php\n?? index.php\n?? post.php', note: '多了一个 data 目录，但这里没有它：.gitignore 让 Git 忽略了它。' },
+    { cmd: 'git add .gitignore db.php index.php post.php' },
+    { cmd: 'git commit -m "Guestbook: list and post messages"', out: '[main (root-commit) 5b1fc52] Guestbook: list and post messages\n 4 files changed, 65 insertions(+)\n create mode 100644 .gitignore\n create mode 100644 db.php\n create mode 100644 index.php\n create mode 100644 post.php', note: '提交编号每个人不同。' },
+  ]}
+/>
+
+数据库文件是程序运行时产生的，每个人的都不一样，不该进仓库；仓库里只放「怎么做出这个网站」。Dockerfile 和 compose.yaml 留到部署跑通之后再提交，这样每次提交都是一个能用的状态。（来源：[Recording Changes to the Repository](#source-progit-recording)、[gitignore](#source-gitignore)）
+
+## 三、部署到容器
+
+### 1. 镜像和服务
+
+<CodeFile file="labs/guestbook-capstone/Dockerfile" lang="dockerfile" mark="4" />
+
+<CodeFile file="labs/guestbook-capstone/compose.yaml" lang="yaml" mark="7" />
+
+和第 34 课相比只有两处不同：`COPY *.php ./` 只复制程序文件，本机 data 目录里的测试数据不会进镜像；卷挂在 `/app/data`，正好是 db.php 里数据库所在的目录。（来源：[Writing a Dockerfile](#source-dk-writing-dockerfile)、[Volumes](#source-dk-volumes)）
+
+### 2. 启动并验证
+
+<TerminalSession
+  title="一条命令部署"
+  steps={[
+    {
+      cmd: 'docker compose up -d --build',
+      out: "[+] Building 0.5s (11/11) FINISHED\n…\n => [2/4] WORKDIR /app                                                     0.0s\n => [3/4] COPY *.php ./                                                    0.0s\n => [4/4] RUN mkdir data                                                   0.1s\n…\n[+] Running 4/4\n ✔ guestbook-web              Built                                        0.0s\n ✔ Network guestbook_default  Created                                      0.0s\n ✔ Volume guestbook_messages  Created                                      0.0s\n ✔ Container guestbook-web-1  Started                                      0.1s",
+    },
+    { cmd: 'curl -s http://127.0.0.1:8080/ | grep 条留言', out: '<p>0 条留言</p>', note: '容器用的是新卷里的新数据库，和本机 8000 端口上那个互不相干。' },
+    { cmd: "curl -s -d 'name=docker&body=hi from compose' http://127.0.0.1:8080/post.php" },
+    { cmd: "curl -s http://127.0.0.1:8080/ | grep -E '条留言|msg'", out: '<p>1 条留言</p>\n<div class="msg"><b>docker</b>：hi from compose</div>' },
+    { cmd: 'docker compose down', out: "[+] Running 2/2\n ✔ Container guestbook-web-1  Removed                                     10.2s\n ✔ Network guestbook_default  Removed                                      0.2s", note: '又是 10 秒：php -S 不响应停止信号，见第 34 课。' },
+    { cmd: 'docker compose up -d', out: "[+] Running 2/2\n ✔ Network guestbook_default  Created                                      0.0s\n ✔ Container guestbook-web-1  Started                                      0.2s" },
+    { cmd: 'curl -s http://127.0.0.1:8080/ | grep 条留言', out: '<p>1 条留言</p>', note: '容器是新的，留言还在：它在卷里。' },
+  ]}
+/>
+
+### 3. 第二次提交
+
+<TerminalSession
+  title="把部署文件也提交进去"
+  steps={[
+    { cmd: 'git add Dockerfile compose.yaml' },
+    { cmd: 'git commit -m "Run with Docker Compose"', out: '[main 0f99607] Run with Docker Compose\n 2 files changed, 17 insertions(+)\n create mode 100644 Dockerfile\n create mode 100644 compose.yaml' },
+    { cmd: 'git log --oneline', out: '0f99607 (HEAD -> main) Run with Docker Compose\n5b1fc52 Guestbook: list and post messages' },
+    { cmd: 'git status --short', note: '没有输出：所有该管的文件都提交了，data 被忽略。' },
+    { cmd: 'docker compose down -v', out: "[+] Running 3/3\n ✔ Container guestbook-web-1  Removed                                     10.2s\n…（还有 Volume guestbook_messages 和 Network guestbook_default 两行 Removed，先后顺序每次可能不同）", note: '练习结束，连卷一起清掉。正式使用时不要加 -v。' },
+  ]}
+/>
+
+现在任何人拿到这个仓库，`docker compose up -d --build` 就能得到一个一模一样的留言板。（来源：[What is Docker Compose?](#source-dk-compose)、[docker compose up](#source-dk-compose-up)、[docker compose down](#source-dk-compose-down)）
+
+### 4. 验收清单
+
+<DataTable
+  caption="交作业前逐项检查"
+  headers={["检查项", "怎么验证", "应该看到"]}
+  rows={[
+    ["能发能看", "表单提交一条，或者 curl -d", "首页条数加一，新留言在最前"],
+    ["服务器端校验", "curl 发空留言、21 个字的名字", "400 和提示文字，数据库里没有新行"],
+    ["只接受 POST", "浏览器直接打开 post.php", "405"],
+    ["不重复提交", "提交后按 F5 刷新", "条数不变"],
+    ["原样显示", "留言写 <b>x</b> 和带引号的名字 O'Brien", "页面上显示的就是这些字符，名字里的引号也能正常保存"],
+    ["数据库存原文", "sqlite3 查 messages 表", "看到的是没有转义的原文"],
+    ["数据持久", "docker compose down 再 up -d", "留言还在"],
+    ["Git 记录", "git log --oneline、git status --short", "至少两次提交；status 干净，没有 data"],
+  ]}
+  columnRatios={[1.3, 2.4, 2.6]}
+/>
+
+### 5. 可以继续做的
+
+- 每条留言显示时间（验收第 3 题）。
+- 留言超过 20 条时分页：`LIMIT` 和 `OFFSET`，页码从 `$_GET` 里取，记得检查它是不是正整数。
+- 提交失败时回到表单页面显示错误，并保留用户已经填的内容。
+- 给页面加一点 CSS（第 16 课）。
+
+<Callout variant="note" title="下学期还会见到它">
+下学期的 Web 安全课会以这个留言板为起点：在自己的虚拟机里，故意拿掉其中一道关（服务器端校验、预处理语句或者输出转义），观察会出什么问题，再把它补回去。所以现在把每一道关的作用弄清楚，下学期会轻松很多。
+</Callout>
+
+## 常见报错与排错
+
+<DataTable
+  caption="做这个项目时最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["could not find driver", "没装 PHP 的 SQLite 扩展", "sudo apt install -y php8.4-sqlite3（第 31 课）"],
+    ["SQLSTATE[HY000] [14] unable to open database file", "data 目录不存在，或者当前用户不能写", "在项目目录里 mkdir -p data"],
+    ["页面空白", "PHP 出错了，错误写在服务器终端里", "看终端 A；需要时加 -d display_errors=1（第 27 课）"],
+    ["提交后看到 405", "表单的 method 没写 post", "检查 index.php 里的 form"],
+    ["中文留言没超长却被拒绝", "用 strlen 按字节算了长度", "用 iconv_strlen($text, 'UTF-8')"],
+    ["Address already in use", "8000 端口上已经有服务器在跑", "到终端 A 按 Ctrl+C，或换端口"],
+    ["port is already allocated", "8080 被别的容器占着，比如第 34 课的 web", "在那个项目目录里 docker compose down"],
+    ["改了代码容器里没变", "没有重新构建镜像", "docker compose up -d --build"],
+    ["git status 里出现 data/", ".gitignore 没写或者写错了位置", ".gitignore 放在项目根目录，内容是 data/"],
+  ]}
+  columnRatios={[2.2, 2.2, 2]}
+/>
+
+边界：这个留言板适合练习和在自己的虚拟机里做实验。真正对外开放的网站还要考虑更多：内置服务器不能用在公开网络上（换成 nginx 加 PHP-FPM），要防止有人短时间内大量提交，要有管理员删除留言的功能，等等。（来源：[Built-in web server](#source-php-webserver)）
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'e($text)', description: 'htmlspecialchars($text, ENT_QUOTES, \'UTF-8\')，输出到 HTML 前一律经过它。' },
+    { term: 'prepare(...)->execute([...])', description: 'SQL 和数据分开。' },
+    { term: 'iconv_strlen($s, \'UTF-8\')', description: '按字符数算长度。' },
+    { term: 'http_response_code(400)', description: '设置状态码。' },
+    { term: "header('Location: index.php', true, 303)", description: '提交成功后跳回首页。' },
+    { term: 'curl -d / --data-urlencode', description: '不经过表单直接发 POST。' },
+    { term: '.gitignore: data/', description: '数据不进仓库。' },
+    { term: 'docker compose up -d --build', description: '构建并部署。' },
+  ]}
+/>
+
+<KeyTakeaway>
+一个最小的网站也要处理好三件事：用户提交的数据在服务器端重新校验，写进数据库用预处理语句，输出到 HTML 前用 htmlspecialchars 转义；数据库里存原文，到了哪里就按哪里的规则处理。表单提交后用 303 跳回首页，刷新不会重复提交。用 Git 按「每次都是能用的状态」分步提交，数据文件用 .gitignore 排除。Dockerfile 只复制程序，compose.yaml 把数据放进卷，任何人拿到仓库一条命令就能部署。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 60 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

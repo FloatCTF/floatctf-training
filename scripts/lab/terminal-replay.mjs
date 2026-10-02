@@ -61,6 +61,16 @@ const volatile = [
   [/\bsession([=\t])[0-9a-f]{16}\b/g, 'session$1<会话编号>'],
   [/\b(PHPSESSID[=\t]|session id: )[0-9a-f]{32}\b/g, '$1<会话编号>'],
   [/\$2y\$\d{2}\$[.\/A-Za-z0-9]{53}/g, '<bcrypt 散列>'],
+  // Docker：容器与镜像的完整编号、自动起的容器名、nginx 访问日志的时间
+  [/\b(?:sha256:)?[0-9a-f]{64}\b/g, '<编号>'],
+  [/\bendpoint [a-z]+_[a-z]+\b/g, 'endpoint <随机名>'],
+  [/\[\d{2}\/(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}\]/g, '[<日志时间>]'],
+  // docker build、docker compose 的进度：每一步的耗时、构建上下文的大小、截短的镜像摘要；Docker 网络分给容器的地址
+  [/ +\d+\.\ds$/gm, ' <耗时>'],
+  [/\bBuilding \d+\.\ds\b/g, 'Building <耗时>'],
+  [/transferring context: [\d.]+k?B/g, 'transferring context: <大小>'],
+  [/writing image sha256:[0-9a-f]+/g, 'writing image <编号>'],
+  [/\b172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3}(?::\d+)?\b/g, '<容器地址>'],
   [/\/tmp\/cc[A-Za-z0-9]{6}\.o/g, '/tmp/<临时文件>.o'],
   [/\b0x[0-9a-f]{9,12}\b/g, '<地址>'],
   [/==\d+==/g, '==<进程号>=='],

@@ -3,7 +3,7 @@
   "testedAt": "2026-10-02",
   "target": "http://localhost:4321/",
   "browser": "Playwright Chromium",
-  "scope": "基础学期第 1 到 6 批三十二课，以及首页入口、学期路线页、分类页；读数见 qa/foundations-batch-1-verification.json 到 qa/foundations-batch-6-verification.json。本次实测的是第 6 批六课与站点层面的入口，前二十六课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
+  "scope": "基础学期 37 课，以及首页入口、学期路线页、分类页和改了前置知识的 11 门安全与 AI 课；读数见 qa/foundations-batch-1-verification.json 到 qa/foundations-batch-7-verification.json。本次实测的是第 7 批五课、站点层面的入口与前置链接，前三十二课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
     "/categories/cs-foundations/",
@@ -18,10 +18,15 @@
     "/lessons/c-structs-and-heap/",
     "/lessons/c-types-and-control-flow/",
     "/lessons/data-representation/",
+    "/lessons/docker-compose-labs/",
+    "/lessons/docker-images-and-containers/",
     "/lessons/git-branches-and-collaboration/",
     "/lessons/git-local-workflow/",
+    "/lessons/guestbook-capstone/",
     "/lessons/html-css-dom/",
     "/lessons/http-basics/",
+    "/lessons/java-jvm-and-objects/",
+    "/lessons/java-web-project-reading/",
     "/lessons/javascript-in-the-browser/",
     "/lessons/network-basics/",
     "/lessons/php-forms-and-sessions/",
@@ -47,32 +52,32 @@
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口：已上线 32，下一课 33",
-      "screenshot": "qa/screenshots/foundations-b6-home.png"
+      "evidence": "首页入口：7 个阶段 · 37 课 · 已上线 37",
+      "screenshot": "qa/screenshots/foundations-b7-home.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 31 课深色主题整页，无横向溢出",
-      "screenshot": "qa/screenshots/foundations-b6-lesson31-desktop-dark.png"
+      "evidence": "第 34 课深色主题整页，无横向溢出",
+      "screenshot": "qa/screenshots/foundations-b7-lesson34-desktop-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 29 课桌面浅色整页：刊头、代码清单、终端会话、警示与速查卡",
-      "screenshot": "qa/screenshots/foundations-b6-lesson29-desktop-light.png"
+      "evidence": "第 37 课桌面浅色整页：刊头、流程图、代码清单（含行标亮）、终端会话、验收清单与速查卡",
+      "screenshot": "qa/screenshots/foundations-b7-lesson37-desktop-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下 PHP 六课整页溢出为零；前二十六课沿用上一轮读数",
-      "screenshot": "qa/screenshots/foundations-b6-lesson32-mobile.png"
+      "evidence": "390 宽度下第 7 批五课整页溢出为零；前三十二课沿用上一轮读数",
+      "screenshot": "qa/screenshots/foundations-b7-lesson36-mobile.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 32 课手机整页：表格与终端会话在块内横向滚动",
-      "screenshot": "qa/screenshots/foundations-b6-lesson32-mobile.png"
+      "evidence": "第 36 课手机整页：Maven 项目的代码清单标题、表格与终端会话在块内横向滚动",
+      "screenshot": "qa/screenshots/foundations-b7-lesson36-mobile.png"
     },
     {
       "id": "category-page",
@@ -83,13 +88,14 @@
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页已上线三十二课为链接，规划课为纯文本；「下一课」标在第 33 课"
+      "evidence": "路线页 37 课全部为链接，没有规划课和「下一课」标记",
+      "screenshot": "qa/screenshots/foundations-b7-path.png"
     },
     {
       "id": "print",
       "status": "pass",
-      "evidence": "打印媒体模拟：PHP 六课验收答案、终端会话与代码清单可见；纸张分页未验收",
-      "screenshot": "qa/screenshots/foundations-b6-lesson27-print.png"
+      "evidence": "打印媒体模拟：第 7 批五课验收答案、终端会话与代码清单可见；纸张分页未验收",
+      "screenshot": "qa/screenshots/foundations-b7-lesson35-print.png"
     },
     {
       "id": "reduced-motion",
@@ -106,7 +112,7 @@
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "PHP 六课多种环境下页内锚点无断链；翻页链接按路线顺序首尾相接"
+      "evidence": "第 7 批五课多种环境下页内锚点无断链；翻页链接按路线顺序首尾相接；11 门安全与 AI 课的前置链接全部指向存在的页面"
     },
     {
       "id": "lesson-keyboard",
@@ -121,7 +127,7 @@
     {
       "id": "console",
       "status": "pass",
-      "evidence": "第 6 批全部检查过程中控制台与页面错误为零"
+      "evidence": "第 7 批全部检查过程中控制台与页面错误为零"
     },
     {
       "id": "performance",
@@ -161,6 +167,12 @@
     "qa/screenshots/foundations-b6-lesson27-print.png",
     "qa/screenshots/foundations-b6-lesson29-desktop-light.png",
     "qa/screenshots/foundations-b6-lesson31-desktop-dark.png",
-    "qa/screenshots/foundations-b6-lesson32-mobile.png"
+    "qa/screenshots/foundations-b6-lesson32-mobile.png",
+    "qa/screenshots/foundations-b7-home.png",
+    "qa/screenshots/foundations-b7-lesson34-desktop-dark.png",
+    "qa/screenshots/foundations-b7-lesson35-print.png",
+    "qa/screenshots/foundations-b7-lesson36-mobile.png",
+    "qa/screenshots/foundations-b7-lesson37-desktop-light.png",
+    "qa/screenshots/foundations-b7-path.png"
   ]
 }

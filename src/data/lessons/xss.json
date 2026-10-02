@@ -24,9 +24,9 @@
       "在本地演示中比较危险汇点、安全汇点与 URL 参数编码"
     ],
     "prerequisites": [
-      "HTML 与 DOM 基础",
-      "JavaScript 事件与字符串",
-      "HTTP Cookie 与同源策略概念"
+      "html-css-dom",
+      "javascript-in-the-browser",
+      "http-basics"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-07-23"

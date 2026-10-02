@@ -67,7 +67,11 @@
       "difficulty": "intermediate",
       "status": "completed",
       "pagePath": "/lessons/ssrf/",
-      "prerequisites": [],
+      "prerequisites": [
+        "network-basics",
+        "http-basics",
+        "php-request-lifecycle"
+      ],
       "order": 1
     },
     {
@@ -79,7 +83,11 @@
       "difficulty": "intermediate",
       "status": "completed",
       "pagePath": "/lessons/sql-injection/",
-      "prerequisites": [],
+      "prerequisites": [
+        "sql-basics",
+        "php-forms-and-sessions",
+        "php-pdo-database"
+      ],
       "order": 2
     },
     {
@@ -105,7 +113,11 @@
       "difficulty": "intermediate",
       "status": "completed",
       "pagePath": "/lessons/xss/",
-      "prerequisites": [],
+      "prerequisites": [
+        "html-css-dom",
+        "javascript-in-the-browser",
+        "http-basics"
+      ],
       "order": 4
     },
     {
@@ -117,7 +129,11 @@
       "difficulty": "intermediate",
       "status": "completed",
       "pagePath": "/lessons/rce/",
-      "prerequisites": [],
+      "prerequisites": [
+        "shell-permissions-and-pipes",
+        "http-basics",
+        "php-request-lifecycle"
+      ],
       "order": 5
     },
     {
@@ -156,6 +172,7 @@
       "status": "completed",
       "pagePath": "/lessons/ai-literacy/",
       "prerequisites": [
+        "machine-learning-foundations",
         "neural-network-foundations"
       ],
       "order": 3
@@ -170,7 +187,9 @@
       "status": "completed",
       "pagePath": "/lessons/agent-harness-engineering/",
       "prerequisites": [
-        "ai-literacy"
+        "ai-literacy",
+        "python-network-scripting",
+        "git-local-workflow"
       ],
       "order": 4
     },
@@ -184,7 +203,10 @@
       "status": "completed",
       "pagePath": "/lessons/ai-engineering-landscape/",
       "prerequisites": [
-        "agent-harness-engineering"
+        "agent-harness-engineering",
+        "http-basics",
+        "python-network-scripting",
+        "sql-basics"
       ],
       "order": 5
     },
@@ -198,7 +220,10 @@
       "status": "completed",
       "pagePath": "/lessons/ai-security-essentials/",
       "prerequisites": [
-        "ai-engineering-landscape"
+        "ai-engineering-landscape",
+        "ai-literacy",
+        "http-basics",
+        "python-network-scripting"
       ],
       "order": 6
     },
@@ -283,8 +308,8 @@
       "title": "Docker 一：镜像、容器、端口与卷",
       "summary": "跑起别人做好的环境，弄清端口映射和数据放在哪。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/docker-images-and-containers/",
       "prerequisites": [
         "shell-permissions-and-pipes",
         "network-basics"
@@ -299,8 +324,8 @@
       "title": "Docker 二：Dockerfile 与 Compose",
       "summary": "把自己的项目写成镜像，一条命令起一整套服务。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/docker-compose-labs/",
       "prerequisites": [
         "docker-images-and-containers"
       ],
@@ -724,8 +749,8 @@
       "title": "Java 一：JDK、JVM、类与对象",
       "summary": "编译、运行一个 Java 程序，认识类和对象。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/java-jvm-and-objects/",
       "prerequisites": [
         "shell-permissions-and-pipes"
       ],
@@ -739,8 +764,8 @@
       "title": "Java 二：读懂一个 Java Web 项目",
       "summary": "Maven 目录结构，以及一个请求怎样走到某个方法。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/java-web-project-reading/",
       "prerequisites": [
         "java-jvm-and-objects",
         "http-basics"
@@ -754,8 +779,8 @@
       "title": "综合项目：留言板",
       "summary": "用 Git 管理、PHP 加 SQLite 实现、Docker 部署，下学期当本地靶子用。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/guestbook-capstone/",
       "prerequisites": [
         "git-branches-and-collaboration",
         "php-pdo-database",
