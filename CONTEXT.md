@@ -40,6 +40,7 @@
 - **CodeStepper**（`code-stepper.tsx`）——逐行执行图。数据在 `src/data/steppers/<名字>.json`，由 `scripts/lab/py-trace.py` 追踪课程材料的真实执行生成，每一步附一句解说；不手写状态。门禁（`steppers.mjs`）校验数据里的源码与材料文件一致，改了材料必须重新生成。`view="values"` 只显示名字的值，用于循环这类不关心对象身份的内容。
 - CodeStepper 的 `view="memory"` 是 C 的内存视图：栈帧、带地址的变量、展开成格子的数组、堆块。数据由 `scripts/lab/c-trace.py` 在 Kali 容器里用 gdb 逐行执行生成（容器要以 `--cap-add=SYS_PTRACE --security-opt seccomp=unconfined` 运行，gdb 才能关闭地址随机化），每一步的解说放在 `scripts/lab/stepper-notes/<名字>.json`。
 - C 课的约定：编译命令一律带 `-Wall`；未定义行为只陈述规则，某一次运行的结果要写明「这一次」；内存错误只讲成因、表现和检测，不讲利用。gdb 会话用 `TerminalSession` 加 `environment="GDB · ./程序"`、`prompt="(gdb)"`。
+- PHP 课在 `~/lab/php` 里做，服务器用 `php -S 127.0.0.1:8000` 在终端 A 里运行。四条处理外部输入的规矩贯穿六课并在后续课里沿用：进 HTML 用 `htmlspecialchars`，进 SQL 用占位符，读写文件只按名单，外部数据用 JSON 不用 `unserialize`。安全相关内容只讲成因和正确写法，不放攻击用的输入。
 - **GitGraph**（`git-graph.tsx`）——Git 三个区与提交图。数据在 `src/data/git-traces/<名字>.json`，由 `scripts/lab/git-trace.py` 执行场景文件（`scripts/lab/git-scenarios/<名字>.json`）里的真实 git 命令后读取状态生成；不手画提交图。它固定了作者与提交时间，所以哈希可复现，并且与页面终端会话里的哈希相同。门禁（`steppers.mjs`）校验数据里的命令与场景文件一致，改了场景必须重新生成。
 - 一门课接着上一门课的现场做时，在 `scripts/lab/preludes/<课 id>.txt` 写前置步骤：普通行是重放前悄悄执行的 shell 命令（清理目录、固定 git 提交时间），`@replay <另一课 id>` 先把那一课页面上的命令悄悄跑一遍。
 - 终端输出里因机器而异的进度与统计（如 git push 的对象数、线程数、速度）在页面上用一行以「…」开头的说明代替。比对时这一行匹配任意多行，其余行仍须逐字一致。

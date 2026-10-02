@@ -59,10 +59,14 @@ const volatile = [
   [/\bafter \d+ ms/g, 'after <耗时>'],
   [/\bfrom ([\d.]+) port \d+/g, 'from $1 port <临时端口>'],
   [/\bsession([=\t])[0-9a-f]{16}\b/g, 'session$1<会话编号>'],
+  [/\b(PHPSESSID[=\t]|session id: )[0-9a-f]{32}\b/g, '$1<会话编号>'],
+  [/\$2y\$\d{2}\$[.\/A-Za-z0-9]{53}/g, '<bcrypt 散列>'],
   [/\/tmp\/cc[A-Za-z0-9]{6}\.o/g, '/tmp/<临时文件>.o'],
   [/\b0x[0-9a-f]{9,12}\b/g, '<地址>'],
   [/==\d+==/g, '==<进程号>=='],
   [/\bprocess \d+\b/g, 'process <进程号>'],
+  [/\[(?:Mon|Tue|Wed|Thu|Fri|Sat|Sun) (?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec) [ \d]\d \d{2}:\d{2}:\d{2} \d{4}\]/g, '[<日志时间>]'],
+  [/\b127\.0\.0\.1:\d{5}\b/g, '127.0.0.1:<临时端口>'],
   // 程序崩溃时 shell 是否多说一句 (core dumped)，取决于系统有没有保存 core 文件：采集用的容器会，学员的虚拟机默认不会
   [/ \(core dumped\)/g, ''],
 ];

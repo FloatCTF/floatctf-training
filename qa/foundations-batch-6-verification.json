@@ -1,0 +1,510 @@
+{
+ "schemaVersion": 1,
+ "recordedAt": "2026-10-02",
+ "scope": "基础学期第 6 批：PHP 六课（第 27 到 32 课）",
+ "commandReplay": {
+  "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali；PHP 8.4.24（php8.4-cli、php8.4-sqlite3），SQLite 3.53.4",
+  "method": "sh scripts/lab/replay-lesson.sh <课 id>：把 public/labs/<课 id>/ 的文件放进 ~/lab/php，在第二个终端里启动 php -S，按页面顺序重放并逐条比对",
+  "commands": 84,
+  "identical": 84,
+  "differing": 0,
+  "volatileOnly": 15,
+  "perLesson": {
+   "php-request-lifecycle": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 3
+    }
+   },
+   "php-types-and-arrays": {
+    "shell": {
+     "identical": 8,
+     "volatileOnly": 0
+    }
+   },
+   "php-forms-and-sessions": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 9
+    }
+   },
+   "php-functions-and-files": {
+    "shell": {
+     "identical": 13,
+     "volatileOnly": 2
+    }
+   },
+   "php-pdo-database": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 1
+    }
+   },
+   "php-objects-and-serialization": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 0
+    }
+   }
+  },
+  "volatileFields": "PHP 内置服务器日志的时间与客户端端口、Date 头、PHPSESSID 会话编号、bcrypt 散列。",
+  "separatelyReproduced": "各课验收题与作业的参考解答；端口被占用时的提示；display_errors 打开前后的页面；CLI 与内置服务器下警告的位置。"
+ },
+ "browser": {
+  "tool": "Playwright Chromium，开发服务器 http://localhost:4321",
+  "pages": [
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 5,
+    "tables": 1,
+    "sources": 5,
+    "check": "desk php-request-lifecycle http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 12,
+    "check": "desk php-types-and-arrays http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 8,
+    "tables": 4,
+    "sources": 10,
+    "check": "desk php-forms-and-sessions http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 10,
+    "check": "desk php-functions-and-files http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 10,
+    "check": "desk php-pdo-database http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 5,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 12,
+    "check": "desk php-objects-and-serialization http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 5,
+    "tables": 1,
+    "sources": 5,
+    "check": "phone php-request-lifecycle http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 12,
+    "check": "phone php-types-and-arrays http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 8,
+    "tables": 4,
+    "sources": 10,
+    "check": "phone php-forms-and-sessions http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 10,
+    "check": "phone php-functions-and-files http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 10,
+    "check": "phone php-pdo-database http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 5,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 12,
+    "check": "phone php-objects-and-serialization http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 5,
+    "tables": 1,
+    "sources": 5,
+    "check": "dark php-request-lifecycle http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 12,
+    "check": "dark php-types-and-arrays http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 8,
+    "tables": 4,
+    "sources": 10,
+    "check": "dark php-forms-and-sessions http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 10,
+    "check": "dark php-functions-and-files http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 10,
+    "check": "dark php-pdo-database http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 5,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 12,
+    "check": "dark php-objects-and-serialization http=200"
+   }
+  ],
+  "interactions": {
+   "php-request-lifecycle": {
+    "simulator-0": {
+     "steps": 4,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   },
+   "php-types-and-arrays": {},
+   "php-forms-and-sessions": {},
+   "php-functions-and-files": {},
+   "php-pdo-database": {},
+   "php-objects-and-serialization": {}
+  },
+  "static": {
+   "reduced": {
+    "php-request-lifecycle": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 10
+    },
+    "php-types-and-arrays": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 7
+    },
+    "php-forms-and-sessions": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 7
+    },
+    "php-functions-and-files": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 6
+    },
+    "php-pdo-database": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 9
+    },
+    "php-objects-and-serialization": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 5
+    }
+   },
+   "nojs": {
+    "php-request-lifecycle": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "php-types-and-arrays": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "php-forms-and-sessions": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "php-functions-and-files": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "php-pdo-database": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "php-objects-and-serialization": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    }
+   }
+  },
+  "print": {
+   "php-request-lifecycle": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "codeFiles": 5,
+    "headerHidden": true
+   },
+   "php-types-and-arrays": {
+    "answersVisible": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "headerHidden": true
+   },
+   "php-forms-and-sessions": {
+    "answersVisible": 3,
+    "terminals": 7,
+    "codeFiles": 8,
+    "headerHidden": true
+   },
+   "php-functions-and-files": {
+    "answersVisible": 3,
+    "terminals": 6,
+    "codeFiles": 8,
+    "headerHidden": true
+   },
+   "php-pdo-database": {
+    "answersVisible": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "php-objects-and-serialization": {
+    "answersVisible": 3,
+    "terminals": 5,
+    "codeFiles": 6,
+    "headerHidden": true
+   }
+  },
+  "site": {
+   "path": "已上线 32 / 37",
+   "pathLinks": 32,
+   "nextTag": "Docker 一：镜像、容器、端口与卷",
+   "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 32 | 下一课　33　Docker 一：镜像、容器、端口与卷",
+   "pagination": {
+    "php-request-lifecycle": {
+     "links": [
+      "/lessons/c-debugging-memory-errors/",
+      "/lessons/php-types-and-arrays/"
+     ],
+     "prereq": [
+      "/lessons/http-basics/",
+      "/lessons/html-css-dom/",
+      "/lessons/c-compile-and-run/"
+     ]
+    },
+    "php-types-and-arrays": {
+     "links": [
+      "/lessons/php-request-lifecycle/",
+      "/lessons/php-forms-and-sessions/"
+     ],
+     "prereq": [
+      "/lessons/php-request-lifecycle/",
+      "/lessons/python-collections/",
+      "/lessons/c-types-and-control-flow/"
+     ]
+    },
+    "php-forms-and-sessions": {
+     "links": [
+      "/lessons/php-types-and-arrays/",
+      "/lessons/php-functions-and-files/"
+     ],
+     "prereq": [
+      "/lessons/php-types-and-arrays/",
+      "/lessons/http-basics/"
+     ]
+    },
+    "php-functions-and-files": {
+     "links": [
+      "/lessons/php-forms-and-sessions/",
+      "/lessons/php-pdo-database/"
+     ],
+     "prereq": [
+      "/lessons/php-forms-and-sessions/",
+      "/lessons/c-files-and-projects/"
+     ]
+    },
+    "php-pdo-database": {
+     "links": [
+      "/lessons/php-functions-and-files/",
+      "/lessons/php-objects-and-serialization/"
+     ],
+     "prereq": [
+      "/lessons/php-functions-and-files/",
+      "/lessons/sql-basics/"
+     ]
+    },
+    "php-objects-and-serialization": {
+     "links": [
+      "/lessons/php-pdo-database/"
+     ],
+     "prereq": [
+      "/lessons/php-pdo-database/",
+      "/lessons/c-structs-and-heap/"
+     ]
+    }
+   },
+   "category-cs-foundations": {
+    "http": 200,
+    "links": 6,
+    "planned": 0
+   },
+   "category-programming": {
+    "http": 200,
+    "links": 21,
+    "planned": 2
+   },
+   "category-engineering-tools": {
+    "http": 200,
+    "links": 5,
+    "planned": 2
+   },
+   "category-custom": {
+    "http": 200,
+    "links": 0,
+    "planned": 1
+   }
+  },
+  "consoleErrors": []
+ },
+ "kaliDefaults": "apt-get install -s kali-linux-default kali-desktop-xfce 的模拟安装里有 php8.4-cli、php8.4-mysql、libapache2-mod-php8.4，没有 php8.4-sqlite3。",
+ "knownIssues": [
+  "手机宽度下，宽输出的终端会话里解释文字随整块横向滚动。"
+ ],
+ "notRun": [
+  "浏览器图形界面里的表单与 Cookie 操作",
+  "真实 Kali 虚拟机",
+  "真实移动设备、屏幕阅读器、纸张分页",
+  "生产 nginx 与 CSP"
+ ]
+}

@@ -632,8 +632,8 @@
       "title": "PHP 一：请求进来到页面出去",
       "summary": "用内置服务器跑起第一个页面，看清 PHP 在一次请求里做了什么。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-request-lifecycle/",
       "prerequisites": [
         "http-basics",
         "html-css-dom"
@@ -648,8 +648,8 @@
       "title": "PHP 二：类型、比较与数组",
       "summary": "弱类型怎样自动转换，== 和 === 差在哪。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-types-and-arrays/",
       "prerequisites": [
         "php-request-lifecycle"
       ],
@@ -663,8 +663,8 @@
       "title": "PHP 三：表单、Cookie 与会话",
       "summary": "接收用户输入，用 Session 记住登录状态。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-forms-and-sessions/",
       "prerequisites": [
         "php-types-and-arrays"
       ],
@@ -678,8 +678,8 @@
       "title": "PHP 四：函数、include 与文件",
       "summary": "把页面拆成多个文件，读写服务器上的文件。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-functions-and-files/",
       "prerequisites": [
         "php-forms-and-sessions"
       ],
@@ -693,8 +693,8 @@
       "title": "PHP 五：PDO 与预处理",
       "summary": "连上数据库，用参数绑定的方式执行查询。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-pdo-database/",
       "prerequisites": [
         "php-functions-and-files",
         "sql-basics"
@@ -709,8 +709,8 @@
       "title": "PHP 六：面向对象与序列化",
       "summary": "类、魔术方法，以及对象怎样被存成字符串再还原。",
       "difficulty": "beginner",
-      "status": "planned",
-      "pagePath": null,
+      "status": "completed",
+      "pagePath": "/lessons/php-objects-and-serialization/",
       "prerequisites": [
         "php-pdo-database"
       ],

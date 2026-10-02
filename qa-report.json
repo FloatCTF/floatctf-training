@@ -3,188 +3,188 @@
   "reviewedAt": "2026-10-02",
   "reviewer": "Claude",
   "mode": "add-topic",
-  "summary": "基础学期第 1 到 5 批共二十六课验收（起步四课、Python 七课、Git 两课、网络与 Web 五课、C 八课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。",
+  "summary": "基础学期第 1 到 6 批共三十二课验收（起步四课、Python 七课、Git 两课、网络与 Web 五课、C 八课、PHP 六课）。原有十一课本轮未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "第 5 批 C 八课：编译、类型两课以 code 为主模式；函数、数组、指针、结构体四课以 mechanism 为主模式，核心是「内存里实际是什么样」；文件与工程一课以 tool 为主；调试一课以 troubleshooting 为主，从症状出发。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "PHP 六课：第 27 课以 mechanism 为主，讲清一次请求里 PHP 做了什么；其余五课以 code 为主，每课一组可运行的脚本或页面。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "八课各 90 分钟三段。顺序是一条线：先让程序跑起来，再看变量占多大，然后依次是栈帧、数组、指针、堆，每一课都用到上一课的图；最后两课是工程组织和调试。第 21 课没修好的 swap 在第 23 课修好，第 23 课的悬垂指针在第 24 课给出正确写法。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "六课各 90 分钟三段。顺序沿着一个网站长大的过程：生成页面、处理类型、接收表单和登录、拆成多个文件并写文件、接数据库、用对象组织代码。第 29 课把第 14 课的 Python 练习站用 PHP 重写，第 31 课沿用第 18 课的数据集。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "C 八课基本不用比喻，直接用内存视图呈现真实的地址和值。只有「栈：后放上去的先拿走」一处借了名字本身的含义。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "PHP 六课不用比喻，直接对照学过的 Python、C 和第 14 课的练习站。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "源代码、机器码、编译器、预处理、目标文件、链接、退出状态、声明、地址、未定义行为、原型、栈、栈帧、局部变量、段错误、空字符、缓冲区溢出、指针、解引用、悬垂指针、结构体、堆、内存泄漏、头文件、规则、调试信息、调用栈等术语首次出现时加粗并定义。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "超全局变量、类型转换、类型声明、会话、预处理语句、占位符、类、对象、属性、方法、魔术方法、序列化等术语首次出现时加粗并定义。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "C 八课的来源为 C11 标准草案 N1570、Beej's Guide to C 十章、CS50x 三讲、手册页十四页、GNU make 手册两页、zsh 手册与 AddressSanitizer 文档各一页，共 32 个页面，全部打开原页核对。gcc 与 gdb 的官方在线手册拒绝抓取，改用 man7.org 上的手册页并在来源里注明。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "PHP 六课的来源为 PHP 官方手册 53 页，全部打开原页核对；PHP 8 前后有变化的规则都按手册注明了版本。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "C 八课页面上的 165 条命令在 Kali 容器里按页面顺序重放，全部一致（17 条只在地址、进程号这类字段上不同），其中 19 条 gdb 命令在真实的交互式 gdb 里执行。九份内存视图数据由 gdb 逐行执行真实程序生成。验收题与作业的预期结果用参考解答编译运行核对过。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "PHP 六课页面上的 84 条命令在 Kali 容器里按页面顺序重放，全部一致（15 条只在时间、端口、会话编号、散列上不同）；内置服务器由重放工具在第二个终端里真实启动。验收题与作业的预期结果用参考解答运行核对过。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "C 八课不含攻击步骤。越界、缓冲区溢出、释放后使用、重复释放只讲成因、表现和检测手段（-Wall、栈保护、AddressSanitizer、gdb），不涉及利用方法；所有会崩溃的程序都是学员自己写、在自己机器上运行的十几行示例。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "PHP 六课不含攻击步骤。输出转义、预处理语句、文件名单、不对外部数据 unserialize 四条都以正确写法和成因讲解，示例输入只有 <b> 标签和带单引号的普通名字；XSS、SQL 注入、反序列化只点名为下学期专题。练习服务器只监听 127.0.0.1，账号密码以散列存储。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "内存视图用在九个高理解成本点：变量的大小与地址、按值传参、递归的栈帧、越界读到邻居、字符串结尾标记、通过指针修改、指针运算、堆块的生存期、函数返回后堆块仍在。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "第 27 课用流程图呈现一次请求里 PHP 的四步；其余各课的互动在学员自己的两个终端里进行，页面没有另加交互组件。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "内存视图只有上一步、下一步和滑杆，没有自动播放；每一步都改变高亮行、栈帧、堆和解说。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "本批没有新增动画或交互。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "减少动态与关闭 JavaScript 时，内存视图显示终态和完整的逐步表（每步执行的行与解说）。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "本批唯一的流程图在减少动态与关闭 JavaScript 时直接显示全部四步；验收题答案的原生折叠可展开。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "内存视图的按钮与滑杆是原生控件，方向键可在滑杆上逐步回退；未做完整的 Tab 顺序走查。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "流程图滑杆可用方向键步进；终端会话可聚焦后横向滚动。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "C 八课在 390 与 1280 宽度、深浅主题下共 24 次检查，整页横向溢出为零；手机宽度下内存视图的代码与状态上下排布，数组的格子自动换行。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "PHP 六课在 390 与 1280 宽度、深浅主题下共 18 次检查，整页横向溢出为零。已知问题：宽输出的终端会话里，解释文字随整块横向滚动。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "打印媒体模拟下八课的验收题答案、终端会话与代码清单全部显示，内存视图转为逐步表。纸张分页未验收。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "打印媒体模拟下六课的验收题答案、终端会话与代码清单全部显示。纸张分页未验收。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "八课结构与前十八课一致；路线页显示已上线 26 / 37，下一课为第 27 课。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "六课结构与前二十六课一致；路线页显示已上线 32 / 37，下一课为第 33 课。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "内存视图沿用逐行执行图的框架与配色，新增的栈帧、堆块、格子样式与原有的名字列表同一套字号和间距。gdb 会话沿用终端会话的样式，提示符换成 (gdb)。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "沿用已有的终端会话、代码清单、表格、警示与速查卡，没有新增样式。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
-      "evidenceFile": "qa/foundations-batch-5.md",
+      "evidenceFile": "qa/foundations-batch-6.md",
       "note": "本地 npm run verify 通过。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5-verification.json",
-      "note": "逐课打开页面检查了表格全宽、代码清单、终端会话与内存视图在桌面和手机上的排布。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6-verification.json",
+      "note": "逐课打开页面检查了表格全宽、代码清单与终端会话在桌面和手机上的排布。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "每个程序先展示完整源码，再展示编译命令、运行命令与实际输出；崩溃的提示、编译器的警告原样上屏。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "每个脚本先给出完整源码，再给出命令与实际输出；服务器日志在需要对照的地方单独列出。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "每条 claim 对应来源中的具体语句，例如「无符号运算对最大值加 1 取模」「E1[E2] 等同于 (*((E1)+(E2)))」「参数被赋予实参的值」都绑定 N1570 原文，gets 的危险绑定手册页的原话。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "每条 claim 对应手册中的具体语句，例如内置服务器「不应在公共网络上使用」、预处理语句「参数不需要加引号」、unserialize「不要传入不可信的用户输入」都是手册原意。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "八课的引导问题：Kali 里的命令是什么做的、一个整数能有多大、这个交换函数为什么没用、多读了一个读到的是什么、怎样让 swap 真的管用、这块内存该放在哪、程序长大以后、只有一句 segmentation fault。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "六课的引导问题：同一个网址为什么每个人看到的不一样、\"5\" 加 3 等于几、把第 14 课的练习站翻过来、改一处导航要改几个文件、一个带单引号的名字、会话里存的东西长什么样。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "内存视图把「这个指针指向谁」「函数返回后什么还在」这类只能靠想象的事，变成每一步都看得见的真实状态。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "只在第 27 课用了一张流程图，其余用表格逐行拆解代码。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "例子沿用前几课的素材（端口号、日志里的状态码、用户与等级），并一步步引出下学期二进制安全要面对的现象：越界、溢出、悬垂指针、释放后使用。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "例子是一个会逐步长大的小网站：问候页、登录与会话、多页布局、留言本、商品查询，正是下学期 Web 安全专题要面对的结构。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "八课各一张结论卡和一张速查卡。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "六课各一张结论卡和一张速查卡。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "本批没有定时动画，全部由学员自己步进。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "本批没有定时动画。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/foundations-batch-5.md",
-      "note": "每课至多两张内存视图，放在对应机制第一次出现的地方。 前四批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-4.md。"
+      "evidenceFile": "qa/foundations-batch-6.md",
+      "note": "第 27 课的流程图放在标签讲解之后，其余各课以代码清单为视觉中心。 前五批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-5.md。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
-      "evidenceFile": "qa/foundations-batch-5.md",
+      "evidenceFile": "qa/foundations-batch-6.md",
       "note": "本批没有用户提供的讲义；公开课程只用于确定章节顺序。"
     }
   ]

@@ -1,0 +1,379 @@
+{
+  "lessonPlan": {
+    "audience": "能写出带表单和会话的单个 PHP 页面、还没有组织过多个文件的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "一个小站点拆成几块：公共的函数放进 lib.php，每页都有的头尾放进 header.php 和 footer.php，各个页面用 require 拼起来；留言写进服务器上的一个文本文件，再读出来显示",
+    "learningObjectives": [
+      "定义带类型声明和默认参数的函数，说出类型不符时会发生什么",
+      "用 require 把公共的函数和页面片段拆到单独的文件里，区分 include 和 require",
+      "用 __DIR__ 拼出可靠的文件路径",
+      "用 file_put_contents 和 file 读写服务器上的文件",
+      "只允许用户在一份固定的名单里选择文件，不把请求里的值直接拼成路径"
+    ],
+    "prerequisites": [
+      "php-forms-and-sessions",
+      "c-files-and-projects"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-whitelist",
+      "kind": "mechanism",
+      "title": "为什么要一份名单",
+      "question": "page.php 用一个数组列出了允许读取的页面，请求的名字不在数组里就返回 404。有同学觉得麻烦，想改成 echo file_get_contents(__DIR__ . '/' . $_GET['name'] . '.txt');，这样以后加页面不用改代码。这样改有什么问题？",
+      "answer": "改了之后，读哪个文件完全由请求里的 name 决定，而 name 是访问者自己填的，可以是任何字符串。程序本意是只让人看 about 和 rules 两个说明文件，但路径一旦由外部输入拼出来，访问者就有可能让它读到目录里别的文件，甚至目录之外的文件，程序已经无法保证它只读到想给人看的那几个。用名单的写法里，请求的值只用来在数组里查找，真正拼进路径的是数组里写死的文件名，访问者再怎么填，能读到的也只有名单上的文件。多改一行代码，换来的是「能读什么」由程序决定，而不是由访问者决定。",
+      "sourceIds": [
+        "php-file-get-contents",
+        "php-isset"
+      ]
+    },
+    {
+      "id": "check-predict-include",
+      "kind": "prediction",
+      "title": "include 和 require 各走到哪",
+      "question": "missing.php 依次执行：echo \"start\"; include 一个不存在的文件; echo \"after include\"; require 同一个不存在的文件; echo \"after require\";。用 php missing.php 运行，标准输出里会出现哪几行？另外，use_lib.php 最后一行调用 format_size('a lot')，format_size 的参数声明为 int，结果是什么？",
+      "answer": "标准输出里有 start 和 after include 两行。include 找不到文件只给出警告，程序继续往下执行；require 找不到文件抛出错误，程序在这里终止，after require 不会出现。format_size('a lot') 抛出 TypeError：Argument #1 ($bytes) must be of type int, string given，程序终止。参数的类型声明让 PHP 在调用时检查实参的类型，不符合就报错，而不是像第 28 课那样默默转换。",
+      "sourceIds": [
+        "php-require",
+        "php-declarations"
+      ]
+    },
+    {
+      "id": "check-about-page",
+      "kind": "practice",
+      "title": "加一个页面",
+      "question": "给这个练习站加一个 about.php：标题是 About，正文读出 about.txt 的内容显示在一个 <p> 里，头尾和其他页面一样。再在 header.php 的导航里加上它的链接。",
+      "answer": "参考写法：about.php 里先 $title = 'About'; require __DIR__ . '/header.php';，然后 <p><?= htmlspecialchars(file_get_contents(__DIR__ . '/about.txt')) ?></p>，最后 require __DIR__ . '/footer.php';。header.php 的 <nav> 里加一个 <a href=\"about.php\">About</a>。自查标准：curl http://127.0.0.1:8000/about.php 的输出里有 <h1>About</h1> 和 This site is for practice.；首页和留言页的导航里也出现了 About，因为三个页面共用同一个 header.php。",
+      "sourceIds": [
+        "php-require",
+        "php-file-get-contents",
+        "php-magic-constants"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "函数",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出类型声明为什么让 format_size('a lot') 直接报错。"
+    },
+    {
+      "kind": "动手",
+      "title": "把页面拆开",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "首页和留言页共用同一个头尾。"
+    },
+    {
+      "kind": "进阶",
+      "title": "读写服务器上的文件",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "提交两条留言，notes.txt 里有两行，页面上两条都正确显示。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual user-defined functions type declarations TypeError",
+      "PHP manual include require difference warning error",
+      "PHP manual magic constants __DIR__",
+      "PHP manual file_put_contents FILE_APPEND LOCK_EX; file FILE_IGNORE_NEW_LINES; file_get_contents"
+    ],
+    "notes": "十个文件在 public/labs/php-functions-and-files/。全部命令在 kalilinux/kali-rolling 容器（PHP 8.4.24）里实际运行，页面输出取自运行记录。page.php 只演示用名单限制可读的文件，本课不演示任何绕过路径限制的输入。留言页对存进文件的内容在输出时转义，存的时候原样保存，这一点在页面上做了说明。"
+  },
+  "sources": [
+    {
+      "id": "php-functions",
+      "kind": "official-doc",
+      "title": "PHP Manual: Functions",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.functions.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-functions"
+      ]
+    },
+    {
+      "id": "php-declarations",
+      "kind": "official-doc",
+      "title": "PHP Manual: Type declarations",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.declarations.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-declarations"
+      ]
+    },
+    {
+      "id": "php-include",
+      "kind": "official-doc",
+      "title": "PHP Manual: include",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.include.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-include"
+      ]
+    },
+    {
+      "id": "php-require",
+      "kind": "official-doc",
+      "title": "PHP Manual: require",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.require.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-require"
+      ]
+    },
+    {
+      "id": "php-magic-constants",
+      "kind": "official-doc",
+      "title": "PHP Manual: Magic constants",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.constants.magic.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-dir"
+      ]
+    },
+    {
+      "id": "php-file-put-contents",
+      "kind": "official-doc",
+      "title": "PHP Manual: file_put_contents",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.file-put-contents.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-file-put"
+      ]
+    },
+    {
+      "id": "php-file-get-contents",
+      "kind": "official-doc",
+      "title": "PHP Manual: file_get_contents",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.file-get-contents.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-file-read"
+      ]
+    },
+    {
+      "id": "php-file",
+      "kind": "official-doc",
+      "title": "PHP Manual: file",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.file.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-file-read"
+      ]
+    },
+    {
+      "id": "php-isset",
+      "kind": "official-doc",
+      "title": "PHP Manual: isset",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.isset.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-isset-key"
+      ]
+    },
+    {
+      "id": "php-htmlspecialchars",
+      "kind": "official-doc",
+      "title": "PHP Manual: htmlspecialchars",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-escape-output"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-functions",
+      "text": "PHP 支持用户自定义函数，函数可以有参数和返回值。",
+      "sourceIds": [
+        "php-functions"
+      ]
+    },
+    {
+      "id": "claim-declarations",
+      "text": "类型声明可以加在函数的参数和返回值上，保证调用时的值是指定的类型，否则抛出 TypeError。",
+      "sourceIds": [
+        "php-declarations"
+      ]
+    },
+    {
+      "id": "claim-include",
+      "text": "include 包含并执行指定的文件。",
+      "sourceIds": [
+        "php-include"
+      ]
+    },
+    {
+      "id": "claim-require",
+      "text": "require 与 include 相同，只是失败时会产生 Error 异常（PHP 8.0 之前是 E_COMPILE_ERROR 级别的错误），而 include 只产生警告。",
+      "sourceIds": [
+        "php-require"
+      ]
+    },
+    {
+      "id": "claim-dir",
+      "text": "__DIR__ 是当前文件所在的目录，相当于 dirname(__FILE__)，末尾没有斜杠。",
+      "sourceIds": [
+        "php-magic-constants"
+      ]
+    },
+    {
+      "id": "claim-file-put",
+      "text": "file_put_contents 把数据写入文件，默认覆盖原有内容；设置 FILE_APPEND 时追加到末尾；LOCK_EX 在写入时对文件加排他锁。",
+      "sourceIds": [
+        "php-file-put-contents"
+      ]
+    },
+    {
+      "id": "claim-file-read",
+      "text": "file_get_contents 把整个文件读成一个字符串；file 把整个文件读成数组，每行一个元素，FILE_IGNORE_NEW_LINES 去掉每个元素末尾的换行。",
+      "sourceIds": [
+        "php-file-get-contents",
+        "php-file"
+      ]
+    },
+    {
+      "id": "claim-isset-key",
+      "text": "isset 判断变量是否已声明并且不是 null，可以用来判断数组里有没有某个键。",
+      "sourceIds": [
+        "php-isset"
+      ]
+    },
+    {
+      "id": "claim-escape-output",
+      "text": "htmlspecialchars 把在 HTML 里有特殊含义的字符转换成 HTML 实体。",
+      "sourceIds": [
+        "php-htmlspecialchars"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "lib",
+      "path": "public/labs/php-functions-and-files/lib.php",
+      "command": "php use_lib.php（lib.php 被它 require）",
+      "expectedResult": "512 B、2 KB、Hello, kali!、Welcome back, kali!，最后一行调用因类型不符抛出 TypeError。"
+    },
+    {
+      "id": "use-lib",
+      "path": "public/labs/php-functions-and-files/use_lib.php",
+      "command": "php use_lib.php",
+      "expectedResult": "同上。"
+    },
+    {
+      "id": "missing",
+      "path": "public/labs/php-functions-and-files/missing.php",
+      "command": "php missing.php",
+      "expectedResult": "start、include 的两条警告、after include，然后 require 失败，程序以 Fatal error 结束。"
+    },
+    {
+      "id": "index",
+      "path": "public/labs/php-functions-and-files/index.php",
+      "command": "curl http://127.0.0.1:8000/index.php",
+      "expectedResult": "由 header.php、正文和 footer.php 拼成的完整页面，标题是 Home。"
+    },
+    {
+      "id": "header",
+      "path": "public/labs/php-functions-and-files/header.php",
+      "command": "被 index.php 和 notes.php 引用",
+      "expectedResult": "输出页面开头、导航和 <h1>。"
+    },
+    {
+      "id": "footer",
+      "path": "public/labs/php-functions-and-files/footer.php",
+      "command": "被 index.php 和 notes.php 引用",
+      "expectedResult": "输出页脚和结束标签。"
+    },
+    {
+      "id": "notes",
+      "path": "public/labs/php-functions-and-files/notes.php",
+      "command": "curl -s -d 'text=buy more coffee' http://127.0.0.1:8000/notes.php",
+      "expectedResult": "notes.txt 末尾多一行；再请求 notes.php，列表里多一个 <li>。"
+    },
+    {
+      "id": "page",
+      "path": "public/labs/php-functions-and-files/page.php",
+      "command": "curl 'http://127.0.0.1:8000/page.php?name=rules'",
+      "expectedResult": "Be kind. No spam.；名字不在名单上时返回 404 和 No such page.。"
+    },
+    {
+      "id": "about",
+      "path": "public/labs/php-functions-and-files/about.txt",
+      "command": "page.php?name=about 读取它",
+      "expectedResult": "This site is for practice."
+    },
+    {
+      "id": "rules",
+      "path": "public/labs/php-functions-and-files/rules.txt",
+      "command": "page.php?name=rules 读取它",
+      "expectedResult": "Be kind. No spam."
+    }
+  ],
+  "visualNarrative": {
+    "kind": "site-parts",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

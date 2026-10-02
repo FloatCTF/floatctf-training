@@ -1,0 +1,274 @@
+---
+title: PHP 五：PDO 与预处理
+description: 用 PDO 连接 SQLite，执行查询并取出结果，用 prepare 和 execute 把参数单独交给数据库，看清把输入拼进 SQL 为什么会坏，并写出一个按参数查询的页面
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/php-pdo-database.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 add_item.php，加一件 mug，items.php?category=merch 列出三项。' },
+  { title: '查订单', detail: '写 orders.php：从命令行接收一个用户名，用预处理语句和第 18 课的 JOIN 查出这个用户买过的每件商品和数量。php orders.php bob 应当打印 sticker 10 和 mouse 1 两行。' },
+  { title: '把留言本搬进数据库', detail: '在 shop.db 里建一张 notes 表（id、body），把第 30 课 notes.php 的读写改成用 PDO：写用 INSERT 预处理语句，读用 SELECT。页面效果应当和原来一样。' },
+  { title: '找出拼接', detail: '回头看你这学期写过的所有 PHP 文件，找出每一处 SQL。确认每一处里来自外部的值都通过占位符传入。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PHP / LESSON 31"
+  kicker="PDO, Prepared Statements"
+  lines={[
+    { text: "PHP 五" },
+    { text: "PDO 与预处理", accent: true },
+  ]}
+  summary="第 18 课你在 sqlite3 里亲手敲过 SQL，最后用 Python 的占位符查过一次用户。这一课让 PHP 连上同一个数据库。要学的新东西不多，最重要的一条规矩在第 18 课就立下了：别人给的值，永远不要拼进 SQL 文本。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：一个带单引号的名字
+
+爱尔兰人常见的姓 O'Brien，中间有一个单引号。第 18 课末尾，你用 Python 查过一个叫 `o'brien` 的用户，程序老老实实地回答「没有这个人」。
+
+如果换一种写法，把名字直接拼进 SQL 字符串里，同样的名字会让程序当场报错。一个普通的名字就能把程序弄坏，说明拼接这种写法本身有问题：**数据混进了代码里。** 这一课用 PHP 把两种写法放在一起对比，看清问题出在哪，以及正确的写法为什么不怕。
+
+## 一、连上数据库，执行查询
+
+### 1. 准备
+
+PHP 访问数据库用的是一套统一的接口，叫 **PDO**。它需要对应数据库的驱动。Kali 默认带了 MySQL 的驱动，SQLite 的要自己装：
+
+<TerminalSession
+  replay="skip"
+  title="安装 SQLite 驱动（只需一次）"
+  steps={[
+    { cmd: 'sudo apt install -y php8.4-sqlite3' },
+  ]}
+/>
+
+<TerminalSession
+  title="确认驱动在了，生成数据库"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    { cmd: 'php -m | grep -i sqlite', out: 'pdo_sqlite\nsqlite3', note: 'php -m 列出已经加载的扩展。' },
+    { cmd: 'php setup.php', out: 'created shop.db', note: 'setup.php 读取第 18 课的 shop.sql，在同一目录下建出 shop.db。' },
+    { cmd: 'ls', out: 'add_user.php  db.php    items.php  setup.php  shop.sql\nbad_find.php  find.php  list.php   shop.db' },
+  ]}
+/>
+
+### 2. 连接放在一个函数里
+
+<CodeFile file="labs/php-pdo-database/db.php" />
+
+<DataTable
+  caption="db.php 的三行"
+  headers={["行", "做什么"]}
+  rows={[
+    ["4", "new PDO('sqlite:路径') 打开一个 SQLite 数据库，返回代表这个连接的对象。路径用第 30 课的 __DIR__ 拼成绝对路径"],
+    ["5", "出错时抛出异常。PHP 8 起这已经是默认值，写出来让意图清楚"],
+    ["6", "取出的每一行是一个以列名为键的数组，例如 $row['name']"],
+  ]}
+  columnRatios={[0.5, 4]}
+/>
+
+`$pdo->setAttribute(…)` 里的 `->` 是在调用一个对象的方法，下一课细讲；现在把它读作「对这个连接做某件事」。（来源：[PDO::__construct](#source-php-pdo-construct)、[PDO_SQLITE DSN](#source-php-pdo-sqlite)、[Errors and error handling](#source-php-pdo-errors)）
+
+### 3. 固定的查询
+
+<CodeFile file="labs/php-pdo-database/list.php" mark="5" />
+
+<TerminalSession
+  title="列出所有商品"
+  steps={[
+    { cmd: 'php list.php', out: '6 items\nkeyboard 120\nt-shirt 80\nmouse 60\nusb-drive 45\nhandbook 35\nsticker 5' },
+  ]}
+/>
+
+SQL 里没有任何来自外部的值时，用 `query` 直接执行，`fetchAll` 把所有行一次取出来，得到一个数组的数组。（来源：[PDO::query](#source-php-pdo-query)）
+
+## 二、带参数的查询
+
+### 1. 预处理语句
+
+<CodeFile file="labs/php-pdo-database/find.php" mark="6-8" />
+
+<TerminalSession
+  title="按名字查用户"
+  steps={[
+    { cmd: 'php find.php alice', out: 'alice is admin in Chengdu', note: '$argv 是命令行参数，和第 23 课 C 的 argv 一样，$argv[1] 是第一个参数。' },
+    { cmd: 'php find.php nobody', out: 'no such user', note: '没有匹配的行，fetch 返回 false。' },
+    { cmd: 'php find.php dave', out: 'dave is member in unknown', note: 'dave 的 city 是 NULL，?? 给出了 unknown。' },
+    { cmd: 'php find.php "o\'brien"', out: 'no such user', note: '带单引号的名字，正常地查了，只是没有这个人。' },
+  ]}
+/>
+
+第 6 到 8 行分三步：
+
+<DataTable
+  caption="预处理语句的三步"
+  headers={["行", "写法", "做什么"]}
+  rows={[
+    ["6", "$stmt = $pdo->prepare('… WHERE name = ?')", "把带占位符 ? 的 SQL 交给数据库。语句的结构在这一步就定下了"],
+    ["7", "$stmt->execute([$name])", "把参数单独交过去。数据库只把它当作要比较的值"],
+    ["8", "$user = $stmt->fetch()", "取出一行。没有就是 false"],
+  ]}
+  columnRatios={[0.4, 2.2, 2.4]}
+/>
+
+占位符有两种写法：问号 `?`，按顺序对应 `execute` 数组里的值；命名占位符 `:name`，按名字对应，参数多的时候更清楚。同一条语句里只能用一种。（来源：[PDO::prepare](#source-php-pdo-prepare)、[PDOStatement::execute](#source-php-pdo-execute)、[PDOStatement::fetch](#source-php-pdo-fetch)）
+
+### 2. 拼接的写法为什么会坏
+
+下面这个文件**故意写错**，用来对照：
+
+<CodeFile file="labs/php-pdo-database/bad_find.php" mark="7" note="第 7 行把名字直接拼进了 SQL 文本。" />
+
+<TerminalSession
+  title="同样的输入，拼接的版本"
+  steps={[
+    { cmd: 'php bad_find.php alice', out: "SQL: SELECT name, role FROM users WHERE name = 'alice'\nalice is admin", note: '普通的名字，看起来一切正常。这正是拼接写法危险的地方：平时测不出问题。' },
+    {
+      cmd: 'php bad_find.php "o\'brien"',
+      out: "SQL: SELECT name, role FROM users WHERE name = 'o'brien'\nPHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 near \"brien\": syntax error in /home/kali/lab/php/bad_find.php:9\nStack trace:\n#0 /home/kali/lab/php/bad_find.php(9): PDO->query()\n#1 {main}\n  thrown in /home/kali/lab/php/bad_find.php on line 9",
+      note: '看打印出来的 SQL：名字里的单引号和外面的单引号配成了一对，字符串在 o 之后就结束了，剩下的 brien\' 成了数据库读不懂的东西。',
+    },
+  ]}
+/>
+
+第 18 课说过，SQL 里的单引号是字符串的边界。把输入拼进 SQL 文本，输入里的字符就有机会改变语句的结构。这里只是一个名字，结果是语法错误；输入完全由外部决定时，被改变的可能不止于此。下学期的 SQL 注入专题讲的就是这件事。
+
+预处理语句不会出现这个问题，原因在于先后顺序：**SQL 的结构先交给数据库定好，值后交，值永远只是值。** PHP 手册的说法是：预处理语句的参数不需要加引号，驱动会自动处理；只用预处理语句的程序，可以确信不会发生 SQL 注入。（来源：[Prepared statements](#source-php-pdo-prepared)）
+
+<Callout variant="danger" title="规矩">
+凡是 SQL 里需要放一个来自外部的值，`$_GET`、`$_POST`、`$_COOKIE`、命令行参数、文件内容，一律写占位符，用 `prepare` 加 `execute` 传进去。不要拼接，也不要自己去「转义一下再拼」。
+</Callout>
+
+### 3. 插入也一样
+
+<CodeFile file="labs/php-pdo-database/add_user.php" mark="5-6" />
+
+<TerminalSession
+  title="插入一个名字带单引号的用户"
+  steps={[
+    { cmd: 'php add_user.php "o\'brien" Dublin', out: 'new user id: 5', note: 'lastInsertId 给出刚插入那一行的 id。' },
+    { cmd: 'php find.php "o\'brien"', out: "o'brien is member in Dublin" },
+    { cmd: "sqlite3 shop.db 'SELECT id, name, city FROM users;'", out: "╭────┬─────────┬─────────╮\n│ id │  name   │  city   │\n╞════╪═════════╪═════════╡\n│  1 │ alice   │ Chengdu │\n│  2 │ bob     │ Wuhan   │\n│  3 │ carol   │ Chengdu │\n│  4 │ dave    │ NULL    │\n│  5 │ o'brien │ Dublin  │\n╰────┴─────────┴─────────╯", note: '用第 18 课的工具直接看数据库：名字原样存进去了。' },
+  ]}
+/>
+
+（来源：[PDO::lastInsertId](#source-php-pdo-lastinsertid)）
+
+## 三、把查询放进网页
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动服务器"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    { cmd: 'php -S 127.0.0.1:8000', out: '[Fri Oct  2 14:11:20 2026] PHP 8.4.24 Development Server (http://127.0.0.1:8000) started\n…' },
+  ]}
+/>
+
+<CodeFile file="labs/php-pdo-database/items.php" mark="4-7,13,19" />
+
+<TerminalSession
+  title="终端 B：按分类查商品"
+  steps={[
+    {
+      cmd: "curl 'http://127.0.0.1:8000/items.php?category=merch'",
+      out: '<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><title>Items</title></head>\n<body>\n<h1>merch</h1>\n<ul>\n  <li>sticker: 5</li>\n  <li>t-shirt: 80</li>\n</ul>\n</body>\n</html>',
+    },
+    { cmd: "curl -s 'http://127.0.0.1:8000/items.php?category=food' | grep -A1 '<h1>'", out: '<h1>food</h1>\n<p>Nothing in this category.</p>', note: '没有这个分类，查询返回空数组，页面给出提示。' },
+  ]}
+/>
+
+这个页面把这几课的规矩用在了一起：
+
+<DataTable
+  caption="items.php 对外部输入的两道处理"
+  headers={["输入去了哪", "风险", "处理"]}
+  rows={[
+    ["进了 SQL", "改变语句的结构", "占位符 ? 加 execute"],
+    ["进了 HTML", "改变页面的结构", "htmlspecialchars"],
+  ]}
+  columnRatios={[1, 1.6, 1.6]}
+/>
+
+两件事的道理是一样的：**数据不能被当成代码。** SQL 有 SQL 的处理方式，HTML 有 HTML 的，要在数据进入每一种语言的那一刻，用那种语言对应的方法处理。（来源：[htmlspecialchars](#source-php-htmlspecialchars)）
+
+练完之后在终端 A 按 `Ctrl` + `C` 停掉服务器。
+
+## 常见报错与排错
+
+<TerminalSession
+  title="数据库已经建过了，再建一次"
+  steps={[
+    { cmd: 'php setup.php', out: 'PHP Fatal error:  Uncaught PDOException: SQLSTATE[HY000]: General error: 1 table users already exists in /home/kali/lab/php/setup.php:5\nStack trace:\n#0 /home/kali/lab/php/setup.php(5): PDO->exec()\n#1 {main}\n  thrown in /home/kali/lab/php/setup.php on line 5', note: '要从头来，先 rm shop.db。' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["PDOException: could not find driver", "没装 php8.4-sqlite3", "sudo apt install -y php8.4-sqlite3"],
+    ["PDOException: … no such table: items", "数据库是空的，或者连到了别的文件", "先运行 setup.php；DSN 里用 __DIR__ 拼绝对路径"],
+    ["PDOException: … table users already exists", "setup.php 运行了第二次", "rm shop.db 后再运行"],
+    ["PDOException: … unable to open database file", "PHP 进程对数据库所在的目录没有写权限", "ls -l 检查目录权限"],
+    ["SQLSTATE[HY093]: Invalid parameter number", "execute 给的值的个数和占位符对不上，或者命名占位符的名字拼错", "对照 SQL 里的占位符逐个检查"],
+    ["Uncaught Error: Call to a member function fetch() on bool", "PDO 处于静默模式，查询失败返回了 false", "设置 ERRMODE_EXCEPTION，让错误直接显示出来"],
+    ["fetch 永远返回 false", "条件写错，或者大小写不一致", "先用 sqlite3 手工执行同一条 SQL"],
+  ]}
+  columnRatios={[1.9, 1.7, 1.7]}
+/>
+
+局限：占位符只能代替**值**，不能代替表名、列名或 `ORDER BY` 后面的排序方向。这些部分如果要由外部决定，做法和第 30 课一样：准备一份名单，只允许从名单里选。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'new PDO("sqlite:" . __DIR__ . "/shop.db")', description: '连接 SQLite 数据库。' },
+    { term: 'PDO::ERRMODE_EXCEPTION', description: '出错时抛出 PDOException。' },
+    { term: '$pdo->query($sql)->fetchAll()', description: '执行固定的查询，取出全部行。' },
+    { term: '$stmt = $pdo->prepare("… = ?")', description: '准备带占位符的语句。' },
+    { term: '$stmt->execute([$value])', description: '把参数单独交给数据库执行。' },
+    { term: ':name / ?', description: '命名占位符 / 问号占位符，同一语句只用一种。' },
+    { term: '$stmt->fetch() / fetchAll()', description: '取一行（没有则 false）/ 取全部行。' },
+    { term: '$pdo->lastInsertId()', description: '最后插入的那一行的 id。' },
+    { term: '$argv[1]', description: '命令行的第一个参数。' },
+    { term: '占位符只代替值', description: '表名、列名、排序方向用名单限制。' },
+  ]}
+/>
+
+<KeyTakeaway>
+PHP 用 PDO 连接数据库，`query` 执行固定的 SQL，`fetch` 和 `fetchAll` 取出结果。SQL 里只要有来自外部的值，就用 `prepare` 写占位符、用 `execute` 单独把值交过去：语句的结构先定好，值永远只是值。把输入拼进 SQL 文本，输入里的字符就可能改变语句的结构，一个带单引号的名字就足以让它出错。进 SQL 用占位符，进 HTML 用 `htmlspecialchars`，道理相同：数据不能被当成代码。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

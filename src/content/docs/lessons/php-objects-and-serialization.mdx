@@ -1,0 +1,260 @@
+---
+title: PHP 六：面向对象与序列化
+description: 定义类、创建对象、用 public 与 private 控制访问，弄清对象赋值时指向的是同一个对象，认识几个自动调用的魔术方法，读懂 serialize 的格式并知道为什么外部数据只能用 JSON
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/php-objects-and-serialization.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 Item 类，打九折后 echo 出 keyboard: 108，json_encode 只有 name。' },
+  { title: '把 db.php 改成一个类', detail: '写一个类 Shop：构造函数里创建 PDO 连接存进 private 属性；方法 findUser(string $name) 用预处理语句查用户，查到返回数组，查不到返回 null。用它重写第 31 课的 find.php。' },
+  { title: '读一段序列化字符串', detail: '不运行程序，先写出 serialize(["ok" => true, "n" => 3.5, "tags" => []]) 的结果，再运行验证。逐段说明每一部分的含义。' },
+  { title: '给 Visit 加一个计数', detail: '在 lifetime.php 的 Visit 类里加一个 private static 的计数器（static 自己查手册），每创建一个对象加 1，__destruct 时打印当前计数。调用 show() 两次，看输出。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PHP / LESSON 32"
+  kicker="Classes, Objects, serialize"
+  lines={[
+    { text: "PHP 六" },
+    { text: "面向对象与序列化", accent: true },
+  ]}
+  summary="上一课你已经在用对象了：$pdo->prepare()、$stmt->execute()。这一课自己写类，弄清对象在变量之间是怎样传递的；再看 PHP 怎样把一个对象压成一行字符串、又怎样还原。PHP 这一段到此收尾。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：会话里存的东西，到底长什么样
+
+第 29 课的登录页把用户名存进了 `$_SESSION`，下一次请求时它又回来了。中间这段时间，它待在服务器上的一个文件里。
+
+文件只能存字节，`$_SESSION` 却是一个 PHP 数组，里面还可能有对象。PHP 一定有办法把这些值变成一串字符写进去，再原样读回来。这一课先学写类和对象，再看这个「变成字符串」的过程，以及它为什么只能用在你自己信得过的数据上。
+
+## 一、类和对象
+
+### 1. 定义一个类
+
+<CodeFile file="labs/php-objects-and-serialization/User.php" />
+
+<DataTable
+  caption="User.php 的各部分"
+  headers={["写法", "含义"]}
+  rows={[
+    ["class User { … }", "定义一个类。类是一种新类型，描述这类对象有哪些数据、能做哪些事"],
+    ["public string $name", "属性：每个对象自己的一份数据。写在构造函数参数里，是 PHP 8 的简写，叫构造函数提升"],
+    ["private int $level = 1", "private 的属性只有这个类自己的方法能读写"],
+    ["public function promote(): void", "方法：属于这个类的函数"],
+    ["$this->level", "在方法里，$this 指当前这个对象，-> 访问它的成员"],
+    ["__construct / __toString", "两个下划线开头的是魔术方法，由 PHP 在特定时刻自动调用"],
+  ]}
+  columnRatios={[1.5, 3.3]}
+/>
+
+（来源：[Classes and Objects: The Basics](#source-php-oop-basic)、[Constructors and Destructors](#source-php-oop-construct)）
+
+和第 24 课 C 的结构体相比，类多了两样东西：**方法**，把操作数据的函数和数据放在一起；**可见性**，决定外面能不能直接碰某个属性。
+
+### 2. 创建和使用对象
+
+<CodeFile file="labs/php-objects-and-serialization/objects.php" mark="4-5,9,11" />
+
+<TerminalSession
+  title="new、->、echo 一个对象"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    {
+      cmd: 'php objects.php',
+      out: 'alice is at level 2\nbob (level 3)\nbool(true)\nPHP Fatal error:  Uncaught Error: Cannot access private property User::$level in /home/kali/lab/php/objects.php:11\nStack trace:\n#0 {main}\n  thrown in /home/kali/lab/php/objects.php on line 11',
+      note: '第 9 行 echo 一个对象，PHP 自动调用了 __toString。第 11 行想从外面读 private 的 level，被拒绝了。',
+    },
+  ]}
+/>
+
+`new User('alice')` 创建一个对象，自动调用 `__construct`，参数就是括号里的值。从外面读 `level` 只能通过 `level()` 方法，改它只能通过 `promote()`。这样，等级只会按类里规定的方式变化，不会被随便设成别的值。（来源：[Visibility](#source-php-oop-visibility)、[Magic Methods](#source-php-oop-magic)）
+
+## 二、对象是怎样被传来传去的
+
+### 1. 赋值不复制对象
+
+<CodeFile file="labs/php-objects-and-serialization/same.php" mark="5,9" />
+
+<TerminalSession
+  title="两个变量，一个对象"
+  steps={[
+    { cmd: 'php same.php', out: 'carol (level 2)\ncarol (level 2) / carol (level 3)', note: '第一行：通过 $b 升级，$a 也变了。第二行：clone 之后，两者各走各的。' },
+  ]}
+/>
+
+变量里存的不是对象本身，而是一个指向对象的标识符。`$b = $a` 复制的是这个标识符，两个变量指向同一个对象。这和第 23 课 C 的指针很像：两个指针指着同一块内存，从哪一个改，另一个都看得到。要一个真正独立的副本，用 `clone`。（来源：[Objects and references](#source-php-oop-references)、[Object Cloning](#source-php-oop-cloning)）
+
+数组不是这样：第 28 课的数组赋值会得到一份独立的副本。
+
+<DataTable
+  caption="比较两个对象"
+  headers={["写法", "什么时候为 true"]}
+  rows={[
+    ["$a == $c", "同一个类，属性和值都相等"],
+    ["$a === $b", "是同一个对象"],
+  ]}
+  columnRatios={[1, 3]}
+/>
+
+（来源：[Comparing Objects](#source-php-oop-comparison)）
+
+### 2. PHP 自动调用的方法
+
+<CodeFile file="labs/php-objects-and-serialization/lifetime.php" />
+
+<TerminalSession
+  title="构造和析构"
+  steps={[
+    { cmd: 'php lifetime.php', out: 'start index\nshowing\nend index\nback in main', note: 'show() 返回时，局部变量 $v 消失，没有别的变量指向这个对象了，PHP 自动调用 __destruct。' },
+  ]}
+/>
+
+代码里从来没有写过 `$v->__destruct()`，它是被 PHP 在对象不再被使用时自动调用的。魔术方法的共同点就在这里：**你只写方法，什么时候调用由 PHP 决定**。`__construct` 在 `new` 时，`__destruct` 在对象被销毁时，`__toString` 在对象被当作字符串时。手册里还有好几个，各自对应一种时刻。（来源：[Constructors and Destructors](#source-php-oop-construct)、[Magic Methods](#source-php-oop-magic)）
+
+## 三、把对象存成字符串
+
+### 1. serialize 的格式
+
+<CodeFile file="labs/php-objects-and-serialization/serialize.php" />
+
+<TerminalSession
+  title="数组和对象变成字符串，再变回来"
+  steps={[
+    {
+      cmd: 'php serialize.php',
+      out: 'a:3:{s:4:"port";i:80;s:5:"tools";a:2:{i:0;s:4:"curl";i:1;s:2:"nc";}s:4:"open";b:1;}\nbool(true)\n61 bytes\nO:4:"User":2:{s:4:"name";s:5:"alice";s:11:"\\0User\\0level";i:2;}\nalice (level 2)\nbool(false)\nbool(true)',
+      note: '还原出来的对象和原来的相等（==），但不是同一个（===），是新造出来的。',
+    },
+  ]}
+/>
+
+`serialize` 把一个值变成可以存储的字符串，保留它的类型和结构；`unserialize` 把字符串变回原来的值。（来源：[serialize](#source-php-serialize)）
+
+读一下对象那一行：
+
+<DataTable
+  caption={'O:4:"User":2:{…} 拆开看'}
+  headers={["这一段", "含义"]}
+  rows={[
+    ["O:4:\"User\"", "一个对象（O），类名有 4 个字符，是 User"],
+    [":2:", "有 2 个属性"],
+    ["s:4:\"name\";s:5:\"alice\";", "属性名是长度为 4 的字符串 name，值是长度为 5 的字符串 alice"],
+    ["s:11:\"\\0User\\0level\";i:2;", "private 属性的名字前面带着类名，两侧是两个空字节（终端里看不见，这里显示成 \\0），值是整数 2"],
+  ]}
+  columnRatios={[1.6, 3.2]}
+/>
+
+数组那一行同理：`a:3` 是三个元素的数组，`i:80` 是整数，`b:1` 是布尔值真。
+
+第 29 课的会话数据就是这样存的：PHP 在脚本结束时把 `$_SESSION` 序列化，写进会话文件。（来源：[Sessions: Basic usage](#source-php-session-basic)）
+
+### 2. 为什么不能用在外部数据上
+
+注意 `O:4:"User"`：**字符串里写着要造出哪个类的对象。** `unserialize` 读到它，就真的造出一个 User，按字符串里写的值设置它的属性；如果这个类定义了特定的魔术方法，还会被自动调用。
+
+如果这串字符来自你自己的会话文件，没有问题。如果它来自请求，比如 Cookie 或表单，那么「造出什么对象、属性是什么值」就由发请求的人决定了。
+
+<Callout variant="danger" title="PHP 手册的原话">
+不要把不可信的用户输入交给 `unserialize()`。反序列化可能因为对象的创建和自动加载，导致代码被加载和执行，恶意用户可能利用这一点。需要和用户之间传递数据时，用 JSON 这样安全、标准的格式（`json_encode` 和 `json_decode`）。
+</Callout>
+
+（来源：[unserialize](#source-php-unserialize)）
+
+这类问题叫反序列化漏洞，是下学期的一个专题。现在只需要记住规矩：**`unserialize` 只用于你自己写入、别人改不了的数据；和外部交换数据一律用 JSON。**
+
+### 3. JSON：只有数据
+
+<CodeFile file="labs/php-objects-and-serialization/json.php" />
+
+<TerminalSession
+  title="同样的数组，换成 JSON"
+  steps={[
+    { cmd: 'php json.php', out: '{"port":80,"tools":["curl","nc"],"open":true}\nbool(true)\n{"name":"alice"}', note: '第 15 课 Python 的 requests 和第 17 课浏览器的 fetch 读的都是这种格式。对象只输出了 public 的 name。' },
+  ]}
+/>
+
+JSON 只能表示对象（键值对）、数组、字符串、数字、真假和 null。`json_decode` 不会造出任何类的对象，第二个参数传 `true` 时得到的是普通的关联数组。这正是它适合跟外部交换数据的原因：**解码的结果只是数据，不会是带着行为的对象。**（来源：[json_encode](#source-php-json-encode)、[json_decode](#source-php-json-decode)）
+
+<DataTable
+  caption="两种格式"
+  headers={["", "serialize", "JSON"]}
+  rows={[
+    ["能表示", "几乎所有 PHP 值，包括任意类的对象", "键值对、数组、字符串、数字、布尔值、null"],
+    ["谁能读", "只有 PHP", "几乎所有语言"],
+    ["还原时", "按字符串里写的类名造出对象", "只得到数据"],
+    ["用在", "自己存、自己读的数据，例如会话", "和浏览器、其他程序交换的数据"],
+  ]}
+  columnRatios={[0.8, 2, 2]}
+/>
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["Error: Cannot access private property …", "在类的外面读写 private 属性", "通过类提供的方法访问，或者确实需要时改成 public"],
+    ["Error: Class \"User\" not found", "没有 require 定义它的文件", "require __DIR__ . '/User.php';"],
+    ["Error: Call to undefined method …", "方法名拼错，或者这个类没有这个方法", "对照类的定义"],
+    ["改了一个变量里的对象，另一个变量也变了", "两个变量指向同一个对象", "需要独立副本时用 clone"],
+    ["Error: Object of class … could not be converted to string", "echo 了一个没有 __toString 的对象", "定义 __toString，或者 echo 它的属性"],
+    ["json_encode 的结果里少了某些属性", "json_encode 默认只输出 public 属性", "这通常正是想要的：private 的数据不该外泄"],
+    ["unserialize(): Error at offset …", "序列化字符串被截断或改动过，长度对不上", "检查数据是怎样存、怎样传的"],
+  ]}
+  columnRatios={[2, 1.7, 1.7]}
+/>
+
+局限：这一课没有讲继承、接口、静态成员和命名空间。真实的 PHP 项目大量使用它们；第 36 课读 Java 项目时会集中遇到同样的概念，到时对照着看。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'class A { … }', description: '定义类。' },
+    { term: 'public function __construct(public string $n) {}', description: '构造函数，参数直接成为属性。' },
+    { term: 'new A(…) / $obj->方法()', description: '创建对象 / 调用方法。' },
+    { term: '$this', description: '方法里指当前对象。' },
+    { term: 'public / private', description: '哪里都能访问 / 只有类自己能访问。' },
+    { term: '$b = $a / clone $a', description: '指向同一个对象 / 复制出一个新对象。' },
+    { term: '__toString / __destruct', description: '被当作字符串时 / 被销毁时，PHP 自动调用。' },
+    { term: 'serialize / unserialize', description: '值与字符串互转。unserialize 只用于自己信得过的数据。' },
+    { term: 'json_encode / json_decode($s, true)', description: '和外部交换数据用它们。' },
+  ]}
+/>
+
+<KeyTakeaway>
+类把数据和操作数据的方法放在一起，`private` 让属性只能按类规定的方式改变。变量里存的是指向对象的标识符，赋值后两个变量指向同一个对象，要副本用 `clone`。魔术方法由 PHP 在特定时刻自动调用。`serialize` 把值连同类型变成字符串，`unserialize` 按字符串里写的类名把对象造回来，所以只能用在自己写入、别人改不了的数据上；和外部交换数据一律用 JSON。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

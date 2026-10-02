@@ -1,0 +1,22 @@
+[
+  {
+    "label": "请求到达",
+    "detail": "浏览器请求 /hello.php。服务器按路径在网站目录里找到 hello.php 这个文件。",
+    "state": "normal"
+  },
+  {
+    "label": "交给 PHP",
+    "detail": "文件名以 .php 结尾，服务器不直接发送它，而是让 PHP 解释器从头到尾执行一遍。",
+    "state": "normal"
+  },
+  {
+    "label": "边执行边输出",
+    "detail": "标签外面的 HTML 原样输出；<?php 和 ?> 之间的代码被执行，echo 的内容输出在那个位置。",
+    "state": "normal"
+  },
+  {
+    "label": "输出就是响应",
+    "detail": "执行完毕，攒下的全部输出作为响应的正文发回浏览器。PHP 代码本身不会被发出去。",
+    "state": "success"
+  }
+]

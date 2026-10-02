@@ -1,0 +1,406 @@
+{
+  "lessonPlan": {
+    "audience": "写过 SQL 查询、会用 PHP 处理表单和文件的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "同一个带单引号的名字，两种交给数据库的方式：拼进 SQL 文本里，单引号提前结束了字符串，语句当场坏掉；作为参数单独交出去，SQL 的结构先定好，名字只是数据，原样查到",
+    "learningObjectives": [
+      "用 PDO 连接 SQLite 数据库，把出错方式设为抛出异常",
+      "用 query 执行固定的查询，用 fetch 和 fetchAll 取出结果",
+      "用 prepare 和 execute 执行带参数的查询，区分 ? 和 :name 两种占位符",
+      "解释为什么不能把输入拼进 SQL 文本，以及预处理语句为什么能避免这个问题",
+      "写出一个按请求参数查询数据库并安全输出的页面"
+    ],
+    "prerequisites": [
+      "php-functions-and-files",
+      "sql-basics"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-why-prepared",
+      "kind": "mechanism",
+      "title": "同一个名字，两种结局",
+      "question": "php bad_find.php \"o'brien\" 报了 syntax error，php find.php \"o'brien\" 正常回答 no such user（加了这个用户之后能查到）。两个脚本拿到的输入一模一样，差别在哪？为什么预处理语句不怕名字里有单引号？",
+      "answer": "bad_find.php 把名字直接拼进 SQL 文本，得到 WHERE name = 'o'brien'。数据库按 SQL 的规则读这段文本：第二个单引号被当成字符串的结束，后面剩下的 brien' 不是合法的 SQL，于是语法错误。也就是说，输入里的字符改变了 SQL 语句的结构。find.php 用的是预处理语句：先把带 ? 的 SQL 交给数据库，结构在这一步就定下了；名字随后作为参数单独交过去，数据库只把它当成要比较的值，无论里面有什么字符，都不会被当成 SQL 的一部分来解释。PHP 手册的说法是：参数不需要加引号，驱动会自动处理；只用预处理语句的程序可以确信不会发生 SQL 注入。",
+      "sourceIds": [
+        "php-pdo-prepared",
+        "php-pdo-prepare"
+      ]
+    },
+    {
+      "id": "check-predict-pdo",
+      "kind": "prediction",
+      "title": "预测四条命令的输出",
+      "question": "在刚刚执行过 php setup.php 的目录里，依次预测：一、php find.php carol。二、php find.php Alice（大写 A）。三、curl -s 'http://127.0.0.1:8000/items.php?category=book' | grep '<li>'。四、再执行一次 php setup.php。",
+      "answer": "一、carol is member in Chengdu。二、no such user：SQLite 用等号比较字符串时区分大小写，第 18 课见过。fetch 没有行可取，返回 false。三、  <li>handbook: 35</li>，book 分类只有这一件。四、PDOException：table users already exists。shop.sql 里是 CREATE TABLE，表已经建过了，再建一次就报错；ERRMODE_EXCEPTION 让这个错误以异常的形式抛出，脚本在这里终止。要重来，先删掉 shop.db。",
+      "sourceIds": [
+        "php-pdo-fetch",
+        "php-pdo-errors"
+      ]
+    },
+    {
+      "id": "check-add-item",
+      "kind": "practice",
+      "title": "写一个添加商品的脚本",
+      "question": "写 add_item.php：从命令行接收三个参数（名字、分类、价格），用带 :name、:category、:price 占位符的预处理语句插入 items 表，打印新商品的 id。然后用它加一件 mug，分类 merch，价格 25，再用 curl 打开 items.php?category=merch 确认它出现了。",
+      "answer": "参考写法：require __DIR__ . '/db.php'; $stmt = db()->prepare('INSERT INTO items (name, category, price) VALUES (:name, :category, :price)'); $stmt->execute([':name' => $argv[1], ':category' => $argv[2], ':price' => (int) $argv[3]]); 然后用同一个 PDO 对象的 lastInsertId() 打印 id（注意要先把 db() 的结果存进一个变量，两次调用 db() 得到的是两个连接）。自查标准：php add_item.php mug merch 25 打印 new item id: 7；curl 的结果里 merch 下面有三项，按价格排序依次是 sticker 5、mug 25、t-shirt 80。",
+      "sourceIds": [
+        "php-pdo-prepare",
+        "php-pdo-lastinsertid"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "连上数据库，执行查询",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "list.php 打印出 6 items 和六行商品。"
+    },
+    {
+      "kind": "动手",
+      "title": "带参数的查询",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "能说出 bad_find.php 为什么在 o'brien 上出错。"
+    },
+    {
+      "kind": "进阶",
+      "title": "把查询放进网页",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "items.php 按分类列出商品，没有的分类显示 Nothing。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual PDO prepared statements SQL injection parameters need not be quoted",
+      "PHP manual PDO::prepare named and question mark markers do not include user input",
+      "PHP manual PDOStatement::execute fetch fetchAll lastInsertId",
+      "PHP manual PDO error handling ERRMODE_EXCEPTION default PHP 8",
+      "PHP manual PDO_SQLITE DSN"
+    ],
+    "notes": "八个文件在 public/labs/php-pdo-database/，数据集 shop.sql 与第 18 课相同。全部命令在 kalilinux/kali-rolling 容器（PHP 8.4.24、php8.4-sqlite3）里实际运行，页面输出取自运行记录。Kali 默认安装带 php8.4-mysql 但没有 php8.4-sqlite3，已用 apt 的模拟安装核对，页面给出了安装命令（安装过程的输出没有上页面）。bad_find.php 是故意写错的对照，只用一个含单引号的普通名字说明拼接会破坏语句的结构，不涉及任何注入用的输入；SQL 注入的原理与利用留给下学期的专题。"
+  },
+  "versionInfo": {
+    "targetVersion": "PHP 8.4.24 与 php8.4-sqlite3（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh；PHP 8.4.24（php8.4-cli，Kali 打包版本）。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "PHP 8.0 起 PDO 默认就是 ERRMODE_EXCEPTION，示例里显式设置是为了在旧版本上行为一致。没有安装 php8.4-sqlite3 时，new PDO('sqlite:…') 报 could not find driver。lastInsertId 返回的是字符串。"
+  },
+  "sources": [
+    {
+      "id": "php-pdo-construct",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO::__construct",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.construct.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-pdo"
+      ]
+    },
+    {
+      "id": "php-pdo-sqlite",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO_SQLITE DSN",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/ref.pdo-sqlite.connection.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-pdo",
+        "cmd-check-driver"
+      ]
+    },
+    {
+      "id": "php-pdo-errors",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO: Errors and error handling",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.error-handling.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-errmode",
+        "cmd-bad-find"
+      ]
+    },
+    {
+      "id": "php-pdo-query",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO::query",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.query.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-query"
+      ]
+    },
+    {
+      "id": "php-pdo-prepared",
+      "kind": "official-doc",
+      "title": "PHP Manual: Prepared statements and stored procedures",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.prepared-statements.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-prepared",
+        "cmd-bad-find"
+      ]
+    },
+    {
+      "id": "php-pdo-prepare",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO::prepare",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.prepare.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-placeholders",
+        "cmd-find"
+      ]
+    },
+    {
+      "id": "php-pdo-execute",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDOStatement::execute",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdostatement.execute.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-execute",
+        "cmd-find"
+      ]
+    },
+    {
+      "id": "php-pdo-fetch",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDOStatement::fetch",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdostatement.fetch.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-fetch"
+      ]
+    },
+    {
+      "id": "php-pdo-lastinsertid",
+      "kind": "official-doc",
+      "title": "PHP Manual: PDO::lastInsertId",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/pdo.lastinsertid.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-lastinsertid"
+      ]
+    },
+    {
+      "id": "php-htmlspecialchars",
+      "kind": "official-doc",
+      "title": "PHP Manual: htmlspecialchars",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-escape-html"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-pdo",
+      "text": "new PDO(…) 创建一个代表数据库连接的 PDO 实例。SQLite 的 DSN 前缀是 sqlite:，访问磁盘上的数据库要在前缀后面接上它的绝对路径。",
+      "sourceIds": [
+        "php-pdo-construct",
+        "php-pdo-sqlite"
+      ]
+    },
+    {
+      "id": "claim-errmode",
+      "text": "PDO::ERRMODE_EXCEPTION 是 PHP 8.0 起的默认错误模式：出错时除了设置错误码，还会抛出 PDOException，脚本在出错的地方停下，便于调试。PHP 8.0 之前的默认模式是 ERRMODE_SILENT。",
+      "sourceIds": [
+        "php-pdo-errors"
+      ]
+    },
+    {
+      "id": "claim-query",
+      "text": "PDO::query 执行一条不带占位符的 SQL 语句并返回结果集。",
+      "sourceIds": [
+        "php-pdo-query"
+      ]
+    },
+    {
+      "id": "claim-prepared",
+      "text": "预处理语句可以看作 SQL 的模板，用可变的参数来定制；预处理语句的参数不需要加引号，驱动会自动处理。只用预处理语句的应用可以确信不会发生 SQL 注入，但如果查询的其他部分仍由未转义的输入拼成，SQL 注入依然可能。",
+      "sourceIds": [
+        "php-pdo-prepared"
+      ]
+    },
+    {
+      "id": "claim-placeholders",
+      "text": "PDO::prepare 准备一条由 PDOStatement::execute 执行的语句，模板里可以有命名占位符 :name 或问号占位符 ?，执行时代入真实的值；同一条语句里两种占位符不能混用。应当用这些参数绑定所有用户输入，不要把用户输入直接写进查询里。",
+      "sourceIds": [
+        "php-pdo-prepare"
+      ]
+    },
+    {
+      "id": "claim-execute",
+      "text": "PDOStatement::execute 执行预处理语句，可以传入一个数组，元素个数与语句里的参数个数相同，所有值都按字符串处理。",
+      "sourceIds": [
+        "php-pdo-execute"
+      ]
+    },
+    {
+      "id": "claim-fetch",
+      "text": "PDOStatement::fetch 从结果集里取出下一行，没有更多行或失败时返回 false。",
+      "sourceIds": [
+        "php-pdo-fetch"
+      ]
+    },
+    {
+      "id": "claim-lastinsertid",
+      "text": "PDO::lastInsertId 返回最后插入的那一行的 ID。",
+      "sourceIds": [
+        "php-pdo-lastinsertid"
+      ]
+    },
+    {
+      "id": "claim-escape-html",
+      "text": "htmlspecialchars 把在 HTML 里有特殊含义的字符转换成 HTML 实体。",
+      "sourceIds": [
+        "php-htmlspecialchars"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-check-driver",
+      "command": "php -m | grep -i sqlite",
+      "expectedResult": "pdo_sqlite 和 sqlite3 两行。没有输出说明还没安装 php8.4-sqlite3。",
+      "sourceIds": [
+        "php-pdo-sqlite"
+      ]
+    },
+    {
+      "id": "cmd-find",
+      "command": "php find.php alice",
+      "expectedResult": "alice is admin in Chengdu",
+      "sourceIds": [
+        "php-pdo-prepare",
+        "php-pdo-execute"
+      ]
+    },
+    {
+      "id": "cmd-bad-find",
+      "command": "php bad_find.php \"o'brien\"",
+      "expectedResult": "先打印拼好的 SQL，然后 PDOException：SQLSTATE[HY000]: General error: 1 near \"brien\": syntax error。",
+      "sourceIds": [
+        "php-pdo-prepared",
+        "php-pdo-errors"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "db",
+      "path": "public/labs/php-pdo-database/db.php",
+      "command": "被其他脚本 require",
+      "expectedResult": "返回一个连到同目录 shop.db、出错时抛异常、默认按关联数组取行的 PDO 对象。"
+    },
+    {
+      "id": "setup",
+      "path": "public/labs/php-pdo-database/setup.php",
+      "command": "php setup.php",
+      "expectedResult": "created shop.db"
+    },
+    {
+      "id": "shop-sql",
+      "path": "public/labs/php-pdo-database/shop.sql",
+      "command": "setup.php 读取并执行它",
+      "expectedResult": "建出 users、items、orders 三张表。"
+    },
+    {
+      "id": "list",
+      "path": "public/labs/php-pdo-database/list.php",
+      "command": "php list.php",
+      "expectedResult": "6 items，然后按价格从高到低六行。"
+    },
+    {
+      "id": "find",
+      "path": "public/labs/php-pdo-database/find.php",
+      "command": "php find.php alice",
+      "expectedResult": "alice is admin in Chengdu"
+    },
+    {
+      "id": "bad-find",
+      "path": "public/labs/php-pdo-database/bad_find.php",
+      "command": "php bad_find.php \"o'brien\"",
+      "expectedResult": "syntax error 的 PDOException。"
+    },
+    {
+      "id": "add-user",
+      "path": "public/labs/php-pdo-database/add_user.php",
+      "command": "php add_user.php \"o'brien\" Dublin",
+      "expectedResult": "new user id: 5"
+    },
+    {
+      "id": "items",
+      "path": "public/labs/php-pdo-database/items.php",
+      "command": "curl 'http://127.0.0.1:8000/items.php?category=merch'",
+      "expectedResult": "标题 merch，两项：sticker: 5 和 t-shirt: 80。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "prepared-statement",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}
