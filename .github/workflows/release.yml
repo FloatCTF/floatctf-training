@@ -1,0 +1,173 @@
+# 训练站制品发布：main 每次合并后构建一次，产出可直接部署的静态制品。
+#
+# 设计前提：消费方（平台宿主）**只下载、不构建**——不执行本仓库的任何代码，
+# 也不需要 Node。宿主拿到 tar.gz 后校验 sha256、解包、原子切换软链即可。
+#
+# 稳定下载地址（私有仓库，消费方需要只读凭据）：
+#   https://github.com/FloatCTF/floatctf-training/releases/download/training-latest/training-dist.tar.gz
+#   同目录另有 training-dist.tar.gz.sha256 与 BUILD_INFO.json
+#
+# 仓库变量（Settings → Secrets and variables → Actions → Variables）：
+#   TRAINING_BASE  子路径部署前缀，默认 /training/
+#   TRAINING_SITE  站点公开地址，写入 canonical / og:url / sitemap；
+#                  未设置时退回 http://training.local 并给出告警（不影响页面与搜索）
+
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# 同一 ref 的发布串行化，避免两个 main 提交同时改同一个滚动 release。
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - run: npm ci
+
+      - name: Resolve build inputs
+        id: inputs
+        env:
+          VAR_BASE: ${{ vars.TRAINING_BASE }}
+          VAR_SITE: ${{ vars.TRAINING_SITE }}
+        run: |
+          set -euo pipefail
+          base="${VAR_BASE:-/training/}"
+          case "$base" in /*) ;; *) base="/$base" ;; esac
+          case "$base" in */) ;; *) base="$base/" ;; esac
+          echo "base=$base" >> "$GITHUB_OUTPUT"
+          if [ -n "${VAR_SITE:-}" ]; then
+            echo "site=$VAR_SITE" >> "$GITHUB_OUTPUT"
+          else
+            echo "site=" >> "$GITHUB_OUTPUT"
+            echo "::warning title=TRAINING_SITE 未设置::产物里的 canonical/og:url/sitemap 会退回 http://training.local（页面与搜索不受影响）。设置仓库变量 TRAINING_SITE 后重跑本工作流即可修正。"
+          fi
+          echo "TRAINING_BASE=$base"
+
+      # 走仓库自己的完整门禁（内容校验 → 主题生成 → 生成物新鲜度 → 字体同步 → astro check → build），
+      # 门禁不过就不产出制品。
+      - name: Verify and build
+        env:
+          TRAINING_BASE: ${{ steps.inputs.outputs.base }}
+          TRAINING_SITE: ${{ steps.inputs.outputs.site }}
+        run: npm run verify
+
+      - name: Package artifact
+        env:
+          BASE: ${{ steps.inputs.outputs.base }}
+          SITE: ${{ steps.inputs.outputs.site }}
+        run: |
+          set -euo pipefail
+
+          # 发布前硬检查：缺任何一项都说明构建不完整（字体与 Pagefind 都是生成物）
+          test -f dist/index.html
+          test -f dist/404.html
+          test -f dist/pagefind/pagefind.js
+          test -s dist/fontsource/fonts.css
+
+          FILES="$(find dist -type f | wc -l | tr -d ' ')"
+          BYTES="$(du -sb dist | cut -f1)"
+          export FILES BYTES
+
+          node -e '
+            const fs = require("fs");
+            const info = {
+              repository: process.env.GITHUB_REPOSITORY,
+              commit: process.env.GITHUB_SHA,
+              ref: process.env.GITHUB_REF,
+              workflow_run:
+                process.env.GITHUB_SERVER_URL +
+                "/" + process.env.GITHUB_REPOSITORY +
+                "/actions/runs/" + process.env.GITHUB_RUN_ID,
+              base: process.env.BASE,
+              site: process.env.SITE || null,
+              node: process.version,
+              files: Number(process.env.FILES),
+              bytes: Number(process.env.BYTES),
+              built_at: new Date().toISOString(),
+            };
+            fs.writeFileSync("BUILD_INFO.json", JSON.stringify(info, null, 2) + "\n");
+          '
+          cat BUILD_INFO.json
+
+          # 固定属主/时间戳并按文件名排序，让同样的内容尽量得到同样的归档
+          tar --sort=name --owner=0 --group=0 --numeric-owner --mtime=@0 \
+            -cf - -C dist . | gzip -9n > training-dist.tar.gz
+          sha256sum training-dist.tar.gz > training-dist.tar.gz.sha256
+          cat training-dist.tar.gz.sha256
+
+      - name: Upload build artifact (可回滚的历史)
+        uses: actions/upload-artifact@v4
+        with:
+          name: training-dist
+          path: |
+            training-dist.tar.gz
+            training-dist.tar.gz.sha256
+            BUILD_INFO.json
+          retention-days: 90
+          if-no-files-found: error
+
+      - name: Publish rolling release (main)
+        if: github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="training-latest"
+          title="训练站制品（滚动通道）"
+          notes="$(cat <<EOF
+          自动构建的静态站点制品，来自 \`main\` 的最新提交。
+
+          - 提交：\`${GITHUB_SHA}\`
+          - 构建：[run ${GITHUB_RUN_ID}](${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID})
+          - BASE：\`$(node -p "require('./BUILD_INFO.json').base")\`
+
+          消费方式（只下载、不构建；私有仓库需要只读凭据）：
+
+          \`\`\`bash
+          gh release download ${tag} -R ${GITHUB_REPOSITORY} -p 'training-dist.tar.gz*'
+          sha256sum -c training-dist.tar.gz.sha256
+          \`\`\`
+
+          注意：本 release 是**滚动**的，tag \`${tag}\` 指向首次创建它的提交；
+          制品对应的真实提交以上面的提交号与 \`BUILD_INFO.json\` 为准。
+          EOF
+          )"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            gh release upload "$tag" \
+              training-dist.tar.gz training-dist.tar.gz.sha256 BUILD_INFO.json --clobber
+            gh release edit "$tag" --title "$title" --notes "$notes" --latest
+          else
+            gh release create "$tag" --title "$title" --notes "$notes" --latest \
+              training-dist.tar.gz training-dist.tar.gz.sha256 BUILD_INFO.json
+          fi
+          gh release view "$tag" --json tagName,url,assets
+
+      - name: Publish versioned release (v* tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          gh release create "$tag" \
+            --title "$tag" \
+            --notes "训练站制品 ${tag}（提交 ${GITHUB_SHA}）。永久保留，用于固定版本部署。" \
+            training-dist.tar.gz training-dist.tar.gz.sha256 BUILD_INFO.json
+          gh release view "$tag" --json tagName,url,assets
