@@ -3,6 +3,10 @@ dist/
 .astro/
 .DS_Store
 *.log
+# 课程随附的访问日志样本
+!public/labs/shell-permissions-and-pipes/access.log
+!public/labs/python-files-and-exceptions/access.log
+!public/labs/c-files-and-projects/access.log
 .env
 .env.*
 !.env.example
