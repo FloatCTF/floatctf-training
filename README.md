@@ -50,6 +50,38 @@ npm run build
 - `TRAINING_BASE`：子路径部署时的 base，例如 `/training/`
 - `TRAINING_SITE`：站点 URL，写入 sitemap 等
 
+## 制品发布（CI 产出可部署制品）
+
+`main` 每次合并后，[`.github/workflows/release.yml`](.github/workflows/release.yml) 会跑一遍完整门禁
+（`npm run verify`：内容校验 → 主题生成 → 生成物新鲜度 → 字体同步 → `astro check` → `build`），
+门禁通过才发布制品：
+
+| 产物 | 说明 |
+| --- | --- |
+| `training-dist.tar.gz` | `dist/` 的归档，已按子路径前缀构建，解包即可部署 |
+| `training-dist.tar.gz.sha256` | 校验和 |
+| `BUILD_INFO.json` | 提交、构建时间、`TRAINING_BASE`/`TRAINING_SITE`、文件数与字节数 |
+
+- **滚动通道**（始终是 `main` 的最新构建）：
+  `https://github.com/FloatCTF/floatctf-training/releases/download/training-latest/training-dist.tar.gz`
+  （tag `training-latest` 指向首次创建它的提交；制品对应的真实提交看 `BUILD_INFO.json`。）
+- 打 `v*` tag 会额外产出一份**永久版本化** release，用于固定版本部署。
+- 每次构建还会上传保留 90 天的 Actions artifact，便于回滚。
+
+部署机**只下载、不构建**——不需要 Node，也不执行本仓库任何代码；仓库是私有的，所以需要一个只读凭据：
+
+```bash
+gh release download training-latest -R FloatCTF/floatctf-training -p 'training-dist.tar.gz*'
+sha256sum -c training-dist.tar.gz.sha256
+```
+
+仓库变量（Settings → Secrets and variables → Actions → Variables）：
+
+| 变量 | 默认 | 说明 |
+| --- | --- | --- |
+| `TRAINING_BASE` | `/training/` | 子路径部署前缀，构建期生效；改了要重跑工作流 |
+| `TRAINING_SITE` | 空 | 站点公开地址，写入 canonical/og:url/sitemap；未设置会退回 `http://training.local` 并输出告警 |
+
 ## 协作流程（同仓分支 + PR）
 
 团队默认采用 **同一仓库开 feature 分支，向 `main` 提 PR**。  
