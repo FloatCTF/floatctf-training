@@ -1,0 +1,410 @@
+{
+  "lessonPlan": {
+    "audience": "写过 PHP 函数、数组、会话和数据库查询，还没有写过类的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "一个 User 对象的一生：用 new 造出来，用方法改它，变量传来传去指向的是同一个对象；serialize 把它压成一行字符串存起来，unserialize 再按字符串里写的类名和属性把它造回来",
+    "learningObjectives": [
+      "定义带属性、构造函数和方法的类，用 new 创建对象，用 -> 访问成员",
+      "用 public 和 private 控制谁能访问对象的属性",
+      "说出把对象赋给另一个变量时发生了什么，用 clone 复制对象",
+      "认识 __construct、__destruct、__toString 这几个由 PHP 自动调用的方法",
+      "读懂 serialize 的输出格式，说明为什么不能对外部数据使用 unserialize，以及该用什么代替"
+    ],
+    "prerequisites": [
+      "php-pdo-database",
+      "c-structs-and-heap"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-unserialize-input",
+      "kind": "mechanism",
+      "title": "为什么不能 unserialize 外部数据",
+      "question": "有同学想把购物车存进 Cookie：serialize($cart) 发给浏览器，下次请求再对 $_COOKIE['cart'] 调用 unserialize 还原。结合 serialize 的输出格式和 PHP 手册的警告，说明这个做法的问题，并给出替代方案。",
+      "answer": "serialize 的输出里写着要还原成什么：O:4:\"User\" 表示一个 User 类的对象，后面是它每个属性的名字和值。unserialize 照着这段文字把对象造出来。Cookie 的内容由浏览器这一侧决定，可以被任意改写，于是「造出哪个类的对象、属性是什么值」都变成了由外部决定。PHP 手册明确警告：不要把不可信的用户输入交给 unserialize，因为反序列化可能导致代码被加载和执行，恶意用户可能利用这一点。替代方案：需要和外部交换数据时用 JSON，json_encode 和 json_decode 只表示数组、字符串、数字这类数据，不会造出任意类的对象；购物车这种状态更好的做法是放进第 29 课的 $_SESSION，客户端只拿一个会话编号。",
+      "sourceIds": [
+        "php-unserialize",
+        "php-serialize",
+        "php-json-decode"
+      ]
+    },
+    {
+      "id": "check-predict-objects",
+      "kind": "prediction",
+      "title": "预测五行输出",
+      "question": "已有 User 类（构造参数是名字和等级，等级默认 1，promote() 加 1，__toString 返回「名字 (level 等级)」）。依次执行：$a = new User('kali'); $b = $a; $b->promote(); echo $a; 然后 $c = clone $a; $c->promote(); echo $a, \" / \", $c; 然后 var_dump($a == $c, $a === $b); 最后 echo serialize(['n' => 1]);。写出每次输出的内容。",
+      "answer": "第一次 echo：kali (level 2)。$b = $a 没有复制对象，两个变量指向同一个对象，通过 $b 改的就是 $a 看到的那个。第二次：kali (level 2) / kali (level 3)。clone 造出了一个新对象，之后改 $c 不影响 $a。var_dump 两行都是 bool：$a == $c 是 false，两个对象的 level 不同；$a === $b 是 true，它们是同一个对象。最后：a:1:{s:1:\"n\";i:1;}，一个元素的数组，键是长度为 1 的字符串 n，值是整数 1。",
+      "sourceIds": [
+        "php-oop-references",
+        "php-oop-cloning",
+        "php-oop-comparison",
+        "php-serialize"
+      ]
+    },
+    {
+      "id": "check-write-class",
+      "kind": "practice",
+      "title": "写一个 Item 类",
+      "question": "写 Item.php：类 Item 有 public 的 name 和 private 的 price（int），构造函数用构造函数提升接收两者；方法 discount(int $percent): void 按百分比降价（结果取整）；方法 price(): int 返回价格；__toString 返回「名字: 价格」。再写 use_item.php：创建 keyboard 120，打九折，echo 它，再用 json_encode 输出它。",
+      "answer": "参考写法：class Item { public function __construct(public string $name, private int $price) {} public function discount(int $percent): void { $this->price = intdiv($this->price * (100 - $percent), 100); } public function price(): int { return $this->price; } public function __toString(): string { return \"$this->name: $this->price\"; } }。use_item.php 里 require __DIR__ . '/Item.php'; $k = new Item('keyboard', 120); $k->discount(10); echo $k, \"\\n\"; echo json_encode($k), \"\\n\";。自查标准：第一行 keyboard: 108；第二行 {\"name\":\"keyboard\"}，json_encode 默认只输出 public 属性，price 是 private 所以不在里面；在类外面写 $k->price 会报 Cannot access private property。",
+      "sourceIds": [
+        "php-oop-construct",
+        "php-oop-visibility",
+        "php-json-encode"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "类和对象",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能说出 $alice->level 为什么报错。"
+    },
+    {
+      "kind": "动手",
+      "title": "对象是怎样被传来传去的",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "能解释 $b = $a 之后改 $b 为什么 $a 也变了。"
+    },
+    {
+      "kind": "进阶",
+      "title": "把对象存成字符串",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "能读出 O:4:\"User\":2:{…} 里每一段的含义。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual classes and objects basics new $this",
+      "PHP manual constructors destructors constructor promotion",
+      "PHP manual visibility public private",
+      "PHP manual magic methods __toString __unserialize",
+      "PHP manual objects and references object identifier; cloning; comparing objects",
+      "PHP manual serialize unserialize warning untrusted user input json"
+    ],
+    "notes": "六个文件在 public/labs/php-objects-and-serialization/。全部在 kalilinux/kali-rolling 容器（PHP 8.4.24）里用 php 命令实际运行，页面输出取自运行记录。serialize 输出里 private 属性名两侧的空字节在终端里不可见，示例用 str_replace 把它显示成 \\0。本课讲 serialize 的格式、unserialize 会按字符串里的类名造出对象，并引用 PHP 手册对不可信输入的警告；不涉及任何构造恶意序列化数据的方法，那是下学期反序列化专题的内容。"
+  },
+  "sources": [
+    {
+      "id": "php-oop-basic",
+      "kind": "official-doc",
+      "title": "PHP Manual: Classes and Objects: The Basics",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.basic.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-class"
+      ]
+    },
+    {
+      "id": "php-oop-construct",
+      "kind": "official-doc",
+      "title": "PHP Manual: Constructors and Destructors",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.decon.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-construct",
+        "claim-destruct"
+      ]
+    },
+    {
+      "id": "php-oop-visibility",
+      "kind": "official-doc",
+      "title": "PHP Manual: Visibility",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.visibility.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-visibility"
+      ]
+    },
+    {
+      "id": "php-oop-magic",
+      "kind": "official-doc",
+      "title": "PHP Manual: Magic Methods",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.magic.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-magic"
+      ]
+    },
+    {
+      "id": "php-oop-references",
+      "kind": "official-doc",
+      "title": "PHP Manual: Objects and references",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.references.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-references"
+      ]
+    },
+    {
+      "id": "php-oop-cloning",
+      "kind": "official-doc",
+      "title": "PHP Manual: Object Cloning",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.cloning.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-clone"
+      ]
+    },
+    {
+      "id": "php-oop-comparison",
+      "kind": "official-doc",
+      "title": "PHP Manual: Comparing Objects",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.oop5.object-comparison.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-object-compare"
+      ]
+    },
+    {
+      "id": "php-serialize",
+      "kind": "official-doc",
+      "title": "PHP Manual: serialize",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.serialize.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-serialize"
+      ]
+    },
+    {
+      "id": "php-unserialize",
+      "kind": "official-doc",
+      "title": "PHP Manual: unserialize",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.unserialize.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-unserialize-warning"
+      ]
+    },
+    {
+      "id": "php-json-encode",
+      "kind": "official-doc",
+      "title": "PHP Manual: json_encode",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.json-encode.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-json"
+      ]
+    },
+    {
+      "id": "php-json-decode",
+      "kind": "official-doc",
+      "title": "PHP Manual: json_decode",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.json-decode.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-json"
+      ]
+    },
+    {
+      "id": "php-session-basic",
+      "kind": "official-doc",
+      "title": "PHP Manual: Sessions: Basic usage",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/session.examples.basic.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-session-serialized"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-class",
+      "text": "类的定义以关键字 class 开头，后面是类名和一对花括号，花括号里是属于这个类的属性和方法。创建类的实例必须用 new。在对象的方法里，伪变量 $this 指向调用这个方法的对象。",
+      "sourceIds": [
+        "php-oop-basic"
+      ]
+    },
+    {
+      "id": "claim-construct",
+      "text": "带构造方法的类会在每个新创建的对象上调用它，适合做对象使用前的初始化。自 PHP 8.0 起，构造函数的参数可以「提升」为同名的属性，作为常见写法的简写。",
+      "sourceIds": [
+        "php-oop-construct"
+      ]
+    },
+    {
+      "id": "claim-destruct",
+      "text": "没有任何其他引用指向一个对象时，或者在程序结束的过程中，它的析构方法会被调用。",
+      "sourceIds": [
+        "php-oop-construct"
+      ]
+    },
+    {
+      "id": "claim-visibility",
+      "text": "声明为 public 的成员在任何地方都可以访问，声明为 private 的成员只能由定义它的类访问；没有写可见性的属性默认是 public。",
+      "sourceIds": [
+        "php-oop-visibility"
+      ]
+    },
+    {
+      "id": "claim-magic",
+      "text": "魔术方法是在对对象执行某些操作时覆盖 PHP 默认行为的特殊方法，以两个下划线开头的方法名都被 PHP 保留。__toString 让一个类决定被当作字符串时怎样表现，例如 echo $obj 打印什么。unserialize 会检查对象是否有 __unserialize 方法，有就调用它来恢复属性。",
+      "sourceIds": [
+        "php-oop-magic"
+      ]
+    },
+    {
+      "id": "claim-references",
+      "text": "变量里存的不是对象本身，而是一个对象标识符；对象作为参数传递、作为返回值或赋给另一个变量时，传的是这个标识符的副本，指向同一个对象。",
+      "sourceIds": [
+        "php-oop-references"
+      ]
+    },
+    {
+      "id": "claim-clone",
+      "text": "用 clone 关键字复制一个对象，PHP 对对象的属性做浅拷贝。",
+      "sourceIds": [
+        "php-oop-cloning"
+      ]
+    },
+    {
+      "id": "claim-object-compare",
+      "text": "用 == 比较时，两个对象属性和值都相同、属于同一个类就相等；用 === 比较时，只有指向同一个类的同一个实例才全等。",
+      "sourceIds": [
+        "php-oop-comparison"
+      ]
+    },
+    {
+      "id": "claim-serialize",
+      "text": "serialize 生成一个值的可存储表示，在存储或传递 PHP 值时不会丢失它的类型和结构；用 unserialize 把这个字符串变回 PHP 值。",
+      "sourceIds": [
+        "php-serialize"
+      ]
+    },
+    {
+      "id": "claim-unserialize-warning",
+      "text": "不要把不可信的用户输入交给 unserialize，无论 allowed_classes 选项怎样设置：反序列化可能因对象的创建和自动加载而导致代码被加载和执行，恶意用户可能利用这一点。需要把序列化的数据交给用户时，应使用 JSON 这样安全、标准的数据交换格式。",
+      "sourceIds": [
+        "php-unserialize"
+      ]
+    },
+    {
+      "id": "claim-json",
+      "text": "json_encode 返回所给值的 JSON 表示；对对象默认只包含公开可见的属性。json_decode 把 JSON 字符串解码，可以选择解码成关联数组。",
+      "sourceIds": [
+        "php-json-encode",
+        "php-json-decode"
+      ]
+    },
+    {
+      "id": "claim-session-serialized",
+      "text": "PHP 结束时会自动把 $_SESSION 的内容序列化，交给会话保存处理器存储；默认保存在服务器上的文件里。",
+      "sourceIds": [
+        "php-session-basic"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "user-class",
+      "path": "public/labs/php-objects-and-serialization/User.php",
+      "command": "被其他脚本 require",
+      "expectedResult": "定义 User 类：public 的 name、private 的 level、promote()、level() 和 __toString()。"
+    },
+    {
+      "id": "objects",
+      "path": "public/labs/php-objects-and-serialization/objects.php",
+      "command": "php objects.php",
+      "expectedResult": "alice is at level 2、bob (level 3)、bool(true)，最后一行因访问 private 属性而报错。"
+    },
+    {
+      "id": "same",
+      "path": "public/labs/php-objects-and-serialization/same.php",
+      "command": "php same.php",
+      "expectedResult": "carol (level 2) 和 carol (level 2) / carol (level 3)。"
+    },
+    {
+      "id": "lifetime",
+      "path": "public/labs/php-objects-and-serialization/lifetime.php",
+      "command": "php lifetime.php",
+      "expectedResult": "start index、showing、end index、back in main。"
+    },
+    {
+      "id": "serialize",
+      "path": "public/labs/php-objects-and-serialization/serialize.php",
+      "command": "php serialize.php",
+      "expectedResult": "数组的序列化字符串、bool(true)、61 bytes、对象的序列化字符串、alice (level 2)、bool(false)、bool(true)。"
+    },
+    {
+      "id": "json",
+      "path": "public/labs/php-objects-and-serialization/json.php",
+      "command": "php json.php",
+      "expectedResult": "{\"port\":80,\"tools\":[\"curl\",\"nc\"],\"open\":true}、bool(true)、{\"name\":\"alice\"}。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "object-lifecycle",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

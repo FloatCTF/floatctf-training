@@ -1,0 +1,319 @@
+---
+title: Java 一：JDK、JVM、类与对象
+description: 装好 JDK，用 javac 和 java 编译运行第一个程序，弄清字节码和 Java 虚拟机；把 C 学过的类型、数组、循环、函数在 Java 里过一遍，再写一个有字段、构造方法和方法的类，用 new 创建对象
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import FlowSimulator from '../../../components/flow-simulator';
+import javaFlow from '../../../data/flows/java-compile-run.json';
+import manifest from '../../../data/lessons/java-jvm-and-objects.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写 Book 和 Shelf 两个类，编译运行，再故意在 Shelf 里访问 b.pages，看编译器怎么说。' },
+  { title: '改 Basics', detail: '让 Basics 算出带小数的平均分 84.33…。提示：把其中一边变成 double，例如 (double) sum / scores.length。' },
+  { title: '读一个异常', detail: '把 Crash.java 的循环改成从 i = -1 开始，编译运行，读懂异常的第一行和 at 那一行，说出它和 C 里越界有什么不同。' },
+  { title: '读一页官方教程', detail: '读 dev.java 的 Creating and Using Objects，找出「声明一个引用变量」和「创建一个对象」的区别。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="JAVA / LESSON 35"
+  kicker="JDK, JVM, Classes and Objects"
+  lines={[
+    { text: "Java 一" },
+    { text: "JDK、JVM、类与对象", accent: true },
+  ]}
+  summary="很多公司的网站后端是用 Java 写的，下学期你会读到这样的代码。Java 的语法和 C 很像，面向对象的写法和第 32 课的 PHP 相通。这节课把它们对上号，再补上 Java 自己的那一块：编译出来的不是机器码，而是给 Java 虚拟机的字节码。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：编译好的程序能不能拿到别的系统上运行
+
+第 19 课用 gcc 编译出来的 `hello`，拷到 Windows 上运行不了：它是给 Linux 和这颗 CPU 准备的机器码。Python 和 PHP 没有这个问题，但每次运行都要从源码开始解释。
+
+Java 走了中间一条路：先编译，但编译成一种不依赖操作系统的指令，再由每个系统上的 Java 虚拟机去执行。这节课先看清这条路，再用 Java 写一点代码。
+
+## 一、JDK、JVM 与第一个程序
+
+### 1. 三个词
+
+<DataTable
+  caption="和 Java 打交道时常见的三个词"
+  headers={["词", "是什么"]}
+  rows={[
+    ["JDK", "Java 开发工具包。里面有编译器 javac、运行程序的 java，以及 javap 等工具。写 Java 要装它"],
+    ["JRE", "Java 运行环境。只能运行 Java 程序，没有编译器。Kali 默认装的就是它，因为 Burp Suite 这类工具要靠它运行"],
+    ["JVM", "Java 虚拟机。一台「用软件实现的计算机」，有自己的指令集。java 命令启动的就是它"],
+  ]}
+  columnRatios={[0.6, 4]}
+/>
+
+（来源：[Getting Started with Java](#source-jv-getting-started)、[JVM 规范第 1 章](#source-jv-jvms)）
+
+### 2. 安装 JDK
+
+在 Kali 里执行 `javac -version`，会看到 `command not found`：默认只有运行环境，没有编译器。装上 JDK：
+
+<TerminalSession
+  replay="skip"
+  title="安装 JDK（只需一次）"
+  steps={[
+    { cmd: 'sudo apt install -y default-jdk', note: 'default-jdk 总是指向 Kali 当前的默认版本，现在是 OpenJDK 25。' },
+  ]}
+/>
+
+<TerminalSession
+  title="确认装好了"
+  steps={[
+    { cmd: 'cd ~/lab/java' },
+    { cmd: 'java -version', out: 'openjdk version "25.0.4.1" 2026-08-18\nOpenJDK Runtime Environment (build 25.0.4.1+1-1-Debian)\nOpenJDK 64-Bit Server VM (build 25.0.4.1+1-1-Debian, mixed mode, sharing)', note: '小版本号和日期可能和你的不同。' },
+    { cmd: 'javac -version', out: 'javac 25.0.4.1' },
+  ]}
+/>
+
+本课的示例文件都在下面各节的代码下方，下载到 `~/lab/java` 目录。
+
+### 3. 第一个程序
+
+<CodeFile file="labs/java-jvm-and-objects/Hello.java" />
+
+和 C 比，多了一层外壳：所有代码都写在一个**类**（class）里。程序从 `main` 开始执行，`public static void main(String[] args)` 这一行目前照抄即可，`static` 和 `String[] args` 后面会讲到。`System.out.println` 打印一行，相当于 C 的 `printf` 加上 `\n`。
+
+<TerminalSession
+  title="编译，运行"
+  steps={[
+    { cmd: 'javac Hello.java', note: '没有任何输出，说明编译成功。' },
+    { cmd: 'ls Hello*', out: 'Hello.class  Hello.java' },
+    { cmd: 'java Hello', out: 'Hello, Java!', note: '写的是类名 Hello，不带 .class。' },
+    { cmd: 'file Hello.class', out: 'Hello.class: compiled Java class data, version 69.0 (Java SE 25)', note: '不是 ELF 可执行文件，而是 Java 的 class 文件。' },
+  ]}
+/>
+
+### 4. .class 里装的是什么
+
+<TerminalSession
+  title="用 javap 看字节码"
+  steps={[
+    {
+      cmd: 'javap -c Hello',
+      out: 'Compiled from "Hello.java"\npublic class Hello {\n  public Hello();\n    Code:\n         0: aload_0\n         1: invokespecial #1                  // Method java/lang/Object."<init>":()V\n         4: return\n\n  public static void main(java.lang.String[]);\n    Code:\n         0: getstatic     #7                  // Field java/lang/System.out:Ljava/io/PrintStream;\n         3: ldc           #13                 // String Hello, Java!\n         5: invokevirtual #15                 // Method java/io/PrintStream.println:(Ljava/lang/String;)V\n         8: return\n}',
+      note: 'main 里的四条指令：取出 System.out，放上字符串，调用 println，返回。',
+    },
+  ]}
+/>
+
+这些就是**字节码**：给 JVM 的指令，不是给 CPU 的。每个操作系统上都有自己的 JVM，同一个 `.class` 文件放到哪里都能运行。（来源：[JVM 规范第 1 章](#source-jv-jvms)、[The javap Command](#source-jv-javap)）
+
+<FlowSimulator client:visible title="一个 Java 程序从源码到输出" steps={javaFlow} motionLevel="explanatory" />
+
+<DataTable
+  caption="三种语言的运行方式"
+  headers={["", "C（第 19 课）", "Python、PHP", "Java"]}
+  rows={[
+    ["运行前", "gcc 编译成机器码", "不需要", "javac 编译成字节码"],
+    ["运行时", "CPU 直接执行", "解释器读源码执行", "JVM 执行字节码"],
+    ["换个系统", "要重新编译", "装好解释器就行", "装好 Java 就行，.class 不用重新编译"],
+    ["类型错误在什么时候发现", "编译时", "多数到运行时", "编译时"],
+  ]}
+  columnRatios={[1.4, 1.5, 1.5, 1.8]}
+/>
+
+（来源：[The javac Command](#source-jv-javac)、[The java Command](#source-jv-java)）
+
+### 5. 不生成 .class，直接运行
+
+<TerminalSession
+  title="java 也可以直接运行源文件"
+  steps={[
+    { cmd: 'rm Hello.class' },
+    { cmd: 'java Hello.java', out: 'Hello, Java!' },
+    { cmd: 'ls Hello*', out: 'Hello.java', note: '编译发生在内存里，没有留下 .class 文件。' },
+  ]}
+/>
+
+只有一个文件的小程序可以这样跑，省一步。写多个文件的项目、给别人发程序，仍然用 javac 编译。（来源：[JEP 330](#source-jv-jep330)、[Launching Simple Source-Code Java Programs](#source-jv-launch-source)）
+
+## 二、和 C 很像的部分
+
+<CodeFile file="labs/java-jvm-and-objects/Basics.java" mark="3-5,19" />
+
+<TerminalSession
+  title="编译运行 Basics"
+  steps={[
+    { cmd: 'javac Basics.java' },
+    { cmd: 'java Basics', out: 'kali has 3 items, total 28.5, ok=true\nsum=253, average=84\nsquare(12)=144\nKALI 4', note: '253 / 3 是两个 int 相除，和 C 一样舍掉小数，得 84。' },
+  ]}
+/>
+
+<DataTable
+  caption="对照 C 来读这段代码"
+  headers={["Java", "和 C 比"]}
+  rows={[
+    ["int、double、boolean", "int、double 一样；boolean 只有 true 和 false，不能拿 0 和 1 代替"],
+    ["String name = \"kali\";", "字符串是对象，不是字符数组。用 + 拼接，数字会自动变成文字；name.length()、name.toUpperCase() 是它的方法"],
+    ["int[] scores = {90, 75, 88};", "方括号写在类型后面。scores.length 就是长度，不用自己记"],
+    ["for、if、while、+=、&&", "写法完全一样"],
+    ["static int square(int x)", "就是 C 的函数。在 Java 里叫方法，必须写在类里；static 表示不需要先创建对象就能调用"],
+  ]}
+  columnRatios={[1.6, 3.4]}
+/>
+
+（来源：[Primitive Types](#source-jv-primitive)、[Arrays](#source-jv-arrays)）
+
+### 编译器替你查类型
+
+Java 和 C 一样，每个变量都要先写明类型。类型对不上，编译就不通过：
+
+<CodeFile file="labs/java-jvm-and-objects/Broken.java" mark="3" />
+
+<TerminalSession
+  title="把字符串赋给 int"
+  steps={[
+    { cmd: 'javac Broken.java', out: 'Broken.java:3: error: incompatible types: String cannot be converted to int\n        int count = "3";\n                    ^\n1 error', note: '第 3 行，类型不兼容。这时不会生成 Broken.class。' },
+  ]}
+/>
+
+同样的写法在 PHP 里会悄悄把 "3" 转成 3（第 28 课），在 Python 里要等运行到那一行才出问题。
+
+### 数组越界：Java 会拦下来
+
+<CodeFile file="labs/java-jvm-and-objects/Crash.java" mark="4" note="循环条件写成了 <=，最后一次 i 等于 3。" />
+
+<TerminalSession
+  title="越界访问"
+  steps={[
+    { cmd: 'javac Crash.java' },
+    { cmd: 'java Crash', out: '90\n75\n88\nException in thread "main" java.lang.ArrayIndexOutOfBoundsException: Index 3 out of bounds for length 3\n\tat Crash.main(Crash.java:5)' },
+    { cmd: 'echo $?', out: '1' },
+  ]}
+/>
+
+第 22 课里，C 程序越界读到的是数组后面内存里碰巧有的东西，程序还照常往下跑。Java 每次访问数组都检查下标，越界就**抛出异常**：停止正常的执行，打印异常的类型、原因和发生位置（`Crash.java` 第 5 行，在 `main` 方法里）。读 Java 报错，先看第一行说了什么，再看 `at` 开头的那几行指向哪里。（来源：[ArrayIndexOutOfBoundsException](#source-jv-aioobe)、[What Is an Exception?](#source-jv-exceptions)）
+
+## 三、类与对象
+
+第 32 课用 PHP 写过类。Java 的类是同一回事，只是每样东西都要写明类型。
+
+<CodeFile file="labs/java-jvm-and-objects/Student.java" mark="3-4,7-10" />
+
+<DataTable
+  caption="Student 类里的各个部分"
+  headers={["部分", "写法", "作用"]}
+  rows={[
+    ["字段", "private String name;", "每个 Student 对象各有一份。private：只有 Student 类自己的代码能直接访问"],
+    ["构造方法", "public Student(String name, int score)", "名字和类名相同，没有返回值类型。new 的时候执行，给字段赋初值"],
+    ["this", "this.name = name;", "这个对象自己。左边是字段，右边是参数"],
+    ["方法", "public void addBonus(int points)", "没有 static，要通过某个对象调用：a.addBonus(5)"],
+    ["toString", "public String toString()", "对象被拼进字符串、交给 println 时，显示成什么样"],
+  ]}
+  columnRatios={[0.9, 2.2, 2.9]}
+/>
+
+（来源：[Creating Classes](#source-jv-classes)、[Providing Constructors](#source-jv-constructors)、[More on Classes](#source-jv-access)、[Object](#source-jv-object)）
+
+<CodeFile file="labs/java-jvm-and-objects/School.java" mark="12-14" />
+
+<TerminalSession
+  title="两个类一起编译"
+  steps={[
+    { cmd: 'javac School.java', note: 'School 用到了 Student，javac 自动找到 Student.java 一起编译。' },
+    { cmd: 'ls *.class', out: 'Basics.class  Crash.class  School.class  Student.class' },
+    { cmd: 'java School', out: 'alice(58) bob(92)\nalice(63) passed: true\nalice(73) true\nalice -> pass\nbob -> pass\ncarol -> fail\n3 students' },
+  ]}
+/>
+
+第三行是 `alice(73) true`。`Student c = a;` 没有复制出一个新学生，只是让 `c` 也指向 `a` 指向的那个对象，所以通过 `c` 加的 10 分，从 `a` 也看得到；`a == c` 比较的是两个变量是不是指向同一个对象，结果是 true。这和第 8 课 Python 的列表、第 32 课 PHP 的对象一样。真正创建对象的只有 `new`。（来源：[Creating and Using Objects](#source-jv-objects)、[JLS 15.21.3](#source-jv-jls15)）
+
+`ArrayList<Student>` 是一个能自动变长的列表，尖括号里写元素的类型；`for (Student s : list)` 依次取出每个元素，相当于 PHP 的 foreach。（来源：[ArrayList](#source-jv-arraylist)）
+
+### private 的效果
+
+<CodeFile file="labs/java-jvm-and-objects/Peek.java" mark="4" />
+
+<TerminalSession
+  title="在别的类里直接读 private 字段"
+  steps={[
+    { cmd: 'javac Peek.java', out: 'Peek.java:4: error: score has private access in Student\n        System.out.println(a.score);\n                            ^\n1 error', note: '编译器直接拒绝。别的类只能通过 Student 提供的方法来读写。' },
+  ]}
+/>
+
+## 常见报错与排错
+
+<TerminalSession
+  title="两个和文件名、类名有关的错"
+  steps={[
+    { cmd: 'javac Hello.java' },
+    { cmd: 'java Hello.class', out: 'Error: Could not find or load main class Hello.class\nCaused by: java.lang.ClassNotFoundException: Hello.class', note: 'java 后面写类名，不写文件名。' },
+    { cmd: 'cp Hello.java Greeting.java' },
+    { cmd: 'javac Greeting.java', out: 'Greeting.java:1: error: class Hello is public, should be declared in a file named Hello.java\npublic class Hello {\n       ^\n1 error', note: 'public 类必须放在同名的文件里。' },
+    { cmd: 'rm Greeting.java' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答", "原因", "处理"]}
+  rows={[
+    ["javac: command not found", "只装了运行环境（JRE），没有 JDK", "sudo apt install -y default-jdk"],
+    ["Could not find or load main class", "java 后面写成了 Hello.class 这样的文件名，或者当前目录里没有这个 .class", "写类名：java Hello；cd 到对应目录"],
+    ["class X is public, should be declared in a file named X.java", "文件名和 public 类名不一致，大小写也算", "改文件名或类名，让两者一致"],
+    ["error: ';' expected", "语句末尾漏了分号", "看报错的行号，往前一行找"],
+    ["incompatible types", "把一种类型的值赋给了另一种类型的变量", "检查变量类型；字符串转数字用 Integer.parseInt"],
+    ["has private access in", "在类的外面直接访问 private 字段", "通过类提供的方法访问"],
+    ["ArrayIndexOutOfBoundsException", "下标小于 0 或者不小于数组长度", "循环条件用 i < arr.length"],
+    ["NullPointerException", "变量里是 null，没有指向任何对象，却调用了它的方法", "确认 new 过；看 at 行定位是哪个变量"],
+  ]}
+  columnRatios={[2, 2.2, 1.8]}
+/>
+
+边界：这节课只覆盖读懂 Java 代码最需要的部分。继承、接口、泛型、异常处理（try、catch）、包都没有展开，下节课读项目时遇到会顺带解释。Java 25 允许把很短的程序写得更简单（不写外面的 class），但你将来读到的项目几乎都是本课的传统写法。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'javac X.java', description: '编译，生成 X.class。' },
+    { term: 'java X', description: '运行类 X（写类名）。' },
+    { term: 'java X.java', description: '单文件程序：直接运行源文件。' },
+    { term: 'javap -c X', description: '查看字节码。' },
+    { term: 'public static void main(String[] args)', description: '程序入口。' },
+    { term: 'System.out.println(...)', description: '打印一行。' },
+    { term: 'int[] a = {1, 2}; a.length', description: '数组和它的长度。' },
+    { term: 'private 字段 + 构造方法 + 方法', description: '一个类的基本样子。' },
+    { term: 'new 类名(参数)', description: '创建对象。' },
+    { term: 'a == b（对象）', description: '是不是同一个对象。' },
+  ]}
+/>
+
+<KeyTakeaway>
+JDK 里的 javac 把 .java 编译成字节码 .class，java 启动 Java 虚拟机执行它；字节码不依赖操作系统，同一个 .class 装好 Java 就能运行。Java 的类型、数组、循环、方法和 C 很像，但类型错误在编译时就报出来，数组越界会抛出异常而不是悄悄读错内存。类由 private 字段、构造方法和方法组成，new 创建对象；把一个对象变量赋给另一个变量，两者指向同一个对象。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

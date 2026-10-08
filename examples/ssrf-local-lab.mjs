@@ -32,16 +32,21 @@ const address = server.address();
 if (!address || typeof address === 'string') throw new Error('无法确定本地实验端口');
 const labUrl = `http://127.0.0.1:${address.port}/private`;
 
+let vulnerableLine;
 try {
   const vulnerableResponse = await fetch(labUrl);
-  console.log(`脆弱流程：${await vulnerableResponse.text()}`);
-  try {
-    await guardedFetch(labUrl);
-    throw new Error('安全流程未阻止环回地址');
-  } catch (error) {
-    if (!(error instanceof TargetRejectedError)) throw error;
-    console.log(`安全流程：${error.message}`);
-  }
-} finally {
-  await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  vulnerableLine = `脆弱流程：${await vulnerableResponse.text()}`;
+} catch (error) {
+  vulnerableLine = `脆弱流程：已尝试连接但失败（${error instanceof Error ? error.message : '未知错误'}）。这一步没有做目标校验。`;
 }
+let safeLine;
+try {
+  await guardedFetch(labUrl);
+  safeLine = '安全流程：未阻止环回地址';
+} catch (error) {
+  if (!(error instanceof TargetRejectedError)) throw error;
+  safeLine = `安全流程：${error.message}`;
+}
+console.log(vulnerableLine);
+console.log(safeLine);
+await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));

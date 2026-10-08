@@ -1,0 +1,5 @@
+body { font-family: sans-serif; margin: 2rem; }
+h1 { color: darkred; }
+.tool { color: navy; }
+.done { text-decoration: line-through; }
+#title { border-bottom: 2px solid gray; }

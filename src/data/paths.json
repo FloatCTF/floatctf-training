@@ -1,0 +1,92 @@
+{
+  "paths": [
+    {
+      "id": "freshman",
+      "title": "新生学期路线",
+      "summary": "每课对应一次 90 分钟的培训。按顺序学，每一课只用到前面讲过的东西。",
+      "pagePath": "/paths/freshman/",
+      "sessionMinutes": 90,
+      "stages": [
+        {
+          "name": "起步",
+          "goal": "能开终端、会求助、看得懂字节。",
+          "topics": [
+            "vm-kali-setup",
+            "shell-files-and-paths",
+            "shell-permissions-and-pipes",
+            "data-representation"
+          ]
+        },
+        {
+          "name": "Python",
+          "goal": "第一门语言，学到能独立写出能跑的小程序。",
+          "topics": [
+            "python-variables-and-types",
+            "python-control-flow",
+            "python-functions-and-modules",
+            "python-collections",
+            "python-strings-and-bytes",
+            "python-files-and-exceptions"
+          ]
+        },
+        {
+          "name": "Git",
+          "goal": "改动可追溯，能按社团的分支和 PR 流程协作。",
+          "topics": [
+            "git-local-workflow",
+            "git-branches-and-collaboration"
+          ]
+        },
+        {
+          "name": "网络与 Web",
+          "goal": "看懂一次请求从浏览器走到数据库的全过程。",
+          "topics": [
+            "network-basics",
+            "http-basics",
+            "python-network-scripting",
+            "html-css-dom",
+            "javascript-in-the-browser",
+            "sql-basics"
+          ]
+        },
+        {
+          "name": "C",
+          "goal": "理解程序运行时内存里发生了什么。",
+          "topics": [
+            "c-compile-and-run",
+            "c-types-and-control-flow",
+            "c-functions-and-stack",
+            "c-arrays-and-strings",
+            "c-pointers",
+            "c-structs-and-heap",
+            "c-files-and-projects",
+            "c-debugging-memory-errors"
+          ]
+        },
+        {
+          "name": "PHP",
+          "goal": "读写 Web 后端代码，为下学期的 Web 安全铺路。",
+          "topics": [
+            "php-request-lifecycle",
+            "php-types-and-arrays",
+            "php-forms-and-sessions",
+            "php-functions-and-files",
+            "php-pdo-database",
+            "php-objects-and-serialization"
+          ]
+        },
+        {
+          "name": "交付与收尾",
+          "goal": "把项目装进容器，完成一次完整交付。",
+          "topics": [
+            "docker-images-and-containers",
+            "docker-compose-labs",
+            "java-jvm-and-objects",
+            "java-web-project-reading",
+            "guestbook-capstone"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -7,10 +7,11 @@
     "dev": "astro dev",
     "preview": "astro preview",
     "generate:themes": "node scripts/generate-theme-css.mjs",
+    "check:fresh": "node scripts/check-generated.mjs",
     "validate": "node scripts/validate-content.mjs",
     "check": "astro check",
     "build": "astro build",
-    "verify": "npm run generate:themes && npm run sync:fonts && npm run validate && npm run check && npm run build",
+    "verify": "npm run validate && npm run generate:themes && npm run check:fresh && npm run sync:fonts && npm run check && npm run build",
     "sync:fonts": "node scripts/sync-fonts.mjs"
   },
   "dependencies": {

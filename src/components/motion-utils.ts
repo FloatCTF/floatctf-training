@@ -102,42 +102,57 @@ export interface SimulatorStage {
   toggleRunning: () => void;
 }
 
+export interface SimulatorControl extends SimulatorStage {
+  presentation: MotionPresentation;
+  visible: boolean;
+}
+
 /**
- * 单步/连续播放/复位控制台的公共状态机：到达 maxStage 自动停，离屏或转静态由调用方通过 stop/reset 处理。
+ * 模拟器舞台的完整接线：根元素上的媒体呈现（reduced-motion / print）、离屏暂停、
+ * 单步/连续播放状态机与到顶自动停止，全部收进一个 hook。
+ * onStatic 决定转静态（打印、减少动态）时回到复位态还是停在当前步。
  */
-export function useSimulatorStage(
+export function useSimulator(
+  root: RefObject<HTMLElement | null>,
   maxStage: number,
   stepMs: number,
-  { interactive, visible }: { interactive: boolean; visible: boolean },
-): SimulatorStage {
+  motionLevel: MotionLevel,
+  onStatic: 'reset' | 'stop' = 'stop',
+): SimulatorControl {
   const [stage, setStage] = useState(0);
   const [running, setRunning] = useState(false);
 
-  const advance = useCallback(() => {
-    setStage((current) => {
-      if (current >= maxStage) {
-        setRunning(false);
-        return current;
-      }
-      const next = current + 1;
-      if (next >= maxStage) setRunning(false);
-      return next;
-    });
+  const finishAt = useCallback((current: number) => {
+    if (current >= maxStage) {
+      setRunning(false);
+      return current;
+    }
+    const next = current + 1;
+    if (next >= maxStage) setRunning(false);
+    return next;
   }, [maxStage]);
 
+  const advance = useCallback(() => setStage(finishAt), [finishAt]);
   const reset = useCallback(() => {
     setRunning(false);
     setStage(0);
   }, []);
-
   const stop = useCallback(() => setRunning(false), []);
   const toggleRunning = useCallback(() => setRunning((current) => !current), []);
 
-  useEffect(() => {
-    if (!running || !visible || !interactive || stage >= maxStage) return undefined;
-    const timer = window.setTimeout(advance, stepMs);
-    return () => window.clearTimeout(timer);
-  }, [advance, interactive, maxStage, running, stage, stepMs, visible]);
+  const visible = useInView(root, () => setRunning(false));
+  const presentation = useMotionPresentation(root, motionLevel, (next) => {
+    if (next === 'static') {
+      setRunning(false);
+      if (onStatic === 'reset') setStage(0);
+    }
+  });
 
-  return { stage, running, advance, reset, stop, toggleRunning };
+  useEffect(() => {
+    if (!running || !visible || presentation !== 'interactive' || stage >= maxStage) return undefined;
+    const timer = window.setTimeout(() => setStage(finishAt), stepMs);
+    return () => window.clearTimeout(timer);
+  }, [finishAt, maxStage, presentation, running, stage, stepMs, visible]);
+
+  return { presentation, visible, stage, running, advance, reset, stop, toggleRunning };
 }

@@ -1,191 +1,191 @@
 {
   "schemaVersion": 1,
-  "reviewedAt": "2026-08-28",
-  "reviewer": "agent",
-  "mode": "validate-site",
-  "summary": "AI 分类全面优化轮：修复 danger/safe 未定义主题 token（32 处硬编码 fallback）与全站 941KB 阻塞 CSS（字体移出打包管线，主 CSS 降至 195KB），GSAP 与动效检测解耦并抽出三个公共 hooks，删除 2 个死代码组件与对应死样式；五课完成内容与档案修订（RLHF/DPO 与幻觉小节、树模型与失衡对策、术语定义、子代理机制、三处高时效事实内联核验日期、claim 与正文对齐）；新增第六课《AI 安全：从提示注入到对抗样本》（security+academic 双证据档案，两起真实事件证据，无考核）。npm run verify 通过（结构门禁、astro check 0 错误、22 页构建），浏览器矩阵与 judge 整页视觉评审全部通过，QA 新鲜度与原生 table 回归已纳入自动门禁。 后续按用户反馈重设计 AiStackExplorer（层头问题句+计数徽标、中性 chip 色、×7 标注、谱系去向、默认选中），设计中发现 subtle 动效等级被误报为 static 呈现的回归并修复，AiStackExplorer/AiMlDlExplorer 交互经浏览器实测与 judge 复审通过。 曾进一步实现 SVG 谱系连线并经 judge 两轮通过，按用户偏好撤除连线、保留文字谱系标注，撤除后组件交互复验通过。",
+  "reviewedAt": "2026-10-02",
+  "reviewer": "Claude",
+  "mode": "add-topic",
+  "summary": "基础学期 37 课全部验收（起步四课、Python 七课、Git 两课、网络与 Web 五课、C 八课、PHP 六课、Docker 两课、Java 两课、综合项目），五门 Web 安全课与六门 AI 课的前置知识改为指向基础课的链接。原有十一课正文未改动，其上一轮评审记录见 qa/user-review-fixes.md。证据与未覆盖范围见 qa/foundations-batch-1.md 到 qa/foundations-batch-7.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 mechanism 主模式配 case-study/comparison 支持；五门既有课模式未变。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "第 7 批五课：Docker 两课以 tool 为主，Java 一以 code 为主，Java 二以 code 为主、读项目为线索，综合项目以 project 为主。每课一组可运行的材料。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/catalog.json",
-      "note": "先修链延伸为六课：ML→NN→LLM→Agent→全景→安全；新课前置登记 ai-engineering-landscape，分类页主线同步。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课各 90 分钟三段。顺序是先会用别人的镜像，再把自己的程序做成镜像并用 Compose 组合；Java 两课先对照 C 和 PHP 认识语言，再读一个 Web 项目；最后的留言板把 Git、PHP、SQLite、Docker 串成一个完整项目。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-literacy.mdx",
-      "note": "RLHF 作文类比沿用既有边界声明；新课注入流程与「指令即数据」机制直接对应，无空比喻。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "不用比喻：Docker 一把容器放进第 1 课「电脑、虚拟机、Kali」的嵌套图里；Java 一用表格对照 C、Python、PHP 的运行方式。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "提示注入、越狱、直接/间接注入、对抗样本、后门、成员推断、模型提取、FGSM 首现即定义；前课补齐 grader、DAG、成功谓词、sampling/roots/elicitation、探针/消融、共适应、seq2seq、MT-Bench/Arena。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "镜像、容器、镜像仓库、端口发布、绑定挂载、卷、构建上下文、层、服务名、JDK、JRE、JVM、字节码、类、对象、构造方法、包、POM、生命周期、路由、处理者、注解、Post/Redirect/Get 等术语首次出现时加粗或列表定义。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-literacy.json",
-      "note": "本轮新增 12 个来源全部核验（InstructGPT、DPO、幻觉综述、Greshake、Rehberger、AIID-622、FGSM、BadNets、Shokri、Tramèr、sklearn 集成/类权重），claims 双向绑定；MCP/OTel/缓存倍率三处高时效句加内联核验日期。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课共 73 个来源：Docker 官方文档、dev.java、JDK 25 手册与 API、JVM 规范、JLS、Maven 官方指南、Spring 官方指南、PHP 手册、RFC 9110、MDN、Pro Git。全部打开原页核对，逐条论断对得上原文。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/components/prompt-injection-flow.tsx",
-      "note": "astro check 0 错误 0 警告 0 提示；新课流程模拟器与注意力头交互实测通过；重设计后发现并修复 subtle 等级误报 static 的呈现回归（AiStackExplorer 22 chip、AiMlDlExplorer 3 按钮恢复交互）。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "第 7 批五课 142 条命令在 Kali 里按页面顺序重放全部一致（15 条只在编号、时间、耗时、地址上不同）；Docker 课在带守护进程的采集容器里真实拉取镜像、构建、启动。因为改了录制器，37 课全量重放了一遍：第 5 到 32 课 743 条中 742 条一致（剩下一条是页面已注明的 DNS 地址顺序），第 1 到 4 课在干净容器里的差异与第 1 批登记的同类。验收题的预期结果用参考解答实跑核对过。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 safetyScope=authorized-lab，页面含标准免责声明并明确「只针对自建靶场练习」；其余五课仍为 not-applicable。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课不含攻击步骤。Docker 一写明 docker 组等于 root 权限；Docker 二提醒运行来路不明的靶场前先读 compose.yaml、放在练习虚拟机里；留言板只讲服务器端校验、预处理语句、输出转义、Post/Redirect/Get 的正确写法，示例输入只有 <b> 标签和带单引号的普通名字。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课主交互解释间接注入的攻防数据流；技能栈组件以层头问题句、计数徽标与文字谱系标注承载「名词分工细化」的关系，无装饰性动效。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 二、Java 一、Java 二、留言板各一个六步流程图，分别对应一次请求在两个容器间的路线、Java 从源码到输出、请求在项目里的调用链、一条留言从表单到页面；其余互动在学员自己的终端里进行。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 primaryAnimations=1、supportingInteractions=1、scrollReveals=0，与页面实际一致；全站动效预算未超。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本批没有新增动画组件，四个流程图沿用已有的 FlowSimulator。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-no-js.png",
-      "note": "无 JS 态新课整页内容完整；技能栈组件的文字谱系标注在无 JS/打印/移动单栏完整保留。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "四个流程图在减少动态与关闭 JavaScript 时直接显示全部步骤；验收题答案的原生折叠可展开。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/browser-report.json",
-      "note": "新课流程 range 聚焦按 End 值至 4 并保持焦点；ai-literacy 注意力头按钮 aria-pressed 状态正确；公共 hooks 重构未改变键盘行为。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "流程图滑杆可用方向键步进，四个流程图都用键盘走完了六步；终端会话可聚焦后横向滚动。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-lessons-ai-security-essentials-mobile.png",
-      "note": "390×844 下首页、AI 分类页与六课页面级横向溢出为 0（滚动条基线内）。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课在 390 与 1280 宽度、深浅主题下共 15 次检查，整页横向溢出为零。已知问题：宽输出的终端会话里，解释文字随整块横向滚动。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-print.pdf",
-      "note": "新课 A4 打印 PDF 生成成功：控制区隐藏、静态内容/表格/来源完整；打印样式未受 hooks 重构影响。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "打印媒体模拟下五课的验收题答案、终端会话与代码清单全部显示。纸张分页未验收。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/catalog.json",
-      "note": "六门 completed 专题 ID/slug/路径/先修一致；首页目录与 AI 分类页自动收录新课；22 页构建成功。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "五课结构与前三十二课一致；路线页显示已上线 37 / 37，没有规划中的课。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-dark.png",
-      "note": "danger/safe token 三套主题生效；技能栈组件移除非安全红绿语义色后 judge 复审通过（默认态/选中态/深色/移动端）。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "沿用已有的终端会话、代码清单、表格、嵌套层图、流程图、警示与速查卡，没有新增样式。代码清单的行标亮此前一直没有生效，本批修复后在浅色和深色主题下核对了效果。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
-      "status": "pass",
-      "evidenceFile": "deploy/nginx.conf.example",
-      "note": "字体分片由既有静态资源规则覆盖（woff2 MIME 与 30 天缓存已映射），异步字体样式表走 font-src 'self'，CSP 未放宽；nginx 结构门禁通过。"
+      "status": "not-run",
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本地 npm run verify 通过。生产 nginx 与 CSP 验收本轮未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-literacy-full-light.png",
-      "note": "六课整页 judge 视觉评审通过：表格全宽、编号连续、无重叠裁切；发现过的深色/无 JS 取证范围问题已补拍全页并复审通过。"
+      "evidenceFile": "qa/foundations-batch-7-verification.json",
+      "note": "逐课打开页面检查了表格全宽、代码清单（含 Maven 项目的子目录标题）与终端会话在桌面和手机上的排布；修复行标亮后逐一核对了全部 64 处标亮行，改正了三处行号。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课脆弱/防御代码对照、五步流程、OWASP 十项映射与 CTF 四步全部在页内呈现；RLHF/DPO 效果数据（1.3B 优于 175B）直接给出。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "每个材料先给出完整源码，再给出命令与实际输出；docker build、docker compose 的进度给出刷新结束后屏幕上的内容，无关的行用「…」注明省略。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课 11 条 claim 全部绑定原始论文/事件记录/OWASP；ai-literacy 的 CS336 claim 在正文获得落点；LAND 与 AGENT 的重复评测 claim 建立跨课引用语义。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "每条 claim 对应原文中的具体语句，例如 docker 组「相当于 root 级别的权限」、EXPOSE「并不真正发布端口」、HttpServer 按「最长匹配前缀」找处理者、客户端校验「不能当作完整的安全措施」都是原文原意。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/content/docs/lessons/ai-security-essentials.mdx",
-      "note": "新课以「骗的是模型还是权重」建立两类攻击面的学习动机；LAND 开头矛盾修复后引导问题完整。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课的引导问题：怎样把一个环境原样交给别人、靶场目录里的那几个文件、编译好的程序能不能拿到别的系统上运行、从哪个文件开始读、一个最小的网站要哪几样东西。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-machine-learning-foundations-full-light.png",
-      "note": "树模型对照表与失衡对策将高理解成本关系落为表格；新课攻防流程图与机制地图减少名词理解步骤。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 一用嵌套层图把容器放回第 1 课的结构；另外四课各一个流程图，其余用表格逐项拆解配置与代码。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课两个真实事件（AIID-622、markdown 外泄）与两段生产风格代码对照贴合真实任务。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "例子是真实工作里的形状：nginx 反向代理加 PHP 的两容器项目、标准目录结构的 Maven 项目、可以部署的留言板；留言板下学期会作为本地练习对象继续使用。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "qa/screenshots/qa0828-ai-security-essentials-full-light.png",
-      "note": "新课 KeyTakeaway 收束两条攻击线；各课仍保持单一结论卡。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "五课各一张结论卡和一张速查卡；留言板另有一张交作业前的验收清单。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/components/motion-utils.ts",
-      "note": "公共 hooks 统一播放节奏与离屏停止；新课交互由用户输入驱动，无装饰循环。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本批没有定时动画。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
-      "evidenceFile": "src/data/lessons/ai-security-essentials.json",
-      "note": "新课主视觉对象为注入攻防数据流；各课每课一个主视觉的约定保持。"
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "Docker 一以嵌套层图为视觉中心，其余各课以代码清单和流程图为中心。 前六批的结论见 qa/foundations-batch-1.md 到 qa/foundations-batch-6.md。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
-      "status": "pass",
-      "evidenceFile": "qa/ai-ml-deep-audit.json",
-      "note": "本轮用户请求的优化清单逐项落地：性能、正确性、组件复用、门禁自动化、五课内容缺口、新课与分类闭环；既有 37 个视觉实例回归无破坏。"
+      "status": "not-applicable",
+      "evidenceFile": "qa/foundations-batch-7.md",
+      "note": "本批没有用户提供的讲义；公开课程只用于确定章节顺序。"
     }
   ]
 }

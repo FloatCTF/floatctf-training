@@ -1,0 +1,506 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-arrays-and-strings/fill.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "#include <string.h>",
+  "",
+  "int main(void) {",
+  "    char buf[8];",
+  "    strcpy(buf, \"nc\");",
+  "    buf[2] = '!';",
+  "    buf[3] = '\\0';",
+  "    printf(\"%s\\n\", buf);",
+  "    buf[1] = '\\0';",
+  "    printf(\"%s\\n\", buf);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'c'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "buf 有 8 个格子。strcpy 把 'n'、'c' 和结尾的 '\\0' 复制进前三格。后面几格这次碰巧也是 0，那是之前留在那里的值，不能指望。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'c'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "把第 2 格的 '\\0' 改成 '!'。此刻结尾标记被盖掉了，全靠第 3 格碰巧是 0 才没有出事。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'c'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "在第 3 格明确写上 '\\0'，字符串到这里结束。"
+  },
+  {
+   "line": 9,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'c'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "nc!\n",
+   "note": "%s 从第 0 格开始一个个打印，遇到 '\\0' 停下，所以是 nc!。"
+  },
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "nc!\n",
+   "note": "把第 1 格改成 '\\0'。后面的 '!' 还在内存里，没有被擦掉。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "nc!\nn\n",
+   "note": "再打印，到第 1 格就停了，只有 n。字符串有多长，由第一个 '\\0' 的位置决定。"
+  },
+  {
+   "line": 12,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "char [8]",
+       "addr": "…ec18",
+       "size": 8,
+       "name": "buf",
+       "cells": [
+        {
+         "type": "char",
+         "addr": "…ec18",
+         "size": 1,
+         "value": "'n'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec19",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1a",
+         "size": 1,
+         "value": "'!'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1b",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1c",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1d",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1e",
+         "size": 1,
+         "value": "'\\0'"
+        },
+        {
+         "type": "char",
+         "addr": "…ec1f",
+         "size": 1,
+         "value": "'\\0'"
+        }
+       ]
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "nc!\nn\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

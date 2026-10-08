@@ -1,0 +1,167 @@
+{
+ "source": [
+  "a = 3",
+  "b = a",
+  "a = a + 1",
+  "name = \"kali\"",
+  "print(a, b, name)"
+ ],
+ "steps": [
+  {
+   "line": 1,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "int",
+     "repr": "3"
+    }
+   },
+   "stdout": "",
+   "note": "右边先算出整数对象 3，再把名字 a 绑到它上面。"
+  },
+  {
+   "line": 2,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "int",
+     "repr": "3"
+    }
+   },
+   "stdout": "",
+   "note": "没有产生新对象。名字 b 绑到 a 此刻指向的同一个对象，所以两个名字后面是同一个圈号。"
+  },
+  {
+   "line": 3,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 2
+      },
+      {
+       "name": "b",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "2": {
+     "type": "int",
+     "repr": "4"
+    },
+    "1": {
+     "type": "int",
+     "repr": "3"
+    }
+   },
+   "stdout": "",
+   "note": "先算右边：a 现在是 3，3 + 1 得到一个新的整数对象 4。再把名字 a 改绑到 4。b 没有被动过，仍然指向 3。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 2
+      },
+      {
+       "name": "b",
+       "ref": 1
+      },
+      {
+       "name": "name",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "2": {
+     "type": "int",
+     "repr": "4"
+    },
+    "1": {
+     "type": "int",
+     "repr": "3"
+    },
+    "3": {
+     "type": "str",
+     "repr": "'kali'"
+    }
+   },
+   "stdout": "",
+   "note": "字符串也是对象。名字 name 绑到 \"kali\" 上。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 2
+      },
+      {
+       "name": "b",
+       "ref": 1
+      },
+      {
+       "name": "name",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "2": {
+     "type": "int",
+     "repr": "4"
+    },
+    "1": {
+     "type": "int",
+     "repr": "3"
+    },
+    "3": {
+     "type": "str",
+     "repr": "'kali'"
+    }
+   },
+   "stdout": "4 3 kali\n",
+   "note": "按名字找到三个对象，把它们的值依次打印出来，中间用空格隔开。"
+  }
+ ],
+ "error": null,
+ "file": "public/labs/python-variables-and-types/names.py"
+}

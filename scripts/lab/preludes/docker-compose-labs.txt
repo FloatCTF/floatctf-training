@@ -1,0 +1,8 @@
+# 第 34 课和第 33 课一样在 kali-docker 里重放。项目放在 ~/lab/compose（模拟学员把四个文件下载进了这个目录）。
+@container kali-docker
+@root pgrep -x dockerd >/dev/null || (dockerd > /var/log/dockerd.log 2>&1 &); sleep 3
+# 清掉上次留下的项目、容器、卷、本课的镜像和构建缓存，让页面上的构建步骤真实执行；两个基础镜像提前拉好。
+cd ~/lab/compose 2>/dev/null && docker compose down -v -t 0 >/dev/null 2>&1; cd ~; true
+docker rm -f $(docker ps -aq) >/dev/null 2>&1; docker volume prune -af >/dev/null 2>&1; docker rmi -f counter compose-app >/dev/null 2>&1; docker builder prune -af >/dev/null 2>&1; true
+docker pull -q php:8.4-cli-alpine >/dev/null; docker pull -q nginx:alpine >/dev/null; true
+rm -rf ~/lab/compose; mkdir -p ~/lab/compose; cp -r ~/lab/python/. ~/lab/compose/; cd ~; true

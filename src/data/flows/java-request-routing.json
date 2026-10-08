@@ -1,0 +1,32 @@
+[
+  {
+    "label": "请求到达",
+    "detail": "curl 发出 POST /notes。App.main 里创建的 HttpServer 正在 127.0.0.1:8080 上等待连接，收下了这个请求。",
+    "state": "normal"
+  },
+  {
+    "label": "按路径找处理者",
+    "detail": "HttpServer 拿请求路径去比对注册过的前缀 /hello 和 /notes，取匹配得最长的那个。/notes 匹配，交给 NotesHandler 对象。一个都不匹配，直接回 404。",
+    "state": "normal"
+  },
+  {
+    "label": "调用 handle",
+    "detail": "HttpServer 调用 NotesHandler 的 handle(exchange)。exchange 里装着这次请求的方法、路径、头和正文，也用来写回响应。",
+    "state": "normal"
+  },
+  {
+    "label": "按方法分开处理",
+    "detail": "handle 里先看 getRequestMethod()：GET 列出笔记，POST 读正文、存进 NoteStore，其他方法回 405。",
+    "state": "normal"
+  },
+  {
+    "label": "数据层",
+    "detail": "NoteStore.add 把文字放进 ArrayList，返回编号。真实项目里这一层通常是数据库访问代码。",
+    "state": "normal"
+  },
+  {
+    "label": "写回响应",
+    "detail": "Responses.send 设置 Content-Type、发出状态码 201 和正文 created #1。curl 收到并打印。",
+    "state": "success"
+  }
+]

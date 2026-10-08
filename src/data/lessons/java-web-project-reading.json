@@ -1,0 +1,470 @@
+{
+  "lessonPlan": {
+    "audience": "学过 Java 一和 HTTP、第一次打开一个 Java 项目目录的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "tool",
+      "mechanism"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一次 POST /notes 在项目里走过的路：HttpServer 收下请求，按最长前缀找到 NotesHandler，handle 里按请求方法分开，数据交给 NoteStore，Responses 写回 201；读项目就是沿着这条路反着找",
+    "learningObjectives": [
+      "认出 Maven 项目的标准目录结构，说出 pom.xml、src/main/java、target 各放什么，以及包名和目录的对应关系",
+      "用 mvn package 构建项目、用 java -jar 运行，说出 jar 里装的是什么",
+      "沿着「入口 → 路由 → 处理者 → 数据」读懂一个请求怎样走到某个方法，用 grep 在项目里定位这些位置",
+      "读懂 Java 异常栈，在一长串 at 里找到属于项目自己的那一行",
+      "认出 Spring 项目里 @RestController、@GetMapping、@RequestParam 这类注解对应的是同一件事"
+    ],
+    "prerequisites": [
+      "java-jvm-and-objects",
+      "http-basics"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-routing",
+      "kind": "mechanism",
+      "title": "这个请求交给谁",
+      "question": "服务器运行着本课的 notes 项目。下面四个请求分别由谁处理、得到什么状态码？一、GET /notes/abc。二、GET /notesx。三、GET /Notes。四、PUT /notes。说出你的依据。",
+      "answer": "一、NotesHandler，200，返回笔记列表：HttpServer 取「请求路径的最长匹配前缀」，/notes 是 /notes/abc 的前缀。二、也是 NotesHandler，200：匹配按字符串前缀逐字比较，/notes 也是 /notesx 的前缀。这说明这种写法的路由比较粗，真实框架会按路径分段精确匹配。三、没有处理者，404 No context found for request：路径比较区分大小写，/Notes 和 /notes 不匹配，HttpServer 对找不到处理者的请求直接回 404。四、NotesHandler，405：路由只看路径，不看方法；进了 handle 之后，方法既不是 GET 也不是 POST，走到最后的 else 分支。",
+      "sourceIds": [
+        "jv-httpserver",
+        "jv-httpexchange"
+      ]
+    },
+    {
+      "id": "check-predict-hello",
+      "kind": "prediction",
+      "title": "读代码预测输出",
+      "question": "读 HelloHandler.java，不运行，写出下面三个请求的响应正文：一、/hello?name=kali。二、/hello?name=a&x=1。三、/hello?x=1&name=a。如果要让二、三都得到 Hello, a!，应该怎么改？",
+      "answer": "一、Hello, kali!。二、Hello, a&x=1!：代码只判断查询字符串是不是以 name= 开头，然后把第 5 个字符之后的全部内容当名字，不认识 & 分隔的其他参数。三、Hello, stranger!：查询字符串以 x= 开头，不满足 startsWith(\"name=\")。正确的做法是先按 & 拆成多个参数，再按 = 拆成名字和值（还要做 URL 解码）；真实项目里交给框架做，例如 Spring 的 @RequestParam 会把查询参数 name 的值绑定到方法的参数上。读别人的代码时，这种「自己手写的解析」正是要多看两眼的地方。",
+      "sourceIds": [
+        "jv-httpexchange",
+        "sp-rest"
+      ]
+    },
+    {
+      "id": "check-add-route",
+      "kind": "practice",
+      "title": "加一条路由",
+      "question": "给 notes 项目加一个 /stats 路由：GET /stats 返回 notes: 2 这样的一行，2 是当前笔记的条数。需要改哪几个文件？改完重新构建运行，用 curl 验证。",
+      "answer": "三处：一、NoteStore.java 加一个方法 public synchronized int count() { return notes.size(); }；二、新建 StatsHandler.java，包名同样是 club.floatctf.notes，实现 HttpHandler，构造方法接收 NoteStore，handle 里调用 Responses.send(exchange, 200, \"notes: \" + store.count() + \"\\n\")；三、App.java 里加 server.createContext(\"/stats\", new StatsHandler(store));，注意要传同一个 store 对象。然后在终端 A 按 Ctrl+C 停掉旧的服务器，mvn package，再 java -jar target/notes-1.0.jar。POST 两条笔记后 curl -s http://127.0.0.1:8080/stats 得到 notes: 2。自查：grep -rn createContext src 能看到三条路由；没有重启服务器之前，/stats 会被当成找不到处理者而返回 404。",
+      "sourceIds": [
+        "jv-httpserver",
+        "jv-httphandler",
+        "mv-lifecycle"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "Maven 项目长什么样",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "mvn package 显示 BUILD SUCCESS，target 里出现 notes-1.0.jar。"
+    },
+    {
+      "kind": "动手",
+      "title": "一个请求怎样走到某个方法",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "能说出 POST /notes 依次经过哪几个类的哪个方法。"
+    },
+    {
+      "kind": "进阶",
+      "title": "换成框架以后",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能在 Spring 的代码片段里指出路由写在哪里。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "Maven standard directory layout src/main/java target",
+      "Maven introduction to the POM groupId artifactId version",
+      "Maven build lifecycle phases package",
+      "Maven archiver mainClass executable jar",
+      "JDK 25 com.sun.net.httpserver HttpServer createContext longest matching prefix 404",
+      "HttpHandler HttpExchange getRequestMethod sendResponseHeaders",
+      "JAR file specification Main-Class, jar tool --list",
+      "Spring guide building a RESTful web service RestController GetMapping RequestParam"
+    ],
+    "notes": "项目在 Kali 容器里用 Kali 打包的 maven 3.9.12 和 OpenJDK 25.0.4.1 实际构建运行。第一次构建要从 Maven 中央仓库下载插件，采集时约 80 秒；下载过程的输出没有上页面。Kali 的 Maven 在 Java 25 上启动时会打印四行 sun.misc.Unsafe 的警告，来自 Maven 自带的 guava 库，与项目无关，页面照实保留并说明。路由的边界情况（/notesx、/Notes、PUT）和 HelloHandler 的查询字符串解析都在容器里用 curl 实际验证过。Spring 部分只引用官方指南里的代码片段说明注解的作用，没有在本课构建 Spring 项目。"
+  },
+  "versionInfo": {
+    "targetVersion": "Apache Maven 3.9.12（Kali 打包），OpenJDK 25.0.4.1",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh；default-jdk-headless 2:1.25-77（OpenJDK 25.0.4.1，Debian 打包）；maven 3.9.12-1（Kali 打包），插件从 Maven 中央仓库下载。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "用 Maven 官方二进制包或较新的 Maven 时，开头的四行 Unsafe 警告可能没有；插件版本（compiler、surefire 等）由 Maven 版本决定，输出里的版本号可能不同。没有网络或访问中央仓库很慢时，第一次 mvn package 会长时间停在下载上或失败，需要配置镜像。"
+  },
+  "sources": [
+    {
+      "id": "mv-layout",
+      "kind": "official-doc",
+      "title": "Introduction to the Standard Directory Layout",
+      "publisher": "Apache Maven Project",
+      "url": "https://maven.apache.org/guides/introduction/introduction-to-the-standard-directory-layout.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-layout"
+      ]
+    },
+    {
+      "id": "mv-pom",
+      "kind": "official-doc",
+      "title": "Introduction to the POM",
+      "publisher": "Apache Maven Project",
+      "url": "https://maven.apache.org/guides/introduction/introduction-to-the-pom.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-pom"
+      ]
+    },
+    {
+      "id": "mv-lifecycle",
+      "kind": "official-doc",
+      "title": "Introduction to the Build Lifecycle",
+      "publisher": "Apache Maven Project",
+      "url": "https://maven.apache.org/guides/introduction/introduction-to-the-lifecycle.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-lifecycle",
+        "cmd-mvn-package"
+      ]
+    },
+    {
+      "id": "mv-5min",
+      "kind": "official-doc",
+      "title": "Maven in 5 Minutes",
+      "publisher": "Apache Maven Project",
+      "url": "https://maven.apache.org/guides/getting-started/maven-in-five-minutes.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-first-download",
+        "cmd-mvn-package"
+      ]
+    },
+    {
+      "id": "mv-jar-manifest",
+      "kind": "official-doc",
+      "title": "Maven Archiver: Set Up The Classpath / Make The Jar Executable",
+      "publisher": "Apache Maven Project",
+      "url": "https://maven.apache.org/shared/maven-archiver/examples/classpath.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-main-class"
+      ]
+    },
+    {
+      "id": "jv-packages",
+      "kind": "official-doc",
+      "title": "Dev.java: Packages",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/oop/packages/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-package"
+      ]
+    },
+    {
+      "id": "jv-javac",
+      "kind": "official-doc",
+      "title": "The javac Command (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/javac.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-package"
+      ]
+    },
+    {
+      "id": "jv-jar",
+      "kind": "official-doc",
+      "title": "The jar Command (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/man/jar.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-jar",
+        "cmd-jar-tf"
+      ]
+    },
+    {
+      "id": "jv-jarspec",
+      "kind": "specification",
+      "title": "JAR File Specification (JDK 25)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/specs/jar/jar.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-main-class",
+        "claim-jar",
+        "cmd-run"
+      ]
+    },
+    {
+      "id": "jv-httpserver",
+      "kind": "official-doc",
+      "title": "HttpServer (Java SE 25 API, jdk.httpserver)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/jdk.httpserver/com/sun/net/httpserver/HttpServer.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-httpserver",
+        "cmd-run"
+      ]
+    },
+    {
+      "id": "jv-httphandler",
+      "kind": "official-doc",
+      "title": "HttpHandler (Java SE 25 API, jdk.httpserver)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/jdk.httpserver/com/sun/net/httpserver/HttpHandler.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-handler-exchange"
+      ]
+    },
+    {
+      "id": "jv-httpexchange",
+      "kind": "official-doc",
+      "title": "HttpExchange (Java SE 25 API, jdk.httpserver)",
+      "publisher": "Oracle",
+      "url": "https://docs.oracle.com/en/java/javase/25/docs/api/jdk.httpserver/com/sun/net/httpserver/HttpExchange.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-handler-exchange"
+      ]
+    },
+    {
+      "id": "jv-exceptions",
+      "kind": "official-doc",
+      "title": "Dev.java: What Is an Exception?",
+      "publisher": "Oracle",
+      "url": "https://dev.java/learn/language/annotations-exceptions/exceptions/what-is-an-exception/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-stack-trace"
+      ]
+    },
+    {
+      "id": "sp-rest",
+      "kind": "official-doc",
+      "title": "Building a RESTful Web Service",
+      "publisher": "Spring (Broadcom)",
+      "url": "https://spring.io/guides/gs/rest-service",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-spring"
+      ]
+    },
+    {
+      "id": "sp-requestmapping",
+      "kind": "official-doc",
+      "title": "Spring Framework Reference: Mapping Requests",
+      "publisher": "Spring (Broadcom)",
+      "url": "https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-requestmapping.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-spring"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-layout",
+      "text": "Maven 项目的顶层只有 src 和 target 两个子目录（外加 pom.xml 等文件）：src 放全部源材料，其中 src/main/java 放程序源码，src/main/resources 放资源文件，src/test/java 放测试代码；target 放构建产生的全部输出。",
+      "sourceIds": [
+        "mv-layout"
+      ]
+    },
+    {
+      "id": "claim-pom",
+      "text": "POM（项目对象模型）是 Maven 的基本工作单元，是一个 XML 文件，记录项目信息和构建配置；groupId、artifactId、version 三项必须写，合起来是项目的完整坐标。没写的配置使用默认值，例如源码目录默认是 src/main/java，构建目录默认是 target。",
+      "sourceIds": [
+        "mv-pom"
+      ]
+    },
+    {
+      "id": "claim-lifecycle",
+      "text": "Maven 默认生命周期依次有 validate、compile、test、package 等阶段，执行某个阶段会先执行它前面的所有阶段；package 把编译好的代码打成可分发的格式，例如 JAR。",
+      "sourceIds": [
+        "mv-lifecycle"
+      ]
+    },
+    {
+      "id": "claim-first-download",
+      "text": "第一次运行 Maven 会比较慢，因为它要把插件等文件下载到本地仓库；构建成功的输出以 BUILD SUCCESS 结尾。",
+      "sourceIds": [
+        "mv-5min"
+      ]
+    },
+    {
+      "id": "claim-main-class",
+      "text": "要生成可以直接运行的 jar，需要通过 Maven Archiver 的 mainClass 配置告诉它入口类；jar 清单里的 Main-Class 属性指定 java -jar 启动时加载的主类。",
+      "sourceIds": [
+        "mv-jar-manifest",
+        "jv-jarspec"
+      ]
+    },
+    {
+      "id": "claim-jar",
+      "text": "JAR 文件基于 ZIP 格式，用来把许多文件合成一个，本质上是一个带可选 META-INF 目录的 zip 文件；jar --list（-t）列出其中的内容。",
+      "sourceIds": [
+        "jv-jarspec",
+        "jv-jar"
+      ]
+    },
+    {
+      "id": "claim-package",
+      "text": "包是一组相关类型的集合，用来管理名字和控制访问；源文件第一行用 package 语句声明所属的包，公司通常用倒过来的域名作为包名的开头。属于某个包的类，编译后放在反映包名的子目录里，例如 p.q.r 对应 p/q/r。",
+      "sourceIds": [
+        "jv-packages",
+        "jv-javac"
+      ]
+    },
+    {
+      "id": "claim-httpserver",
+      "text": "HttpServer 绑定在一个地址和端口上监听连接；每个 HttpHandler 用一个根路径注册到服务器上（createContext）。收到请求时，服务器找路径是请求路径最长匹配前缀的那个上下文，比较是逐字的、区分大小写；找不到处理者的请求以 404 拒绝。",
+      "sourceIds": [
+        "jv-httpserver"
+      ]
+    },
+    {
+      "id": "claim-handler-exchange",
+      "text": "HttpHandler 是处理 HTTP 交换的接口，每次交换由一个处理者处理；HttpExchange 封装一次收到的请求和要生成的响应，提供查看请求方法、请求头、正文和发送响应头、写响应正文的方法。",
+      "sourceIds": [
+        "jv-httphandler",
+        "jv-httpexchange"
+      ]
+    },
+    {
+      "id": "claim-stack-trace",
+      "text": "为了走到出错的方法而依次调用过的那一串方法叫调用栈；运行时系统从出错的方法开始，沿调用栈寻找能处理这个异常的代码，一直找不到，所在的线程就结束，如果是主线程，整个程序结束。",
+      "sourceIds": [
+        "jv-exceptions"
+      ]
+    },
+    {
+      "id": "claim-spring",
+      "text": "在 Spring 里，处理 HTTP 请求的控制器用 @RestController 标识；@GetMapping 把对某个路径的 GET 请求映射到一个方法，它是 @RequestMapping 针对 HTTP 方法的简写之一（还有 @PostMapping、@PutMapping、@DeleteMapping、@PatchMapping）；@RequestParam 把查询字符串里的参数值绑定到方法参数上，参数缺失时使用 defaultValue。",
+      "sourceIds": [
+        "sp-rest",
+        "sp-requestmapping"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-mvn-package",
+      "command": "mvn package",
+      "expectedResult": "编译 5 个源文件，打出 target/notes-1.0.jar，以 BUILD SUCCESS 结束。",
+      "sourceIds": [
+        "mv-lifecycle",
+        "mv-5min"
+      ]
+    },
+    {
+      "id": "cmd-jar-tf",
+      "command": "jar tf target/notes-1.0.jar",
+      "expectedResult": "列出 META-INF/MANIFEST.MF 和 club/floatctf/notes/ 下的 5 个 .class 文件。",
+      "sourceIds": [
+        "jv-jar"
+      ]
+    },
+    {
+      "id": "cmd-run",
+      "command": "java -jar target/notes-1.0.jar",
+      "expectedResult": "打印 listening on http://127.0.0.1:8080，之后一直运行到按 Ctrl+C。",
+      "sourceIds": [
+        "jv-jarspec",
+        "jv-httpserver"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "notes-app",
+      "path": "public/labs/java-web-project-reading/src/main/java/club/floatctf/notes/App.java",
+      "command": "mvn package && java -jar target/notes-1.0.jar",
+      "expectedResult": "在 127.0.0.1:8080 上提供 /hello 和 /notes 两条路由。"
+    },
+    {
+      "id": "notes-handler",
+      "path": "public/labs/java-web-project-reading/src/main/java/club/floatctf/notes/NotesHandler.java",
+      "command": "curl -s -X POST -d 'buy milk' http://127.0.0.1:8080/notes",
+      "expectedResult": "created #1；之后 GET /notes 返回 1. buy milk。"
+    },
+    {
+      "id": "hello-handler",
+      "path": "public/labs/java-web-project-reading/src/main/java/club/floatctf/notes/HelloHandler.java",
+      "command": "curl -s 'http://127.0.0.1:8080/hello?name=kali'",
+      "expectedResult": "Hello, kali!"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "request-routing",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

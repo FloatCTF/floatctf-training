@@ -1,0 +1,286 @@
+{
+  "lessonPlan": {
+    "audience": "会编译运行 C 程序、熟悉 Python 的变量与循环的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "逐行执行一段只有三个变量的程序，看每个变量在内存里占几个字节、地址是多少，赋值时地址不变而里面的值在变",
+    "learningObjectives": [
+      "说出 char、int、long、double 在本机各占几个字节，用 sizeof 查看",
+      "为每种类型选对 printf 的格式符",
+      "解释整数除法、取余，以及 char 为什么可以做加减",
+      "预测无符号整数超出范围后的结果，说出有符号整数溢出为什么不能依赖",
+      "用 if、for、while 写出分支和循环，并对照 Python 说出写法差别"
+    ],
+    "prerequisites": [
+      "c-compile-and-run",
+      "data-representation",
+      "python-control-flow"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-fixed-size",
+      "kind": "mechanism",
+      "title": "255 加 1 为什么是 0",
+      "question": "一个 unsigned char 变量里存着 255，给它加 1 之后打印出来是 0。Python 里 255 + 1 是 256。用「这个变量在内存里有多大」解释 C 的结果。如果换成 unsigned char u = 250; u = u + 10;，结果是多少？",
+      "answer": "unsigned char 只有 1 个字节，也就是 8 个二进制位，能表示的范围是 0 到 255。255 的二进制是八个 1，再加 1 应当是 1 后面跟八个 0，一共九位，但这个变量只留得下低八位，全是 0，所以结果是 0。C 标准规定无符号整数的运算结果对「最大值加 1」取余：256 对 256 取余是 0。同理 250 + 10 = 260，260 对 256 取余是 4。Python 的整数没有固定大小，需要多少位就用多少位，所以不会发生这种事。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-predict-arith",
+      "kind": "prediction",
+      "title": "预测五行输出",
+      "question": "下面五条语句各打印什么？一、printf(\"%d\\n\", 17 / 5);。二、printf(\"%d\\n\", 17 % 5);。三、char c = 97 + 2; printf(\"%c\\n\", c);。四、unsigned char u = 250; u = u + 10; printf(\"%d\\n\", u);。五、printf(\"%zu\\n\", sizeof(long) + sizeof(char));。",
+      "answer": "一、3。两个整数相除，结果的小数部分直接丢掉。二、2。% 是取余，17 除以 5 余 2。三、c。char 里存的是数字，97 是 a 的 ASCII 码，加 2 得 99，按 %c 打印就是字符 c。四、4。260 超出了 unsigned char 的范围，对 256 取余。五、9。本机上 long 占 8 个字节，char 占 1 个。",
+      "sourceIds": [
+        "n1570",
+        "man-printf3"
+      ]
+    },
+    {
+      "id": "check-fizzbuzz-c",
+      "kind": "practice",
+      "title": "用 C 重写 FizzBuzz",
+      "question": "把第 6 课用 Python 写过的 FizzBuzz 用 C 重写成 fizz.c：从 1 数到 15，每个数一行；是 3 的倍数打印 Fizz，是 5 的倍数打印 Buzz，同时是两者的倍数打印 FizzBuzz，其余打印数字本身。用 -Wall 编译。",
+      "answer": "参考写法：for (int i = 1; i <= 15; i++) 循环里用 if (i % 15 == 0) 打印 FizzBuzz，else if (i % 3 == 0) 打印 Fizz，else if (i % 5 == 0) 打印 Buzz，else 用 printf(\"%d\\n\", i) 打印数字。注意先判断 15 的倍数。自查标准：编译没有警告；输出共 15 行，依次是 1、2、Fizz、4、Buzz、Fizz、7、8、Fizz、Buzz、11、Fizz、13、14、FizzBuzz。",
+      "sourceIds": [
+        "beej-variables"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "类型：每个变量占固定大小",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能说出 char、int、long 各占几个字节，并为它们选对格式符。"
+    },
+    {
+      "kind": "动手",
+      "title": "装不下的时候",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "能算出 unsigned char 存 300 之后实际是多少。"
+    },
+    {
+      "kind": "进阶",
+      "title": "分支与循环",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "写出一个带 for 和 if 的程序，-Wall 编译无警告。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "C11 N1570 6.2.5 unsigned operands can never overflow reduced modulo",
+      "C11 N1570 6.5 exceptional condition undefined behavior",
+      "C11 N1570 6.5.5 integer division truncation toward zero",
+      "C11 N1570 6.5.3.4 sizeof",
+      "Beej's Guide to C variables and statements",
+      "printf(3) scanf(3) conversion specifiers"
+    ],
+    "notes": "七个源文件在 public/labs/c-types-and-control-flow/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0，x86-64）里实际运行，页面输出取自运行记录。各类型的字节数是这台机器（x86-64 Linux）上的结果，标准只规定了下限，页面已注明。逐行执行图的数据由 scripts/lab/c-trace.py 用 gdb 追踪 vars.c 的真实执行生成，图里的地址是关闭地址随机化之后的实际地址。有符号整数溢出属于未定义行为，页面只陈述规则，没有演示某一次的结果。验收题的预期输出用参考解答在同一环境里运行核对过。"
+  },
+  "sources": [
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-sizeof",
+        "claim-unsigned-wrap",
+        "claim-signed-overflow",
+        "claim-integer-division"
+      ]
+    },
+    {
+      "id": "beej-variables",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Variables and Statements",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/variables-and-statements.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-variables-typed"
+      ]
+    },
+    {
+      "id": "man-printf3",
+      "kind": "official-doc",
+      "title": "printf(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/printf.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-printf-format"
+      ]
+    },
+    {
+      "id": "man-scanf3",
+      "kind": "official-doc",
+      "title": "scanf(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/scanf.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-scanf"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-wall-format"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-sizeof",
+      "text": "sizeof 运算符给出操作数的大小，单位是字节；操作数可以是一个表达式，也可以是用括号括起来的类型名。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-unsigned-wrap",
+      "text": "涉及无符号操作数的运算不会溢出：结果超出该无符号类型能表示的范围时，会对「该类型能表示的最大值加 1」取模。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-signed-overflow",
+      "text": "如果对表达式求值时出现异常情况，也就是结果在数学上没有定义，或者不在其类型能表示的范围之内，行为是未定义的。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-integer-division",
+      "text": "整数相除时，/ 的结果是代数商去掉小数部分，也就是向零截断；(a/b)*b + a%b 等于 a。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-printf-format",
+      "text": "printf 系列函数按照格式字符串生成输出，格式字符串里的转换说明决定后面的参数怎样被转换和打印。",
+      "sourceIds": [
+        "man-printf3"
+      ]
+    },
+    {
+      "id": "claim-variables-typed",
+      "text": "C 的变量在使用之前必须先声明，声明时要写出它的类型。",
+      "sourceIds": [
+        "beej-variables"
+      ]
+    },
+    {
+      "id": "claim-wall-format",
+      "text": "-Wall 打开一批针对可疑写法的警告。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-scanf",
+      "text": "scanf 从标准输入流 stdin 读取输入，并按格式做转换。",
+      "sourceIds": [
+        "man-scanf3"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "sizes",
+      "path": "public/labs/c-types-and-control-flow/sizes.c",
+      "command": "gcc -Wall sizes.c -o sizes && ./sizes",
+      "expectedResult": "四行：char 1、int 4、long 8、double 8。"
+    },
+    {
+      "id": "arith",
+      "path": "public/labs/c-types-and-control-flow/arith.c",
+      "command": "gcc -Wall arith.c -o arith && ./arith",
+      "expectedResult": "五行：3、1、3.500000、A 65、B 66。"
+    },
+    {
+      "id": "vars",
+      "path": "public/labs/c-types-and-control-flow/vars.c",
+      "command": "gcc -Wall vars.c -o vars && ./vars",
+      "expectedResult": "C 4 5000000000"
+    },
+    {
+      "id": "wrap",
+      "path": "public/labs/c-types-and-control-flow/wrap.c",
+      "command": "gcc wrap.c -o wrap && ./wrap",
+      "expectedResult": "编译时对 300 那一行给出 -Woverflow 警告；运行打印五行：0、44、4294967295、0、2147483647。"
+    },
+    {
+      "id": "grade",
+      "path": "public/labs/c-types-and-control-flow/grade.c",
+      "command": "gcc -Wall grade.c -o grade && ./grade",
+      "expectedResult": "提示 score: 后输入 95 打印 excellent，输入 70 打印 pass，输入 30 打印 fail。"
+    },
+    {
+      "id": "sum",
+      "path": "public/labs/c-types-and-control-flow/sum.c",
+      "command": "gcc -Wall sum.c -o sum && ./sum",
+      "expectedResult": "两行：10 和 111。"
+    },
+    {
+      "id": "mistakes",
+      "path": "public/labs/c-types-and-control-flow/mistakes.c",
+      "command": "gcc -Wall mistakes.c -o mistakes",
+      "expectedResult": "三条 warning：%d 对不上 long、scanf 的参数少了 &、if 里把 == 写成了 =。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "typed-memory",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

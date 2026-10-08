@@ -4,10 +4,9 @@ const layers = [
   { y: 148, h: 58, label: '工作记忆', sub: '近期轮次摘要，随时注入', kind: 'working' },
   { y: 230, h: 58, label: '长期存储', sub: '用户偏好、历史决定，检索后取回', kind: 'long' },
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-<section class="memory-layers lesson-diagram not-content" aria-label="记忆分层图">
-  <p class="lesson-diagram__eyebrow">MEMORY LAYERS / 三层</p>
-  <h3 class="lesson-diagram__title">窗口、工作记忆与长期存储</h3>
+<LessonDiagram eyebrow="MEMORY LAYERS / 三层" title="窗口、工作记忆与长期存储" ariaLabel="记忆分层图" class="memory-layers" note="类比操作系统的内存与磁盘：放不下的内容换到外层，用到时换回来。写入什么、何时遗忘、检索错了怎样纠正，是这一层的设计对象。">
   <svg viewBox="0 0 628 360" role="img" aria-label="记忆分层：上下文窗口在最上层，本轮可见；工作记忆在中间，保存近期摘要；长期存储在最下层，跨会话保存事实。写入与检索在层间流动。">
     <title>记忆分层图</title>
     <defs>
@@ -27,5 +26,5 @@ const layers = [
       </g>
     ))}
   </svg>
-  <p class="lesson-diagram__note">类比操作系统的内存与磁盘：放不下的内容换到外层，用到时换回来。写入什么、何时遗忘、检索错了怎样纠正，是这一层的设计对象。</p>
-</section>
+
+</LessonDiagram>

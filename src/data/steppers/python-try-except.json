@@ -1,0 +1,148 @@
+{
+ "source": [
+  "text = \"abc\"",
+  "try:",
+  "    number = int(text)",
+  "    print(\"number:\", number)",
+  "except ValueError:",
+  "    print(\"not a number:\", text)",
+  "print(\"done\")"
+ ],
+ "steps": [
+  {
+   "line": 1,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "",
+   "note": "text 绑到字符串 \"abc\"。"
+  },
+  {
+   "line": 2,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "",
+   "note": "进入 try 块。从这里到 except 之前的代码处于「出了异常有人接」的状态。"
+  },
+  {
+   "line": 3,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "",
+   "raised": "ValueError: invalid literal for int() with base 10: 'abc'",
+   "note": "int(\"abc\") 无法转换，抛出 ValueError。这一行没有执行完，number 没有被赋值；try 块里剩下的那一行 print 被整个跳过。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "",
+   "note": "Python 拿着这个异常去对 except 后面写的类型。类型是 ValueError，对上了。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "not a number: abc\n",
+   "note": "执行 except 块里的代码，打印提示。异常到此被处理掉，程序没有崩溃。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "text",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "str",
+     "repr": "'abc'"
+    }
+   },
+   "stdout": "not a number: abc\ndone\n",
+   "note": "离开整个 try 语句，继续执行后面的代码。"
+  }
+ ],
+ "error": null,
+ "file": "public/labs/python-files-and-exceptions/safe_number.py"
+}

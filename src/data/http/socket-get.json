@@ -1,0 +1,96 @@
+{
+ "scenario": "scripts/lab/http-scenarios/socket-get.json",
+ "request": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "GET",
+     "label": "方法",
+     "note": "脚本里那个字符串的开头。和 curl、浏览器发的没有区别。"
+    },
+    {
+     "text": "/hello?name=socket",
+     "label": "目标",
+     "note": "路径和查询参数。用 requests 时这一段是它根据 params 替你拼的，这里要自己写对。"
+    },
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "HTTP 的版本。后面跟着 \\r\\n，表示这一行结束。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Host",
+   "value": "127.0.0.1:8000",
+   "note": "HTTP/1.1 规定必须有的头部。requests 会根据网址自动填上。"
+  },
+  {
+   "kind": "header",
+   "name": "Connection",
+   "value": "close",
+   "note": "告诉服务器：答完这一次就把连接关掉。这样 recv 才会收到「没有更多数据」的信号，循环才能结束。"
+  },
+  {
+   "kind": "blank",
+   "note": "字符串末尾连续两个 \\r\\n：第一个结束上一行，第二个就是这个空行。少了它，服务器会一直等下去。"
+  }
+ ],
+ "response": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "从这里开始是 recv 收到的字节，解码成文字之后的样子。"
+    },
+    {
+     "text": "200",
+     "label": "状态码",
+     "note": "状态码。用 requests 时它在 r.status_code 里，这里要自己从文字里找。"
+    },
+    {
+     "text": "OK",
+     "label": "原因短语",
+     "note": "给人看的简短说明。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Server",
+   "value": "PracticeSite/1.0",
+   "note": "服务器软件的自我介绍。"
+  },
+  {
+   "kind": "header",
+   "name": "Date",
+   "value": "Thu, 01 Oct 2026 16:53:45 GMT",
+   "note": "响应生成的时间。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "text/plain; charset=utf-8",
+   "note": "正文的类型和编码。requests 靠它决定怎样把字节解码成 r.text。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "15",
+   "note": "正文的字节数。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行。前面是头部，后面是正文，自己解析时要从这里切开。"
+  },
+  {
+   "kind": "body",
+   "text": "Hello, socket!",
+   "note": "正文。用 requests 时它在 r.text 里。"
+  }
+ ]
+}

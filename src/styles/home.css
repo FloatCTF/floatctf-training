@@ -25,6 +25,11 @@
   color: var(--training-muted);
 }
 
+.category-directory.category-planned { background: transparent; border-style: dashed; }
+.category-directory.category-trigger { align-self: stretch; }
+.category-planned .category-title { font-size: 1.2rem; }
+.category-planned .category-summary { display: none; }
+
 .directory-empty { color: var(--training-muted); font-size: 0.82rem; }
 
 
@@ -202,6 +207,42 @@ a.category-trigger:focus-visible {
   border-block-end: 0;
 }
 
+.directory-topic:has(+ .directory-series) {
+  border-block-end: 0;
+}
+
+/* 分类页里的系列小标题：一条细重线把同一门语言的课收成一组 */
+.directory-series {
+  align-items: baseline;
+  border-block-end: 0.0625rem solid var(--training-heading);
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 0;
+  padding-block: 1.9rem 0.55rem;
+}
+
+.directory-series:first-child {
+  padding-block-start: 1.35rem;
+}
+
+.directory-series h3 {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.directory-series span {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.64rem;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
 .directory-topic-copy { display: grid;
   gap: 0.2rem;
 }
@@ -227,18 +268,6 @@ a.category-trigger:focus-visible {
   letter-spacing: 0.05em;
 }
 
-.category-overview {
-  text-decoration: none;
-  letter-spacing: 0.08em;
-  justify-content: space-between;
-  font-weight: 700;
-  font-family: var(--training-font-code);
-  display: flex;
-  color: var(--training-link);
-  align-items: center;
-  font-size: 0.66rem;
-  padding-block: 0.9rem 0.45rem;
-}
 
 .learning-map-footer {
   text-align: center;
@@ -374,7 +403,8 @@ html.category-morphing::view-transition-new(root) {
 }
 
 .category-panel[hidden],
-.category-panel-overlay[hidden] {
+.category-panel-overlay[hidden],
+.category-panel-series[hidden] {
   display: none !important;
 }
 
@@ -438,12 +468,14 @@ html.category-morphing::view-transition-new(root) {
   遮住横竖不等比缩放带来的挤压。收起时先于面板淡出，落点是一块干净的纸面。
 */
 .category-panel-header,
+.category-panel-series,
 .category-panel-body,
 .category-panel-footer {
   opacity: 0;
 }
 
 .category-panel.is-lit .category-panel-header,
+.category-panel.is-lit .category-panel-series,
 .category-panel.is-lit .category-panel-body,
 .category-panel.is-lit .category-panel-footer {
   opacity: 1;
@@ -451,6 +483,7 @@ html.category-morphing::view-transition-new(root) {
 }
 
 .category-panel.is-closing .category-panel-header,
+.category-panel.is-closing .category-panel-series,
 .category-panel.is-closing .category-panel-body,
 .category-panel.is-closing .category-panel-footer {
   opacity: 0;
@@ -564,6 +597,83 @@ html.category-morphing::view-transition-new(root) {
   transform: translateY(0);
 }
 
+/*
+  系列切换：一次只列一门语言的课，面板不随课程总数变长。
+  列数由脚本按系列个数写入 --series-count。
+*/
+.category-panel-series {
+  border-block-end: var(--training-rule-light);
+  display: grid;
+  flex-shrink: 0;
+  gap: 0.4rem;
+  grid-template-columns: repeat(var(--series-count, 4), minmax(0, 1fr));
+  /* 面板落在 Starlight 正文流里，相邻块会被加上 margin-block-start，这里与按钮内部一并清掉 */
+  margin: 0;
+  padding: 0.8rem 1.45rem;
+}
+
+.category-panel-series button,
+.category-panel-series button > * {
+  margin: 0;
+}
+
+.category-panel-series button {
+  appearance: none;
+  background: transparent;
+  border: var(--training-rule-light);
+  border-radius: var(--training-radius-md);
+  color: inherit;
+  cursor: pointer;
+  display: grid;
+  gap: 0.05rem;
+  justify-items: center;
+  line-height: 1.3;
+  min-height: 2.75rem;
+  min-width: 0;
+  padding: 0.42rem 0.3rem 0.48rem;
+  transition:
+    background var(--training-duration-fast) ease,
+    border-color var(--training-duration-fast) ease;
+}
+
+.category-panel-series button b {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 0.92rem;
+  font-weight: 800;
+  transition: color var(--training-duration-fast) ease;
+}
+
+.category-panel-series button small {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  transition: color var(--training-duration-fast) ease;
+}
+
+.category-panel-series button:hover {
+  border-color: color-mix(in srgb, var(--training-border) 80%, transparent);
+}
+
+.category-panel-series button[aria-selected='true'] {
+  background: var(--training-heading);
+  border-color: var(--training-heading);
+}
+
+.category-panel-series button[aria-selected='true'] b {
+  color: var(--training-surface-bg);
+}
+
+.category-panel-series button[aria-selected='true'] small {
+  color: color-mix(in srgb, var(--training-surface-bg) 72%, transparent);
+}
+
+.category-panel-series button:focus-visible {
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--training-accent) 35%, transparent);
+  outline: none;
+}
+
 .category-panel-body {
   -ms-overflow-style: none;
   -webkit-overflow-scrolling: touch;
@@ -629,6 +739,22 @@ html.category-morphing::view-transition-new(root) {
 
 .category-panel.is-lit .category-panel-body .directory-topic-planned {
   opacity: 0.62;
+}
+
+/*
+  切换系列时新列表逐条浮入。只写起点，终点落回各自的常态不透明度，
+  已上线与规划中的课不必分两套关键帧。
+*/
+.category-panel-body.is-switching .directory-topic {
+  animation: series-topic-in 0.34s cubic-bezier(0.32, 0.72, 0, 1) backwards;
+  animation-delay: calc(var(--topic-index, 0) * 26ms);
+}
+
+@keyframes series-topic-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
 }
 
 .category-panel-footer {

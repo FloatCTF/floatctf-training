@@ -1,0 +1,36 @@
+---
+// 代码清单：直接读取 public/labs/<课 id>/ 下的文件来展示，页面上的代码与学员下载、重放时运行的是同一份。
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { Code } from '@astrojs/starlight/components';
+import { withBase } from '../lib/base-url';
+
+interface Props {
+  file: string;
+  /** 语法高亮语言；省略时按扩展名推断。 */
+  lang?: string;
+  /** 需要标亮的行，例如 "3"、"2-4" 或 "4-7,13"。 */
+  mark?: string;
+  /** 代码下方的一句说明。 */
+  note?: string;
+}
+
+const { file, lang, mark, note } = Astro.props;
+if (!/^labs\/[a-z0-9-]+\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+$/.test(file) || file.includes('..')) throw new Error(`Unknown lesson material: ${file}`);
+const source = readFileSync(resolve('public', file), 'utf8').replace(/\n+$/, '');
+const name = file.split('/').pop() || file;
+/** 材料在子目录里时（如 Maven 项目），标题显示课程目录之下的相对路径，提醒学员按这个结构存放。 */
+const title = file.split('/').slice(2).join('/');
+const extension = name.includes('.') ? name.split('.').pop() || '' : '';
+const languages: Record<string, string> = { py: 'python', sh: 'bash', c: 'c', h: 'c', php: 'php', js: 'js', sql: 'sql', html: 'html', css: 'css', java: 'java', xml: 'xml', yaml: 'yaml', yml: 'yaml', txt: 'text', log: 'text' };
+const language = lang ?? languages[extension] ?? 'text';
+// Expressive Code 把字符串形式的 mark 当作「要标出的文字」，行号必须写成数字或 { range }，这里把 "4-7,13" 换成行标记
+const lineMarks = mark?.split(',').map((part) => part.trim()).filter(Boolean).map((part) => (/^\d+$/.test(part) ? Number(part) : { range: part }));
+---
+<div class="code-file">
+  <Code code={source} lang={language} title={title} mark={lineMarks} />
+  <p class="code-file__meta not-content">
+    <a href={withBase(`/${file}`)} download={name}>下载 {name}</a>
+    {note && <span>{note}</span>}
+  </p>
+</div>

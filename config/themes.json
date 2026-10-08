@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "themes": [
     {
       "id": "light-editor",
@@ -14,6 +13,8 @@
         "heading": "#17150F",
         "border": "#817867",
         "accent": "#A63D2C",
+        "classZero": "#21618C",
+        "classOne": "#A64B00",
         "link": "#8B2E23",
         "danger": "#B3261E",
         "safe": "#1B7F3B",
@@ -46,6 +47,8 @@
         "heading": "#FFF8E9",
         "border": "#70685A",
         "accent": "#D36A4D",
+        "classZero": "#7FC8F0",
+        "classOne": "#FFB86B",
         "link": "#E4896D",
         "danger": "#E0705A",
         "safe": "#8CC79C",
@@ -78,6 +81,8 @@
         "heading": "#000000",
         "border": "#707070",
         "accent": "#8B2E23",
+        "classZero": "#21618C",
+        "classOne": "#A64B00",
         "link": "#8B2E23",
         "danger": "#6F1D23",
         "safe": "#174A29",

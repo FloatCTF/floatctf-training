@@ -1,0 +1,5 @@
+# 第 33 课在专门的 Docker 采集容器里重放：容器里运行着自己的 Docker 守护进程（见 qa/foundations-batch-7.md）。
+@container kali-docker
+@root pgrep -x dockerd >/dev/null || (dockerd > /var/log/dockerd.log 2>&1 &); sleep 3
+# 从干净的状态开始：没有容器、没有卷、没有镜像，这样页面上「下载镜像」的步骤会真实发生。
+docker rm -f $(docker ps -aq) >/dev/null 2>&1; docker volume prune -af >/dev/null 2>&1; docker rmi -f $(docker images -q) >/dev/null 2>&1; rm -rf ~/lab/docker; cd ~; true

@@ -1,0 +1,547 @@
+{
+  "lessonPlan": {
+    "audience": "零基础新生：会用 Windows 上网和安装软件，没有接触过虚拟机、Linux 和命令行",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "concept",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "宿主机、虚拟机软件、客户机三层的包含关系用静态嵌套图表达；三种网络模式用对照表说明虚拟机拿到什么地址、能和谁通信",
+    "learningObjectives": [
+      "说出宿主机、虚拟机软件和客户机各自是什么，以及为什么在虚拟机里练习",
+      "安装 VMware Workstation Pro，导入 Kali 预装虚拟机并用默认账号登录",
+      "在终端里用四条命令确认当前用户、系统版本和默认 shell",
+      "拍摄快照并恢复到快照，说明恢复后哪些改动会消失",
+      "区分 NAT、桥接和仅主机三种网络模式的用途",
+      "用 apt 完成一次系统更新，并根据常见报错定位问题",
+      "安装中文输入法，并在中英文输入之间切换"
+    ],
+    "prerequisites": [
+      "一台 64 位 Windows 10 或 Windows 11 电脑，有管理员权限",
+      "至少 8 GB 内存和 40 GB 可用磁盘空间（社团建议值，见正文的配置说明）",
+      "会下载文件、解压压缩包、安装软件"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-snapshot",
+      "kind": "mechanism",
+      "title": "快照保存了什么",
+      "question": "你给 Kali 拍了一个快照，之后在家目录里新建了文件 a.txt，又把桌面设置改乱了。现在恢复到这个快照：a.txt 还在吗？改乱的设置呢？说出理由。",
+      "answer": "两者都回到拍快照那一刻的样子：a.txt 消失，设置复原。快照保存的是虚拟机的内存内容、虚拟机设置和所有虚拟磁盘的状态，恢复就是让这三样整体回到那个时间点，之后写进磁盘的东西一并丢弃。所以恢复之前，要先把想留下的文件拷到虚拟机外面。",
+      "sourceIds": [
+        "vmware-snapshots"
+      ]
+    },
+    {
+      "id": "check-first-commands",
+      "kind": "prediction",
+      "title": "三条命令各输出什么",
+      "question": "用默认账号登录刚导入的 Kali，打开终端依次输入 whoami、echo $SHELL、uname -m。先写下你预测的三行输出，再实际运行核对。",
+      "answer": "依次是 kali、/usr/bin/zsh、x86_64。whoami 打印当前登录的用户名，预装镜像的默认用户是 kali；$SHELL 是登录 shell 的路径，Kali 桌面镜像默认用 zsh；uname -m 打印处理器架构，amd64 镜像运行在 64 位 Intel 或 AMD 处理器上，显示 x86_64。",
+      "sourceIds": [
+        "kali-default-credentials",
+        "kali-2020-4-release"
+      ]
+    },
+    {
+      "id": "check-snapshot-practice",
+      "kind": "practice",
+      "title": "拍一个干净快照并验证能回退",
+      "question": "完成更新后给虚拟机拍一个名为 clean 的快照。然后在终端执行 touch ~/delete-me.txt，用 ls ~ 确认文件出现。接着恢复到 clean 快照，再执行 ls ~。记录两次 ls 的差别。",
+      "answer": "第一次 ls ~ 能看到 delete-me.txt；恢复快照后再执行 ls ~，这个文件不在了，说明快照可用。自查标准：快照管理器里能看到 clean；恢复后终端可以正常输入命令；delete-me.txt 不存在。以后每次做有风险的实验前，都先确认有一个能回去的快照。",
+      "sourceIds": [
+        "vmware-snapshots"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "虚拟机是什么",
+      "heading": "一、",
+      "minutes": 20,
+      "checkpoint": "能指出宿主机、虚拟机软件、客户机分别是哪一个。"
+    },
+    {
+      "kind": "动手",
+      "title": "装好并开机",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "用 kali 账号登录，终端里 whoami 输出 kali。"
+    },
+    {
+      "kind": "进阶",
+      "title": "快照、网络、更新与输入法",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "完成一次 apt 更新，能在终端里打出中文，并有一个名为 clean 的快照。"
+    }
+  ],
+  "researchStatus": {
+    "status": "partial",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "kali.org get-kali virtual machines current release",
+      "Kali docs import pre-made VMware VM",
+      "Kali docs default credentials",
+      "Kali docs updating kali apt full-upgrade",
+      "Broadcom KB VMware Workstation Pro free download license",
+      "VMware Workstation Pro 26H1 snapshots take revert",
+      "VMware Workstation Pro 26H1 bridged NAT host-only networking",
+      "Microsoft Learn Get-FileHash SHA256",
+      "Microsoft Support enable virtualization on Windows UEFI",
+      "Fcitx 5 setup im-config Debian",
+      "Fcitx 5 configtool add input method"
+    ],
+    "notes": "已核验：Kali 官方文档的镜像导入步骤、默认账号、更新命令和配置建议；Broadcom 文档中 Workstation Pro 的授权、快照与三种网络模式定义；微软文档的 Get-FileHash 用法与 UEFI 开启虚拟化的入口。终端命令在 kalilinux/kali-rolling 容器里以 kali 用户、交互式 zsh 实际运行并记录输出。未核验：没有在 Windows 上实际操作 VMware 的图形界面，安装与导入步骤完全依据上述官方文档；PowerShell 的输出格式引自微软文档示例，未在本机复现；容器不含桌面环境，登录界面与桌面外观未截图核对。输入法部分：安装命令与 im-config -w fcitx5 在容器里实际运行通过；默认切换键 Ctrl+空格、配置工具里「Only Show Current Language」选项与 Pinyin 条目取自 fcitx5 5.1.21 安装后的程序文件；注销重登与在配置工具里添加拼音的图形界面操作依据 Fcitx 官方 wiki 和软件包自带的 README.Debian，未实际操作。因此标记为 partial。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali Linux 2026.2 预装 VMware 镜像；VMware Workstation Pro 26H1",
+    "environment": "Windows 10 或 Windows 11 宿主机。终端输出取自 kalilinux/kali-rolling 容器（os-release 报告 2026.3，zsh 5.9.2，apt 3.3.3），以 kali 用户登录的交互式 zsh。",
+    "verifiedAt": "2026-10-01",
+    "knownDifferences": "Kali 是滚动发行版，更新后 VERSION_ID 与可升级包数量会变化；刚导入的 2026.2 镜像第一次更新时下载量远大于正文示例。VirtualBox 用户导入的是 .vbox 文件而不是 .vmx。VMware 界面语言不同，菜单文字不同，位置相同。输入法版本为 fcitx5 5.1.21、fcitx5-chinese-addons 5.1.13、im-config 1.1；im-config 1.1 用 -w 写入配置，较早的版本用 -n。"
+  },
+  "sources": [
+    {
+      "id": "kali-get-kali",
+      "kind": "official-doc",
+      "title": "Get Kali",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/get-kali/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注修订日期，publishedAt 记录核验快照日期。访问时页面显示当前版本为 2026.2。",
+      "supports": [
+        "claim-prebuilt-vm"
+      ]
+    },
+    {
+      "id": "kali-import-vmware",
+      "kind": "official-doc",
+      "title": "Import Pre-Made Kali VMware VM",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/virtualization/import-premade-vmware/",
+      "publishedAt": "2026-06-30",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-import-steps",
+        "claim-default-credentials"
+      ]
+    },
+    {
+      "id": "kali-import-virtualbox",
+      "kind": "official-doc",
+      "title": "Import Pre-Made Kali VirtualBox VM",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/virtualization/import-premade-virtualbox/",
+      "publishedAt": "2026-06-30",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-import-steps"
+      ]
+    },
+    {
+      "id": "kali-default-credentials",
+      "kind": "official-doc",
+      "title": "Kali's Default Credentials",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/introduction/default-credentials/",
+      "publishedAt": "2026-04-27",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-default-credentials",
+        "cmd-whoami"
+      ]
+    },
+    {
+      "id": "kali-updating",
+      "kind": "official-doc",
+      "title": "Updating Kali",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/general-use/updating-kali/",
+      "publishedAt": "2026-05-14",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-update-commands",
+        "cmd-os-release",
+        "cmd-apt-update",
+        "cmd-apt-full-upgrade"
+      ]
+    },
+    {
+      "id": "kali-sudo",
+      "kind": "official-doc",
+      "title": "All about sudo",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/general-use/sudo/",
+      "publishedAt": "2025-06-18",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-non-root",
+        "cmd-apt-update"
+      ]
+    },
+    {
+      "id": "kali-requirements",
+      "kind": "official-doc",
+      "title": "Installing Kali Linux",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/installation/hard-disk-install/",
+      "publishedAt": "2025-06-16",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期；本课只引用其中的系统要求。",
+      "supports": [
+        "claim-vm-resources"
+      ]
+    },
+    {
+      "id": "kali-vmware-guest",
+      "kind": "official-doc",
+      "title": "Kali inside VMware (Guest VM)",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/docs/virtualization/install-vmware-guest-vm/",
+      "publishedAt": "2026-06-30",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期；本课只引用其中官方虚拟机的资源配置。",
+      "supports": [
+        "claim-vm-resources"
+      ]
+    },
+    {
+      "id": "kali-2020-4-release",
+      "kind": "release-note",
+      "title": "Kali Linux 2020.4 Release (ZSH, Bash, CME, MOTD, AWS, Docs, Win-KeX & Vagrant)",
+      "publisher": "Kali Linux",
+      "url": "https://www.kali.org/blog/kali-linux-2020-4-release/",
+      "publishedAt": "2020-11-18",
+      "accessedAt": "2026-10-01",
+      "supports": [
+        "claim-zsh-default",
+        "cmd-echo-shell"
+      ]
+    },
+    {
+      "id": "vmware-desktop-hypervisor-kb",
+      "kind": "official-doc",
+      "title": "Download and license VMware Desktop Hypervisor (Fusion Pro and Workstation Pro)",
+      "publisher": "Broadcom",
+      "url": "https://knowledge.broadcom.com/external/article/368667/download-and-license-vmware-desktop-hype.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注修订日期，publishedAt 记录核验快照日期。知识库文章编号 368667。",
+      "supports": [
+        "claim-workstation-free"
+      ]
+    },
+    {
+      "id": "vmware-networking",
+      "kind": "official-doc",
+      "title": "Understanding Common Networking Configurations (VMware Workstation Pro 26H1)",
+      "publisher": "Broadcom",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/desktop-hypervisors/workstation-pro/26H1/using-vmware-workstation-pro/configuring-network-connections/understanding-common-networking-configurations.html",
+      "publishedAt": "2026-09-03",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-network-modes"
+      ]
+    },
+    {
+      "id": "vmware-snapshots",
+      "kind": "official-doc",
+      "title": "Taking Snapshots of Virtual Machines (VMware Workstation Pro 26H1)",
+      "publisher": "Broadcom",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/desktop-hypervisors/workstation-pro/26H1/using-vmware-workstation-pro/using-virtual-machines-in-workstation-pro-user-guide/taking-snapshots-of-virtual-machines.html",
+      "publishedAt": "2026-09-03",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期；拍摄与恢复的菜单路径来自其子页面 Take a Snapshot of a Virtual Machine 与 Revert to a Snapshot。",
+      "supports": [
+        "claim-snapshot"
+      ]
+    },
+    {
+      "id": "vmware-hotkeys",
+      "kind": "official-doc",
+      "title": "Default Hot-Key Combinations (VMware Workstation Pro 26H1)",
+      "publisher": "Broadcom",
+      "url": "https://techdocs.broadcom.com/us/en/vmware-cis/desktop-hypervisors/workstation-pro/26H1/using-vmware-workstation-pro/installing-and-using-workstation-pro/using-the-workstation-pro-window/default-hot-key-combinations.html",
+      "publishedAt": "2026-09-03",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的更新日期。",
+      "supports": [
+        "claim-release-cursor"
+      ]
+    },
+    {
+      "id": "fcitx-setup",
+      "kind": "official-doc",
+      "title": "Setup Fcitx 5",
+      "publisher": "Fcitx",
+      "url": "https://fcitx-im.org/wiki/Setup_Fcitx_5",
+      "publishedAt": "2023-12-07",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的最后编辑日期。",
+      "supports": [
+        "claim-im-config",
+        "cmd-install-fcitx5",
+        "cmd-im-config"
+      ]
+    },
+    {
+      "id": "fcitx-configtool",
+      "kind": "official-doc",
+      "title": "Configtool (Fcitx 5)",
+      "publisher": "Fcitx",
+      "url": "https://fcitx-im.org/wiki/Configtool_(Fcitx_5)",
+      "publishedAt": "2024-03-18",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面标注的最后编辑日期。",
+      "supports": [
+        "claim-fcitx-configtool"
+      ]
+    },
+    {
+      "id": "ms-get-filehash",
+      "kind": "official-doc",
+      "title": "Get-FileHash (Microsoft.PowerShell.Utility)",
+      "publisher": "Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/get-filehash",
+      "publishedAt": "2025-03-24",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "日期为页面元数据中的更新时间。",
+      "supports": [
+        "claim-file-hash",
+        "cmd-get-filehash"
+      ]
+    },
+    {
+      "id": "ms-enable-virtualization",
+      "kind": "official-doc",
+      "title": "Enable Virtualization on Windows",
+      "publisher": "Microsoft Support",
+      "url": "https://support.microsoft.com/en-us/windows/enable-virtualization-on-windows-c5578302-6e43-4b4b-a449-8ced115f58e1",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-virtualization-uefi"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-prebuilt-vm",
+      "text": "Kali 官方为 VMware、VirtualBox、Hyper-V 和 QEMU 提供预装虚拟机镜像，以 7z 压缩包分发；2026-10-01 访问时的当前版本是 2026.2。",
+      "sourceIds": [
+        "kali-get-kali"
+      ]
+    },
+    {
+      "id": "claim-import-steps",
+      "text": "导入 VMware 预装镜像的步骤是：解压 7z 压缩包，在 VMware 中选择打开虚拟机，选中解压目录里的 .vmx 文件。VirtualBox 对应的是添加 .vbox 文件。",
+      "sourceIds": [
+        "kali-import-vmware",
+        "kali-import-virtualbox"
+      ]
+    },
+    {
+      "id": "claim-default-credentials",
+      "text": "预装虚拟机镜像的默认用户名和密码都是 kali。",
+      "sourceIds": [
+        "kali-default-credentials",
+        "kali-import-vmware"
+      ]
+    },
+    {
+      "id": "claim-non-root",
+      "text": "Kali 自 2020.1 起默认使用有管理权限的非 root 用户，需要管理员权限时用 sudo 并输入自己的密码。",
+      "sourceIds": [
+        "kali-sudo"
+      ]
+    },
+    {
+      "id": "claim-zsh-default",
+      "text": "Kali 桌面镜像自 2020.4 起默认 shell 是 zsh。",
+      "sourceIds": [
+        "kali-2020-4-release"
+      ]
+    },
+    {
+      "id": "claim-update-commands",
+      "text": "更新 Kali 使用 sudo apt update 与 sudo apt full-upgrade -y，默认软件源分支是 kali-rolling。",
+      "sourceIds": [
+        "kali-updating"
+      ]
+    },
+    {
+      "id": "claim-vm-resources",
+      "text": "Kali 官方制作通用虚拟机时分配 2 GB 内存和 80 GB 磁盘；带 Xfce 桌面和默认工具集的安装建议至少 2 GB 内存、20 GB 磁盘，运行 Burp Suite 这类程序建议 8 GB 以上内存。",
+      "sourceIds": [
+        "kali-vmware-guest",
+        "kali-requirements"
+      ]
+    },
+    {
+      "id": "claim-workstation-free",
+      "text": "VMware Workstation Pro 自 2024-11-11 起对商业、教育和个人用户免费，免费版不需要许可证密钥，下载需要登录 Broadcom 支持门户账号。",
+      "sourceIds": [
+        "vmware-desktop-hypervisor-kb"
+      ]
+    },
+    {
+      "id": "claim-snapshot",
+      "text": "快照包含虚拟机内存内容、虚拟机设置和所有虚拟磁盘的状态，可以反复回到拍摄时的状态；拍摄路径是 VM > Snapshot > Take Snapshot，恢复路径是 VM > Snapshot > Revert to Snapshot。",
+      "sourceIds": [
+        "vmware-snapshots"
+      ]
+    },
+    {
+      "id": "claim-network-modes",
+      "text": "NAT 模式下虚拟机在外部网络上没有自己的 IP 地址，与宿主机共用一个网络身份，新建虚拟机默认使用 NAT；桥接模式通过宿主机的网卡把虚拟机接入宿主机所在的网络；仅主机模式的网络完全限制在宿主机内部。",
+      "sourceIds": [
+        "vmware-networking"
+      ]
+    },
+    {
+      "id": "claim-release-cursor",
+      "text": "VMware Workstation Pro 默认用 Ctrl+Alt 释放鼠标光标，把输入还给宿主机。",
+      "sourceIds": [
+        "vmware-hotkeys"
+      ]
+    },
+    {
+      "id": "claim-im-config",
+      "text": "在 Debian 及其衍生发行版上，用 im-config 选择 fcitx5，可以让它随图形界面登录自动启动并设置好所需的环境变量。",
+      "sourceIds": [
+        "fcitx-setup"
+      ]
+    },
+    {
+      "id": "claim-fcitx-configtool",
+      "text": "fcitx5-configtool 是 Fcitx 5 的图形配置工具；在它的 Qt 界面里，从右侧列表选中输入法后双击或点中间的添加按钮即可加入；切换输入法的按键在全局选项的热键配置里查看和修改。",
+      "sourceIds": [
+        "fcitx-configtool"
+      ]
+    },
+    {
+      "id": "claim-file-hash",
+      "text": "Get-FileHash 默认使用 SHA256；文件内容哪怕只改一个字符，哈希值也会改变，因此可以用哈希值确认下载的文件没有损坏或被替换。",
+      "sourceIds": [
+        "ms-get-filehash"
+      ]
+    },
+    {
+      "id": "claim-virtualization-uefi",
+      "text": "多数 Windows 设备已经启用虚拟化；没有启用时，需要进入 UEFI 或 BIOS 设置开启。",
+      "sourceIds": [
+        "ms-enable-virtualization"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-get-filehash",
+      "command": "Get-FileHash .\\kali-linux-2026.2-vmware-amd64.7z -Algorithm SHA256 | Format-List",
+      "expectedResult": "输出 Algorithm、Hash、Path 三行；Hash 与 Kali 下载页公布的该文件 SHA256 完全一致。",
+      "sourceIds": [
+        "ms-get-filehash"
+      ]
+    },
+    {
+      "id": "cmd-whoami",
+      "command": "whoami",
+      "expectedResult": "kali",
+      "sourceIds": [
+        "kali-default-credentials"
+      ]
+    },
+    {
+      "id": "cmd-echo-shell",
+      "command": "echo $SHELL",
+      "expectedResult": "/usr/bin/zsh",
+      "sourceIds": [
+        "kali-2020-4-release"
+      ]
+    },
+    {
+      "id": "cmd-os-release",
+      "command": "cat /etc/os-release",
+      "expectedResult": "包含 NAME=\"Kali GNU/Linux\" 与 VERSION_CODENAME=kali-rolling；VERSION_ID 随镜像与更新状态变化。",
+      "sourceIds": [
+        "kali-updating"
+      ]
+    },
+    {
+      "id": "cmd-apt-update",
+      "command": "sudo apt update",
+      "expectedResult": "询问 kali 的密码后读取软件源，最后一行报告可升级的包数量。",
+      "sourceIds": [
+        "kali-updating",
+        "kali-sudo"
+      ]
+    },
+    {
+      "id": "cmd-install-fcitx5",
+      "command": "sudo apt install -y fcitx5 fcitx5-chinese-addons",
+      "expectedResult": "安装输入法框架与拼音等中文输入法，结束后回到提示符。",
+      "sourceIds": [
+        "fcitx-setup"
+      ]
+    },
+    {
+      "id": "cmd-im-config",
+      "command": "im-config -w fcitx5",
+      "expectedResult": "没有输出；~/.xinputrc 里写入 run_im fcitx5，下次登录时生效。",
+      "sourceIds": [
+        "fcitx-setup"
+      ]
+    },
+    {
+      "id": "cmd-apt-full-upgrade",
+      "command": "sudo apt full-upgrade -y",
+      "expectedResult": "下载并安装全部可升级的包，结束后回到提示符。",
+      "sourceIds": [
+        "kali-updating"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "nested-layers",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

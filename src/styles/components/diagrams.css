@@ -1,0 +1,1671 @@
+/* 静态图示（采样、规模、卷积、RNN、数据流水线、XOR、激活流、损失面等）。
+   本文件由 components.css 按原始级联顺序 @import；顺序即优先级契约，勿重排。 */
+/* 采样实验台 */
+.sp-controls {
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+
+.sp-bars {
+  display: grid;
+  gap: 0.55rem;
+  margin-block-start: var(--training-space-3);
+}
+
+.sp-bar {
+  align-items: center;
+  display: grid;
+  gap: 0.7rem;
+  grid-template-columns: 4.5rem 1fr 4.2rem 5.5rem;
+}
+
+.sp-bar--cut .sp-bar__token,
+.sp-bar--cut .sp-bar__value {
+  opacity: 0.42;
+}
+
+.sp-bar__token {
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.sp-bar__value {
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.8rem;
+}
+
+.sp-bar__mark {
+  color: var(--training-muted);
+  font-size: 0.72rem;
+}
+
+.sp-behavior {
+  border-block-start: var(--training-rule-light);
+  font-size: 0.85rem;
+  line-height: 1.8;
+  margin-block-start: var(--training-space-3);
+  padding-block-start: 0.8rem;
+}
+
+.sp-history {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-block-start: var(--training-space-2);
+}
+
+.sp-history__label {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+}
+
+.sp-history__chip {
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.78rem;
+  padding: 0.15rem 0.5rem;
+}
+
+.sp-history__chip--last {
+  border-color: var(--training-accent);
+  color: var(--training-accent);
+  font-weight: 800;
+}
+
+.sp-ledger .learning-sim-ledger-row {
+  grid-template-columns: 0.7fr repeat(4, minmax(4rem, 1fr));
+}
+
+/* 预训练规模对比 */
+.training-scale svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 42rem;
+}
+
+.ts-label {
+  fill: var(--training-heading);
+  font-size: 14.5px;
+  font-weight: 700;
+}
+
+.ts-sub {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+.ts-bar--life {
+  fill: color-mix(in srgb, var(--training-heading) 55%, transparent);
+}
+
+.ts-bar--corpus {
+  fill: var(--training-accent);
+}
+
+.ts-break line {
+  stroke: var(--training-page-bg);
+  stroke-width: 5;
+}
+
+.ts-break {
+  opacity: 0.9;
+}
+
+.ts-value {
+  fill: var(--training-heading);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ts-note {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+.lesson-diagram {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+  padding: 1.25rem 1.4rem 1rem;
+}
+
+.lesson-diagram__eyebrow {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  margin: 0 0 0.25rem;
+}
+
+.lesson-diagram__title {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+  line-height: 1.25;
+  margin: 0 0 1rem;
+}
+
+.lesson-diagram svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 40rem;
+}
+
+.lesson-diagram__note {
+  border-block-start: var(--training-rule-light);
+  color: var(--training-muted);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  margin: 0.9rem 0 0;
+  padding-block-start: 0.7rem;
+}
+
+.diagram-label {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.diagram-lane-label {
+  fill: var(--training-muted);
+  font-size: 14px;
+}
+
+.diagram-lane-label--fail {
+  fill: var(--training-danger);
+}
+
+.diagram-arrow {
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+/* 卷积滑动窗口图示 */
+.conv-window__intro {
+  color: var(--training-muted);
+  font-size: 0.86rem;
+  line-height: 1.8;
+  margin: 0 0 1rem;
+}
+
+.conv-window svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 42rem;
+}
+
+.cw-paper {
+  fill: color-mix(in srgb, var(--training-border) 12%, transparent);
+  stroke: var(--training-border);
+  stroke-width: 1;
+}
+
+.cw-ink {
+  fill: color-mix(in srgb, var(--training-heading) calc(var(--ink, 0) * 100%), transparent);
+}
+
+.cw-frame {
+  fill: none;
+  stroke: var(--training-muted);
+  stroke-dasharray: 5 4;
+  stroke-width: 2;
+}
+
+.cw-frame--hit {
+  stroke: var(--training-accent);
+}
+
+.cw-frame-label {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.cw-kernel {
+  fill: color-mix(in srgb, var(--training-border) 10%, transparent);
+  stroke: var(--training-border);
+  stroke-width: 1.4;
+}
+
+.cw-kernel--on {
+  fill: color-mix(in srgb, var(--training-accent) 18%, transparent);
+  stroke: var(--training-accent);
+}
+
+.cw-kernel-value {
+  fill: var(--training-accent);
+  font-size: 15px;
+  font-weight: 800;
+}
+
+.cw-kernel-note {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+.cw-res-label {
+  fill: var(--training-heading);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.cw-res-track {
+  fill: color-mix(in srgb, var(--training-border) 25%, transparent);
+}
+
+.cw-res-fill {
+  fill: color-mix(in srgb, var(--training-heading) 40%, transparent);
+}
+
+.cw-res-fill--hit {
+  fill: var(--training-accent);
+}
+
+.cw-res-value {
+  fill: var(--training-heading);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.cw-res-note {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+/* RNN 展开图示 */
+.rnn-unfold svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 42rem;
+}
+
+.ru-cell {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-heading);
+  stroke-width: 1.6;
+}
+
+.ru-cell-label {
+  fill: var(--training-heading);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.ru-cell-sub {
+  fill: var(--training-muted);
+  font-size: 13px;
+  font-family: var(--training-font-code);
+}
+
+.ru-io {
+  fill: var(--training-muted);
+  font-size: 13px;
+}
+
+.ru-io--out {
+  fill: var(--training-heading);
+  font-weight: 600;
+}
+
+.ru-loop,
+.ru-recurrent {
+  fill: none;
+  stroke: var(--training-accent);
+  stroke-width: 2.6;
+}
+
+.ru-loop--head {
+  fill: var(--training-accent);
+  stroke: none;
+}
+
+.ru-loop-label {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+.ru-w-label {
+  fill: var(--training-accent);
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.ru-bp {
+  stroke: var(--training-danger-text);
+  stroke-dasharray: 6 4;
+}
+
+.ru-bp--3 { stroke-width: 3; opacity: 1; }
+.ru-bp--2 { stroke-width: 2.2; opacity: 0.72; }
+.ru-bp--1 { stroke-width: 1.5; opacity: 0.45; }
+
+.ru-bp--head {
+  fill: var(--training-danger-text);
+  stroke: none;
+}
+
+.ru-bp-title {
+  fill: var(--training-heading);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.ru-bp-note {
+  fill: var(--training-muted);
+  font-size: 12px;
+}
+
+/* 数据流水线图示 */
+.data-pipeline svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 44rem;
+}
+
+.dp-node {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-heading);
+  stroke-width: 1.5;
+}
+
+.dp-node__n {
+  fill: var(--training-accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.dp-node__title {
+  fill: var(--training-heading);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.dp-node__note {
+  color: var(--training-muted);
+  font-size: 11px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.dp-arrow {
+  marker-end: none;
+}
+
+.dp-leak {
+  fill: none;
+  stroke: var(--training-danger-text);
+  stroke-dasharray: 6 4;
+  stroke-width: 2;
+}
+
+.dp-leak--head {
+  fill: var(--training-danger-text);
+  stroke: none;
+}
+
+.dp-leak-label {
+  fill: var(--training-danger-text);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.diagram-arrow--fail {
+  stroke: var(--training-danger);
+  stroke-dasharray: 0.45rem 0.35rem;
+}
+
+.diagram-arrow--loop {
+  stroke: var(--training-link);
+  stroke-dasharray: 0.45rem 0.35rem;
+}
+
+.diagram-arrow-head {
+  fill: var(--training-heading);
+}
+
+.diagram-box {
+  fill: var(--training-page-bg);
+  stroke: var(--training-border);
+  stroke-width: 1.5;
+}
+
+.diagram-box--doc { stroke: var(--training-accent); }
+.diagram-box--store { stroke: var(--training-heading); stroke-width: 2; }
+.diagram-box--model { stroke: var(--training-link); }
+.diagram-box--window { stroke: var(--training-accent); }
+.diagram-box--working { stroke: var(--training-heading); }
+.diagram-box--long { stroke: var(--training-muted); stroke-dasharray: 0.4rem 0.3rem; }
+.diagram-box--join { stroke: var(--training-heading); stroke-width: 2; }
+.diagram-box--human { stroke: var(--training-safe); stroke-width: 2; }
+.diagram-box--start { stroke: var(--training-accent); }
+.diagram-box--end { fill: var(--training-heading); }
+
+.diagram-box-label {
+  fill: var(--training-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.diagram-box--end .diagram-box-label {
+  fill: var(--training-surface-bg);
+}
+
+.diagram-box-sub {
+  fill: var(--training-muted);
+  font-size: 13px;
+}
+
+.mask-cell--visible {
+  fill: color-mix(in srgb, var(--training-accent) 16%, var(--training-page-bg));
+  stroke: var(--training-accent);
+}
+
+.mask-cell--blocked {
+  stroke: var(--training-border);
+}
+
+.mask-cell {
+  stroke-width: 1.5;
+}
+
+.mask-cell--blocked {
+  fill: color-mix(in srgb, var(--training-border) 28%, var(--training-page-bg));
+}
+
+.mask-cell-text {
+  fill: var(--training-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mask-cell-text--blocked {
+  fill: var(--training-muted);
+}
+
+.budget-track {
+  background: color-mix(in srgb, var(--training-border) 30%, var(--training-page-bg));
+  block-size: 3.4rem;
+  border: var(--training-rule-light);
+  display: flex;
+  inline-size: 100%;
+  max-inline-size: 40rem;
+  overflow: hidden;
+  position: relative;
+}
+
+.budget-segment {
+  background: var(--segment-color);
+  block-size: 100%;
+  border-inline-end: 1px solid var(--training-surface-bg);
+  position: relative;
+  transition: inline-size 220ms ease;
+}
+
+.budget-segment::after {
+  content: attr(data-label);
+  inset-inline-start: 0.4rem;
+  position: absolute;
+  top: -1.7rem;
+  white-space: nowrap;
+}
+
+.budget-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.1rem;
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+}
+
+.budget-legend li {
+  align-items: center;
+  color: var(--training-muted);
+  display: flex;
+  font-size: 0.75rem;
+  gap: 0.4rem;
+}
+
+.budget-swatch {
+  background: var(--segment-color);
+  block-size: 0.8rem;
+  border: 1px solid var(--training-border);
+  display: inline-block;
+  inline-size: 0.8rem;
+}
+
+.xor-explorer {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.xor-explorer__header {
+  padding: 1.1rem 1.4rem 0.2rem;
+}
+
+.xor-explorer__intro {
+  color: var(--training-muted);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0.4rem 0 0;
+}
+
+.xor-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  padding: 0.8rem 1.4rem 0;
+}
+
+.xor-step-tab {
+  background: none;
+  border: 1px solid var(--training-border);
+  color: var(--training-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+}
+
+.xor-step-tab[aria-selected='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
+}
+
+.xor-stage {
+  padding: 0.9rem 1.4rem 0.4rem;
+}
+
+.xor-stage + .xor-stage {
+  border-block-start: 1px dashed var(--training-border);
+  margin-block-start: 0.7rem;
+  padding-block-start: 1rem;
+}
+
+.xor-stage h4 {
+  color: var(--training-heading);
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.xor-stage__lead {
+  font-size: 0.86rem;
+  line-height: 1.75;
+  margin: 0 0 0.6rem;
+}
+
+.xor-stage__figure {
+  margin: 0.4rem 0 0;
+}
+
+.xor-stage__figure svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 460px;
+}
+
+.xor-stage__figure figcaption {
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  margin-block-start: 0.4rem;
+}
+
+.xor-wide-scroll {
+  overflow-x: auto;
+}
+
+.xor-wide-scroll .xor-stage__figure svg {
+  max-inline-size: none;
+  min-inline-size: 660px;
+}
+
+.xor-legend {
+  color: var(--training-muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  gap: 0.4rem 1.1rem;
+  list-style: none;
+  margin: 0.55rem 0 0;
+  padding: 0;
+}
+
+.xor-legend__dot {
+  border-radius: 50%;
+  display: inline-block;
+  block-size: 0.72rem;
+  inline-size: 0.72rem;
+  margin-inline-end: 0.35rem;
+  vertical-align: -1px;
+}
+
+.xor-legend__dot--one {
+  background: var(--training-class-one);
+  border-radius: 2px;
+}
+
+.xor-legend__dot--zero {
+  background: var(--training-class-zero);
+}
+
+.xor-angle {
+  color: var(--training-heading);
+  display: grid;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 0.35rem;
+  margin: 0.8rem 0 0.4rem;
+}
+
+.xor-angle input[type='range'] {
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+}
+
+.xor-chip {
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-inline: 0.1rem;
+  min-inline-size: 1.8rem;
+  padding: 0.02rem 0.4rem;
+  text-align: center;
+}
+
+.xor-chip--one {
+  color: var(--training-class-one);
+}
+
+.xor-chip--zero {
+  color: var(--training-class-zero);
+}
+
+.xor-insight {
+  background: color-mix(in srgb, var(--training-accent) 7%, transparent);
+  border-inline-start: 3px solid var(--training-accent);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0.7rem 0 0;
+  padding: 0.55rem 0.75rem;
+}
+
+.xor-mapping {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  inline-size: 100%;
+  margin: 0.7rem 0 0;
+}
+
+.xor-mapping caption {
+  caption-side: top;
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  padding-block-end: 0.3rem;
+  text-align: left;
+}
+
+.xor-mapping th,
+.xor-mapping td {
+  border: 1px solid var(--training-border);
+  padding: 0.3rem 0.55rem;
+  text-align: center;
+}
+
+.xor-mapping th {
+  background: color-mix(in srgb, var(--training-heading) 6%, transparent);
+  color: var(--training-muted);
+  font-weight: 600;
+}
+
+.xor-line {
+  stroke: var(--training-heading);
+  stroke-width: 4;
+}
+
+.xor-grid {
+  stroke: color-mix(in srgb, var(--training-border) 45%, transparent);
+  stroke-width: 1;
+}
+
+.xor-separator {
+  stroke: var(--training-safe);
+  stroke-width: 4;
+}
+
+.xor-axis-label {
+  fill: var(--training-muted);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.xor-separator-label {
+  fill: var(--training-safe);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.xor-point {
+  stroke: var(--training-surface-bg);
+  stroke-width: 2.5;
+}
+
+.xor-point--one {
+  fill: var(--training-class-one);
+}
+
+.xor-point--zero {
+  fill: var(--training-class-zero);
+}
+
+.xor-point-inner {
+  dominant-baseline: central;
+  fill: var(--training-page-bg);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.xor-point-inner--merged {
+  fill: var(--training-heading);
+  font-size: 14px;
+}
+
+.xor-diagonal {
+  stroke: color-mix(in srgb, var(--training-heading) 40%, transparent);
+  stroke-dasharray: 3 5;
+  stroke-width: 2;
+}
+
+.xor-plot-title {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.xor-map-gloss {
+  fill: var(--training-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.xor-map-arrow {
+  fill: none;
+  marker-end: url(#xor-arrow-head);
+  stroke: var(--training-accent);
+  stroke-dasharray: 5 4;
+  stroke-width: 2.5;
+}
+
+.digit-threes {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.digit-threes__header {
+  padding: 1.1rem 1.4rem 0.2rem;
+}
+
+.digit-threes__intro {
+  color: var(--training-muted);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0.4rem 0 0;
+}
+
+.digit-threes__grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0.9rem 1.4rem 0.4rem;
+}
+
+.digit-threes__panel {
+  margin: 0;
+}
+
+.digit-threes__panel svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.digit-threes__paper {
+  fill: color-mix(in srgb, var(--training-border) 13%, transparent);
+}
+
+.digit-threes__gridline {
+  stroke: color-mix(in srgb, var(--training-border) 38%, transparent);
+  stroke-width: 1;
+}
+
+.digit-threes__ink {
+  fill: var(--training-heading);
+  fill-opacity: var(--ink);
+}
+
+.digit-threes__panel figcaption {
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  margin-block-start: 0.4rem;
+  text-align: center;
+}
+
+.digit-threes__note {
+  margin: 0;
+  padding: 0.8rem 1.4rem 1.1rem;
+}
+
+.activation-flow {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.activation-flow__header {
+  padding: 1.1rem 1.4rem 0.2rem;
+}
+
+.activation-flow__intro {
+  color: var(--training-muted);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0.4rem 0 0;
+}
+
+.activation-flow__picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  padding: 0.8rem 1.4rem 0.2rem;
+}
+
+.af-thumb {
+  background: none;
+  border: 1px solid var(--training-border);
+  color: var(--training-muted);
+  cursor: pointer;
+  display: grid;
+  font: inherit;
+  font-size: 0.72rem;
+  gap: 0.3rem;
+  justify-items: center;
+  min-inline-size: 5.4rem;
+  padding: 0.45rem 0.55rem 0.4rem;
+}
+
+.af-thumb svg {
+  display: block;
+  inline-size: 56px;
+}
+
+.af-thumb--active {
+  border-color: var(--training-accent);
+  box-shadow: 0 0 0 1px var(--training-accent);
+  color: var(--training-heading);
+  font-weight: 700;
+}
+
+.activation-flow__static-note {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+  margin: 0;
+  padding: 0.6rem 1.4rem 0;
+}
+
+.activation-flow__scroll {
+  overflow-x: auto;
+  padding: 0.5rem 1.4rem 0;
+}
+
+.activation-flow__scroll svg {
+  display: block;
+  min-inline-size: 860px;
+}
+
+.af-paper {
+  fill: color-mix(in srgb, var(--training-border) 13%, transparent);
+}
+
+.af-ink {
+  fill: var(--training-heading);
+  fill-opacity: var(--ink);
+}
+
+.af-col-title {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.af-input-label {
+  fill: var(--training-muted);
+  font-size: 14px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+
+.af-bundle {
+  opacity: 0.5;
+  stroke: var(--training-heading);
+  stroke-width: 9;
+}
+
+.af-bundle-label {
+  fill: var(--training-heading);
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.af-bundle-sub {
+  fill: var(--training-muted);
+  font-size: 12px;
+  text-anchor: middle;
+}
+
+.af-wire {
+  stroke: color-mix(in srgb, var(--training-heading) 30%, transparent);
+  stroke-width: 1.4;
+}
+
+.af-wire--pos {
+  opacity: 0.85;
+  stroke: var(--training-accent);
+  stroke-width: var(--wire-width, 1.6);
+}
+
+.af-wire--neg {
+  opacity: 0.85;
+  stroke: var(--training-link);
+  stroke-width: var(--wire-width, 1.6);
+}
+
+.af-unit {
+  fill: color-mix(in srgb, var(--training-heading) calc(var(--act, 0) * 100%), transparent);
+  stroke: var(--training-border);
+  stroke-width: 2;
+  transition: fill 280ms ease;
+}
+
+.af-unit-label {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.af-unit-question {
+  fill: var(--training-muted);
+  font-size: 12.5px;
+}
+
+.af-out-char {
+  fill: var(--training-muted);
+  font-size: 30px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.af-out-char--win {
+  fill: var(--training-accent);
+}
+
+.af-out-win {
+  fill: var(--training-accent);
+  font-size: 13px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.af-track {
+  fill: color-mix(in srgb, var(--training-border) 25%, transparent);
+}
+
+.af-fill {
+  fill: color-mix(in srgb, var(--training-heading) 40%, transparent);
+  transition: width 280ms ease;
+}
+
+.af-fill--win {
+  fill: var(--training-accent);
+}
+
+.af-out-percent {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.af-verdict {
+  font-size: 0.84rem;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0.8rem 1.4rem 0;
+}
+
+.af-results {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  inline-size: calc(100% - 2.8rem);
+  margin: 0.8rem 1.4rem 0;
+}
+
+.af-results caption {
+  caption-side: top;
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  padding-block-end: 0.3rem;
+  text-align: left;
+}
+
+.af-results th,
+.af-results td {
+  border: 1px solid var(--training-border);
+  padding: 0.3rem 0.55rem;
+  text-align: center;
+}
+
+.af-results th {
+  background: color-mix(in srgb, var(--training-heading) 6%, transparent);
+  color: var(--training-muted);
+  font-weight: 600;
+}
+
+.activation-flow__note {
+  margin: 0;
+  padding: 0.8rem 1.4rem 1.1rem;
+}
+
+.matrix-steps {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.matrix-steps__header {
+  padding: 1.1rem 1.4rem 0.2rem;
+}
+
+.matrix-steps__intro {
+  color: var(--training-muted);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0.4rem 0 0;
+}
+
+.matrix-steps__body {
+  overflow-x: auto;
+  padding: 0.4rem 1.4rem 0;
+}
+
+.matrix-steps__body svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 640px;
+}
+
+.matrix-steps__scroll-hint,
+.matrix-steps__mobile-ledger {
+  display: none;
+}
+
+.ms-wire {
+  opacity: 0.5;
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.ms-wire--pos {
+  opacity: 0.9;
+  stroke: var(--training-accent);
+}
+
+.ms-wire--neg {
+  opacity: 0.9;
+  stroke: var(--training-link);
+}
+
+.ms-weight {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ms-node {
+  fill: color-mix(in srgb, var(--training-heading) 6%, transparent);
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.ms-node--hidden {
+  stroke: var(--training-accent);
+}
+
+.ms-node-label {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.ms-node-value {
+  fill: var(--training-muted);
+  font-size: 13px;
+}
+
+.ms-calc {
+  fill: var(--training-heading);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.ms-act {
+  fill: var(--training-muted);
+  font-size: 13.5px;
+}
+
+.matrix-steps__note {
+  margin: 0;
+  padding: 0.8rem 1.4rem 1.1rem;
+}
+
+.loss-landscape {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.loss-landscape__figure {
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem 1.4rem 0.2rem;
+}
+
+.loss-landscape__figure svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 540px;
+}
+
+.loss-landscape__figure figcaption {
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  margin-block-start: 0.4rem;
+}
+
+.ls-axis {
+  stroke: var(--training-border);
+  stroke-width: 2;
+}
+
+.ls-axis-label {
+  fill: var(--training-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ls-contour {
+  fill: none;
+  stroke: color-mix(in srgb, var(--training-accent) 45%, transparent);
+  stroke-width: 1.6;
+}
+
+.ls-min {
+  fill: var(--training-safe);
+}
+
+.ls-min-label {
+  fill: var(--training-safe);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.ls-ball {
+  fill: var(--training-heading);
+}
+
+.ls-ball--next {
+  fill: var(--training-accent);
+}
+
+.ls-gradient {
+  marker-end: url(#ls-arrow);
+  stroke: var(--training-heading);
+  stroke-width: 3;
+}
+
+.ls-gradient--next {
+  opacity: 0.6;
+  stroke-dasharray: 4 4;
+}
+
+.ls-step-label {
+  fill: var(--training-heading);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.ls-dir-label {
+  fill: var(--training-muted);
+  font-size: 13px;
+}
+
+.loss-landscape__note {
+  margin: 0;
+  padding: 0.7rem 1.4rem 1rem;
+}
+
+.embedding-space {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.embedding-space__figure {
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem 1.4rem 0.2rem;
+}
+
+.embedding-space__figure svg {
+  display: block;
+  inline-size: 100%;
+  min-inline-size: 540px;
+}
+
+.embedding-space__figure figcaption {
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  margin-block-start: 0.4rem;
+}
+
+.es-axis {
+  stroke: var(--training-border);
+  stroke-width: 2;
+}
+
+.es-axis-label {
+  fill: var(--training-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.es-hull {
+  fill: color-mix(in srgb, var(--training-accent) 5%, transparent);
+  stroke: color-mix(in srgb, var(--training-accent) 40%, transparent);
+  stroke-dasharray: 4 5;
+  stroke-width: 1.6;
+}
+
+.es-hull-label {
+  fill: var(--training-muted);
+  font-size: 14px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.es-point {
+  fill: var(--training-accent);
+}
+
+.es-point-label {
+  fill: var(--training-heading);
+  font-size: 15px;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.es-link--near {
+  stroke: var(--training-safe);
+  stroke-width: 2.5;
+}
+
+.es-link--far {
+  stroke: var(--training-muted);
+  stroke-dasharray: 5 4;
+  stroke-width: 2;
+}
+
+.es-link-label--near {
+  fill: var(--training-safe);
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.es-link-label--far {
+  fill: var(--training-muted);
+  font-size: 13px;
+}
+
+.embedding-space__note {
+  margin: 0;
+  padding: 0.7rem 1.4rem 1rem;
+}
+
+.neuron-playground {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+  padding-block-end: 1.2rem;
+}
+
+.neuron-playground__layout {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: minmax(0, 1.3fr) minmax(15rem, 0.9fr);
+  padding: 0.6rem 1.4rem 0;
+}
+
+.neuron-playground__layout svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.neuron-playground__dials {
+  display: grid;
+  gap: 0.55rem;
+  align-content: center;
+}
+
+.neuron-playground__dials label {
+  color: var(--training-heading);
+  display: grid;
+  font-size: 0.8rem;
+  font-weight: 700;
+  gap: 0.3rem;
+}
+
+.neuron-playground__dials input[type='range'] {
+  inline-size: 100%;
+  min-block-size: 2.4rem;
+}
+
+.neuron-playground__verdict {
+  margin: 0.9rem 1.4rem 0;
+}
+
+.neuron-node {
+  fill: var(--training-page-bg);
+  stroke: var(--training-heading);
+  stroke-width: 2.5;
+}
+
+.neuron-node--body {
+  stroke: var(--training-accent);
+  stroke-width: 3;
+}
+
+.neuron-node-label {
+  fill: var(--training-heading);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.neuron-node-value {
+  fill: var(--training-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.neuron-wire {
+  stroke-width: var(--wire-width, 2);
+}
+
+.neuron-wire--excite {
+  stroke: var(--training-accent);
+}
+
+.neuron-wire--inhibit {
+  stroke: var(--training-link);
+}
+
+.neuron-wire-label {
+  fill: var(--training-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.neuron-output-track {
+  fill: color-mix(in srgb, var(--training-border) 35%, var(--training-page-bg));
+  stroke: var(--training-border);
+}
+
+.neuron-output-fill {
+  fill: var(--training-accent);
+}
+
+.network-diagram__row {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.network-diagram figure {
+  margin: 0;
+}
+
+.network-diagram svg {
+  display: block;
+  inline-size: 100%;
+}
+
+.network-diagram figcaption {
+  color: var(--training-muted);
+  font-size: 0.76rem;
+  line-height: 1.6;
+  margin-block-start: 0.4rem;
+}
+
+.net-node {
+  fill: var(--training-page-bg);
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.net-node--active {
+  fill: color-mix(in srgb, var(--training-accent) 30%, var(--training-page-bg));
+  stroke: var(--training-accent);
+}
+
+.net-node--dropped {
+  fill: color-mix(in srgb, var(--training-border) 45%, var(--training-page-bg));
+  stroke: var(--training-border);
+  stroke-dasharray: 0.25rem 0.2rem;
+}
+
+.net-wire {
+  stroke: color-mix(in srgb, var(--training-heading) 55%, transparent);
+  stroke-width: var(--wire-width, 1.6);
+}
+
+.net-wire--cut {
+  stroke: var(--training-border);
+  stroke-dasharray: 0.3rem 0.25rem;
+  stroke-width: 1.2;
+}
+
+.net-node-label {
+  fill: var(--training-heading);
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.xor-explorer__footer {
+  display: grid;
+  gap: 0.6rem;
+  padding: 0.9rem 1.4rem 1.2rem;
+}
+
+.xor-explorer__static-note {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+  margin: 0;
+}
+
+.xor-verdict {
+  color: var(--training-text);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.xor-explorer__note {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.learning-axis {
+  stroke: var(--training-border);
+  stroke-width: 2;
+}
+
+.learning-loss-curve {
+  fill: none;
+  stroke: var(--training-heading);
+  stroke-width: 4;
+}
+
+.learning-contour {
+  stroke-width: 1.4;
+  stroke: color-mix(in srgb, var(--training-heading) 45%, transparent);
+}
+
+.learning-trajectory {
+  fill: none;
+  stroke: var(--training-accent);
+  stroke-width: 2.4;
+  stroke-dasharray: 1 7;
+  stroke-linecap: round;
+}
+
+.learning-optimum-dot {
+  fill: var(--training-heading);
+  stroke: var(--training-page-bg);
+  stroke-width: 3;
+}
+
+.learning-loss-marker {
+  fill: var(--training-accent);
+  stroke: var(--training-page-bg);
+  stroke-width: 4;
+}
+
+.learning-chart-label {
+  fill: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 16px;
+}
+
+.learning-sim-controls > label {
+  display: grid;
+  gap: 0.25rem;
+}
+
+.learning-sim-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+}
+
+.learning-sim-actions button {
+  background: var(--training-heading);
+  border: 0;
+  border-radius: var(--training-radius-sm);
+  color: var(--training-page-bg);
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-block-size: 2.75rem;
+  padding-inline: 1rem;
+}
+
+.learning-sim-actions button[aria-pressed='true'] {
+  background: var(--training-accent);
+}
+
+.learning-sim-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+/* 嵌套层次图：每一层是一个框，里面套着下一层 */
+.nested-layers__layer {
+  border: 0.0625rem solid color-mix(in srgb, var(--training-border) 70%, transparent);
+  border-radius: var(--training-radius-md);
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.nested-layers > .nested-layers__layer {
+  background: color-mix(in srgb, var(--training-page-bg) 70%, var(--training-surface-bg));
+}
+
+.nested-layers__layer .nested-layers__layer {
+  background: color-mix(in srgb, var(--training-surface-bg) 86%, var(--training-heading) 4%);
+  margin-block-start: 0.8rem;
+}
+
+.nested-layers__layer .nested-layers__layer .nested-layers__layer {
+  background: var(--training-surface-bg);
+}
+
+.nested-layers__layer:not(:has(.nested-layers__layer)) {
+  border-color: var(--training-accent);
+}
+
+.nested-layers__role {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  margin: 0;
+}
+
+.nested-layers__name {
+  color: var(--training-heading);
+  font-family: var(--training-font-title);
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.nested-layers__detail {
+  color: var(--training-text);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  margin: 0;
+}

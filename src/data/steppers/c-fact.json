@@ -1,0 +1,408 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-functions-and-stack/fact.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "",
+  "int fact(int n) {",
+  "    if (n <= 1) {",
+  "        return 1;",
+  "    }",
+  "    return n * fact(n - 1);",
+  "}",
+  "",
+  "int main(void) {",
+  "    int result = fact(3);",
+  "    printf(\"%d\\n\", result);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "main 调用 fact(3)。新栈帧里 n 是 3。result 要等 fact 返回才有值，所以还没出现。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "3 不小于等于 1，条件不成立，跳过 return 1。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "要算 3 * fact(2)，得先知道 fact(2) 是多少。于是再调用一次 fact，又多出一个栈帧，它有自己的 n，值是 2。上一个栈帧停在这一行等着。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "2 也不满足条件。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebbc",
+       "size": 4,
+       "name": "n",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "再调用 fact(1)。现在栈上叠着三个 fact 的栈帧，各有各的 n。看地址，越晚调用的越小：栈是往低地址方向长的。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebbc",
+       "size": 4,
+       "name": "n",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "1 小于等于 1，条件成立。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebbc",
+       "size": 4,
+       "name": "n",
+       "value": "1"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "执行 return 1，这一层有了结果。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebdc",
+       "size": 4,
+       "name": "n",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "fact(1) 返回 1，它的栈帧消失。回到 fact(2) 停着的那一行，算出 2 * 1。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": []
+    },
+    {
+     "name": "fact",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "n",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "fact(2) 返回 2，栈帧消失。回到 fact(3)，算出 3 * 2。"
+  },
+  {
+   "line": 8,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "result",
+       "value": "6"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "fact(3) 返回 6，栈帧消失。main 里的 result 得到 6。"
+  },
+  {
+   "line": 12,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "result",
+       "value": "6"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "6\n",
+   "note": "打印 6。"
+  },
+  {
+   "line": 13,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "result",
+       "value": "6"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "6\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

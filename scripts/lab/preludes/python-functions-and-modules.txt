@@ -1,0 +1,2 @@
+# 第 7 课：清掉上次重放留下的 pip 下载缓存，让页面上 pip install 的「Downloading」真实出现（学员第一次安装时没有缓存）。
+rm -rf ~/.cache/pip; true

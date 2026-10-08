@@ -1,0 +1,818 @@
+{
+ "schemaVersion": 1,
+ "recordedAt": "2026-10-02",
+ "scope": "基础学期第 7 批：Docker 两课、Java 两课、综合项目（第 33 到 37 课）；安全与 AI 课前置知识改为链接；前六批全量回归",
+ "commandReplay": {
+  "environment": "Docker 课与综合项目：kali-docker 容器（kalilinux/kali-rolling，os-release 2026.3，特权模式，docker.io 28.5.2、docker-buildx 0.29.1、docker-compose 2.40.3，守护进程在容器内运行；PHP 8.4.24、Git 2.53）。Java 课：kali-lab 容器（OpenJDK 25.0.4.1，Maven 3.9.12）。",
+  "method": "sh scripts/lab/replay-lesson.sh <课 id>：按页面顺序在真实的交互式 zsh 里重放并逐条比对；前置脚本清掉本课的容器、卷、镜像与构建缓存，让拉取和构建真实发生",
+  "commands": 142,
+  "identical": 142,
+  "differing": 0,
+  "volatileOnly": 15,
+  "perLesson": {
+   "docker-images-and-containers": {
+    "shell": {
+     "identical": 33,
+     "volatileOnly": 7,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "docker-compose-labs": {
+    "shell": {
+     "identical": 32,
+     "volatileOnly": 5,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "java-jvm-and-objects": {
+    "shell": {
+     "identical": 26,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "java-web-project-reading": {
+    "shell": {
+     "identical": 22,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "guestbook-capstone": {
+    "shell": {
+     "identical": 29,
+     "volatileOnly": 2,
+     "differing": 0,
+     "missing": 0
+    }
+   }
+  },
+  "volatileFields": "64 位容器与镜像编号、Docker 自动起的端点名、nginx 与 PHP 内置服务器日志时间、构建进度每步耗时、构建上下文大小、截短的镜像摘要、Docker 网络分配的地址、HTTP Date 头。",
+  "separatelyReproduced": "第 34 课 proxy_pass 写成 127.0.0.1 时的 502、down/up/--build/down -v 后的计数；第 35 课验收题四个预测与 Book/Shelf 参考解答；第 36 课 /notes/abc、/notesx、/Notes、PUT 的路由与 HelloHandler 的查询字符串；第 37 课 data 目录不存在时的 PDO 报错、iconv_strlen 在 Kali 与 Alpine 镜像里按字符计数。"
+ },
+ "regression": {
+  "reason": "kali-session.py 的输出还原改成了屏幕模拟（处理 docker build、docker compose 原地刷新的进度），前六批全部重新重放",
+  "lessons5to32": {
+   "python-variables-and-types": {
+    "shell": {
+     "identical": 5,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 28,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-control-flow": {
+    "shell": {
+     "identical": 10,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 13,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-functions-and-modules": {
+    "shell": {
+     "identical": 18,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 13,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-collections": {
+    "shell": {
+     "identical": 4,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 30,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-strings-and-bytes": {
+    "shell": {
+     "identical": 4,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 43,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-files-and-exceptions": {
+    "shell": {
+     "identical": 16,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 10,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "git-local-workflow": {
+    "shell": {
+     "identical": 46,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "git-branches-and-collaboration": {
+    "shell": {
+     "identical": 58,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "network-basics": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 3,
+     "differing": 1,
+     "missing": 0
+    }
+   },
+   "http-basics": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 9,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "python-network-scripting": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    },
+    "Python 交互模式": {
+     "identical": 30,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "html-css-dom": {
+    "shell": {
+     "identical": 5,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "Firefox 控制台": {
+     "identical": 25,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "javascript-in-the-browser": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 2,
+     "differing": 0,
+     "missing": 0
+    },
+    "Firefox 控制台": {
+     "identical": 43,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "sql-basics": {
+    "shell": {
+     "identical": 9,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    },
+    "sqlite3 命令行": {
+     "identical": 33,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-compile-and-run": {
+    "shell": {
+     "identical": 26,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-types-and-control-flow": {
+    "shell": {
+     "identical": 14,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-functions-and-stack": {
+    "shell": {
+     "identical": 17,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-arrays-and-strings": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 3,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-pointers": {
+    "shell": {
+     "identical": 17,
+     "volatileOnly": 3,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-structs-and-heap": {
+    "shell": {
+     "identical": 18,
+     "volatileOnly": 3,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-files-and-projects": {
+    "shell": {
+     "identical": 23,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "c-debugging-memory-errors": {
+    "shell": {
+     "identical": 12,
+     "volatileOnly": 2,
+     "differing": 0,
+     "missing": 0
+    },
+    "gdb": {
+     "identical": 19,
+     "volatileOnly": 3,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-request-lifecycle": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 3,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-types-and-arrays": {
+    "shell": {
+     "identical": 8,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-forms-and-sessions": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 9,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-functions-and-files": {
+    "shell": {
+     "identical": 13,
+     "volatileOnly": 2,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-pdo-database": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 1,
+     "differing": 0,
+     "missing": 0
+    }
+   },
+   "php-objects-and-serialization": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 0,
+     "differing": 0,
+     "missing": 0
+    }
+   }
+  },
+  "lessons5to32Note": "network-basics 的一条差异是 dig +short example.com 两个地址的先后顺序，页面已注明顺序可能不同。php-request-lifecycle、php-forms-and-sessions、php-functions-and-files 第一次重放时被第 17 课留下的 Python 练习服务器占住 8000 端口，前置脚本补上清理后单独重放，结果以单独重放为准。python-functions-and-modules 第一次重放时 pip 用了上次留下的下载缓存（显示 Using cached），新增前置脚本清掉 ~/.cache/pip 后单独重放全部一致。docker-images-and-containers 第一次重放时 Docker Hub 连接超时，单独重放全部一致；docker-compose-labs 的 down -v 里删网络和删卷两行先后不固定，页面改为省略说明后单独重放全部一致。",
+  "lessons1to4": "在由 kali-lab-base:b5 新建、去掉 ~/lab 与 htop 的临时容器里重放：shell-files-and-paths 37/39，shell-permissions-and-pipes 30/39，data-representation 26/26；差异全部属于第 1 批登记过的类别（ls -l 时间戳、进程号、tree 的不换行空格、sudo 与 command-not-found 的应答回显、kill 的通知时机）。vm-kali-setup 的 sudo apt update 输出随软件源变化，与第 1 批一样按有意截取处理，其余 5 条一致。"
+ },
+ "markAudit": "修复 CodeFile 的 mark 后逐一核对 24 课 64 处标亮行；改正 c-types-and-control-flow 的 sum.c（5,11 → 5,12）、php-functions-and-files 的 page.php（2-5,12 → 2-5,9,14）、guestbook-capstone 的 index.php（3,16 → 3,17）。",
+ "browser": {
+  "pages": [
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 0,
+    "tables": 4,
+    "sources": 13,
+    "check": "desk docker-images-and-containers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 4,
+    "tables": 4,
+    "sources": 16,
+    "check": "desk docker-compose-labs http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 19,
+    "check": "desk java-jvm-and-objects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 15,
+    "check": "desk java-web-project-reading http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 17,
+    "check": "desk guestbook-capstone http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 0,
+    "tables": 4,
+    "sources": 13,
+    "check": "phone docker-images-and-containers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 4,
+    "tables": 4,
+    "sources": 16,
+    "check": "phone docker-compose-labs http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 19,
+    "check": "phone java-jvm-and-objects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 15,
+    "check": "phone java-web-project-reading http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 17,
+    "check": "phone guestbook-capstone http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 0,
+    "tables": 4,
+    "sources": 13,
+    "check": "dark docker-images-and-containers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 4,
+    "tables": 4,
+    "sources": 16,
+    "check": "dark docker-compose-labs http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 19,
+    "check": "dark java-jvm-and-objects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 15,
+    "check": "dark java-web-project-reading http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 17,
+    "check": "dark guestbook-capstone http=200"
+   }
+  ],
+  "interactions": {
+   "docker-images-and-containers": {},
+   "docker-compose-labs": {
+    "simulator-0": {
+     "steps": 6,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ]
+    }
+   },
+   "java-jvm-and-objects": {
+    "simulator-0": {
+     "steps": 6,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ]
+    }
+   },
+   "java-web-project-reading": {
+    "simulator-0": {
+     "steps": 6,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ]
+    }
+   },
+   "guestbook-capstone": {
+    "simulator-0": {
+     "steps": 6,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ]
+    }
+   }
+  },
+  "static": {
+   "reduced": {
+    "docker-images-and-containers": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "docker-compose-labs": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "java-jvm-and-objects": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 11
+    },
+    "java-web-project-reading": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 9
+    },
+    "guestbook-capstone": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 6
+    }
+   },
+   "nojs": {
+    "docker-images-and-containers": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "docker-compose-labs": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "java-jvm-and-objects": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "java-web-project-reading": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "guestbook-capstone": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    }
+   }
+  },
+  "print": {
+   "docker-images-and-containers": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 0,
+    "headerHidden": true
+   },
+   "docker-compose-labs": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 4,
+    "headerHidden": true
+   },
+   "java-jvm-and-objects": {
+    "answersVisible": 3,
+    "terminals": 11,
+    "codeFiles": 7,
+    "headerHidden": true
+   },
+   "java-web-project-reading": {
+    "answersVisible": 3,
+    "terminals": 9,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "guestbook-capstone": {
+    "answersVisible": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "headerHidden": true
+   }
+  },
+  "errors": [],
+  "site": {
+   "path": "已上线 37 / 37",
+   "pathLinks": 37,
+   "nextTag": null,
+   "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 37",
+   "pagination": {
+    "docker-images-and-containers": {
+     "links": [
+      "/lessons/php-objects-and-serialization/",
+      "/lessons/docker-compose-labs/"
+     ],
+     "prereq": [
+      "/lessons/network-basics/",
+      "/lessons/shell-permissions-and-pipes/",
+      "/lessons/vm-kali-setup/"
+     ]
+    },
+    "docker-compose-labs": {
+     "links": [
+      "/lessons/docker-images-and-containers/",
+      "/lessons/java-jvm-and-objects/"
+     ],
+     "prereq": [
+      "/lessons/docker-images-and-containers/",
+      "/lessons/php-pdo-database/"
+     ]
+    },
+    "java-jvm-and-objects": {
+     "links": [
+      "/lessons/docker-compose-labs/",
+      "/lessons/java-web-project-reading/"
+     ],
+     "prereq": [
+      "/lessons/c-types-and-control-flow/",
+      "/lessons/php-objects-and-serialization/"
+     ]
+    },
+    "java-web-project-reading": {
+     "links": [
+      "/lessons/java-jvm-and-objects/",
+      "/lessons/guestbook-capstone/"
+     ],
+     "prereq": [
+      "/lessons/java-jvm-and-objects/",
+      "/lessons/http-basics/"
+     ]
+    },
+    "guestbook-capstone": {
+     "links": [
+      "/lessons/java-web-project-reading/"
+     ],
+     "prereq": [
+      "/lessons/git-branches-and-collaboration/",
+      "/lessons/php-pdo-database/",
+      "/lessons/docker-compose-labs/"
+     ]
+    }
+   },
+   "category-cs-foundations": {
+    "http": 200,
+    "links": 6,
+    "planned": 0
+   },
+   "category-programming": {
+    "http": 200,
+    "links": 23,
+    "planned": 0
+   },
+   "category-engineering-tools": {
+    "http": 200,
+    "links": 7,
+    "planned": 0
+   },
+   "category-custom": {
+    "http": 200,
+    "links": 1,
+    "planned": 0
+   }
+  }
+ }
+}

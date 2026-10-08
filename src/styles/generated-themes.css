@@ -8,6 +8,8 @@
   --training-heading: #17150F;
   --training-border: #817867;
   --training-accent: #A63D2C;
+  --training-class-zero: #21618C;
+  --training-class-one: #A64B00;
   --training-link: #8B2E23;
   --training-danger: #B3261E;
   --training-safe: #1B7F3B;
@@ -35,6 +37,8 @@
   --training-heading: #FFF8E9;
   --training-border: #70685A;
   --training-accent: #D36A4D;
+  --training-class-zero: #7FC8F0;
+  --training-class-one: #FFB86B;
   --training-link: #E4896D;
   --training-danger: #E0705A;
   --training-safe: #8CC79C;
@@ -65,6 +69,8 @@
     --training-heading: #000000;
     --training-border: #707070;
     --training-accent: #8B2E23;
+    --training-class-zero: #21618C;
+    --training-class-one: #A64B00;
     --training-link: #8B2E23;
     --training-danger: #6F1D23;
     --training-safe: #174A29;

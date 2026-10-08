@@ -1,0 +1,2 @@
+# 第 27 课：清掉上次的练习目录和还在运行的 PHP 服务器。源文件由重放脚本放在默认工作目录，页面流程里再复制进 ~/lab/php。
+rm -rf ~/lab/php; pkill -f 'S 127.0.0.1:800[0]'; pkill -f 'server.p[y]'; pkill -f 'http.serve[r]'; true

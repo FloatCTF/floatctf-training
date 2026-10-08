@@ -1,0 +1,286 @@
+{
+  "lessonPlan": {
+    "audience": "学完 Python 基础六课和 HTTP 一课、还没有用代码发过网络请求的新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "subtle",
+    "visualStory": "把 socket 脚本发出的那串字符和收到的字节逐部分点开，对照 requests 的写法，看清库替你做掉了哪些步骤",
+    "learningObjectives": [
+      "用 requests 发出 GET 和 POST 请求，读取状态码、头部、正文和 JSON",
+      "用 params 和 data 传查询参数与表单数据，不手拼网址",
+      "用 Session 让多个请求共用 Cookie，保持登录状态",
+      "写出带循环的脚本自动翻页取数据，并处理连接失败",
+      "用 socket 亲手发出一个 HTTP 请求，说出 requests 替你做了什么"
+    ],
+    "prerequisites": [
+      "python-files-and-exceptions",
+      "http-basics",
+      "~/lab/http 目录里有第 14 课的 server.py"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-session-cookies",
+      "kind": "mechanism",
+      "title": "登录了，为什么还是 401",
+      "question": "一位同学写了两行：先 requests.post(登录地址, data=账号密码)，得到 200；紧接着 requests.get(\".../me\")，却得到 401。把两行都改成用同一个 requests.Session() 对象的 post 和 get，第二个请求就成了 200。解释这两种写法差在哪里。",
+      "answer": "requests.get、requests.post 每次调用都是一个独立的请求，彼此不共享任何东西。登录时服务器用 Set-Cookie 发下来的会话编号，requests 收到了，但第二次调用 requests.get 时不会带上它，服务器看不到 Cookie，于是返回 401。Session 对象会把收到的 Cookie 记住，并在之后用它发出的每个请求里自动带上，相当于第 14 课里 curl 的 -c 和 -b。所以认人靠的仍然是 Cookie 那一行，Session 只是替你保管和携带它。",
+      "sourceIds": [
+        "requests-advanced",
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "check-predict-requests",
+      "kind": "prediction",
+      "title": "预测三行输出",
+      "question": "练习站在运行。下面的脚本依次打印三行，写出每一行。第一行：r = requests.get(\".../old\", allow_redirects=False)，然后 print(r.status_code, r.headers[\"Location\"])。第二行：r = requests.get(\".../old\")，然后 print(r.status_code, r.text.strip(), len(r.history))。第三行：r = requests.get(\".../nosuch\")，然后 print(r.status_code, r.ok)。",
+      "answer": "第一行：302 /hello。关掉了自动跳转，拿到的是跳转响应本身。第二行：200 Hello, stranger! 1。requests 默认会跟随跳转，最终拿到的是 /hello 的响应；history 里记着中途经过的那一个 302 响应，所以长度是 1。第三行：404 False。请求本身发出去并且收到了响应，所以不会抛异常；ok 在状态码表示出错时是 False。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "check-write-expensive",
+      "kind": "practice",
+      "title": "把贵的挑出来",
+      "question": "写一个 expensive.py：翻遍 /api/items 的所有页，把价格大于 40 的条目的名字写进 expensive.txt，每行一个，最后打印写了几条。",
+      "answer": "参考写法：先准备空列表 names 和 page = 1；while True 循环里用 requests.get(URL, params={\"page\": page}, timeout=5).json()[\"items\"] 取一页，取到空列表就 break；对每个 item，如果 item[\"price\"] > 40 就把 item[\"name\"] 追加进 names；page 加 1。循环结束后用 with open(\"expensive.txt\", \"w\") as f 把每个名字加换行写进去，最后 print(len(names), \"items written\")。自查标准：终端打印 4 items written；cat expensive.txt 显示 item-09 到 item-12 四行。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "requests：让 Python 当客户端",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "在交互模式里拿到 r.json() 并取出其中一个字段。"
+    },
+    {
+      "kind": "动手",
+      "title": "写两个自动化脚本",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "fetch_items.py 打印 items: 12 和 total price: 390。"
+    },
+    {
+      "kind": "进阶",
+      "title": "socket：requests 底下那一层",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "raw_get.py 打印出完整的响应，第一行是 HTTP/1.1 200 OK。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "Requests quickstart params data json status_code raise_for_status redirection history timeouts errors",
+      "Requests advanced session objects persist cookies timeouts",
+      "Python socket create_connection sendall recv",
+      "Python socket HOWTO recv returns 0 bytes"
+    ],
+    "notes": "Kali 默认安装自带 python3-requests 2.34.2（kali-linux-headless 的推荐依赖），与核对的官方文档版本相同，不需要 pip 安装。四个脚本与三组交互模式会话都在 kalilinux/kali-rolling 容器里对着第 14 课的练习站实际运行，页面输出取自运行记录；raw_get.py 输出里的 Date 每次不同。验收题的预期输出用参考解答在同一环境里运行核对过。连接失败的 Traceback 有七十多行，页面只保留首尾并注明省略。"
+  },
+  "sources": [
+    {
+      "id": "requests-quickstart",
+      "kind": "official-doc",
+      "title": "Requests Documentation: Quickstart",
+      "publisher": "Python Software Foundation",
+      "url": "https://requests.readthedocs.io/en/latest/user/quickstart/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。访问时文档对应 Requests 2.34.2，与 Kali 打包的版本相同。",
+      "supports": [
+        "claim-params",
+        "claim-data-form",
+        "claim-json-text",
+        "claim-status-check",
+        "claim-redirects",
+        "claim-timeout",
+        "claim-connection-error"
+      ]
+    },
+    {
+      "id": "requests-advanced",
+      "kind": "official-doc",
+      "title": "Requests Documentation: Advanced Usage",
+      "publisher": "Python Software Foundation",
+      "url": "https://requests.readthedocs.io/en/latest/user/advanced/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。访问时文档对应 Requests 2.34.2。",
+      "supports": [
+        "claim-timeout",
+        "claim-session"
+      ]
+    },
+    {
+      "id": "py-socket",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: socket",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/socket.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-socket-recv-empty"
+      ]
+    },
+    {
+      "id": "py-socket-howto",
+      "kind": "official-doc",
+      "title": "Socket Programming HOWTO",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/howto/sockets.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-socket-recv-empty"
+      ]
+    },
+    {
+      "id": "rfc9112",
+      "kind": "specification",
+      "title": "RFC 9112: HTTP/1.1",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9112",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-host-connection-close"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-params",
+      "text": "Requests 允许用 params 参数以字典形式提供查询字符串里的键值对，由它来拼进 URL。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-data-form",
+      "text": "把字典传给 data 参数，Requests 会在发请求时自动把它编码成表单格式，和 HTML 表单提交的一样。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-json-text",
+      "text": "Requests 会自动解码服务器返回的内容，通过 r.text 读取；内置了 JSON 解码器，r.json() 把 JSON 正文转成 Python 对象，解码失败时抛出异常。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-status-check",
+      "text": "要确认请求成功，用 r.raise_for_status()，或者检查 r.status_code 是不是预期的值。请求返回了表示失败的状态码时，raise_for_status() 抛出 HTTPError。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-redirects",
+      "text": "Requests 默认对 HEAD 以外的所有方法执行跳转；Response.history 列表里是为完成这次请求而产生的中间响应；allow_redirects=False 关闭自动跳转。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-timeout",
+      "text": "timeout 参数让 Requests 在等待若干秒之后停止等待响应。几乎所有正式代码的几乎所有请求都应当设置它，否则程序可能无限期挂起。",
+      "sourceIds": [
+        "requests-quickstart",
+        "requests-advanced"
+      ]
+    },
+    {
+      "id": "claim-connection-error",
+      "text": "遇到网络问题（例如连接被拒绝）时，Requests 抛出 ConnectionError 异常。",
+      "sourceIds": [
+        "requests-quickstart"
+      ]
+    },
+    {
+      "id": "claim-session",
+      "text": "Session 对象让某些参数在多个请求之间保持不变，并在它发出的所有请求之间保留 Cookie；对同一主机的多个请求还会复用底层的 TCP 连接。",
+      "sourceIds": [
+        "requests-advanced"
+      ]
+    },
+    {
+      "id": "claim-socket-recv-empty",
+      "text": "recv 返回 0 个字节，意味着对方已经关闭（或正在关闭）连接，这条连接上不会再收到任何数据。",
+      "sourceIds": [
+        "py-socket-howto",
+        "py-socket"
+      ]
+    },
+    {
+      "id": "claim-host-connection-close",
+      "text": "客户端必须在所有 HTTP/1.1 请求里发送 Host 头；HTTP/1.1 默认使用持久连接。",
+      "sourceIds": [
+        "rfc9112"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "fetch-items",
+      "path": "public/labs/python-network-scripting/fetch_items.py",
+      "command": "python3 fetch_items.py",
+      "expectedResult": "练习站运行时依次打印 page 1 -> 5 items、page 2 -> 5 items、page 3 -> 2 items、items: 12、total price: 390。"
+    },
+    {
+      "id": "my-page",
+      "path": "public/labs/python-network-scripting/my_page.py",
+      "command": "python3 my_page.py",
+      "expectedResult": "两行：200 http://127.0.0.1:8000/me 和 200 Welcome back, student.。"
+    },
+    {
+      "id": "safe-get",
+      "path": "public/labs/python-network-scripting/safe_get.py",
+      "command": "python3 safe_get.py",
+      "expectedResult": "练习站运行时打印 Hello, kali!；练习站停掉后打印 cannot connect: is the practice site running?。"
+    },
+    {
+      "id": "raw-get",
+      "path": "public/labs/python-network-scripting/raw_get.py",
+      "command": "python3 raw_get.py",
+      "expectedResult": "先打印 158 bytes received，再打印完整的响应：HTTP/1.1 200 OK、四个头部、一个空行和 Hello, socket!。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "http-exchange",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

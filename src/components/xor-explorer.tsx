@@ -41,11 +41,13 @@ function PointCircle({ cx, cy, point, merged = false }: {
   const cls = point.label === 1 ? 'xor-point--one' : 'xor-point--zero';
   return (
     <g>
-      <circle className={`xor-point ${cls}`} cx={cx} cy={cy} r={merged ? 18 : 15} />
+      {point.label === 1
+        ? <rect className={`xor-point ${cls}`} x={cx - 15} y={cy - 15} width="30" height="30" rx="3" />
+        : <circle className={`xor-point ${cls}`} cx={cx} cy={cy} r="15" />}
       <text
         className={`xor-point-inner${merged ? ' xor-point-inner--merged' : ''}`}
         x={cx}
-        y={cy}
+        y={merged ? cy - 28 : cy}
       >
         {merged ? '01·10' : point.tag}
       </text>
@@ -61,7 +63,8 @@ function classify(angle: number) {
   const sideB: XorPoint[] = [];
   const onLine: XorPoint[] = [];
   for (const p of POINTS) {
-    const s = (p.x - 0.5) * dx + (p.y - 0.5) * dy;
+    // 使用图中的像素坐标与直线法向量，保持读数和非等比坐标轴一致。
+    const s = (PX(p.x) - PX(0.5)) * dy + (PY(p.y) - PY(0.5)) * dx;
     if (Math.abs(s) < 1e-6) onLine.push(p);
     else if (s < 0) sideA.push(p);
     else sideB.push(p);
@@ -286,14 +289,14 @@ export default function XorExplorer({ motionLevel = 'explanatory' }: Props) {
 
           {s.id === 1 && (
             <>
-              <p className="xor-stage__lead">XOR 一共四种输入，每种是一个点，圆圈里的数字就是这组输入，颜色是正确答案。任务：转动直线，让每侧只剩一种颜色。图中两条虚线把同色的两点连成对角线。</p>
+              <p className="xor-stage__lead">XOR 一共四种输入，每种是一个点，标记中的数字就是这组输入。蓝色圆形表示输出 0，橙色方形表示输出 1。任务：转动直线，让每侧只剩一种类别。图中两条虚线把同类的两点连成对角线。</p>
               <figure className="xor-stage__figure">
                 <InputChart angle={angle} />
                 <figcaption>输入空间。拖动滑块旋转直线；虚线提示同色点的位置关系</figcaption>
               </figure>
               <ul className="xor-legend">
-                <li><span className="xor-legend__dot xor-legend__dot--zero" />输出 0：输入相同（00、11）</li>
-                <li><span className="xor-legend__dot xor-legend__dot--one" />输出 1：输入不同（01、10）</li>
+                <li><span className="xor-legend__dot xor-legend__dot--zero" />蓝色圆形 · 输出 0：输入相同（00、11）</li>
+                <li><span className="xor-legend__dot xor-legend__dot--one" />橙色方形 · 输出 1：输入不同（01、10）</li>
               </ul>
               {interactive ? (
                 <label className="xor-angle">
@@ -312,9 +315,9 @@ export default function XorExplorer({ motionLevel = 'explanatory' }: Props) {
               )}
               <p className="xor-verdict" aria-live="polite">
                 当前 {angle}°：直线一侧是 <Chips points={sideA} />，另一侧是 <Chips points={sideB} />
-                {onLine.length > 0 && <>，<Chips points={onLine} /> 正好压在线上</>}。两侧始终混着两种颜色，分不开。
+                {onLine.length > 0 && <>，<Chips points={onLine} /> 正好压在线上</>}。单一直线无法把两类完整分开。
               </p>
-              <p className="xor-insight">原因就在那两条对角线上：同色的两点总在同一条对角线上，任何直线切开一条对角线的两点，另一条的必同样被切开。单条直线（也就是单层网络）到此为止。</p>
+              <p className="xor-insight">同类的两点位于对角。如果直线将两类严格分开，每一类两点间的连线也应留在各自一侧；这两条对角线在中心相交，因此无法满足这个条件。</p>
             </>
           )}
 
@@ -331,7 +334,7 @@ export default function XorExplorer({ motionLevel = 'explanatory' }: Props) {
                 <caption className="xor-mapping__caption">坐标换算：每个点的新位置怎么算出来</caption>
                 <thead>
                   <tr>
-                    <th scope="col">输入（圆圈里的数字）</th>
+                    <th scope="col">输入（标记中的数字）</th>
                     <th scope="col">h₁ = OR</th>
                     <th scope="col">h₂ = AND</th>
                     <th scope="col">新坐标 (h₁, h₂)</th>

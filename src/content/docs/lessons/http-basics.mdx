@@ -1,0 +1,377 @@
+---
+title: HTTP：请求、响应、Cookie 与会话
+description: 逐部分读懂一次 HTTP 请求和响应，用 curl 发 GET 和 POST，看清登录时服务器怎样用 Cookie 认出同一个人，并在浏览器开发者工具里找到同样的内容
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import HttpExchange from '../../../components/http-exchange';
+import manifest from '../../../data/lessons/http-basics.json';
+import helloGet from '../../../data/http/hello-get.json';
+import loginPost from '../../../data/http/login-post.json';
+
+export const browserSteps = [
+  { title: '打开练习站', detail: '在虚拟机的 Firefox 地址栏输入 http://127.0.0.1:8000/ 并回车，看到 Practice Site 和一个登录表单。' },
+  { title: '打开网络面板', detail: '按 F12 打开开发者工具，点上方的 Network（网络）。也可以直接按 Ctrl + Shift + E。' },
+  { title: '刷新页面', detail: '按 F5。列表里出现一行 GET /，状态是 200。另一行 favicon.ico 是浏览器自己去要网站图标，练习站没有，所以是 404。' },
+  { title: '看一个请求的细节', detail: '点 GET / 那一行，右侧出现几个页签。Headers（标头）里有状态码、HTTP 版本，以及响应头和请求头两组头部。' },
+  { title: '在表单里登录', detail: '在页面上填 student 和 kali123，点 Log in。列表里多出两行：POST /login 是 302，紧接着的 GET /me 是 200。' },
+  { title: '找到 Cookie', detail: '点 POST /login，在 Headers 的响应头里找到 Set-Cookie，在 Request（请求）页签里看到表单提交的两项。再点 GET /me，它的请求头里多了一行 Cookie。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用 curl、nc、Firefox 三种方式请求 /hello，并在终端 A 的日志里找到对应的三行。' },
+  { title: '读 server.py 里的登录代码', detail: '找到 do_POST 里处理 /login 的那几行，指出：哪一行判断密码，哪一行生成会话编号，哪一行把编号发给客户端。再找到 current_user，说出它从请求的哪个头部里取编号。' },
+  { title: '对比 curl 和浏览器', detail: '用 curl -v 请求首页，再在 Firefox 的网络面板里看同一个请求。列出浏览器多发了哪些请求头，至少写出三个。' },
+  { title: '翻页接口', detail: "依次请求 /api/items?page=1、page=2、page=3，每次用 curl -i 看状态码和 Content-Type。写下三页各有几项、一共多少项。下一课会让 Python 替你做这件事。" },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="NETWORK / LESSON 14"
+  kicker="Requests, Responses, Cookies"
+  lines={[
+    { text: "HTTP" },
+    { text: "请求、响应、Cookie 与会话", accent: true },
+  ]}
+  summary="上一课你用 nc 手敲了一行文字，服务器就把文件给了你。那行文字遵守的规矩就是 HTTP。这一课把它逐部分读懂：请求里有什么，响应里有什么，登录之后服务器凭什么认得你。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：登录之后，服务器怎么知道还是你
+
+你在一个网站登录，然后点开「我的主页」。这是两次访问。上一课讲过，每次访问都是一问一答，答完就结束。
+
+那么第二次访问时，服务器怎么知道来的还是刚才登录的那个人？它没有看见你的脸，两次访问也可能走的是两条不同的连接。
+
+答案就写在请求和响应的文字里。这一课结束时，你会亲手把那一行找出来，并且自己带着它去访问。
+
+## 一、请求和响应长什么样
+
+### 1. 启动练习站
+
+这一课用一个专门写的练习服务器。下载它，放进新的练习目录：
+
+<CodeFile file="labs/http-basics/server.py" note="一百行左右，只用标准库。现在不需要读懂，课后作业会读其中一段。" />
+
+<TerminalSession
+  title="准备目录"
+  steps={[
+    { cmd: 'mkdir ~/lab/http' },
+    { cmd: 'cd ~/lab/http' },
+    { cmd: 'mv ~/Downloads/server.py .', note: '浏览器把文件存到了别处的话，换成实际的路径。' },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动练习站，让它一直运行"
+  steps={[
+    { cmd: 'cd ~/lab/http' },
+    {
+      cmd: 'python3 server.py',
+      out: 'Practice site on http://127.0.0.1:8000/  (Ctrl+C to stop)\n…（之后每收到一个请求，这里会多出一行日志）',
+      note: '它只监听 127.0.0.1，只有这台虚拟机自己能访问。',
+    },
+  ]}
+/>
+
+下面的命令都在终端 B 里敲。
+
+### 2. 一次完整的对话
+
+<TerminalSession
+  title="终端 B：先看结果，再看过程"
+  steps={[
+    { cmd: 'cd ~/lab/http' },
+    { cmd: "curl 'http://127.0.0.1:8000/hello?name=kali'", out: 'Hello, kali!', note: '网址用单引号括起来。里面的 ? 和 & 对 shell 有特殊含义，不括起来迟早会出问题。' },
+    {
+      cmd: "curl -v 'http://127.0.0.1:8000/hello?name=kali'",
+      out: '*   Trying 127.0.0.1:8000...\n* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 50282\n* using HTTP/1.x\n> GET /hello?name=kali HTTP/1.1\n> Host: 127.0.0.1:8000\n> User-Agent: curl/8.21.0\n> Accept: */*\n>\n* Request completely sent off\n< HTTP/1.1 200 OK\n< Server: PracticeSite/1.0\n< Date: Thu, 01 Oct 2026 16:45:21 GMT\n< Content-Type: text/plain; charset=utf-8\n< Content-Length: 13\n<\nHello, kali!\n* Connection #0 to host 127.0.0.1:8000 left intact',
+      note: '以 * 开头的是 curl 自己的说明，> 开头的是它发出去的，< 开头的是它收到的。端口号和时间与你的不同。',
+    },
+  ]}
+/>
+
+把 `>` 和 `<` 后面的内容单独拿出来，就是一次完整的 HTTP 对话。点下面任意一部分，看它是什么：
+
+<HttpExchange
+  client:visible
+  trace={helloGet}
+  title="GET /hello?name=kali 的请求与响应"
+  intro="这是对练习站发出的一次真实请求。点任意一部分看解释。"
+/>
+
+请求和响应的结构是一样的，都是四段：
+
+<DataTable
+  caption="HTTP 报文的四段"
+  headers={["部分", "请求里", "响应里"]}
+  rows={[
+    ["起始行", "方法、目标、版本，例如 GET /hello?name=kali HTTP/1.1", "版本、状态码、原因短语，例如 HTTP/1.1 200 OK"],
+    ["头部", "若干行「名字: 值」，是关于这次请求的说明", "若干行「名字: 值」，是关于这次响应的说明"],
+    ["空行", "表示头部结束", "表示头部结束"],
+    ["正文", "要提交的数据。GET 请求通常没有", "真正的内容：网页、图片、数据"],
+  ]}
+  columnRatios={[0.7, 2.2, 2.2]}
+/>
+
+（来源：[RFC 9112](#source-rfc9112)、[RFC 9110](#source-rfc9110)）
+
+### 3. 网址的每一段
+
+你在地址栏里输入的网址，会被拆开放到请求的不同位置：
+
+<DataTable
+  caption="http://127.0.0.1:8000/hello?name=kali 拆开看"
+  headers={["这一段", "名字", "用在哪"]}
+  rows={[
+    ["http://", "协议", "决定用什么规矩说话。http 默认 80 端口"],
+    ["127.0.0.1", "主机", "连到哪台机器。写域名时先经过 DNS"],
+    [":8000", "端口", "连到那台机器的哪个端口。省略就用默认端口"],
+    ["/hello", "路径", "写进请求行，告诉服务器要哪个东西"],
+    ["?name=kali", "查询参数", "跟在路径后面一起写进请求行。多个参数用 & 连接"],
+  ]}
+  columnRatios={[1, 0.8, 2.6]}
+/>
+
+主机和端口用来建立连接，同时也写进 `Host` 头；路径和查询参数写进请求行。
+
+### 4. 状态码
+
+响应的第一行里有一个三位数，叫**状态码**，是服务器对这次请求的总体答复。
+
+<TerminalSession
+  title="终端 B：不是每次都是 200"
+  steps={[
+    {
+      cmd: 'curl -i http://127.0.0.1:8000/nosuch',
+      out: 'HTTP/1.1 404 Not Found\nServer: PracticeSite/1.0\nDate: Thu, 01 Oct 2026 16:45:22 GMT\nContent-Type: text/plain; charset=utf-8\nContent-Length: 11\n\nNot found.',
+      note: '-i 在正文前面把响应的头部也打印出来，比 -v 清爽。404：没有这个东西。',
+    },
+    {
+      cmd: 'curl -i http://127.0.0.1:8000/old',
+      out: 'HTTP/1.1 302 Found\nServer: PracticeSite/1.0\nDate: Thu, 01 Oct 2026 16:45:22 GMT\nContent-Type: text/plain; charset=utf-8\nContent-Length: 16\nLocation: /hello\n\nMoved to /hello',
+      note: '302：你要的东西在别处，地址在 Location 头里。curl 默认不会自己跟过去。',
+    },
+    { cmd: 'curl -L http://127.0.0.1:8000/old', out: 'Hello, stranger!', note: '-L 让 curl 看到跳转就再请求一次新地址。浏览器默认就这样做。' },
+  ]}
+/>
+
+状态码按第一位数字分成五类，先记住四类和几个常见的：
+
+<DataTable
+  caption="状态码的类别"
+  headers={["类别", "含义", "常见的"]}
+  rows={[
+    ["2xx", "成功", "200 OK"],
+    ["3xx", "还要再走一步，通常是跳转", "302 Found，新地址在 Location 头里"],
+    ["4xx", "请求有问题，责任在客户端", "401 需要登录；403 不允许；404 没有这个东西"],
+    ["5xx", "服务器自己出错了", "500 服务器内部错误"],
+  ]}
+  columnRatios={[0.6, 1.6, 2.6]}
+/>
+
+（来源：[RFC 9110](#source-rfc9110)、[curl man page](#source-curl-manpage)）
+
+## 二、POST、登录与 Cookie
+
+### 1. 没登录的时候
+
+<TerminalSession
+  title="终端 B：直接访问「我的页面」"
+  steps={[
+    {
+      cmd: 'curl -i http://127.0.0.1:8000/me',
+      out: 'HTTP/1.1 401 Unauthorized\nServer: PracticeSite/1.0\nDate: Thu, 01 Oct 2026 16:45:24 GMT\nContent-Type: text/plain; charset=utf-8\nContent-Length: 21\n\nPlease log in first.',
+      note: '401：服务器不知道你是谁。',
+    },
+  ]}
+/>
+
+### 2. 用 POST 提交用户名和密码
+
+`GET` 的意思是「把这个东西给我」。登录是另一种动作：把一份数据交给服务器处理。这种请求用 **POST** 方法，数据放在请求的正文里。（来源：[RFC 9110](#source-rfc9110)）
+
+练习站的账号是 `student`，密码是 `kali123`。
+
+<TerminalSession
+  title="终端 B：先错一次，再对一次"
+  steps={[
+    {
+      cmd: "curl -i -d 'user=student&password=wrong' http://127.0.0.1:8000/login",
+      out: 'HTTP/1.1 401 Unauthorized\nServer: PracticeSite/1.0\nDate: Thu, 01 Oct 2026 16:45:24 GMT\nContent-Type: text/plain; charset=utf-8\nContent-Length: 24\n\nWrong user or password.',
+      note: '-d 后面是要提交的数据。用了 -d，curl 就自动改用 POST。',
+    },
+    {
+      cmd: "curl -v -d 'user=student&password=kali123' http://127.0.0.1:8000/login",
+      out: '*   Trying 127.0.0.1:8000...\n* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 50364\n* using HTTP/1.x\n> POST /login HTTP/1.1\n> Host: 127.0.0.1:8000\n> User-Agent: curl/8.21.0\n> Accept: */*\n> Content-Length: 29\n> Content-Type: application/x-www-form-urlencoded\n>\n* upload completely sent off: 29 bytes\n< HTTP/1.1 302 Found\n< Server: PracticeSite/1.0\n< Date: Thu, 01 Oct 2026 16:45:25 GMT\n< Content-Type: text/plain; charset=utf-8\n< Content-Length: 11\n< Location: /me\n< Set-Cookie: session=7d248deb6b0f23d8; Path=/; HttpOnly\n<\nLogged in.\n* Connection #0 to host 127.0.0.1:8000 left intact',
+      note: '密码对了。响应是 302，多了一行 Set-Cookie。session= 后面那串字符是随机生成的，你的不一样。',
+    },
+  ]}
+/>
+
+`curl -v` 不显示请求的正文。把这次对话完整摆出来是这样的：
+
+<HttpExchange
+  client:visible
+  trace={loginPost}
+  title="POST /login 的请求与响应"
+  intro="留意请求里空行之后多出的一行正文，和响应里的 Set-Cookie。"
+/>
+
+### 3. Cookie：服务器发给你的一张号码牌
+
+HTTP 是**无状态**的：服务器处理完一个请求就忘了，下一个请求来的时候，它不会自动知道这和上一个有什么关系。（来源：[RFC 9110](#source-rfc9110)）
+
+要让服务器认出「还是刚才那个人」，办法是让客户端每次都出示一个记号：
+
+<DataTable
+  caption="登录之后发生的事"
+  headers={["步骤", "谁做的", "做了什么"]}
+  rows={[
+    ["1", "服务器", "核对密码正确后，生成一个随机的会话编号，在自己这边记下「这个编号是 student」"],
+    ["2", "服务器", "在响应里用 Set-Cookie 头把编号交给客户端"],
+    ["3", "客户端", "把编号存起来"],
+    ["4", "客户端", "之后每次请求这个站点，都用 Cookie 头把编号带上"],
+    ["5", "服务器", "看到编号，查到是 student，于是知道是谁"],
+  ]}
+  columnRatios={[0.5, 0.8, 3.6]}
+/>
+
+客户端存起来的这小段数据叫 **Cookie**。服务器那边「编号对应哪个用户」的记录叫**会话**（session）。（来源：[RFC 6265](#source-rfc6265)、[MDN: An overview of HTTP](#source-mdn-http-overview)、[MDN: Using HTTP cookies](#source-mdn-http-cookies)）
+
+浏览器会自动完成第 3、4 步。`curl` 需要你告诉它存在哪、从哪取：
+
+<TerminalSession
+  title="终端 B：带着 Cookie 再访问"
+  steps={[
+    {
+      cmd: "curl -s -o /dev/null -c cookies.txt -d 'user=student&password=kali123' http://127.0.0.1:8000/login",
+      note: '再登录一次。-c cookies.txt 把服务器发来的 Cookie 存进文件；-s -o /dev/null 不显示别的输出。',
+    },
+    {
+      cmd: 'cat cookies.txt',
+      out: '# Netscape HTTP Cookie File\n# https://curl.se/docs/http-cookies.html\n# This file was generated by libcurl! Edit at your own risk.\n\n#HttpOnly_127.0.0.1\tFALSE\t/\tFALSE\t0\tsession\teaf1ba536d7cc01f',
+      note: '最后一行的末尾两项就是 Cookie 的名字和值。',
+    },
+    { cmd: 'curl -b cookies.txt http://127.0.0.1:8000/me', out: 'Welcome back, student.', note: '-b cookies.txt 把文件里的 Cookie 带上。服务器认出来了。' },
+    {
+      cmd: 'curl -v -b cookies.txt http://127.0.0.1:8000/me',
+      out: '*   Trying 127.0.0.1:8000...\n* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54210\n* using HTTP/1.x\n> GET /me HTTP/1.1\n> Host: 127.0.0.1:8000\n> User-Agent: curl/8.21.0\n> Accept: */*\n> Cookie: session=eaf1ba536d7cc01f\n>\n* Request completely sent off\n< HTTP/1.1 200 OK\n< Server: PracticeSite/1.0\n< Date: Thu, 01 Oct 2026 16:45:28 GMT\n< Content-Type: text/plain; charset=utf-8\n< Content-Length: 23\n<\nWelcome back, student.\n* Connection #0 to host 127.0.0.1:8000 left intact',
+      note: '这就是引导问题的答案：请求里多了一行 Cookie。服务器认人，靠的只是这一行。',
+    },
+  ]}
+/>
+
+<Callout variant="warning" title="会话编号等于登录状态">
+服务器只看编号，不看是谁送来的。任何人只要拿到你的会话编号，带着它去请求，服务器就会把他当成你。所以 `cookies.txt` 和密码一样要保管好，不要提交进 Git，也不要发给别人。
+</Callout>
+
+### 4. 请求里的每一项都是客户端自己填的
+
+<TerminalSession
+  title="终端 B：自称是别的程序"
+  steps={[
+    {
+      cmd: "curl -v -H 'User-Agent: Mozilla/5.0 (not really)' http://127.0.0.1:8000/hello",
+      out: '*   Trying 127.0.0.1:8000...\n* Established connection to 127.0.0.1 (127.0.0.1 port 8000) from 127.0.0.1 port 54212\n* using HTTP/1.x\n> GET /hello HTTP/1.1\n> Host: 127.0.0.1:8000\n> Accept: */*\n> User-Agent: Mozilla/5.0 (not really)\n>\n* Request completely sent off\n< HTTP/1.1 200 OK\n< Server: PracticeSite/1.0\n< Date: Thu, 01 Oct 2026 16:45:28 GMT\n< Content-Type: text/plain; charset=utf-8\n< Content-Length: 17\n<\nHello, stranger!\n* Connection #0 to host 127.0.0.1:8000 left intact',
+      note: '-H 可以加上或替换任何一个请求头。User-Agent 变成了你写的内容。',
+    },
+  ]}
+/>
+
+上一课说过，请求只是一段文字。头部也一样，客户端写什么，服务器收到的就是什么。**服务器没有办法知道这些内容是不是真的。** 这句话下学期会反复用到。
+
+## 三、在浏览器里看同一件事
+
+浏览器做的事和 `curl` 一样，只是全自动。它自带一套**开发者工具**，可以把每一次请求和响应都摊开给你看。
+
+<StepList title="用 Firefox 的网络面板看登录过程" steps={browserSteps} />
+
+（来源：[Firefox DevTools](#source-firefox-devtools)、[Network Monitor](#source-firefox-network-monitor)、[Network request details](#source-firefox-request-details)）
+
+和刚才的 `curl` 对照：
+
+<DataTable
+  caption="浏览器替你做了什么"
+  headers={["你在 curl 里手动做的", "浏览器的做法"]}
+  rows={[
+    ["-d 写出表单数据", "点提交按钮时，把表单里填的内容拼成同样的格式放进正文"],
+    ["-L 跟随跳转", "看到 302 自动请求 Location 里的地址，所以 POST /login 之后紧跟着 GET /me"],
+    ["-c 和 -b 存取 Cookie", "收到 Set-Cookie 自动保存，之后访问同一站点自动带上"],
+    ["只发你要的那一个请求", "还会自己去要 favicon.ico，以及页面引用的图片、样式、脚本"],
+  ]}
+  columnRatios={[1.4, 3]}
+/>
+
+练完之后回到终端 A，按 `Ctrl` + `C` 停掉练习站。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["curl: (7) Failed to connect to 127.0.0.1:8000", "练习站没有在运行", "看终端 A。被 Ctrl+C 停掉了就重新启动"],
+    ["404 Not Found", "路径写错了。/Hello 和 /hello 是两个不同的路径", "对照终端 A 的日志，看服务器实际收到的路径"],
+    ["登录明明成功了，访问 /me 还是 401", "请求里没有带 Cookie：忘了 -b，或者登录时忘了 -c", "用 curl -v 看请求里有没有 Cookie 那一行"],
+    ["带了 Cookie 还是 401", "练习站重启过。会话记在服务器的内存里，重启就全忘了", "重新登录一次，拿新的 Cookie"],
+    ["命令敲完，提示符回来了，过一会儿才冒出输出，还多了 [1] 之类的行", "网址里有 &，没加引号。shell 把 & 当成了「放到后台运行」，网址被从那里截断", "把整个网址用单引号括起来"],
+    ["用 nc 手敲请求后一直没反应", "最后没有留空行，服务器还在等你把头部写完", "结尾多按一次回车"],
+    ["用 nc 拿到了响应，但 nc 不退出", "HTTP/1.1 默认在答完之后保持连接，等下一个请求", "请求里加一行 Connection: close，或者按 Ctrl+C"],
+  ]}
+  columnRatios={[1.7, 1.6, 1.6]}
+/>
+
+边界：这一课用的是 `http://`，请求和响应在网络上是明文，路上的任何设备都能读到密码和 Cookie。真实网站用 `https://`，对话的格式完全相同，只是整段对话在一条加密的连接里进行。练习站只监听 `127.0.0.1`，数据不出本机，所以可以用明文练习。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '请求行', description: '方法 目标 版本，例如 GET /hello?name=kali HTTP/1.1。' },
+    { term: '状态行', description: '版本 状态码 原因短语，例如 HTTP/1.1 200 OK。' },
+    { term: '2xx / 3xx / 4xx / 5xx', description: '成功 / 跳转 / 请求有问题 / 服务器出错。' },
+    { term: 'curl -i 网址', description: '连同响应头部一起显示。' },
+    { term: 'curl -v 网址', description: '显示全过程：> 是发出的，< 是收到的。' },
+    { term: "curl -d '名字=值&名字=值' 网址", description: '用 POST 提交表单数据。' },
+    { term: 'curl -L 网址', description: '遇到跳转自动跟过去。' },
+    { term: 'curl -c 文件 / -b 文件', description: '把收到的 Cookie 存进文件 / 把文件里的 Cookie 带上。' },
+    { term: "curl -H '名字: 值' 网址", description: '加上或替换一个请求头。' },
+    { term: 'Set-Cookie / Cookie', description: '服务器发 Cookie 的响应头 / 客户端带回 Cookie 的请求头。' },
+    { term: 'F12 → Network', description: '浏览器里看每一次请求和响应。' },
+  ]}
+/>
+
+<KeyTakeaway>
+HTTP 的一次对话是一个请求加一个响应，两者都由起始行、头部、空行、正文组成。请求说明要做什么（方法）和对谁做（目标），响应用状态码给出结果。HTTP 无状态，服务器靠 Cookie 里的会话编号认出同一个人：登录时用 Set-Cookie 发下去，之后每个请求用 Cookie 带回来。请求里的每一项都由客户端填写，服务器无从知道真假。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

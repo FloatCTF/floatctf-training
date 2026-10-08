@@ -1,8 +1,10 @@
 ---
+import NumberedBox from './numbered-box.astro';
+
 interface Props { items: string[] }
 const { items } = Astro.props;
 ---
-<section class="learning-box learning-objectives" aria-labelledby="learning-objectives-title">
-  <header class="learning-box-heading"><span aria-hidden="true">01</span><h2 id="learning-objectives-title">学习目标</h2></header>
+
+<NumberedBox class="learning-objectives" number="01" title="学习目标" titleId="learning-objectives-title">
   <ul>{items.map((item) => <li>{item}</li>)}</ul>
-</section>
+</NumberedBox>

@@ -1,0 +1,463 @@
+---
+title: 浏览器里的 JavaScript
+description: 对照 Python 读懂 JavaScript 的最小语法，用事件让页面对点击作出反应，用 fetch 向服务器要数据并写进页面，认识同源策略拦住了什么
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/javascript-in-the-browser.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '加上 Reset 按钮，并按题目里的自查标准检查。' },
+  { title: '让 Load items 能翻页', detail: '在 app.js 里加一个变量 page，初始为 1。每次点 Load items，请求第 page 页并把 page 加 1。连点三次之后列表里应当有 12 行；第四次点击不再增加。' },
+  { title: '看一次被拦截的请求', detail: '按第三节的办法启动 8001 上的第二个服务器，在 8000 的页面里执行 await tryFetch("http://127.0.0.1:8001/api/items?page=1")。分别记录：控制台里的返回值、控制台里浏览器自己打印的那条提示、8001 那个终端的日志、网络面板里这个请求的状态。' },
+  { title: '同一个地址，三个客户端', detail: '对 http://127.0.0.1:8001/api/items?page=1 分别用 curl、Python 的 requests 和 8000 页面里的 fetch 请求。写下哪些拿到了数据、哪些没有，并用一句话解释差别。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="WEB / LESSON 17"
+  kicker="Events, DOM, fetch, Origins"
+  lines={[
+    { text: "浏览器里的" },
+    { text: "JavaScript", accent: true },
+  ]}
+  summary="上一课你在控制台里一行一行地改页面。网页自带的脚本做的是同一件事，只是事先写好，等用户点击时自动运行。这一课写出这样的脚本，并认识浏览器给它划的一条界线。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：页面没有刷新，内容怎么变了
+
+你在一个网页上点「加载更多」，新的内容就出现在下面，地址栏没变，页面也没有重新加载。
+
+按前几课的知识，这有两点说不通：内容是从服务器来的，那就得发请求，可是你没有打开新网址；页面是照着 DOM 画的，那就得有人去改 DOM，可是你没有打开控制台。
+
+替你做这两件事的，是页面里的一段 **JavaScript**。它和 HTML 一起从服务器下载下来，在你的浏览器里运行。（来源：[MDN: What is JavaScript?](#source-mdn-js-what)）
+
+## 一、JavaScript 的最小语法
+
+### 1. 准备练习页面
+
+新建目录，把下面三个文件保存进去。`server.py` 是这一课的练习服务器，除了提供文件，还带第 15 课用过的 `/api/items`。
+
+<CodeFile file="labs/javascript-in-the-browser/index.html" note="保存为 ~/lab/js/index.html。倒数第三行引用了 app.js。" />
+
+<CodeFile file="labs/javascript-in-the-browser/app.js" note="保存为 ~/lab/js/app.js。这一课逐段读它。" />
+
+<CodeFile file="labs/javascript-in-the-browser/server.py" note="保存为 ~/lab/js/server.py。不需要读懂，会启动就行。" />
+
+<TerminalSession
+  title="准备目录"
+  steps={[
+    { cmd: 'mkdir ~/lab/js' },
+    { cmd: 'cd ~/lab/js' },
+    { cmd: 'ls', setup: 'cp ~/lab/python/index.html ~/lab/python/app.js ~/lab/python/server.py .', out: 'app.js  index.html  server.py' },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端 A"
+  replay="skip"
+  title="启动练习服务器"
+  steps={[
+    { cmd: 'cd ~/lab/js' },
+    { cmd: 'python3 server.py', out: 'Serving on http://127.0.0.1:8000/  (Ctrl+C to stop)' },
+  ]}
+/>
+
+用 Firefox 打开 `http://127.0.0.1:8000/`，按 `F12`，切到 Console。
+
+### 2. 在控制台里试语法
+
+JavaScript 和 Python 是两门不同的语言，但你学过的概念几乎都能对上。先在控制台里试：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="变量、运算、函数、数组"
+  steps={[
+    { cmd: 'let total = 3', out: 'undefined', note: '用 let 声明一个变量。声明本身没有结果，控制台显示 undefined。' },
+    { cmd: 'total + 1', out: '4' },
+    { cmd: 'total = total * 2', out: '6', note: '已经声明过的变量，重新赋值时不再写 let。' },
+    { cmd: 'const name = "kali"', out: 'undefined', note: 'const 声明的名字之后不能再指向别的值。' },
+    { cmd: '"Hello, " + name', out: '"Hello, kali"', note: '字符串用 + 拼接。' },
+    { cmd: 'typeof total', out: '"number"', note: 'typeof 相当于 Python 的 type()。JavaScript 的整数和小数是同一种类型。' },
+    { cmd: 'function double(n) { return n * 2; }', out: 'undefined', note: '定义函数。花括号里是函数体，相当于 Python 里缩进的那一块。' },
+    { cmd: 'double(21)', out: '42' },
+    { cmd: 'const tools = ["curl", "nc"]', out: 'undefined', note: '数组，相当于 Python 的列表。' },
+    { cmd: 'tools.push("dig")', out: '3', note: '相当于 append。它返回数组的新长度。' },
+    { cmd: 'tools.join(", ")', out: '"curl, nc, dig"' },
+    { cmd: 'tools[0]', out: '"curl"' },
+    { cmd: 'console.log("total is", total)', out: 'total is 6\nundefined', note: 'console.log 相当于 print，把内容打印到控制台。第一行是它打印的，第二行是这条语句本身的结果。' },
+    { cmd: 'if (total > 5) { console.log("big"); } else { console.log("small"); }', out: 'big\nundefined', note: '条件写在圆括号里，两个分支各用一对花括号。' },
+  ]}
+/>
+
+（来源：[The JavaScript input interpreter](#source-firefox-console-input)）
+
+<DataTable
+  caption="和 Python 对照"
+  headers={["要做的事", "Python", "JavaScript"]}
+  rows={[
+    ["声明变量", "total = 3", "let total = 3 或 const name = \"kali\""],
+    ["代码块", "冒号加缩进", "一对花括号，缩进只是为了好读"],
+    ["语句结尾", "换行", "分号"],
+    ["定义函数", "def double(n):", "function double(n) { … }"],
+    ["条件", "if total > 5:", "if (total > 5) { … }"],
+    ["真和假、空值", "True、False、None", "true、false、null"],
+    ["打印", "print(…)", "console.log(…)"],
+    ["列表", "tools.append(x)、len(tools)", "tools.push(x)、tools.length"],
+    ["判断相等", "==", "===（三个等号）"],
+  ]}
+  columnRatios={[1, 1.6, 2]}
+/>
+
+### 3. 两个要当心的地方
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="自动转换类型，以及 const"
+  steps={[
+    { cmd: '"5" + 1', out: '"51"', note: 'Python 在这里会报 TypeError。JavaScript 不报错，它把 1 也当成字符串，拼在了一起。' },
+    { cmd: '"5" * 2', out: '10', note: '乘法只对数字有意义，于是它又把 "5" 转成了数字。' },
+    { cmd: '5 == "5"', out: 'true', note: '两个等号：先转换类型，再比较。' },
+    { cmd: '5 === "5"', out: 'false', note: '三个等号：类型不同就不相等。平时一律用三个等号。' },
+    { cmd: 'const name = "kali"', out: 'undefined' },
+    { cmd: 'name = "root"', out: "Uncaught TypeError: invalid assignment to const 'name'", note: 'const 声明的名字不能重新赋值。' },
+  ]}
+/>
+
+JavaScript 遇到类型对不上时，倾向于悄悄转换而不是报错。结果常常出人意料，而且不会有任何提示。下学期学 PHP 时会再次遇到这种性格。
+
+## 二、让页面对点击作出反应
+
+### 1. 脚本是怎样进到页面里的
+
+`index.html` 的倒数第三行：
+
+```html
+<script src="app.js"></script>
+```
+
+浏览器解析到这一行，就去请求 `app.js`，拿到之后立刻从上到下运行一遍。终端 A 的日志里能看到这个请求：
+
+```text
+127.0.0.1 - - [01/Oct/2026 17:06:37] "GET / HTTP/1.1" 200 -
+127.0.0.1 - - [01/Oct/2026 17:06:37] "GET /app.js HTTP/1.1" 200 -
+```
+
+这一行放在 `body` 的最后，是有原因的：脚本运行时，它前面的元素已经解析好了，脚本才找得到它们。（来源：[MDN: script](#source-mdn-script)、[MDN: What is JavaScript?](#source-mdn-js-what)）
+
+服务器只是把 `app.js` 当作一个普通文件发出去。**运行它的是你的浏览器。**
+
+### 2. 事件：等某件事发生再运行
+
+看 `app.js` 的前八行：
+
+```js
+let count = 0;
+
+function handleClick() {
+  count = count + 1;
+  document.querySelector("#count").textContent = count;
+}
+
+document.querySelector("#add").addEventListener("click", handleClick);
+```
+
+<DataTable
+  caption="这八行在什么时候运行"
+  headers={["行", "页面加载时", "之后每次点击按钮时"]}
+  rows={[
+    ["1", "创建变量 count，值是 0", ""],
+    ["3 到 6", "定义函数 handleClick。只是定义，里面的代码不运行", "函数体运行：count 加 1，再把新的值写进 id 为 count 的元素"],
+    ["8", "找到 id 为 add 的按钮，登记一件事：它被点击时，调用 handleClick", ""],
+  ]}
+  columnRatios={[0.6, 2.4, 2.4]}
+/>
+
+用户点击、按键、页面加载完成，这些都叫**事件**。`addEventListener("click", handleClick)` 的意思是：这个元素上发生 click 事件时，请调用 handleClick。注意第二个参数是函数的名字，后面没有括号。写上括号就成了「现在立刻调用」。（来源：[MDN: Introduction to events](#source-mdn-events)、[MDN: addEventListener()](#source-mdn-addeventlistener)）
+
+在页面上点几下 Click me，数字跟着变。也可以在控制台里用代码替你点：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="点击，以及脚本里的变量"
+  steps={[
+    { cmd: 'count', out: '0', note: 'app.js 里的变量，控制台可以直接读到。' },
+    { cmd: 'document.querySelector("#add").click()', out: 'undefined', note: '.click() 在这个元素上触发一次点击事件，和用鼠标点一下效果相同。' },
+    { cmd: 'document.querySelector("#add").click()', out: 'undefined' },
+    { cmd: 'document.querySelector("#count").textContent', out: '"2"', note: '页面上的数字。' },
+    { cmd: 'count', out: '2', note: '变量里的数字。两者是 handleClick 负责保持一致的。' },
+    { cmd: 'count = 100', out: '100', note: '控制台也可以改脚本里的变量。' },
+    { cmd: 'document.querySelector("#add").click()', out: 'undefined' },
+    { cmd: 'document.querySelector("#count").textContent', out: '"101"', note: '下一次点击，从 100 接着加。' },
+  ]}
+/>
+
+最后三步值得记住：页面里的脚本和变量，使用这个页面的人都能在控制台里读到、改掉。**跑在浏览器里的代码，不能指望它来看守任何东西。**
+
+### 3. fetch：让脚本去要数据
+
+脚本可以自己发 HTTP 请求，用的是 `fetch`。先在控制台里一步一步来：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="发请求，取 JSON"
+  steps={[
+    { cmd: 'const r = await fetch("/api/items?page=1")', out: 'undefined', note: '发出 GET 请求。网络请求要花时间，await 的意思是「等它完成再往下走」。' },
+    { cmd: 'r.status', out: '200' },
+    { cmd: 'r.headers.get("Content-Type")', out: '"application/json"' },
+    { cmd: 'const data = await r.json()', out: 'undefined', note: '把正文按 JSON 解析。这一步也要 await。' },
+    { cmd: 'data.total', out: '12', note: 'JavaScript 里取字段用点。' },
+    { cmd: 'data.items.length', out: '5' },
+    { cmd: 'data.items[0].name', out: '"item-01"' },
+  ]}
+/>
+
+这和第 15 课的 `requests.get(…)`、`r.status_code`、`r.json()` 是一一对应的。（来源：[MDN: Using the Fetch API](#source-mdn-fetch-using)）
+
+再看 `app.js` 的第 10 到 20 行，它把上面这几步和修改 DOM 接在了一起：
+
+```js
+async function loadItems() {
+  const response = await fetch("/api/items?page=1");
+  const data = await response.json();
+  for (const item of data.items) {
+    const li = document.createElement("li");
+    li.textContent = item.name + " - " + item.price;
+    document.querySelector("#items").appendChild(li);
+  }
+}
+
+document.querySelector("#load").addEventListener("click", loadItems);
+```
+
+<DataTable
+  caption="逐行读 loadItems"
+  headers={["行", "做什么"]}
+  rows={[
+    ["async function", "函数里要用 await，定义时前面就得写 async"],
+    ["fetch 和 json 两行", "向服务器要第一页，把正文解析成对象"],
+    ["for (const item of data.items)", "相当于 Python 的 for item in data[\"items\"]"],
+    ["createElement(\"li\")", "新建一个 li 元素。这时它还不在页面上"],
+    ["li.textContent = …", "设置它的文字"],
+    ["appendChild(li)", "把它挂到 id 为 items 的那个 ul 下面，页面上才出现"],
+    ["最后一行", "登记：点 Load items 时调用 loadItems"],
+  ]}
+  columnRatios={[1.6, 3]}
+/>
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="点 Load items 前后"
+  steps={[
+    { cmd: 'document.querySelectorAll("#items li").length', out: '0', note: '点之前，列表是空的。' },
+    { cmd: 'document.querySelector("#load").click()', out: 'undefined', note: '也可以用鼠标点页面上的按钮。' },
+    { cmd: 'document.querySelectorAll("#items li").length', out: '5' },
+    { cmd: 'document.querySelector("#items li").textContent', out: '"item-01 - 5"' },
+  ]}
+/>
+
+这就是引导问题的答案：脚本发了一个请求，拿到数据，改了 DOM。页面没有重新加载，地址栏也没有变。在开发者工具的 Network 面板里，能看到点击那一刻多出来的 `/api/items?page=1` 请求。
+
+<Callout variant="warning" title="把数据放进页面时用 textContent">
+`loadItems` 用的是 `li.textContent = …`，放进去的内容永远被当作文字。还有一个写法 `innerHTML`，会把字符串当作 HTML 来解析：如果字符串里有标签，它们会变成真的元素。当内容来自别人（用户输入、服务器返回的数据）时，用 `innerHTML` 等于让别人往你的页面里写 HTML。下学期的 XSS 一课讲的就是这件事。
+</Callout>
+
+（来源：[MDN: innerHTML](#source-mdn-innerhtml)）
+
+## 三、同源策略
+
+### 1. 什么是「源」
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="这个页面的源"
+  steps={[
+    { cmd: 'location.origin', out: '"http://127.0.0.1:8000"', note: '协议、主机、端口三样合在一起，叫这个页面的源。' },
+  ]}
+/>
+
+两个网址的协议、主机、端口都相同，才算**同源**。（来源：[MDN: Same-origin policy](#source-mdn-same-origin)）
+
+<DataTable
+  caption="和 http://127.0.0.1:8000 比"
+  headers={["网址", "是否同源", "原因"]}
+  rows={[
+    ["http://127.0.0.1:8000/api/items", "同源", "只有路径不同"],
+    ["http://127.0.0.1:8001/api/items", "不同源", "端口不同"],
+    ["http://localhost:8000/api/items", "不同源", "主机名不同。即使它们指向同一台机器"],
+    ["https://127.0.0.1:8000/api/items", "不同源", "协议不同"],
+  ]}
+  columnRatios={[2, 0.8, 2]}
+/>
+
+### 2. 做个实验
+
+再开一个终端，在 8001 端口上启动同一个服务器，把它当作「另一个网站」：
+
+<TerminalSession
+  environment="KALI 终端 C"
+  replay="skip"
+  title="第二个服务器"
+  steps={[
+    { cmd: 'cd ~/lab/js' },
+    { cmd: 'python3 server.py 8001', out: 'Serving on http://127.0.0.1:8001/  (Ctrl+C to stop)' },
+  ]}
+/>
+
+`app.js` 的最后一段是一个为实验准备的函数 `tryFetch`：它请求一个地址，成功就返回状态码，失败就返回原因。回到 8000 那个页面的控制台：
+
+<TerminalSession
+  environment="FIREFOX 控制台"
+  prompt="»"
+  page="http://127.0.0.1:8000/"
+  title="同一个脚本，请求三个地址"
+  steps={[
+    { cmd: 'await tryFetch("/api/items?page=1")', out: '"status 200"', note: '同源，正常。' },
+    { cmd: 'await tryFetch("http://127.0.0.1:8001/api/items?page=1")', out: '"blocked: NetworkError when attempting to fetch resource."', note: '端口不同，不同源。脚本没有拿到响应。' },
+    { cmd: 'await tryFetch("http://127.0.0.1:8001/api/open?page=1")', out: '"status 200"', note: '同样是 8001，这个地址却可以。原因在下面。' },
+  ]}
+/>
+
+第二次请求时，Firefox 自己还会在控制台里打印一条提示，大意是：
+
+```text
+Cross-Origin Request Blocked: The Same Origin Policy disallows reading the remote resource at http://127.0.0.1:8001/api/items?page=1. (Reason: CORS header 'Access-Control-Allow-Origin' missing).
+```
+
+（来源：[MDN: CORS header 'Access-Control-Allow-Origin' missing](#source-mdn-cors-missing)）
+
+### 3. 拦住的是什么
+
+去看终端 C 的日志：
+
+```text
+127.0.0.1 - - [01/Oct/2026 17:06:48] "GET /api/items?page=1 HTTP/1.1" 200 -
+127.0.0.1 - - [01/Oct/2026 17:06:49] "GET /api/open?page=1 HTTP/1.1" 200 -
+```
+
+被「拦截」的那个请求，服务器其实收到了，也正常回了 200。**请求发出去了，响应也回来了，是浏览器把响应扣下，不交给脚本。**
+
+`/api/open` 能成功，是因为它的响应里多了一个头。用 `curl` 可以看到：
+
+<TerminalSession
+  title="终端 B：两个地址的响应差在哪"
+  steps={[
+    { cmd: 'cd ~/lab/js' },
+    {
+      cmd: "curl -i 'http://127.0.0.1:8001/api/items?page=3'",
+      setup: '(setsid python3 server.py >/dev/null 2>&1 &); (setsid python3 server.py 8001 >/dev/null 2>&1 &); sleep 1',
+      out: 'HTTP/1.0 200 OK\nServer: SimpleHTTP/0.6 Python/3.14.7\nDate: Thu, 01 Oct 2026 17:06:49 GMT\nContent-Type: application/json\nContent-Length: 124\n\n{"page": 3, "total": 12, "items": [{"id": 11, "name": "item-11", "price": 55}, {"id": 12, "name": "item-12", "price": 60}]}',
+      note: 'curl 拿到了完整的数据。同源策略是浏览器的规矩，curl 和 Python 脚本不受它约束。',
+    },
+    {
+      cmd: "curl -i 'http://127.0.0.1:8001/api/open?page=3'",
+      out: 'HTTP/1.0 200 OK\nServer: SimpleHTTP/0.6 Python/3.14.7\nDate: Thu, 01 Oct 2026 17:06:49 GMT\nContent-Type: application/json\nContent-Length: 124\nAccess-Control-Allow-Origin: *\n\n{"page": 3, "total": 12, "items": [{"id": 11, "name": "item-11", "price": 55}, {"id": 12, "name": "item-12", "price": 60}]}',
+      note: '多了一行 Access-Control-Allow-Origin: *。服务器用它声明：任何源的页面都可以读我这个响应。浏览器看到它才放行。',
+    },
+  ]}
+/>
+
+（来源：[MDN: CORS](#source-mdn-cors)）
+
+### 4. 为什么要有这条规矩
+
+第 14 课讲过，浏览器访问一个站点时会自动带上那个站点的 Cookie。假设你登录了邮箱，又打开了另一个不怀好意的网页。那个网页里的脚本可以让你的浏览器向邮箱发请求，请求会带着你的 Cookie，邮箱服务器会把它当成你。
+
+如果没有同源策略，那段脚本就能读到响应，也就是你的邮件。有了它，响应回到浏览器之后不会交给别的源的脚本。（来源：[MDN: Same-origin policy](#source-mdn-same-origin)）
+
+<DataTable
+  caption="同源策略管什么，不管什么"
+  headers={["情形", "结果"]}
+  rows={[
+    ["页面里的脚本用 fetch 读取另一个源的响应", "默认读不到。对方服务器用 Access-Control-Allow-Origin 明确允许才行"],
+    ["请求有没有发到对方服务器", "发了。拦住的是「读」，不是「发」"],
+    ["curl、Python 脚本、nc", "不受约束。它们不是浏览器，也不会自动带上你的 Cookie"],
+    ["页面用 a 链接、form 表单、img 图片指向另一个源", "允许。这是网页之间互相链接的基础"],
+  ]}
+  columnRatios={[2, 3]}
+/>
+
+练完之后，在终端 A 和终端 C 里各按一次 `Ctrl` + `C`。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["控制台里的报错或现象", "原因", "处理"]}
+  rows={[
+    ["Uncaught TypeError: can't access property \"addEventListener\", document.querySelector(...) is null", "脚本运行时，要找的元素还不存在：script 写在了它前面，或者 id 拼错了", "把 script 放在 body 的最后；核对 id"],
+    ["Uncaught ReferenceError: handleclick is not defined", "名字拼错了，或者还没有声明", "JavaScript 区分大小写。handleclick 和 handleClick 是两个名字"],
+    ["Uncaught SyntaxError: …", "括号、花括号或引号没有配对", "看报错给出的行号，从那一行往前数括号"],
+    ["页面一打开计数就是 1，之后怎么点都不变", "addEventListener(\"click\", handleClick()) 多写了一对括号，函数被立刻调用了一次", "去掉括号，只写函数的名字"],
+    ["改了 app.js，页面还是老样子", "没保存，或者浏览器用了缓存里的旧文件", "保存后按 Ctrl + Shift + R 强制重新加载"],
+    ["Cross-Origin Request Blocked", "脚本请求了另一个源，而对方的响应里没有允许的头", "确认地址是否写错成了别的端口或主机名；确实要跨源，需要对方服务器加上 Access-Control-Allow-Origin"],
+    ["fetch(…) 的结果显示成一个 Promise，而不是数据", "忘了写 await", "在 fetch(…) 和 .json() 前面加上 await"],
+  ]}
+  columnRatios={[1.8, 1.9, 1.7]}
+/>
+
+局限：这一课只讲了让你读懂页面脚本所需的最小部分。JavaScript 还有对象、类、模块、各种框架，都没有涉及。对接下来的安全学习来说，现在这些够用：知道脚本在浏览器里运行、能读写 DOM、能发请求、受同源策略约束。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'let x = 1 / const y = 2', description: '声明变量 / 声明之后不能重新赋值的名字。' },
+    { term: 'function f(n) { return n * 2; }', description: '定义函数。' },
+    { term: '=== / !==', description: '相等 / 不等，连类型一起比。' },
+    { term: 'console.log(…)', description: '打印到控制台。' },
+    { term: '<script src="app.js"></script>', description: '引用脚本文件，放在 body 的最后。' },
+    { term: '元素.addEventListener("click", 函数名)', description: '点击时调用这个函数。函数名后面不加括号。' },
+    { term: 'document.createElement("li") / 上级.appendChild(元素)', description: '新建元素 / 把它挂到树上。' },
+    { term: 'const r = await fetch(网址)', description: '发 GET 请求，等到响应。' },
+    { term: 'await r.json()', description: '把正文按 JSON 解析成对象。' },
+    { term: 'location.origin', description: '当前页面的源：协议 + 主机 + 端口。' },
+    { term: 'Access-Control-Allow-Origin', description: '服务器用来允许其他源的页面读取响应的头。' },
+  ]}
+/>
+
+<KeyTakeaway>
+JavaScript 随页面一起下载，在你的浏览器里运行。它用 `addEventListener` 等待点击这类事件，在函数里读写 DOM，用 `fetch` 向服务器要数据，于是页面不刷新也能变化。脚本和它的变量对使用者完全透明，不能用来保护任何东西。浏览器给脚本划了一条线：默认只能读取同源（协议、主机、端口都相同）的响应；跨源的请求照样会发出去，只是响应不交给脚本。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

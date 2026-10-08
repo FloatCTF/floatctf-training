@@ -1,0 +1,333 @@
+{
+  "lessonPlan": {
+    "audience": "会用指针读写变量和数组、理解栈帧生存期的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "在栈帧旁边多出一块叫堆的区域：malloc 时出现一个堆块，栈上的指针指向它；函数返回后栈帧消失而堆块还在；free 之后堆块标成已释放，指针却还指着它",
+    "learningObjectives": [
+      "定义结构体，用 . 和 -> 访问成员",
+      "说出栈和堆的区别：谁来分配、什么时候消失",
+      "用 malloc 申请内存、用 free 归还，并检查 malloc 是否失败",
+      "认出释放后使用、重复释放和内存泄漏三种错误各自的表现",
+      "用 -fsanitize=address 让这三种错误在运行时被报告出来"
+    ],
+    "prerequisites": [
+      "c-pointers",
+      "c-arrays-and-strings"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-heap-outlives",
+      "kind": "mechanism",
+      "title": "同样是返回地址，为什么这次可以",
+      "question": "上一课的 make 返回了局部变量的地址，结果是悬垂指针。这一课的 new_user 同样返回一个地址，main 却能正常使用。两者差在哪里？new_user 返回之后，哪些东西消失了，哪些还在？",
+      "answer": "差在那块内存在哪里。make 里的 value 是局部变量，在 make 的栈帧里；函数一返回栈帧就作废，那个地址指向的内存不再属于任何变量。new_user 里用 malloc 申请的内存在堆上，不属于任何栈帧，不会因为函数返回而消失，要一直到有人对它调用 free 为止。new_user 返回之后，消失的是它的栈帧，包括局部变量 u 和参数 name 这两个指针变量本身；还在的是 u 曾经指向的那个堆块，它的地址通过返回值交给了 main 的 bob。",
+      "sourceIds": [
+        "n1570",
+        "beej-malloc"
+      ]
+    },
+    {
+      "id": "check-predict-structs",
+      "kind": "prediction",
+      "title": "预测大小和输出",
+      "question": "定义 struct item { char name[12]; int price; };。第一问：sizeof(struct item) 是多少？malloc(3 * sizeof(struct item)) 申请了多少字节？第二问：struct item one = {\"sticker\", 5}; struct item *p = &one; p->price = p->price * 2; 之后，printf(\"%s %d %d\\n\", one.name, one.price, (*p).price); 打印什么？",
+      "answer": "第一问：16 和 48。name 占 12 个字节，price 占 4 个，加起来 16；三个就是 48。第二问：sticker 10 10。p 指向 one，p->price 就是 one.price，乘 2 之后是 10。(*p).price 和 p->price 是同一个写法的两种形式：先解引用得到结构体，再用点取成员。",
+      "sourceIds": [
+        "n1570",
+        "beej-structs"
+      ]
+    },
+    {
+      "id": "check-items-on-heap",
+      "kind": "practice",
+      "title": "堆上的一组结构体",
+      "question": "写 items.c：定义 struct item { char name[12]; int price; };，用 malloc 申请能放 3 个 item 的内存，依次填入 keyboard 120、mouse 60、sticker 5，用循环算出总价并打印，最后 free。再用 -fsanitize=address 编译运行一次，确认没有任何报告。",
+      "answer": "参考写法：struct item *items = malloc(3 * sizeof(struct item)); 检查是否为 NULL；用 strcpy(items[0].name, \"keyboard\"); items[0].price = 120; 这样的写法填三项（items[i] 是一个结构体，所以用点）；for 循环累加 items[i].price；printf(\"%d items, total %d\\n\", count, total);；free(items);。自查标准：-Wall 无警告；输出 3 items, total 185；用 gcc -g -fsanitize=address 编译后运行，输出相同且没有 ERROR 或 LeakSanitizer 的报告。去掉 free 那一行再试，应当出现泄漏报告。",
+      "sourceIds": [
+        "man-malloc3",
+        "asan-wiki"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "结构体：把几样东西捆在一起",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出什么时候用点、什么时候用箭头。"
+    },
+    {
+      "kind": "动手",
+      "title": "堆：自己申请，自己归还",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "能在逐行执行图上指出函数返回后哪些消失了、哪些还在。"
+    },
+    {
+      "kind": "进阶",
+      "title": "三种内存错误",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能从 AddressSanitizer 的报告里读出错误类型和行号。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "C11 N1570 7.22.3 memory management malloc free behavior undefined deallocated",
+      "C11 N1570 6.7.2.1 unnamed padding within a structure",
+      "Beej's Guide to C structs arrow operator; manual memory allocation leak",
+      "malloc(3) allocates size bytes not initialized; free already been freed undefined behavior",
+      "AddressSanitizer use after free memory leaks; gcc -fsanitize=address"
+    ],
+    "notes": "六个源文件在 public/labs/c-structs-and-heap/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0，glibc 2.43）里实际运行，页面输出取自运行记录。两张逐行执行图的数据由 scripts/lab/c-trace.py 用 gdb 追踪 heap.c 和 make_user.c 的真实执行生成：它在 malloc 和 free 上设断点，记录每个堆块的地址、大小和是否已释放。uaf.c 打印的数是释放后那块内存里碰巧留下的内容，每次运行不同，页面用一行说明代替了具体的数。重复释放时的 free(): double free detected in tcache 2 是 glibc 的检查给出的信息，其他 C 库的措辞不同。AddressSanitizer 的报告只保留关键行，地址与进程号每次不同。本课只讲这些错误的表现和检测，不涉及利用方法。"
+  },
+  "sources": [
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-padding",
+        "claim-malloc",
+        "claim-free",
+        "claim-use-after-free"
+      ]
+    },
+    {
+      "id": "beej-structs",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Structs",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/structs.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-struct-arrow"
+      ]
+    },
+    {
+      "id": "beej-malloc",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Manual Memory Allocation",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/manual-memory-allocation.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-automatic-vs-manual"
+      ]
+    },
+    {
+      "id": "cs50-memory",
+      "kind": "university-course",
+      "title": "CS50x: Lecture 4 - Memory",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/x/notes/4/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其讲指针与内存的顺序。",
+      "supports": [
+        "claim-pointer-address"
+      ]
+    },
+    {
+      "id": "man-malloc3",
+      "kind": "official-doc",
+      "title": "malloc(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/malloc.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-malloc",
+        "claim-free"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-asan-finds"
+      ]
+    },
+    {
+      "id": "asan-wiki",
+      "kind": "official-doc",
+      "title": "AddressSanitizer",
+      "publisher": "Google Sanitizers",
+      "url": "https://github.com/google/sanitizers/wiki/AddressSanitizer",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-asan-finds"
+      ]
+    },
+    {
+      "id": "man-signal7",
+      "kind": "official-doc",
+      "title": "signal(7) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages/signal.7.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages。",
+      "supports": [
+        "claim-sigabrt"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-struct-arrow",
+      "text": "有一个结构体时，用点访问成员；有一个指向结构体的指针时，用箭头 ->。",
+      "sourceIds": [
+        "beej-structs"
+      ]
+    },
+    {
+      "id": "claim-padding",
+      "text": "结构体对象内部可以有未命名的填充，但不会在开头。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-automatic-vs-manual",
+      "text": "局部变量在进入和离开作用域时自动分配和释放；想让数据存活得比某个块更久，需要手工分配。手工分配的内存用完后要自己释放，否则就是内存泄漏，这块内存会被进程一直占着直到退出。",
+      "sourceIds": [
+        "beej-malloc"
+      ]
+    },
+    {
+      "id": "claim-malloc",
+      "text": "malloc 分配 size 个字节并返回指向这块内存的指针，内存没有被初始化；出错时返回 NULL。",
+      "sourceIds": [
+        "man-malloc3",
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-free",
+      "text": "free 释放 p 指向的内存，p 必须是之前 malloc 一类函数返回的；如果 p 已经被释放过，行为是未定义的；p 是 NULL 时什么都不做。",
+      "sourceIds": [
+        "man-malloc3",
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-use-after-free",
+      "text": "对象的生存期结束后，指向它的指针的值变成不确定的；在生存期之外引用对象是未定义行为。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-asan-finds",
+      "text": "AddressSanitizer 能发现释放后使用、堆缓冲区溢出和内存泄漏等内存错误；用 -fsanitize=address 启用。",
+      "sourceIds": [
+        "asan-wiki",
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-pointer-address",
+      "text": "指针是存放地址的变量；malloc 让你申请一块指定大小的内存，free 让你把之前申请的那块内存还回去。",
+      "sourceIds": [
+        "cs50-memory"
+      ]
+    },
+    {
+      "id": "claim-sigabrt",
+      "text": "SIGABRT 是 abort 函数发出的中止信号。",
+      "sourceIds": [
+        "man-signal7"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "user",
+      "path": "public/labs/c-structs-and-heap/user.c",
+      "command": "gcc -Wall user.c -o user && ./user",
+      "expectedResult": "两行：alice 2 和 12。"
+    },
+    {
+      "id": "heap",
+      "path": "public/labs/c-structs-and-heap/heap.c",
+      "command": "gcc -Wall heap.c -o heap && ./heap",
+      "expectedResult": "10 20 30"
+    },
+    {
+      "id": "make-user",
+      "path": "public/labs/c-structs-and-heap/make_user.c",
+      "command": "gcc -Wall make_user.c -o make_user && ./make_user",
+      "expectedResult": "bob 1"
+    },
+    {
+      "id": "uaf",
+      "path": "public/labs/c-structs-and-heap/uaf.c",
+      "command": "gcc -g -fsanitize=address uaf.c -o uaf && ./uaf",
+      "expectedResult": "AddressSanitizer 报告 heap-use-after-free，位置是 uaf.c 第 8 行。"
+    },
+    {
+      "id": "dfree",
+      "path": "public/labs/c-structs-and-heap/dfree.c",
+      "command": "gcc dfree.c -o dfree && ./dfree",
+      "expectedResult": "free(): double free detected in tcache 2，程序被中止，退出状态 134。"
+    },
+    {
+      "id": "leak",
+      "path": "public/labs/c-structs-and-heap/leak.c",
+      "command": "gcc -g -fsanitize=address leak.c -o leak && ./leak",
+      "expectedResult": "打印 done 之后，LeakSanitizer 报告 300 byte(s) leaked in 3 allocation(s)。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "stack-and-heap",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

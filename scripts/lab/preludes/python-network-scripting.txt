@@ -1,0 +1,7 @@
+# 第 15 课沿用第 14 课的练习站，在 ~/lab/http 里做。页面上「终端 A」那一块不重放，这里在后台把练习站启动起来；
+# 每一类会话重放之前都重启一次，因为页面末尾为了演示连接失败会把它停掉。
+@labs http-basics
+@workdir /home/kali/lab/http
+rm -rf ~/lab/http; mkdir -p ~/lab/http; cp ~/lab/python/*.py ~/lab/http/
+@each pkill -f 'server.p[y]'; true
+@each cd ~/lab/http && (setsid python3 server.py >/dev/null 2>&1 &); sleep 1

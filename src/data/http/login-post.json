@@ -1,0 +1,131 @@
+{
+ "scenario": "scripts/lab/http-scenarios/login-post.json",
+ "request": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "POST",
+     "label": "方法",
+     "note": "POST 是「请处理我交给你的这份数据」。登录、发帖、提交表单都用它。"
+    },
+    {
+     "text": "/login",
+     "label": "目标",
+     "note": "数据交给谁处理。这次没有问号，要提交的内容不放在这里。"
+    },
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "HTTP 的版本。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Host",
+   "value": "127.0.0.1:8000",
+   "note": "发给哪个主机和端口。"
+  },
+  {
+   "kind": "header",
+   "name": "User-Agent",
+   "value": "curl/8.21.0",
+   "note": "客户端的自我介绍。"
+  },
+  {
+   "kind": "header",
+   "name": "Accept",
+   "value": "*/*",
+   "note": "愿意接收的内容类型。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "29",
+   "note": "正文有 29 个字节。服务器靠它知道该读多少。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "application/x-www-form-urlencoded",
+   "note": "正文的格式。这是网页表单默认的格式：名字=值，用 & 连接。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行，头部结束。"
+  },
+  {
+   "kind": "body",
+   "text": "user=student&password=kali123",
+   "note": "请求的正文：表单里填的两项。它和头部一样是明文，用 http:// 时路上的设备都能看见。"
+  }
+ ],
+ "response": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "服务器用的 HTTP 版本。"
+    },
+    {
+     "text": "302",
+     "label": "状态码",
+     "note": "302 表示「你要的东西在别处」，具体在哪看 Location。"
+    },
+    {
+     "text": "Found",
+     "label": "原因短语",
+     "note": "给人看的简短说明。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Server",
+   "value": "PracticeSite/1.0",
+   "note": "服务器软件的自我介绍。"
+  },
+  {
+   "kind": "header",
+   "name": "Date",
+   "value": "Thu, 01 Oct 2026 16:53:45 GMT",
+   "note": "响应生成的时间。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "text/plain; charset=utf-8",
+   "note": "正文的类型。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "11",
+   "note": "正文的字节数。"
+  },
+  {
+   "kind": "header",
+   "name": "Location",
+   "value": "/me",
+   "note": "接下来该去的地址。浏览器看到 302 会自动去请求它。"
+  },
+  {
+   "kind": "header",
+   "name": "Set-Cookie",
+   "value": "session=c73a07e476ebf0ed; Path=/; HttpOnly",
+   "note": "服务器交给你一个编号，要你以后每次请求都带上。session 是名字，等号后面是随机生成的值；Path=/ 表示访问这个站点的任何路径都带；HttpOnly 表示网页里的脚本读不到它。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行，头部结束。"
+  },
+  {
+   "kind": "body",
+   "text": "Logged in.",
+   "note": "正文。浏览器因为要跳转，通常不会显示它。"
+  }
+ ]
+}

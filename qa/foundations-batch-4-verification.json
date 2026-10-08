@@ -1,0 +1,631 @@
+{
+ "schemaVersion": 1,
+ "recordedAt": "2026-10-02",
+ "scope": "基础学期第 4 批：网络与 Web 六课（第 13 到 18 课）",
+ "commandReplay": {
+  "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali；curl 8.21.0、dig 9.20.29、netcat-traditional 1.10、Python 3.14.7、python3-requests 2.34.2、SQLite 3.53.4、Firefox ESR 140.16.0",
+  "method": "sh scripts/lab/replay-lesson.sh <课 id>：按 scripts/lab/preludes/<课 id>.txt 准备现场，再依次重放 shell、Python 交互模式、sqlite3、Firefox 控制台四类会话并逐条比对",
+  "commands": 196,
+  "identical": 196,
+  "differing": 0,
+  "volatileOnly": 15,
+  "perLesson": {
+   "network-basics": {
+    "shell": {
+     "identical": 20,
+     "volatileOnly": 3
+    }
+   },
+   "http-basics": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 9
+    }
+   },
+   "python-network-scripting": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 1
+    },
+    "python": {
+     "identical": 30
+    }
+   },
+   "html-css-dom": {
+    "shell": {
+     "identical": 5
+    },
+    "firefox": {
+     "identical": 25
+    }
+   },
+   "javascript-in-the-browser": {
+    "shell": {
+     "identical": 6,
+     "volatileOnly": 2
+    },
+    "firefox": {
+     "identical": 43
+    }
+   },
+   "sql-basics": {
+    "shell": {
+     "identical": 9
+    },
+    "sqlite": {
+     "identical": 33
+    }
+   }
+  },
+  "volatileFields": "HTTP 的 Date 与 Last-Modified、服务器日志时间、ping 的耗时与统计、curl 的「after N ms」、curl -v 里的客户端临时端口、练习站随机生成的会话编号。这些字段按形状比对，其余内容逐字比对。",
+  "knownVariation": "dig +short example.com 返回的两个地址顺序会轮换，偶尔与页面顺序相反；页面已注明。",
+  "separatelyReproduced": "普通用户绑定 80 端口的 PermissionError（在恢复默认 net.ipv4.ip_unprivileged_port_start 的临时容器里）；Firefox ESR 提交登录表单后的服务器日志与 document.cookie；requests 的 JSONDecodeError、HTTPError 与 socket.sendall 传入字符串时的 TypeError；JavaScript 里 addEventListener 误写成调用时的行为；Firefox ESR 安装包里的 allow pasting 提示文本；各课验收题与作业的参考解答。"
+ },
+ "httpTraces": {
+  "method": "scripts/lab/http-trace.py 启动练习站、按场景文件发出请求、把请求与真实响应拆成各部分；门禁校验数据里的请求与场景文件一致",
+  "files": [
+   "hello-get.json",
+   "login-post.json",
+   "socket-get.json"
+  ]
+ },
+ "browser": {
+  "tool": "Playwright Chromium，开发服务器 http://localhost:4321",
+  "pages": [
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 0,
+    "tables": 5,
+    "sources": 16,
+    "check": "desk network-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 1,
+    "tables": 6,
+    "sources": 9,
+    "check": "desk http-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 4,
+    "tables": 6,
+    "sources": 5,
+    "check": "desk python-network-scripting http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 2,
+    "tables": 6,
+    "sources": 9,
+    "check": "desk html-css-dom http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 10,
+    "check": "desk javascript-in-the-browser http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 2,
+    "tables": 3,
+    "sources": 9,
+    "check": "desk sql-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 0,
+    "tables": 5,
+    "sources": 16,
+    "check": "phone network-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 1,
+    "tables": 6,
+    "sources": 9,
+    "check": "phone http-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 4,
+    "tables": 6,
+    "sources": 5,
+    "check": "phone python-network-scripting http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 2,
+    "tables": 6,
+    "sources": 9,
+    "check": "phone html-css-dom http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 10,
+    "check": "phone javascript-in-the-browser http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 2,
+    "tables": 3,
+    "sources": 9,
+    "check": "phone sql-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 0,
+    "tables": 5,
+    "sources": 16,
+    "check": "dark network-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 1,
+    "tables": 6,
+    "sources": 9,
+    "check": "dark http-basics http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 4,
+    "tables": 6,
+    "sources": 5,
+    "check": "dark python-network-scripting http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 9,
+    "codeFiles": 2,
+    "tables": 6,
+    "sources": 9,
+    "check": "dark html-css-dom http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 11,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 10,
+    "check": "dark javascript-in-the-browser http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 2,
+    "tables": 3,
+    "sources": 9,
+    "check": "dark sql-basics http=200"
+   }
+  ],
+  "interactions": {
+   "network-basics": {
+    "simulator-0": {
+     "steps": 4,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   },
+   "http-basics": {
+    "http-exchange-0": {
+     "presentation": "interactive",
+     "pieces": 16,
+     "labels": [
+      "请求 · 方法",
+      "请求 · 目标",
+      "请求 · 版本",
+      "请求 · 头部 Host",
+      "请求 · 头部 User-Agent",
+      "请求 · 头部 Accept",
+      "请求 · 空行",
+      "响应 · 版本",
+      "响应 · 状态码",
+      "响应 · 原因短语",
+      "响应 · 头部 Server",
+      "响应 · 头部 Date",
+      "响应 · 头部 Content-Type",
+      "响应 · 头部 Content-Length",
+      "响应 · 空行",
+      "响应 · 正文"
+     ],
+     "keyboardSelected": "/hello?name=kali"
+    },
+    "http-exchange-1": {
+     "presentation": "interactive",
+     "pieces": 21,
+     "labels": [
+      "请求 · 方法",
+      "请求 · 目标",
+      "请求 · 版本",
+      "请求 · 头部 Host",
+      "请求 · 头部 User-Agent",
+      "请求 · 头部 Accept",
+      "请求 · 头部 Content-Length",
+      "请求 · 头部 Content-Type",
+      "请求 · 空行",
+      "请求 · 正文",
+      "响应 · 版本",
+      "响应 · 状态码",
+      "响应 · 原因短语",
+      "响应 · 头部 Server",
+      "响应 · 头部 Date",
+      "响应 · 头部 Content-Type",
+      "响应 · 头部 Content-Length",
+      "响应 · 头部 Location",
+      "响应 · 头部 Set-Cookie",
+      "响应 · 空行",
+      "响应 · 正文"
+     ],
+     "keyboardSelected": "/login"
+    }
+   },
+   "python-network-scripting": {
+    "http-exchange-0": {
+     "presentation": "interactive",
+     "pieces": 15,
+     "labels": [
+      "请求 · 方法",
+      "请求 · 目标",
+      "请求 · 版本",
+      "请求 · 头部 Host",
+      "请求 · 头部 Connection",
+      "请求 · 空行",
+      "响应 · 版本",
+      "响应 · 状态码",
+      "响应 · 原因短语",
+      "响应 · 头部 Server",
+      "响应 · 头部 Date",
+      "响应 · 头部 Content-Type",
+      "响应 · 头部 Content-Length",
+      "响应 · 空行",
+      "响应 · 正文"
+     ],
+     "keyboardSelected": "/hello?name=socket"
+    }
+   },
+   "html-css-dom": {},
+   "javascript-in-the-browser": {},
+   "sql-basics": {}
+  },
+  "static": {
+   "reduced": {
+    "network-basics": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 10
+    },
+    "http-basics": {
+     "islands": [
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 17
+      },
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 22
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "python-network-scripting": {
+     "islands": [
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 16
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 9
+    },
+    "html-css-dom": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 9
+    },
+    "javascript-in-the-browser": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 11
+    },
+    "sql-basics": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 10
+    }
+   },
+   "nojs": {
+    "network-basics": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "http-basics": {
+     "islands": [
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 17
+      },
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 22
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "python-network-scripting": {
+     "islands": [
+      {
+       "cls": "http-exchange",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 16
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "html-css-dom": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "javascript-in-the-browser": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "sql-basics": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    }
+   }
+  },
+  "print": {
+   "network-basics": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "codeFiles": 0,
+    "headerHidden": true
+   },
+   "http-basics": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 1,
+    "headerHidden": true
+   },
+   "python-network-scripting": {
+    "answersVisible": 3,
+    "terminals": 9,
+    "codeFiles": 4,
+    "headerHidden": true
+   },
+   "html-css-dom": {
+    "answersVisible": 3,
+    "terminals": 9,
+    "codeFiles": 2,
+    "headerHidden": true
+   },
+   "javascript-in-the-browser": {
+    "answersVisible": 3,
+    "terminals": 11,
+    "codeFiles": 3,
+    "headerHidden": true
+   },
+   "sql-basics": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "codeFiles": 2,
+    "headerHidden": true
+   }
+  },
+  "site": {
+   "path": "已上线 18 / 37",
+   "pathLinks": 18,
+   "nextTag": "C 一：从 hello.c 到可执行文件",
+   "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 18 | 下一课　19　C 一：从 hello.c 到可执行文件",
+   "pagination": {
+    "network-basics": {
+     "links": [
+      "/lessons/git-branches-and-collaboration/",
+      "/lessons/http-basics/"
+     ],
+     "prereq": [
+      "/lessons/shell-permissions-and-pipes/",
+      "/lessons/python-variables-and-types/"
+     ]
+    },
+    "http-basics": {
+     "links": [
+      "/lessons/network-basics/",
+      "/lessons/python-network-scripting/"
+     ],
+     "prereq": [
+      "/lessons/network-basics/",
+      "/lessons/data-representation/"
+     ]
+    },
+    "python-network-scripting": {
+     "links": [
+      "/lessons/http-basics/",
+      "/lessons/html-css-dom/"
+     ],
+     "prereq": [
+      "/lessons/python-files-and-exceptions/",
+      "/lessons/http-basics/"
+     ]
+    },
+    "html-css-dom": {
+     "links": [
+      "/lessons/python-network-scripting/",
+      "/lessons/javascript-in-the-browser/"
+     ],
+     "prereq": [
+      "/lessons/http-basics/"
+     ]
+    },
+    "javascript-in-the-browser": {
+     "links": [
+      "/lessons/html-css-dom/",
+      "/lessons/sql-basics/"
+     ],
+     "prereq": [
+      "/lessons/html-css-dom/",
+      "/lessons/python-functions-and-modules/",
+      "/lessons/python-network-scripting/"
+     ]
+    },
+    "sql-basics": {
+     "links": [
+      "/lessons/javascript-in-the-browser/"
+     ],
+     "prereq": [
+      "/lessons/shell-permissions-and-pipes/",
+      "/lessons/python-files-and-exceptions/"
+     ]
+    }
+   },
+   "category-cs-foundations": {
+    "links": 6,
+    "planned": 0
+   },
+   "category-programming": {
+    "links": 7,
+    "planned": 16
+   },
+   "category-engineering-tools": {
+    "links": 5,
+    "planned": 2
+   }
+  },
+  "consoleErrors": []
+ },
+ "kaliDefaults": "用 apt-get install -s kali-linux-default kali-desktop-xfce 模拟安装核对：bind9-dnsutils、netcat-traditional、sqlite3、firefox-esr、curl、php8.4-cli、gcc 在默认桌面安装里；python3-requests 是 kali-linux-headless 的推荐依赖。",
+ "notRun": [
+  "Firefox 开发者工具的图形界面操作",
+  "真实 Kali 虚拟机桌面",
+  "真实移动设备、屏幕阅读器、纸张分页",
+  "生产 nginx 与 CSP"
+ ]
+}

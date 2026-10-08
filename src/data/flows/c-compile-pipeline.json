@@ -1,0 +1,22 @@
+[
+  {
+    "label": "预处理",
+    "detail": "处理以 # 开头的行。#include <stdio.h> 被换成那个文件的全部内容。产物还是 C 源码。",
+    "state": "normal"
+  },
+  {
+    "label": "编译",
+    "detail": "把 C 源码翻译成汇编代码：一行行给处理器看的指令，仍然是文本。产物是 hello.s。",
+    "state": "normal"
+  },
+  {
+    "label": "汇编",
+    "detail": "把汇编代码翻译成机器码。产物是目标文件 hello.o，已经是二进制，但还不能运行。",
+    "state": "normal"
+  },
+  {
+    "label": "链接",
+    "detail": "把你的目标文件和 C 库里 printf 的机器码接在一起。产物是可执行文件 hello。",
+    "state": "success"
+  }
+]

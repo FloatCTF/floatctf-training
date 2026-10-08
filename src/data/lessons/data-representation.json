@@ -1,0 +1,255 @@
+{
+  "lessonPlan": {
+    "audience": "已经会在 Kali 终端里使用管道和重定向的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "concept",
+    "supportingModes": [
+      "mechanism",
+      "lab"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "subtle",
+    "visualStory": "同一段文字逐层展开：字符经 UTF-8 变成字节，字节写成十六进制和二进制，再按每 3 字节切成 4 个 6 位得到 Base64；修改输入文字时各层同步变化，直接看到字节数、补位和长度膨胀",
+    "learningObjectives": [
+      "说出位、字节的关系，以及一个字节能表示多少个值",
+      "在十进制、二进制、十六进制之间换算一个字节的值",
+      "用 xxd 查看文件的字节，读懂偏移、十六进制和文本三栏",
+      "解释 ASCII 与 UTF-8 怎样把字符变成字节，说明字符数和字节数为什么不同",
+      "手工说明 Base64 的分组与补位规则，并用 base64、xxd 完成编码和解码",
+      "识别 URL 编码，说明编码与加密的区别"
+    ],
+    "prerequisites": [
+      "shell-permissions-and-pipes",
+      "会用 | 把一条命令的输出交给另一条"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-encoding-not-encryption",
+      "kind": "mechanism",
+      "title": "Base64 之后就安全了吗",
+      "question": "有人把数据库密码用 Base64 处理后写进配置文件，认为这样别人就看不懂了。这个做法安全吗？说出理由，并解释为什么处理后的字符串比原来长。",
+      "answer": "不安全。Base64 是编码：规则是公开的，过程中没有密钥，任何拿到这串字符的人执行一次 base64 -d 就能还原。加密需要密钥，没有密钥的人无法还原，两者解决的问题不同。变长是因为 Base64 把每 3 个字节的 24 位切成 4 个 6 位，每个 6 位用一个字符表示，3 个字节变成 4 个字符，长度约为原来的三分之四；不足 3 个字节的最后一组还要用 = 补齐。",
+      "sourceIds": [
+        "rfc4648"
+      ]
+    },
+    {
+      "id": "check-byte-arithmetic",
+      "kind": "calculation",
+      "title": "一个字节和一个汉字",
+      "question": "第一问：十六进制 4b 对应的十进制、八位二进制和 ASCII 字符分别是什么？第二问：字符串「中A」用 UTF-8 保存占几个字节？xxd -p 会打印什么？先手算，再到终端核对。",
+      "answer": "第一问：4b 的高位 4 是 0100，低位 b 是 1011，二进制 01001011；十进制 4×16+11=75；ASCII 中 75 是大写字母 K。第二问：「中」的码点在 U+0800 到 U+FFFF 之间，UTF-8 用 3 个字节，是 e4 b8 ad；A 是 ASCII 字符，占 1 个字节 41。一共 4 个字节，xxd -p 打印 e4b8ad41。核对命令：printf '%d\\n' 0x4b 输出 75，printf '中A' | wc -c 输出 4。",
+      "sourceIds": [
+        "rfc20",
+        "rfc3629"
+      ]
+    },
+    {
+      "id": "check-decode-layers",
+      "kind": "practice",
+      "title": "解开两层编码",
+      "question": "下面这串字符经过了两层编码，先把原文写成十六进制，再对十六进制字符串做 Base64：NmI2MTZjNjk3YjYyNzk3NDY1NzM1ZjZlNmY3NDVmNmQ2MTY3Njk2Mzdk 。用一条管道命令把它还原成原文。",
+      "answer": "命令：echo 'NmI2MTZjNjk3YjYyNzk3NDY1NzM1ZjZlNmY3NDVmNmQ2MTY3Njk2Mzdk' | base64 -d | xxd -r -p 。第一段 base64 -d 得到十六进制字符串 6b616c697b62797465735f6e6f745f6d616769637d，第二段 xxd -r -p 把十六进制还原成字节，输出 kali{bytes_not_magic}。自查标准：输出以 kali{ 开头、以 } 结尾。解多层编码的顺序和编码时相反，最后做的那一层最先解。",
+      "sourceIds": [
+        "rfc4648",
+        "xxd-manpage"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "位、字节与三种进制",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能把 0x41 换成十进制和二进制。"
+    },
+    {
+      "kind": "动手",
+      "title": "文字怎样变成字节",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "用 xxd 看出「中」占 3 个字节。"
+    },
+    {
+      "kind": "进阶",
+      "title": "Base64 与 URL 编码",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "用一条管道命令解开课首那串字符。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "RFC 4648 base16 base32 base64 data encodings padding",
+      "RFC 3629 UTF-8 octet sequence table",
+      "RFC 3986 percent-encoding unreserved characters",
+      "RFC 20 ASCII format for network interchange",
+      "CS50x 2026 week 0 notes binary ASCII Unicode",
+      "xxd man page -b -p -r options"
+    ],
+    "notes": "位、字节与 ASCII 的讲法参考 CS50x 2026 第 0 周讲义的顺序，正文与例子自写。Base64、UTF-8、URL 编码与 ASCII 的规则分别绑定对应 RFC。全部命令在 kalilinux/kali-rolling 容器里以 kali 用户、交互式 zsh 实际运行，页面输出取自运行记录；roundtrip.sh 在同一环境运行通过。交互组件的 Base64 分组算法按 RFC 4648 实现，用 RFC 的测试向量核对过。"
+  },
+  "sources": [
+    {
+      "id": "rfc4648",
+      "kind": "specification",
+      "title": "RFC 4648: The Base16, Base32, and Base64 Data Encodings",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc4648",
+      "publishedAt": "2006-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-base16",
+        "claim-base64"
+      ]
+    },
+    {
+      "id": "rfc3629",
+      "kind": "specification",
+      "title": "RFC 3629: UTF-8, a transformation format of ISO 10646",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc3629",
+      "publishedAt": "2003-11-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-utf8"
+      ]
+    },
+    {
+      "id": "rfc3986",
+      "kind": "specification",
+      "title": "RFC 3986: Uniform Resource Identifier (URI): Generic Syntax",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc3986",
+      "publishedAt": "2005-01-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-percent-encoding"
+      ]
+    },
+    {
+      "id": "rfc20",
+      "kind": "specification",
+      "title": "RFC 20: ASCII format for network interchange",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc20",
+      "publishedAt": "1969-10-16",
+      "accessedAt": "2026-10-01",
+      "dateType": "publication",
+      "supports": [
+        "claim-ascii"
+      ]
+    },
+    {
+      "id": "cs50-week0",
+      "kind": "university-course",
+      "title": "CS50x 2026: Week 0 Scratch — Lecture Notes",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/x/notes/0/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "讲义未标注发布日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序。",
+      "supports": [
+        "claim-byte"
+      ]
+    },
+    {
+      "id": "xxd-manpage",
+      "kind": "official-doc",
+      "title": "xxd(1) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/trixie/xxd/xxd.1.en.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的文档，页面未标注修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-xxd"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-byte",
+      "text": "计算机通常用 8 个位表示一个数，这 8 个位称为一个字节；字母 A 约定对应数字 65，二进制写作 01000001。",
+      "sourceIds": [
+        "cs50-week0"
+      ]
+    },
+    {
+      "id": "claim-ascii",
+      "text": "ASCII 是 7 位编码，存放在最高位恒为 0 的 8 位字节里；A 是 65，a 是 97。",
+      "sourceIds": [
+        "rfc20"
+      ]
+    },
+    {
+      "id": "claim-utf8",
+      "text": "UTF-8 把一个字符编码成 1 到 4 个字节：U+0000 到 U+007F 用 1 个字节，U+0080 到 U+07FF 用 2 个，U+0800 到 U+FFFF 用 3 个，U+10000 到 U+10FFFF 用 4 个；ASCII 字符的编码与其 ASCII 值相同。",
+      "sourceIds": [
+        "rfc3629"
+      ]
+    },
+    {
+      "id": "claim-base16",
+      "text": "Base16 也就是十六进制，用 16 个字符表示数据，每个字符表示 4 位，不需要补位。",
+      "sourceIds": [
+        "rfc4648"
+      ]
+    },
+    {
+      "id": "claim-base64",
+      "text": "Base64 把输入每 24 位分为一组，输出 4 个字符，每个字符表示 6 位；最后一组不足 3 个字节时用 = 补位：剩 1 个字节输出两个字符加两个 =，剩 2 个字节输出三个字符加一个 =。",
+      "sourceIds": [
+        "rfc4648"
+      ]
+    },
+    {
+      "id": "claim-percent-encoding",
+      "text": "URL 中的百分号编码用 % 加两位十六进制表示一个字节；字母、数字和 - . _ ~ 不需要编码；非 ASCII 文字先按 UTF-8 变成字节，再逐字节编码。",
+      "sourceIds": [
+        "rfc3986"
+      ]
+    },
+    {
+      "id": "claim-xxd",
+      "text": "xxd 生成文件或标准输入的十六进制转储，也能把十六进制转储还原成二进制；-b 以二进制位显示，-p 输出连续的纯十六进制，-r 做反向转换。",
+      "sourceIds": [
+        "xxd-manpage"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "encoding-roundtrip",
+      "path": "public/labs/data-representation/roundtrip.sh",
+      "command": "sh roundtrip.sh",
+      "expectedResult": "依次打印原文、十六进制、Base64、解码后的十六进制和还原的文字，最后一行是 PASS 往返一致：编码可以无损还原，它不是加密。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "encoding-layers",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

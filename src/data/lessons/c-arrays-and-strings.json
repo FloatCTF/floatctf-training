@@ -1,0 +1,374 @@
+{
+  "lessonPlan": {
+    "audience": "理解栈帧和局部变量、用过 Python 列表与字符串的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "把数组画成一排带下标的格子：越界读取时读到的是紧挨在后面的另一个变量；字符数组里每个格子一个字符，结尾的空字符决定字符串在哪里结束",
+    "learningObjectives": [
+      "声明和使用数组，用 sizeof 算出元素个数，说明数组为什么不记得自己的长度",
+      "解释越界访问时实际发生了什么，以及 C 为什么不报错",
+      "说出 C 的字符串是什么：以空字符结尾的 char 数组，区分 sizeof 和 strlen",
+      "解释 strcpy 写过头时为什么会崩溃，知道编译器和运行时各有哪些防线",
+      "用 fgets 按缓冲区大小安全地读入一行"
+    ],
+    "prerequisites": [
+      "c-functions-and-stack",
+      "data-representation"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-string-terminator",
+      "kind": "mechanism",
+      "title": "四个字母为什么要五个格子",
+      "question": "char name[] = \"kali\"; 之后，sizeof(name) 是 5，strlen(name) 是 4。多出来的那一个字节是什么？如果把 name[4] 改成字符 '!'，再用 printf(\"%s\", name) 打印，会发生什么？为什么？",
+      "answer": "多出来的是结尾的空字符 '\\0'，数值是 0。C 的字符串不记录长度，靠这个字节表示「到此为止」：strlen 从头数到它为止，不把它算在内，所以是 4；sizeof 量的是整个数组占的内存，把它算在内，所以是 5。把 name[4] 改成 '!' 之后，数组里就没有结尾标记了。printf 的 %s 会从 name[0] 开始一个个往后打印，打印完 kali! 也不停，继续把数组后面相邻内存里的字节当作字符往外打，直到碰巧遇到一个值为 0 的字节。这是越界读取，属于未定义行为：可能多打出几个乱码，也可能崩溃。",
+      "sourceIds": [
+        "n1570",
+        "cs50-arrays"
+      ]
+    },
+    {
+      "id": "check-predict-arrays",
+      "kind": "prediction",
+      "title": "预测三行输出",
+      "question": "预测下面三条 printf 各打印什么。char word[8] = \"curl\"; 然后 printf(\"%zu %zu\\n\", sizeof(word), strlen(word));。接着 word[2] = '\\0'; 然后 printf(\"%s %zu\\n\", word, strlen(word));。最后 int nums[5] = {1, 2, 3}; 然后 printf(\"%d %zu\\n\", nums[4], sizeof(nums) / sizeof(nums[0]));。",
+      "answer": "第一行：8 4。数组声明了 8 个格子，sizeof 是 8；里面的字符串是 curl，长度 4。第二行：cu 2。把第 2 格改成空字符，字符串就在那里结束了，后面的 l 还在内存里，但已经不属于这个字符串。第三行：0 5。初始化列表只给了前三个，其余的元素被填成 0；整个数组占 20 个字节，每个元素 4 个字节，相除得到元素个数 5。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "check-upper",
+      "kind": "practice",
+      "title": "把一行字转成大写",
+      "question": "写 upper.c：用 fgets 读入一行（缓冲区 32 个字节），去掉末尾的换行，把其中的小写字母逐个改成大写，然后打印结果和它的长度。提示：小写字母的 ASCII 码是 97 到 122，减 32 就是对应的大写字母。",
+      "answer": "参考写法：char text[32]; 用 fgets(text, sizeof(text), stdin) 读入；text[strcspn(text, \"\\n\")] = '\\0'; 去掉换行；for (int i = 0; text[i] != '\\0'; i++) 里，如果 text[i] >= 97 && text[i] <= 122，就 text[i] = text[i] - 32;；最后 printf(\"%s %zu\\n\", text, strlen(text));。自查标准：-Wall 编译无警告；输入 kali linux 打印 KALI LINUX 10；输入一行超过 31 个字符的内容，程序不崩溃，只处理前 31 个。",
+      "sourceIds": [
+        "man-fgets3",
+        "beej-strings"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "数组：一排连续的格子",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能解释 codes[3] 为什么读到了 i 的值。"
+    },
+    {
+      "kind": "动手",
+      "title": "字符串：以空字符结尾的 char 数组",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "能说出 sizeof 和 strlen 对同一个字符数组为什么给出不同的数。"
+    },
+    {
+      "kind": "进阶",
+      "title": "写过头的时候",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "能说出 smash.c 为什么在打印之后才崩溃。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "C11 N1570 6.5.2.1 subscript operator E1[E2] identical to (*((E1)+(E2)))",
+      "C11 N1570 7.1.1 string contiguous sequence of characters terminated by first null character",
+      "C11 N1570 6.5.6 pointer one past the last element undefined",
+      "Beej's Guide to C arrays out of bounds strings terminator",
+      "strcpy(3) programmer is responsible for allocating a destination buffer large enough",
+      "gets(3) never use; fgets(3) at most one less than size",
+      "gcc -fstack-protector guard variable; AddressSanitizer stack buffer overflow"
+    ],
+    "notes": "六个源文件在 public/labs/c-arrays-and-strings/。全部命令在 kalilinux/kali-rolling 容器（gcc 16.2.0）里实际运行，页面输出取自运行记录。两张逐行执行图的数据由 scripts/lab/c-trace.py 用 gdb 追踪 oob.c 和 fill.c 的真实执行生成；oob.c 里越界读到的 3 正是循环变量 i，图中两者的地址可以互相印证。Kali 的 gcc 默认不启用栈保护，所以 smash.c 默认编译后以段错误结束，加 -fstack-protector-strong 才出现 stack smashing detected，两种情况都是实测。AddressSanitizer 的报告有六十多行，页面只保留关键行并注明省略；报告里的地址和进程号每次不同。本课只解释越界和溢出为什么导致错误的结果或崩溃，不涉及任何利用方法。"
+  },
+  "sources": [
+    {
+      "id": "n1570",
+      "kind": "specification",
+      "title": "ISO/IEC 9899:201x (C11) Committee Draft N1570",
+      "publisher": "ISO/IEC JTC1/SC22/WG14",
+      "url": "https://port70.net/~nsz/c/c11/n1570.html",
+      "publishedAt": "2011-04-12",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "C11 标准定稿前的最后一份公开草案，内容与正式标准基本一致；核对的是 port70.net 上的 HTML 转换版。",
+      "supports": [
+        "claim-subscript",
+        "claim-oob-undefined",
+        "claim-string"
+      ]
+    },
+    {
+      "id": "beej-arrays",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Arrays",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/arrays.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-no-bounds-check"
+      ]
+    },
+    {
+      "id": "beej-strings",
+      "kind": "textbook",
+      "title": "Beej's Guide to C Programming: Strings",
+      "publisher": "Brian “Beej Jorgensen” Hall",
+      "url": "https://beej.us/guide/bgc/html/split/strings.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "Beej's Guide to C Programming 由 Brian Hall 撰写并持续修订，以 CC BY-NC-ND 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。本课只参考其讲解顺序与例子思路。",
+      "supports": [
+        "claim-nul"
+      ]
+    },
+    {
+      "id": "cs50-arrays",
+      "kind": "university-course",
+      "title": "CS50x: Lecture 2 - Arrays",
+      "publisher": "Harvard University",
+      "url": "https://cs50.harvard.edu/x/notes/2/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。本课只参考其讲数组与字符串的顺序。",
+      "supports": [
+        "claim-nul"
+      ]
+    },
+    {
+      "id": "man-strcpy3",
+      "kind": "official-doc",
+      "title": "strcpy(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/strcpy.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-strcpy"
+      ]
+    },
+    {
+      "id": "man-strlen3",
+      "kind": "official-doc",
+      "title": "strlen(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/strlen.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-strlen"
+      ]
+    },
+    {
+      "id": "man-fgets3",
+      "kind": "official-doc",
+      "title": "fgets(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/fgets.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-fgets"
+      ]
+    },
+    {
+      "id": "man-gets3",
+      "kind": "official-doc",
+      "title": "gets(3) — Debian Manpages",
+      "publisher": "Debian",
+      "url": "https://manpages.debian.org/unstable/manpages-dev/gets.3.en.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面对应 Debian unstable 打包的 manpages-dev。",
+      "supports": [
+        "claim-gets"
+      ]
+    },
+    {
+      "id": "man-gcc",
+      "kind": "official-doc",
+      "title": "gcc(1) — Linux manual page",
+      "publisher": "man7.org",
+      "url": "https://man7.org/linux/man-pages/man1/gcc.1.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。页面取自 GCC 9.5.0 的手册页，本课引用的选项含义在 GCC 16 中没有变化；gcc.gnu.org 的在线手册拒绝了抓取，所以用这一份。",
+      "supports": [
+        "claim-stack-protector",
+        "claim-asan"
+      ]
+    },
+    {
+      "id": "asan-wiki",
+      "kind": "official-doc",
+      "title": "AddressSanitizer",
+      "publisher": "Google Sanitizers",
+      "url": "https://github.com/google/sanitizers/wiki/AddressSanitizer",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-asan"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-subscript",
+      "text": "下标运算符的定义是：E1[E2] 等同于 (*((E1)+(E2)))。E1 是数组时，E1[E2] 指的是 E1 从 0 数起的第 E2 个元素。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-no-bounds-check",
+      "text": "C 不会阻止你越界访问数组，甚至可能不给警告。",
+      "sourceIds": [
+        "beej-arrays"
+      ]
+    },
+    {
+      "id": "claim-oob-undefined",
+      "text": "指针运算的结果如果超出数组对象（及其末尾后一个位置），行为是未定义的；指向末尾后一个位置的结果不得被解引用。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-string",
+      "text": "字符串是一串连续的字符，以第一个空字符结尾并包含它；字符串的长度是空字符之前的字节数。",
+      "sourceIds": [
+        "n1570"
+      ]
+    },
+    {
+      "id": "claim-nul",
+      "text": "字符串以一个特殊的字符 NUL 结尾，写作 '\\0'。",
+      "sourceIds": [
+        "cs50-arrays",
+        "beej-strings"
+      ]
+    },
+    {
+      "id": "claim-strlen",
+      "text": "strlen 计算字符串的长度，不包括结尾的空字节。",
+      "sourceIds": [
+        "man-strlen3"
+      ]
+    },
+    {
+      "id": "claim-strcpy",
+      "text": "strcpy 把 src 指向的字符串复制到 dst 指向的缓冲区；准备一个足够大的目标缓冲区（strlen(src) + 1）是程序员的责任。",
+      "sourceIds": [
+        "man-strcpy3"
+      ]
+    },
+    {
+      "id": "claim-gets",
+      "text": "gets 不检查缓冲区是否写满，无法预知它会读入多少字符，会一直往缓冲区末尾之后写，极其危险，永远不要使用，应改用 fgets。",
+      "sourceIds": [
+        "man-gets3"
+      ]
+    },
+    {
+      "id": "claim-fgets",
+      "text": "fgets 最多读入 size 减 1 个字符存进缓冲区，读到换行或文件结尾时停止；换行符会被存进缓冲区，最后一个字符之后会存入结尾的空字节。",
+      "sourceIds": [
+        "man-fgets3"
+      ]
+    },
+    {
+      "id": "claim-stack-protector",
+      "text": "-fstack-protector 生成额外的代码来检查缓冲区溢出：给含有易受攻击对象的函数加一个保护变量，进入函数时初始化，退出时检查；检查失败时打印错误信息并终止程序。-fstack-protector-strong 保护更多的函数，包括有局部数组的函数。",
+      "sourceIds": [
+        "man-gcc"
+      ]
+    },
+    {
+      "id": "claim-asan",
+      "text": "AddressSanitizer 是 C/C++ 的内存错误检测器，能发现栈缓冲区溢出、堆缓冲区溢出、释放后使用和内存泄漏等问题；用 -fsanitize=address 启用。",
+      "sourceIds": [
+        "asan-wiki",
+        "man-gcc"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "array",
+      "path": "public/labs/c-arrays-and-strings/array.c",
+      "command": "gcc -Wall array.c -o array && ./array",
+      "expectedResult": "三行：598、16 4、8080。"
+    },
+    {
+      "id": "oob",
+      "path": "public/labs/c-arrays-and-strings/oob.c",
+      "command": "gcc oob.c -o oob && ./oob",
+      "expectedResult": "四行：200、404、500，以及一个不属于数组的数（实测是循环变量 i 的值 3）。"
+    },
+    {
+      "id": "str",
+      "path": "public/labs/c-arrays-and-strings/str.c",
+      "command": "gcc -Wall str.c -o str && ./str",
+      "expectedResult": "四行：kali、5 4、Kali、K=75 a=97 l=108 i=105。"
+    },
+    {
+      "id": "fill",
+      "path": "public/labs/c-arrays-and-strings/fill.c",
+      "command": "gcc -Wall fill.c -o fill && ./fill",
+      "expectedResult": "两行：nc! 和 n。"
+    },
+    {
+      "id": "smash",
+      "path": "public/labs/c-arrays-and-strings/smash.c",
+      "command": "gcc smash.c -o smash && ./smash",
+      "expectedResult": "编译时有 -Wstringop-overflow 警告；运行时先打印那句话，随后以段错误结束。"
+    },
+    {
+      "id": "name",
+      "path": "public/labs/c-arrays-and-strings/name.c",
+      "command": "gcc -Wall name.c -o name && ./name",
+      "expectedResult": "输入 kali 打印 hello, kali (4)；输入 administrator 打印 hello, adminis (7)。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "array-cells",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

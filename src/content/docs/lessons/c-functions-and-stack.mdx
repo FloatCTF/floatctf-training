@@ -1,0 +1,289 @@
+---
+title: C 三：函数与栈帧
+description: 定义和声明 C 函数，用逐行执行图看清一次调用在栈上留下了什么、参数为什么是副本、局部变量何时消失，以及递归时栈帧怎样叠加
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/c-functions-and-stack.json';
+import noswapTrace from '../../../data/steppers/c-noswap.json';
+import factTrace from '../../../data/steppers/c-fact.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 power.c，-Wall 编译无警告，输出 1024 81 和 1 0 0 两行。' },
+  { title: '把函数挪到 main 后面', detail: '把 power.c 里的两个函数定义挪到 main 的后面，先编译看报错，再在 main 前面补上两行原型，让它重新通过。' },
+  { title: '手画栈帧', detail: '在纸上画出 fact(4) 递归到最深时的栈：每个栈帧一个方框，写上函数名和 n 的值，main 在最上面。然后对照逐行执行图检查。' },
+  { title: '观察未初始化的变量', detail: '写一个程序：在函数 show 里声明 int n; 不赋值直接打印，main 里先调用另一个把局部变量设成 12345 的函数，再调用 show。多运行几次，记下打印的数，并写一句话说明它为什么不可靠。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 21"
+  kicker="Functions, Stack Frames"
+  lines={[
+    { text: "C 三" },
+    { text: "函数与栈帧", accent: true },
+  ]}
+  summary="函数在 Python 里就学过。这一课要回答的是 Python 替你藏起来的问题：调用一个函数时，它的参数和局部变量放在内存的什么地方，又是什么时候消失的。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：这个交换函数为什么没用
+
+下面这个程序想用一个函数交换两个变量的值：
+
+<CodeFile file="labs/c-functions-and-stack/noswap.c" />
+
+<TerminalSession
+  title="交换之后再打印"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc -Wall noswap.c -o noswap', note: '没有任何警告。' },
+    { cmd: './noswap', out: '3 5', note: 'x 和 y 没有换过来。' },
+  ]}
+/>
+
+`swap` 里的三行是标准的交换写法，没有错。编译器也没有任何意见。可是 `x` 和 `y` 就是没变。
+
+原因不在那三行代码，而在「调用函数」这个动作本身。看明白它，是理解下学期栈溢出的第一步。
+
+## 一、定义、声明与调用
+
+### 1. 函数的四个部分
+
+<CodeFile file="labs/c-functions-and-stack/add.c" mark="3-6" />
+
+<DataTable
+  caption="int add(int a, int b) 拆开看"
+  headers={["部分", "这里的写法", "含义"]}
+  rows={[
+    ["返回类型", "int", "这个函数算完之后交回一个 int。不返回任何东西时写 void"],
+    ["名字", "add", "调用时用它"],
+    ["参数", "(int a, int b)", "每个参数都要写类型。没有参数时写 (void)"],
+    ["函数体", "{ … return sum; }", "花括号里的语句。return 把值交回去，函数到此结束"],
+  ]}
+  columnRatios={[0.8, 1.2, 3]}
+/>
+
+<TerminalSession
+  title="编译运行"
+  steps={[
+    { cmd: 'gcc -Wall add.c -o add' },
+    { cmd: './add', out: '7' },
+  ]}
+/>
+
+和 Python 的 `def add(a, b):` 相比，多出来的是类型：每个参数是什么类型、返回什么类型，都要写明白。
+
+### 2. 先声明，后使用
+
+编译器从上往下读源文件。读到一处函数调用时，它必须已经知道这个函数长什么样。
+
+<CodeFile file="labs/c-functions-and-stack/order.c" note="twice 写在了 main 的后面。" />
+
+<TerminalSession
+  title="编译器还没见过 twice"
+  steps={[
+    {
+      cmd: 'gcc order.c -o order',
+      out: 'order.c: In function ‘main’:\norder.c:4:20: error: implicit declaration of function ‘twice’ [-Wimplicit-function-declaration]\n    4 |     printf("%d\\n", twice(21));\n      |                    ^~~~~',
+      note: '和第 19 课忘了 #include 时是同一个报错：用了一个编译器没见过的函数。',
+    },
+  ]}
+/>
+
+办法有两个。一是把函数的定义挪到调用它的地方之前。二是在前面写一行**原型**，先告诉编译器这个函数的样子：
+
+<CodeFile file="labs/c-functions-and-stack/proto.c" mark="3" note="第 3 行是原型：函数定义的第一行，末尾加分号。" />
+
+<TerminalSession
+  title="有了原型就能通过"
+  steps={[
+    { cmd: 'gcc -Wall proto.c -o proto' },
+    { cmd: './proto', out: '42' },
+  ]}
+/>
+
+现在回头看 `#include <stdio.h>`：那个文件里放的就是 `printf` 这些函数的原型。（来源：[Beej's Guide: Functions](#source-beej-functions)）
+
+## 二、栈帧：一次调用留下的东西
+
+### 1. 逐行看 noswap
+
+回到引导问题。点「下一步」，看每执行一行之后内存里的样子：
+
+<CodeStepper
+  client:visible
+  trace={noswapTrace}
+  view="memory"
+  title="swap(x, y) 到底换了谁"
+  eyebrow="STEP THROUGH / C 的栈"
+  intro="留意第 3 步：swap 被调用时右边多出来的那一块，以及 a、b 和 x、y 的地址。"
+/>
+
+程序运行时，系统给它一块专门的内存，叫**栈**。每调用一次函数，就在栈上划出一块给这次调用使用，叫**栈帧**，里面放着这个函数的参数和局部变量。函数返回时，这块栈帧就作废了。
+
+<DataTable
+  caption="调用 swap(x, y) 的全过程"
+  headers={["时刻", "栈上的变化"]}
+  rows={[
+    ["调用之前", "只有 main 的栈帧，里面是 x 和 y"],
+    ["调用的瞬间", "多出 swap 的栈帧。把 x 的值 3 复制给 a，把 y 的值 5 复制给 b"],
+    ["swap 执行期间", "a、b、tmp 在 swap 的栈帧里变来变去。main 的栈帧没有人碰"],
+    ["swap 返回", "swap 的栈帧作废，a、b、tmp 不复存在"],
+  ]}
+  columnRatios={[1, 4]}
+/>
+
+关键在第二行：传给函数的是**值的副本**。`a` 和 `x` 是两块不同的内存，只是一开始内容相同。C 的参数全部是这样传的。（来源：[N1570](#source-n1570)、[Beej's Guide: Functions](#source-beej-functions)）
+
+要让函数真正改到调用者的变量，需要把变量的地址传过去。这是第 23 课指针的内容，到时会把这个 `swap` 改对。
+
+### 2. 递归：同一个函数的多个栈帧
+
+<CodeFile file="labs/c-functions-and-stack/fact.c" />
+
+<CodeStepper
+  client:visible
+  trace={factTrace}
+  view="memory"
+  title="fact(3) 的栈帧怎样叠起来又退下去"
+  eyebrow="STEP THROUGH / C 的栈"
+  intro="每调用一次 fact，就多一个栈帧，各有各的 n。留意它们的地址。"
+/>
+
+<TerminalSession
+  title="结果"
+  steps={[
+    { cmd: 'gcc -Wall fact.c -o fact' },
+    { cmd: './fact', out: '6' },
+  ]}
+/>
+
+从图里读出三件事：
+
+- 同一个函数被调用三次，就有三个栈帧，三个互不相干的 `n`。
+- 后调用的先返回。最里面的 `fact(1)` 先结束，然后是 `fact(2)`，最后是 `fact(3)`。「栈」这个名字就是这么来的：后放上去的先拿走。
+- 三个 `n` 的地址依次是 `…ebfc`、`…ebdc`、`…ebbc`，越晚调用的越小。在这台机器上，栈是朝着低地址方向长的。
+
+## 三、局部变量的一生
+
+### 1. 用之前要赋值
+
+函数里声明的变量叫**局部变量**。它在函数被调用时出现，在函数返回时消失。如果声明时不给初值，它里面是什么？
+
+<CodeFile file="labs/c-functions-and-stack/uninit.c" mark="4" />
+
+<TerminalSession
+  title="没有赋过值的变量"
+  steps={[
+    {
+      cmd: 'gcc -Wall uninit.c -o uninit',
+      out: 'uninit.c: In function ‘main’:\nuninit.c:5:5: warning: ‘n’ is used uninitialized [-Wuninitialized]\n    5 |     printf("%d\\n", n);\n      |     ^~~~~~~~~~~~~~~~~\nuninit.c:4:9: note: ‘n’ was declared here\n    4 |     int n;\n      |         ^',
+      note: '-Wall 发现了：n 还没有赋值就被用了。',
+    },
+    { cmd: './uninit', out: '0', note: '这一次打印的是 0。不要相信它。' },
+  ]}
+/>
+
+C 不会替你把变量清零。声明 `int n;` 只是在栈帧里划出 4 个字节，里面是这块内存上一次被使用时留下的内容。这次碰巧是 0，下次、换个程序、换个编译选项，可能是任何数。标准的说法是它的值**不确定**。（来源：[N1570](#source-n1570)）
+
+规矩很简单：**声明变量的同时给它初值。**
+
+### 2. 栈不是无限的
+
+<CodeFile file="labs/c-functions-and-stack/forever.c" note="down 每次都再调用自己，永远不返回。" />
+
+<TerminalSession
+  title="一直调用，从不返回"
+  steps={[
+    { cmd: 'gcc forever.c -o forever', note: '这次故意不加 -Wall。加了的话 gcc 会直接警告 infinite recursion detected。' },
+    { cmd: './forever', out: 'zsh: segmentation fault  ./forever', note: '程序被系统强行终止。有的系统会在中间多显示 (core dumped)，意思是系统顺手保存了崩溃时的内存。' },
+    { cmd: 'echo $?', out: '139', note: '退出状态是 128 加 11。11 是段错误这个信号的编号。' },
+  ]}
+/>
+
+每调用一次 `down`，栈上就多一个栈帧，而它们永远等不到返回。栈的大小有限，很快被用完，程序再想往外写时碰到了不属于它的内存，系统就把它终止了。这种终止叫**段错误**（segmentation fault），之后几课还会以别的方式遇到它。（来源：[Zsh: Shell Grammar](#source-zsh-grammar)、[signal(7)](#source-man-signal7)）
+
+## 常见报错与排错
+
+<CodeFile file="labs/c-functions-and-stack/noreturn.c" mark="5" note="add 声明要返回 int，却没有写 return。" />
+
+<TerminalSession
+  title="忘了 return，以及参数个数不对"
+  steps={[
+    {
+      cmd: 'gcc -Wall noreturn.c -o noreturn',
+      out: 'noreturn.c: In function ‘add’:\nnoreturn.c:4:9: warning: unused variable ‘sum’ [-Wunused-variable]\n    4 |     int sum = a + b;\n      |         ^~~\nnoreturn.c:5:1: warning: control reaches end of non-void function [-Wreturn-type]\n    5 | }\n      | ^',
+      note: '第二条是重点：一个应当返回值的函数，执行到了末尾却没有 return。这只是 warning，程序照样能编译出来，调用者拿到的返回值是不确定的。',
+    },
+    {
+      cmd: 'gcc -Wall fewargs.c -o fewargs',
+      out: 'fewargs.c: In function ‘main’:\nfewargs.c:8:20: error: too few arguments to function ‘add’; expected 2, have 1\n    8 |     printf("%d\\n", add(3));\n      |                    ^~~\nfewargs.c:3:5: note: declared here\n    3 | int add(int a, int b) {\n      |     ^~~',
+      note: 'fewargs.c 里把 add(3, 4) 写成了 add(3)。参数个数对不上是 error。',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["error: implicit declaration of function ‘…’", "调用的函数写在了后面，或者名字拼错", "把定义挪到前面，或者在前面加原型"],
+    ["warning: control reaches end of non-void function", "函数声明了返回类型，却有一条路径没有 return", "补上 return。不需要返回值就把类型写成 void"],
+    ["error: too few arguments to function ‘…’", "调用时参数个数和定义对不上", "对照 note 指出的那一行定义"],
+    ["warning: ‘n’ is used uninitialized", "局部变量没赋值就用了", "声明时给初值"],
+    ["函数里改了参数，调用者那边没变", "参数是副本", "用返回值把结果交回去；或者传地址，见第 23 课"],
+    ["zsh: segmentation fault，程序里有递归", "递归没有终止条件，栈被用完了", "检查什么情况下不再调用自己，以及每次调用是否在向那个情况靠近"],
+  ]}
+  columnRatios={[1.8, 1.5, 1.7]}
+/>
+
+边界：这一课说的「地址越往后越小」「未初始化的变量这次是 0」，都是在这台机器、这个编译器上观察到的现象，不是 C 语言的保证。能依赖的只有标准规定的那几条：参数按值传递，局部变量随函数返回而失效，未初始化的值不确定。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'int add(int a, int b) { return a + b; }', description: '定义函数：返回类型、名字、带类型的参数、函数体。' },
+    { term: 'int add(int a, int b);', description: '原型：先告诉编译器函数的样子，定义可以放在后面。' },
+    { term: 'void', description: '写在返回类型处表示不返回值，写在参数处表示没有参数。' },
+    { term: '栈帧', description: '一次函数调用在栈上占的那一块，放参数和局部变量，返回时作废。' },
+    { term: '按值传递', description: '参数是调用者那边的值的副本，改它不影响调用者。' },
+    { term: '局部变量', description: '随函数调用出现，随返回消失。不赋初值时内容不确定。' },
+    { term: 'segmentation fault', description: '程序碰了不属于它的内存，被系统终止。退出状态 139。' },
+  ]}
+/>
+
+<KeyTakeaway>
+每调用一次函数，栈上就多出一个栈帧，存放这次调用的参数和局部变量；函数返回，栈帧作废。参数是调用者那边的值的副本，所以在函数里改参数改不到调用者的变量。局部变量不赋初值时，里面是内存里原来留下的内容。递归时每一层调用都有自己的栈帧，栈的空间有限，没有终止条件的递归会以段错误结束。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

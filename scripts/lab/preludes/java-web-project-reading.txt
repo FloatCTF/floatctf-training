@@ -1,0 +1,3 @@
+# 项目放在 ~/lab/notes-app（模拟学员按页面上的路径存好了文件；~/lab/notes 是第 2 课建的目录，不能占用）。Maven 的插件缓存 ~/.m2 保留，免得每次重放都重新下载。
+pkill -f 'notes-1.0.ja[r]'; rm -rf ~/lab/notes-app; mkdir -p ~/lab/notes-app; cp -r ~/lab/python/. ~/lab/notes-app/; true
+@workdir /home/kali/lab/notes-app

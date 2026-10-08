@@ -37,10 +37,9 @@ const solidEdges: [string, string][] = [
   ['人工确认', 'END'],
 ];
 const edgeCoords = solidEdges.map(([from, to]) => edge(from, to));
+import LessonDiagram from './lesson-diagram.astro';
 ---
-<section class="lesson-diagram not-content" aria-label="发布简报执行图">
-  <p class="lesson-diagram__eyebrow">EXECUTION GRAPH / 节点与边</p>
-  <h3 class="lesson-diagram__title">一张图同时容纳并行、汇合与回边</h3>
+<LessonDiagram eyebrow="EXECUTION GRAPH / 节点与边" title="一张图同时容纳并行、汇合与回边" ariaLabel="发布简报执行图" note="读取与审查是并行节点，汇合点等待全部完成；虚线回边表示审查失败后带反馈重新生成草稿，发布动作保留给人工节点。">
   <svg viewBox="0 0 680 580" role="img" aria-label="执行图：确认版本范围后并行读取提交与阻断项，生成草稿后并行进行安全、证据、格式三路审查，汇总通过后人工确认结束；审查失败带反馈回到生成草稿。">
     <title>发布简报执行图</title>
     <defs>
@@ -61,5 +60,5 @@ const edgeCoords = solidEdges.map(([from, to]) => edge(from, to));
       </g>
     ))}
   </svg>
-  <p class="lesson-diagram__note">读取与审查是并行节点，汇合点等待全部完成；虚线回边表示审查失败后带反馈重新生成草稿，发布动作保留给人工节点。</p>
-</section>
+
+</LessonDiagram>

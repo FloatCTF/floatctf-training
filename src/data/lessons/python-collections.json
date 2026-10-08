@@ -1,0 +1,291 @@
+{
+  "lessonPlan": {
+    "audience": "已经会写函数和循环、需要一次处理多条数据的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "可变对象的共享：a = [1, 2]、b = a、b.append(3) 之后两个名字看到同一个变化，copy() 之后才分开；逐行执行时用圈号标出哪些名字指向同一个列表",
+    "learningObjectives": [
+      "用下标和切片取出列表里的元素，用 append、in、len 和 for 操作列表",
+      "解释两个名字指向同一个列表时，通过一个名字修改为什么另一个也变",
+      "用字典按键存取数据，用 get() 和 in 处理键不存在的情况",
+      "用「字典计数」统计一组数据里每个值出现的次数，并找出最多的那个",
+      "读懂并写出简单的列表推导式",
+      "区分 IndexError 和 KeyError，知道元组不能修改"
+    ],
+    "prerequisites": [
+      "python-functions-and-modules",
+      "理解变量是指向对象的名字"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-alias",
+      "kind": "mechanism",
+      "title": "改了 b，a 为什么也变了",
+      "question": "执行 a = [1, 2]、b = a、b.append(3) 之后，a 是什么？第 5 课里 a = 3、b = a、a = a + 1 之后 b 没有变，这里为什么不一样？怎样让 b 成为一份独立的列表？",
+      "answer": "a 是 [1, 2, 3]。两种情况里 b = a 做的事相同，都是让两个名字指向同一个对象。区别在后一步：a = a + 1 是赋值，它算出一个新对象并让名字 a 改指向它，原对象没有被改动；b.append(3) 没有给任何名字重新赋值，它直接改了那个列表对象的内容，而 a 也指向这个对象。列表是可变对象，整数不是。要得到独立的一份，写 b = a.copy()。",
+      "sourceIds": [
+        "py-introduction",
+        "py-datamodel"
+      ]
+    },
+    {
+      "id": "check-slices",
+      "kind": "prediction",
+      "title": "五个下标与切片",
+      "question": "s = [10, 20, 30, 40, 50]。不运行，写出 s[1:3]、s[:2]、s[-2:]、len(s[1:]) 和 s[2] 的结果，再逐个验证。",
+      "answer": "依次是 [20, 30]、[10, 20]、[40, 50]、4、30。下标从 0 开始，所以 s[2] 是第三个元素 30。切片 s[a:b] 取下标从 a 到 b 之前的元素，终点不包含在内，和 range 的规则一致；省略 a 表示从头开始，省略 b 表示取到末尾；负数下标从末尾往前数，-2 是倒数第二个。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "check-count-codes",
+      "kind": "practice",
+      "title": "统计状态码",
+      "question": "给定 codes = [200, 404, 200, 500, 404, 200]。写脚本统计每个状态码出现的次数，先打印整个计数字典，再打印出现次数最多的那个状态码。",
+      "answer": "参考写法：counts = {}；for code in codes: counts[code] = counts.get(code, 0) + 1；print(counts)；top = sorted(counts, key=counts.get, reverse=True)；print(top[0])。自查标准：第一行输出 {200: 3, 404: 2, 500: 1}，第二行输出 200。关键的一行是 counts.get(code, 0) + 1：第一次遇到某个状态码时字典里还没有这个键，get 给出默认值 0，加 1 后存进去；之后每遇到一次就在原来的次数上加 1。",
+      "sourceIds": [
+        "py-stdtypes",
+        "py-datastructures"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "列表：按位置存一串数据",
+      "heading": "一、",
+      "minutes": 35,
+      "checkpoint": "能说出 alias.py 打印的三个列表各是什么，以及原因。"
+    },
+    {
+      "kind": "动手",
+      "title": "字典：按名字存取，并用它计数",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "count_ips.py 的最后一行输出 top: 192.0.2.10。"
+    },
+    {
+      "kind": "进阶",
+      "title": "推导式、元组与两种越界",
+      "heading": "三、",
+      "minutes": 20,
+      "checkpoint": "能用一行推导式从列表里筛出偶数。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Python 3.14 tutorial lists indexing slicing mutable assignment never copies",
+      "Python 3.14 tutorial data structures list methods comprehensions tuples sets dictionaries",
+      "Python built-in types dict get mapping insertion order",
+      "Python data model mutable immutable objects",
+      "Python built-in exceptions IndexError KeyError"
+    ],
+    "notes": "语言行为绑定 Python 3.14 官方教程、标准库参考与语言参考。全部脚本与交互模式的输入输出在 kalilinux/kali-rolling 容器（Python 3.14.7）里实际运行；逐行执行图的数据由 scripts/lab/py-trace.py 追踪 alias.py 的真实执行生成。示例中的 IP 取自文档保留地址段，与第 3 课的示例日志一致。"
+  },
+  "sources": [
+    {
+      "id": "py-introduction",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 3. An Informal Introduction to Python",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/introduction.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-list-basics",
+        "claim-assignment-never-copies"
+      ]
+    },
+    {
+      "id": "py-datastructures",
+      "kind": "official-doc",
+      "title": "The Python Tutorial: 5. Data Structures",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/tutorial/datastructures.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-list-methods",
+        "claim-comprehension",
+        "claim-tuple-set",
+        "claim-dict"
+      ]
+    },
+    {
+      "id": "py-stdtypes",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Types",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/stdtypes.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-dict-get-order"
+      ]
+    },
+    {
+      "id": "py-datamodel",
+      "kind": "official-doc",
+      "title": "The Python Language Reference: 3. Data model",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/reference/datamodel.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-mutable"
+      ]
+    },
+    {
+      "id": "py-functions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Functions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/functions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-sorted-key"
+      ]
+    },
+    {
+      "id": "py-exceptions",
+      "kind": "official-doc",
+      "title": "The Python Standard Library: Built-in Exceptions",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3.14/library/exceptions.html",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "页面未标注逐页的修订日期，publishedAt 记录核验快照日期。访问时文档对应 Python 3.14.8。",
+      "supports": [
+        "claim-index-key-errors"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-list-basics",
+      "text": "列表写作方括号里用逗号分隔的一组值；可以像字符串一样用下标和切片访问，下标从 0 开始，负数下标从右边数起；列表是可变类型，可以修改其内容，append() 在末尾添加元素。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-assignment-never-copies",
+      "text": "简单赋值从不复制数据：把列表赋给变量时，变量指向已有的那个列表，通过一个变量做的修改，其他指向它的变量都能看到。",
+      "sourceIds": [
+        "py-introduction"
+      ]
+    },
+    {
+      "id": "claim-mutable",
+      "text": "值可以改变的对象称为可变对象，创建后值不能改变的称为不可变对象。",
+      "sourceIds": [
+        "py-datamodel"
+      ]
+    },
+    {
+      "id": "claim-list-methods",
+      "text": "list.copy() 返回列表的浅拷贝；list.pop() 移除并返回最后一个元素；sorted() 返回一个新的已排序列表，不改动原来的序列。",
+      "sourceIds": [
+        "py-datastructures"
+      ]
+    },
+    {
+      "id": "claim-comprehension",
+      "text": "列表推导式是创建列表的简洁写法，常用于对序列的每个成员做运算得到新列表，或筛出满足条件的元素。",
+      "sourceIds": [
+        "py-datastructures"
+      ]
+    },
+    {
+      "id": "claim-tuple-set",
+      "text": "元组是不可变的；集合是没有重复元素的无序集合，常用于成员测试和去重。",
+      "sourceIds": [
+        "py-datastructures"
+      ]
+    },
+    {
+      "id": "claim-dict",
+      "text": "字典以键为索引，可以看作键值对的集合且键不重复；用 in 检查键是否存在；遍历时用 items() 同时取出键和值。",
+      "sourceIds": [
+        "py-datastructures"
+      ]
+    },
+    {
+      "id": "claim-dict-get-order",
+      "text": "dict.get(key, default) 在键存在时返回对应的值，否则返回 default，不会抛出 KeyError；字典保持键的插入顺序。",
+      "sourceIds": [
+        "py-stdtypes"
+      ]
+    },
+    {
+      "id": "claim-sorted-key",
+      "text": "sorted() 的 key 参数是一个单参数函数，用来从每个元素取出比较用的值；reverse 为 True 时按降序排列。",
+      "sourceIds": [
+        "py-functions"
+      ]
+    },
+    {
+      "id": "claim-index-key-errors",
+      "text": "序列下标超出范围时抛出 IndexError；在字典里找不到键时抛出 KeyError。",
+      "sourceIds": [
+        "py-exceptions"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "alias",
+      "path": "public/labs/python-collections/alias.py",
+      "command": "python3 alias.py",
+      "expectedResult": "[1, 2, 3] [1, 2, 3] [1, 2, 3, 4]"
+    },
+    {
+      "id": "ips",
+      "path": "public/labs/python-collections/ips.py",
+      "command": "python3 ips.py",
+      "expectedResult": "先打印 4、192.0.2.10、203.0.113.5，再打印四行以 seen: 开头的 IP。"
+    },
+    {
+      "id": "count-ips",
+      "path": "public/labs/python-collections/count_ips.py",
+      "command": "python3 count_ips.py",
+      "expectedResult": "第一行是 {'192.0.2.10': 3, '198.51.100.7': 1, '203.0.113.5': 1}，最后一行是 top: 192.0.2.10。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "shared-mutable-object",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

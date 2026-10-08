@@ -1,0 +1,361 @@
+{
+  "lessonPlan": {
+    "audience": "学过 Python 基础、会在控制台里用 querySelector 的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "一段脚本的三个时刻：页面加载时登记「点击时调用谁」，用户点击时函数运行并修改 DOM，脚本向服务器要数据再把结果写进页面；最后是同一个请求发往另一个源时，浏览器把响应扣下不给脚本",
+    "learningObjectives": [
+      "读懂 JavaScript 的变量、函数、条件和数组，对照 Python 说出写法上的差别",
+      "说明网页里的脚本在哪里运行、什么时候运行",
+      "用 addEventListener 让函数在点击时运行，并在函数里修改 DOM",
+      "用 fetch 向服务器要 JSON 数据并显示到页面上",
+      "说出「源」由哪三部分组成，解释同源策略拦住了什么、没拦住什么"
+    ],
+    "prerequisites": [
+      "html-css-dom",
+      "python-functions-and-modules",
+      "python-network-scripting"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-where-it-runs",
+      "kind": "mechanism",
+      "title": "计数器的数存在哪",
+      "question": "你打开计数器页面，点了五次按钮，页面显示 Clicked 5 times.。这时同桌在自己的电脑上打开同一个网址，他看到的是几？你自己按 F5 刷新之后又是几？说明 count 这个变量存在哪里、app.js 是在哪台机器上运行的。",
+      "answer": "同桌看到的是 0，你刷新之后也是 0。服务器只负责把 index.html 和 app.js 这两个文件原样发给浏览器，它自己并不运行 app.js。脚本是在每个人的浏览器里、为每一次打开的页面单独运行的：count 是那一次页面加载时创建的变量，存在浏览器的内存里。同桌的浏览器有他自己的一份，从 0 开始；你刷新之后页面重新加载，脚本重新运行，又是一份新的，从 0 开始。要让一个数被所有人看到、刷新后还在，它必须存在服务器那一边。",
+      "sourceIds": [
+        "mdn-js-what"
+      ]
+    },
+    {
+      "id": "check-predict-js",
+      "kind": "prediction",
+      "title": "预测六行的结果",
+      "question": "在控制台里依次输入下面六行，预测每一行显示的结果。一、\"5\" + 1。二、\"5\" * 2。三、5 == \"5\"。四、5 === \"5\"。五、const n = 1，下一行 n = 2。六、在计数器页面上执行两次 document.querySelector(\"#add\").click() 之后，document.querySelector(\"#count\").textContent。",
+      "answer": "一、\"51\"：加号的一边是字符串时，另一边也被当成字符串拼起来。二、10：乘号只对数字有意义，\"5\" 被自动转成了数字。三、true：两个等号比较之前会先转换类型。四、false：三个等号连类型一起比，数字和字符串不相等。五、第一行显示 undefined，第二行报 Uncaught TypeError: invalid assignment to const 'n'：const 声明的名字不能重新赋值。六、\"2\"：每次 click 都触发一次点击事件，handleClick 运行两次；结果带引号是因为 textContent 永远是字符串。平时一律用三个等号，避开自动转换类型带来的意外。",
+      "sourceIds": [
+        "mdn-js-what",
+        "mdn-addeventlistener"
+      ]
+    },
+    {
+      "id": "check-add-reset",
+      "kind": "practice",
+      "title": "加一个清零按钮",
+      "question": "给计数器页面加一个 Reset 按钮：点它之后，计数回到 0，页面上的数字也变回 0。需要改 index.html 和 app.js 各一处。",
+      "answer": "参考做法：在 index.html 的 Click me 按钮后面加一行 <button id=\"reset\">Reset</button>。在 app.js 里加一个函数 function handleReset() { count = 0; document.querySelector(\"#count\").textContent = count; }，再加一行 document.querySelector(\"#reset\").addEventListener(\"click\", handleReset);。保存两个文件，刷新页面。自查标准：点三次 Click me 显示 3，点 Reset 显示 0，再点 Click me 显示 1（说明变量本身也清零了，不只是页面上的文字）；控制台里没有红色的报错。",
+      "sourceIds": [
+        "mdn-events",
+        "mdn-addeventlistener"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "JavaScript 的最小语法",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能在控制台里定义一个函数并调用它。"
+    },
+    {
+      "kind": "动手",
+      "title": "让页面对点击作出反应",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "点按钮后数字加一，点 Load items 后出现五行条目。"
+    },
+    {
+      "kind": "进阶",
+      "title": "同源策略",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能解释为什么 8001 的日志里有请求，脚本却拿不到结果。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "MDN what is JavaScript client-side interpreted runs in order",
+      "MDN introduction to events addEventListener",
+      "MDN using the Fetch API promise response json",
+      "MDN same-origin policy definition of an origin",
+      "MDN CORS Access-Control-Allow-Origin",
+      "MDN Reason: CORS header Access-Control-Allow-Origin missing",
+      "MDN innerHTML security considerations textContent"
+    ],
+    "notes": "练习材料在 public/labs/javascript-in-the-browser/：index.html、app.js 和只用标准库的 server.py。控制台里的全部语句用 Kali 容器里的 Firefox ESR 140 以无界面方式打开同一个页面逐条执行（scripts/lab/firefox-console.py），页面上的结果取自执行记录；按钮用 .click() 触发，效果与鼠标点击相同。同源策略一节的四个 tryFetch 结果、被拦截的请求仍然出现在 8001 的服务器日志里，均为实测。Firefox 控制台里那条 Cross-Origin Request Blocked 提示无法从接口取得，页面引用的是 MDN 给出的文本格式。开发者工具界面上的操作没有在图形界面里逐步点过。"
+  },
+  "sources": [
+    {
+      "id": "mdn-js-what",
+      "kind": "official-doc",
+      "title": "MDN: What is JavaScript?",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/What_is_JavaScript",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-js-what",
+        "claim-js-order"
+      ]
+    },
+    {
+      "id": "mdn-events",
+      "kind": "official-doc",
+      "title": "MDN: Introduction to events",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Scripting/Events",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-events"
+      ]
+    },
+    {
+      "id": "mdn-addeventlistener",
+      "kind": "official-doc",
+      "title": "MDN: EventTarget: addEventListener() method",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-addeventlistener"
+      ]
+    },
+    {
+      "id": "mdn-fetch-using",
+      "kind": "official-doc",
+      "title": "MDN: Using the Fetch API",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-fetch"
+      ]
+    },
+    {
+      "id": "mdn-same-origin",
+      "kind": "official-doc",
+      "title": "MDN: Same-origin policy",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/Security/Defenses/Same-origin_policy",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-origin",
+        "claim-same-origin-policy"
+      ]
+    },
+    {
+      "id": "mdn-cors",
+      "kind": "official-doc",
+      "title": "MDN: Cross-Origin Resource Sharing (CORS)",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-cors"
+      ]
+    },
+    {
+      "id": "mdn-cors-missing",
+      "kind": "official-doc",
+      "title": "MDN: Reason: CORS header 'Access-Control-Allow-Origin' missing",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS/Errors/CORSMissingAllowOrigin",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-cors-missing"
+      ]
+    },
+    {
+      "id": "mdn-innerhtml",
+      "kind": "official-doc",
+      "title": "MDN: Element: innerHTML property",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Element/innerHTML",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-innerhtml"
+      ]
+    },
+    {
+      "id": "mdn-script",
+      "kind": "official-doc",
+      "title": "MDN: <script>: The Script element",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTML/Reference/Elements/script",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-script-element"
+      ]
+    },
+    {
+      "id": "firefox-console-input",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: The JavaScript input interpreter",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/web_console/the_command_line_interpreter/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-console-single-line"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-js-what",
+      "text": "JavaScript 是一种脚本语言，让网页能做展示静态信息之外的事。客户端代码在用户的电脑上运行：浏览网页时，页面的客户端代码被下载下来，由浏览器运行。浏览器拿到的是文本形式的 JavaScript 代码，直接从文本运行。",
+      "sourceIds": [
+        "mdn-js-what"
+      ]
+    },
+    {
+      "id": "claim-js-order",
+      "text": "浏览器遇到一段 JavaScript 时，通常按从上到下的顺序运行它，所以要注意先后次序：用到的东西一般要先定义好。",
+      "sourceIds": [
+        "mdn-js-what"
+      ]
+    },
+    {
+      "id": "claim-script-element",
+      "text": "script 元素用来嵌入可执行的代码或数据，通常用来嵌入或引用 JavaScript 代码。",
+      "sourceIds": [
+        "mdn-script"
+      ]
+    },
+    {
+      "id": "claim-events",
+      "text": "事件是你编程的系统里发生的事情，系统会告诉你，让你的代码能够作出反应。例如用户点击了网页上的一个按钮。",
+      "sourceIds": [
+        "mdn-events"
+      ]
+    },
+    {
+      "id": "claim-addeventlistener",
+      "text": "addEventListener() 登记一个函数，每当指定的事件送达目标时，这个函数就被调用。",
+      "sourceIds": [
+        "mdn-addeventlistener"
+      ]
+    },
+    {
+      "id": "claim-fetch",
+      "text": "Fetch API 提供了发出 HTTP 请求并处理响应的 JavaScript 接口。fetch() 返回一个 Promise，它在收到服务器的响应时完成，结果是一个 Response 对象；之后可以检查状态，并调用相应的方法把正文按文本或 JSON 取出来。",
+      "sourceIds": [
+        "mdn-fetch-using"
+      ]
+    },
+    {
+      "id": "claim-origin",
+      "text": "两个 URL 的协议、主机和端口（如果指定了）都相同，才算同源。",
+      "sourceIds": [
+        "mdn-same-origin"
+      ]
+    },
+    {
+      "id": "claim-same-origin-policy",
+      "text": "同源策略是一项关键的安全机制，它限制从一个源加载的文档或脚本怎样与另一个源的资源交互。例如，它阻止互联网上的恶意网站在浏览器里运行 JavaScript 去读取用户已登录的第三方网页邮箱里的数据。",
+      "sourceIds": [
+        "mdn-same-origin"
+      ]
+    },
+    {
+      "id": "claim-cors",
+      "text": "出于安全原因，浏览器限制脚本发起的跨源 HTTP 请求，fetch() 遵循同源策略：除非其他源的响应带有正确的 CORS 头，否则网页只能请求与自己同源的资源。响应头 Access-Control-Allow-Origin: * 表示这个资源可以被任何源访问。",
+      "sourceIds": [
+        "mdn-cors"
+      ]
+    },
+    {
+      "id": "claim-cors-missing",
+      "text": "跨源请求的响应缺少 Access-Control-Allow-Origin 头时，Firefox 在控制台里报告 Reason: CORS header 'Access-Control-Allow-Origin' missing。",
+      "sourceIds": [
+        "mdn-cors-missing"
+      ]
+    },
+    {
+      "id": "claim-innerhtml",
+      "text": "innerHTML 会把赋给它的字符串当作 HTML 标记来解析；输入来自攻击者时，它可能成为跨站脚本攻击的入口。已知内容应当是纯文本时应使用 textContent，这样内容不会被当成 HTML 解析。",
+      "sourceIds": [
+        "mdn-innerhtml"
+      ]
+    },
+    {
+      "id": "claim-console-single-line",
+      "text": "Firefox 控制台的解释器可以实时执行 JavaScript 表达式。",
+      "sourceIds": [
+        "firefox-console-input"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "counter-page",
+      "path": "public/labs/javascript-in-the-browser/index.html",
+      "command": "在 ~/lab/js 里执行 python3 server.py，用 Firefox 打开 http://127.0.0.1:8000/",
+      "expectedResult": "页面显示 Counter、Clicked 0 times.、Click me 按钮和 Load items 按钮；每点一次 Click me，数字加一。"
+    },
+    {
+      "id": "counter-script",
+      "path": "public/labs/javascript-in-the-browser/app.js",
+      "command": "在页面上点 Load items",
+      "expectedResult": "按钮下方出现五行，从 item-01 - 5 到 item-05 - 25；服务器日志多一行 GET /api/items?page=1。"
+    },
+    {
+      "id": "js-practice-server",
+      "path": "public/labs/javascript-in-the-browser/server.py",
+      "command": "curl -i 'http://127.0.0.1:8001/api/open?page=3'（先用 python3 server.py 8001 启动）",
+      "expectedResult": "状态行 HTTP/1.0 200 OK，头部里有 Access-Control-Allow-Origin: *，正文是含 item-11、item-12 的 JSON。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "event-fetch-origin",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

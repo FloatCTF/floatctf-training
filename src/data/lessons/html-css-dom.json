@@ -1,0 +1,336 @@
+{
+  "lessonPlan": {
+    "audience": "读得懂 HTTP 请求和响应、还没有写过网页的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "concept",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "同一份 HTML 的三种样子并排：curl 拿到的文本、浏览器解析出的 DOM 树、画出来的页面；在控制台里改动这棵树，页面跟着变而文件不变",
+    "learningObjectives": [
+      "读懂 HTML 的元素、标签、属性和嵌套，说出一个最小网页由哪几部分组成",
+      "解释浏览器怎样把 HTML 文本变成 DOM 树，以及 DOM 和文件的区别",
+      "在开发者工具的控制台里用 querySelector 找到元素、读取和修改它",
+      "写出元素、类、id 三种 CSS 选择器，说出它们各选中哪些元素",
+      "说明表单用 GET 提交时数据出现在哪里"
+    ],
+    "prerequisites": [
+      "http-basics",
+      "会用 mousepad 新建并保存文件，会开两个终端"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-dom-vs-file",
+      "kind": "mechanism",
+      "title": "改了页面，文件变了吗",
+      "question": "你在控制台里执行 document.querySelector(\"h1\").textContent = \"Hacked\"，页面上的标题立刻变了。这时用 curl 请求同一个地址，拿到的 HTML 里标题是什么？按 F5 刷新之后页面上的标题又是什么？用「文件、DOM、页面」三者的关系解释。",
+      "answer": "curl 拿到的仍然是 My Toolbox，刷新之后页面上也变回 My Toolbox。服务器上的 index.html 是一份文本文件。浏览器收到它之后解析成一棵 DOM 树，放在自己的内存里，页面是照着这棵树画出来的。控制台里那一行改的是内存里的这棵树，所以页面立刻跟着变；但它没有也不可能改动服务器上的文件。刷新就是重新请求、重新解析，得到一棵全新的树，之前的改动自然消失。同理，这个改动只发生在你自己的浏览器里，别人打开同一个网址看不到。",
+      "sourceIds": [
+        "mdn-dom-intro"
+      ]
+    },
+    {
+      "id": "check-predict-selectors",
+      "kind": "prediction",
+      "title": "这些选择器各选中几个",
+      "question": "对本课的 index.html，在控制台里依次执行下面五行，预测每行的结果。一、document.querySelectorAll(\"li\").length。二、document.querySelectorAll(\".tool\").length。三、document.querySelectorAll(\"li.done\").length。四、document.querySelector(\".tool\").textContent。五、document.querySelector(\"h2\")。",
+      "answer": "一、3，页面里有三个 li 元素。二、3，三个 li 的 class 里都有 tool。三、1，只有最后一个 li 同时带有 done 这个类。四、\"curl\"：querySelector 只返回第一个匹配的元素，第一个带 tool 类的是内容为 curl 的那个 li。五、null：页面里没有 h2 元素，没有匹配时返回 null，不报错；但如果接着写 .textContent 就会报 TypeError。",
+      "sourceIds": [
+        "mdn-queryselector",
+        "mdn-css-selectors"
+      ]
+    },
+    {
+      "id": "check-build-page",
+      "kind": "practice",
+      "title": "做一页自己的",
+      "question": "在 ~/lab/site 里新建 about.html：标题写你的名字拼音，一段自我介绍，一个至少三项的列表，其中一项加上 class=\"done\"，并引用同一个 style.css。再给 style.css 加一条规则，让段落文字变成灰色。用浏览器打开 http://127.0.0.1:8000/about.html 检查。",
+      "answer": "参考结构：<!doctype html>、<html lang=\"en\">、<head> 里放 <meta charset=\"utf-8\">、<title> 和 <link rel=\"stylesheet\" href=\"style.css\">，<body> 里放 <h1>、<p> 和 <ul>，ul 里三个 <li>。style.css 末尾加一行 p { color: gray; }。自查标准：页面上标题是暗红色，带 done 的那一项有删除线，段落是灰色；控制台里 document.querySelectorAll(\"li\").length 至少是 3，getComputedStyle(document.querySelector(\"p\")).color 是 \"rgb(128, 128, 128)\"；终端 A 的日志里能看到 GET /about.html 和 GET /style.css 两行。",
+      "sourceIds": [
+        "mdn-html-syntax",
+        "mdn-css-selectors"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "HTML：带标记的文本",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能指出一个元素的开始标签、内容、结束标签和属性。"
+    },
+    {
+      "kind": "动手",
+      "title": "DOM：浏览器内存里的树",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "在控制台里改掉标题，刷新后它又变回去，并能说出原因。"
+    },
+    {
+      "kind": "进阶",
+      "title": "CSS 与表单",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能说出 h1、.tool、#title 三种选择器各选中什么。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "MDN basic HTML syntax elements attributes nesting anatomy of an HTML document",
+      "MDN introduction to the DOM nodes objects logical tree",
+      "MDN what is CSS rule-based language",
+      "MDN basic CSS selectors type class id",
+      "MDN Document.querySelector returns first element null",
+      "MDN sending form data GET appended to URL",
+      "Firefox DevTools open the Inspector",
+      "Firefox DevTools web console JavaScript input interpreter"
+    ],
+    "notes": "页面文件是 public/labs/html-css-dom/ 下的 index.html 和 style.css。shell 命令在 kalilinux/kali-rolling 容器里实际运行。控制台里的 25 条语句用容器里的 Firefox ESR 140 以无界面方式打开同一个页面逐条执行（scripts/lab/firefox-console.py，通过 Firefox 自带的 WebDriver BiDi 接口），页面上的结果取自执行记录，并按控制台的显示方式排版：字符串带双引号，抛出的错误前加 Uncaught。开发者工具界面上的操作（打开面板、在 Inspector 里点选元素）依据 Firefox 官方文档写成，没有在图形界面里逐步点过。粘贴前要输入 allow pasting 的提示，核对的是 Firefox ESR 140 安装包里的界面字符串。"
+  },
+  "sources": [
+    {
+      "id": "mdn-html-syntax",
+      "kind": "official-doc",
+      "title": "MDN: Basic HTML syntax",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Structuring_content/Basic_HTML_syntax",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-html",
+        "claim-element-anatomy",
+        "claim-attributes",
+        "claim-document-anatomy"
+      ]
+    },
+    {
+      "id": "mdn-dom-intro",
+      "kind": "official-doc",
+      "title": "MDN: Introduction to the DOM",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document_Object_Model/Introduction",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-dom"
+      ]
+    },
+    {
+      "id": "mdn-css-what",
+      "kind": "official-doc",
+      "title": "MDN: What is CSS?",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/What_is_CSS",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-css"
+      ]
+    },
+    {
+      "id": "mdn-css-selectors",
+      "kind": "official-doc",
+      "title": "MDN: Basic CSS selectors",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/Styling_basics/Basic_selectors",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-selectors"
+      ]
+    },
+    {
+      "id": "mdn-queryselector",
+      "kind": "official-doc",
+      "title": "MDN: Document: querySelector() method",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/API/Document/querySelector",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-queryselector"
+      ]
+    },
+    {
+      "id": "mdn-form-data",
+      "kind": "official-doc",
+      "title": "MDN: Sending form data",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Sending_and_retrieving_form_data",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-form-get"
+      ]
+    },
+    {
+      "id": "firefox-inspector",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: Open the Inspector",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/page_inspector/how_to/open_the_inspector/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-devtools-panels"
+      ]
+    },
+    {
+      "id": "firefox-console",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: Web Console",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/web_console/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-devtools-panels"
+      ]
+    },
+    {
+      "id": "firefox-console-input",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: The JavaScript input interpreter",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/web_console/the_command_line_interpreter/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-console-input"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-html",
+      "text": "HTML 是一种标记语言，告诉浏览器怎样组织网页的结构。它由一系列元素组成，元素用来包住内容的不同部分，让它们以某种方式显示或起作用。",
+      "sourceIds": [
+        "mdn-html-syntax"
+      ]
+    },
+    {
+      "id": "claim-element-anatomy",
+      "text": "一个元素由开始标签、内容和结束标签组成；开始标签是包在尖括号里的元素名。元素可以放在别的元素里面，这叫嵌套。",
+      "sourceIds": [
+        "mdn-html-syntax"
+      ]
+    },
+    {
+      "id": "claim-attributes",
+      "text": "属性包含关于元素的额外信息，这些信息不属于元素的内容。class 属性给元素一个标识名，供样式（CSS）或脚本（JavaScript）用来定位它。",
+      "sourceIds": [
+        "mdn-html-syntax"
+      ]
+    },
+    {
+      "id": "claim-document-anatomy",
+      "text": "一个完整的网页包括文档类型声明 <!doctype html>、根元素 html、放页面信息的 head 和放可见内容的 body。",
+      "sourceIds": [
+        "mdn-html-syntax"
+      ]
+    },
+    {
+      "id": "claim-dom",
+      "text": "DOM 是网页文档的编程接口。它把文档表示成节点和对象组成的一棵逻辑树，程序可以通过它改变文档的结构、样式和内容。同一个文档既可以显示在浏览器窗口里，也可以看作 HTML 源码。",
+      "sourceIds": [
+        "mdn-dom-intro"
+      ]
+    },
+    {
+      "id": "claim-queryselector",
+      "text": "document.querySelector() 返回文档中第一个与指定 CSS 选择器匹配的元素，没有匹配时返回 null。",
+      "sourceIds": [
+        "mdn-queryselector"
+      ]
+    },
+    {
+      "id": "claim-css",
+      "text": "CSS 是一种基于规则的语言：一条规则指定一组样式，应用到网页上的某个元素或某一组元素。",
+      "sourceIds": [
+        "mdn-css-what"
+      ]
+    },
+    {
+      "id": "claim-selectors",
+      "text": "选择器是 CSS 规则的第一部分，告诉浏览器哪些元素应当应用规则里的属性值。基本的选择器有元素类型、类和 id 三种；类选择器以点开头，选中文档里所有带这个类的元素；id 在一个文档里应当唯一。",
+      "sourceIds": [
+        "mdn-css-selectors"
+      ]
+    },
+    {
+      "id": "claim-form-get",
+      "text": "表单用 GET 方法提交时，请求的正文是空的，发给服务器的数据附加在 URL 后面；用 POST 方法提交时，数据放在请求的正文里。",
+      "sourceIds": [
+        "mdn-form-data"
+      ]
+    },
+    {
+      "id": "claim-devtools-panels",
+      "text": "打开 Inspector 有两种主要方式：在开发者工具里选择 Inspector 面板，或者在网页的元素上点右键选择 Inspect。Web Console 可以用 Ctrl+Shift+K 打开，它记录与网页有关的信息，并让你通过执行 JavaScript 表达式与网页交互。",
+      "sourceIds": [
+        "firefox-inspector",
+        "firefox-console"
+      ]
+    },
+    {
+      "id": "claim-console-input",
+      "text": "Web Console 提供的解释器可以实时执行 JavaScript 表达式；单行模式下，在控制台底部 >> 提示符后面的输入框里输入。",
+      "sourceIds": [
+        "firefox-console-input"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "toolbox-page",
+      "path": "public/labs/html-css-dom/index.html",
+      "command": "在 ~/lab/site 里执行 python3 -m http.server 8000，然后 curl http://127.0.0.1:8000/",
+      "expectedResult": "curl 原样打印出 index.html 的二十一行文本；用浏览器打开同一地址，看到暗红色的标题 My Toolbox、一段带链接的文字、三项列表（最后一项有删除线）和一个搜索框。"
+    },
+    {
+      "id": "toolbox-style",
+      "path": "public/labs/html-css-dom/style.css",
+      "command": "curl -I http://127.0.0.1:8000/style.css",
+      "expectedResult": "状态行是 HTTP/1.0 200 OK，Content-type 是 text/css。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "text-tree-page",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

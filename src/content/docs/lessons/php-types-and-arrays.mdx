@@ -1,0 +1,286 @@
+---
+title: PHP 二：类型、比较与数组
+description: 用 var_dump 看清 PHP 的类型，弄懂加号、点号和类型转换的规则，分清 == 与 ===，用既是列表又是字典的数组做计数统计
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/php-types-and-arrays.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 status.php，第一行是 3 200，最后一行是 yes。' },
+  { title: '把统计放进网页', detail: '把 visits.php 改成一个页面：用 php -S 运行，在 <ul> 里每个 IP 一个 <li>。提示：在 foreach 里输出 <li> 标签。' },
+  { title: '收集「意外的相等」', detail: '自己写五组用 == 比较结果为 true、但用 === 为 false 的值，每组用 var_dump 验证。至少有一组是两个不同的字符串。' },
+  { title: '对照三门语言', detail: '同一句「把 "5" 和 3 相加」，分别写出 Python、C、PHP 里会发生什么。Python 和 C 的结果在第 5 课和第 20 课里都见过。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PHP / LESSON 28"
+  kicker="Types, Comparison, Arrays"
+  lines={[
+    { text: "PHP 二" },
+    { text: "类型、比较与数组", accent: true },
+  ]}
+  summary="PHP 和 Python 一样不用声明类型，和 C 一样有整数、浮点数和字符串。它的特别之处在于：值的类型会根据你怎么用它而自动改变。这一课把这些自动转换看清楚，再认识 PHP 里身兼两职的数组。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题："5" 加 3 等于几
+
+上一课说过，`$_GET` 里取出来的值永远是字符串。用户在网址里写 `?count=5`，PHP 拿到的是 `"5"`。
+
+如果你接着写 `$_GET['count'] + 3`，会发生什么？Python 会报 `TypeError`，因为字符串和数字不能相加。C 根本不让你这样写。PHP 会给你一个答案。
+
+这个答案是什么、PHP 是怎么得出的，就是这一课的主题。网站的输入全是字符串，而程序拿它们去算、去比较，所以这些规则每天都在起作用。
+
+## 一、类型与自动转换
+
+### 1. 看清一个值是什么类型
+
+<CodeFile file="labs/php-types-and-arrays/types.php" />
+
+<TerminalSession
+  title="五种基本类型"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    { cmd: 'php types.php', out: 'int(80)\nfloat(0.75)\nstring(4) "kali"\nbool(true)\nNULL\nint string\nhost: kali, port: 80\nsingle quotes: $host' },
+  ]}
+/>
+
+`var_dump` 把类型和值一起打印出来，字符串还附上长度。调试时用它，不要用 `echo`：`echo` 打印 `false` 和空字符串时都什么也不显示，分不出来。（来源：[Types](#source-php-types)、[var_dump](#source-php-var-dump)）
+
+<DataTable
+  caption="PHP 的基本类型"
+  headers={["类型", "例子", "对应 Python", "对应 C"]}
+  rows={[
+    ["int", "80", "int", "long"],
+    ["float", "0.75", "float", "double"],
+    ["string", "\"kali\"", "str", "char 数组"],
+    ["bool", "true / false", "True / False", "非 0 / 0"],
+    ["null", "null", "None", "NULL"],
+    ["array", "[22, 80]", "list 和 dict", "数组"],
+  ]}
+  columnRatios={[0.8, 1.1, 1.2, 1]}
+/>
+
+最后两行输出说明了单引号和双引号的区别：**双引号里的 `$变量` 会被换成它的值，单引号里的原样保留。** 拼接字符串用点号 `.`，不是加号。（来源：[Strings](#source-php-string)、[String Operators](#source-php-string-operators)）
+
+### 2. 运算符决定类型
+
+<CodeFile file="labs/php-types-and-arrays/juggle.php" />
+
+<TerminalSession
+  title="同一个值，换个用法就换个类型"
+  steps={[
+    { cmd: 'php juggle.php', out: 'int(8)\nstring(2) "53"\nfloat(5)\nfloat(3.5)\nint(3)\nint(42)\nbool(false)\nbool(false)\nbool(true)' },
+  ]}
+/>
+
+对照源码逐行看：
+
+<DataTable
+  caption="juggle.php 的九行"
+  headers={["表达式", "结果", "为什么"]}
+  rows={[
+    ["\"5\" + 3", "int(8)", "加号要数字。\"5\" 看起来是个数字，就被当成 5"],
+    ["\"5\" . 3", "string(2) \"53\"", "点号要字符串。3 被当成 \"3\""],
+    ["\"2.5\" * 2", "float(5)", "带小数点的字符串变成浮点数"],
+    ["7 / 2", "float(3.5)", "和 C 不同，PHP 的除法不会丢掉小数"],
+    ["intdiv(7, 2)", "int(3)", "要整数除法用 intdiv"],
+    ["(int) \"42abc\"", "int(42)", "强制转换成整数：取开头的数字部分"],
+    ["(bool) \"0\"", "bool(false)", "字符串 \"0\" 被当作假"],
+    ["(bool) \"\"", "bool(false)", "空字符串是假"],
+    ["(bool) \"false\"", "bool(true)", "非空、又不是 \"0\" 的字符串都是真，哪怕内容是 false"],
+  ]}
+  columnRatios={[1.1, 1.1, 2.8]}
+/>
+
+（来源：[Type Juggling](#source-php-juggling)、[Booleans](#source-php-boolean)）
+
+这就是引导问题的答案：PHP 根据**运算符**决定把值当成什么。加号把两边都转成数字，点号把两边都转成字符串。这种自动转换叫**类型转换**（type juggling）。
+
+### 3. 转不成数字的时候
+
+<CodeFile file="labs/php-types-and-arrays/warn.php" />
+
+<TerminalSession
+  title="半个数字，和完全不是数字"
+  steps={[
+    {
+      cmd: 'php warn.php',
+      out: 'PHP Warning:  A non-numeric value encountered in /home/kali/lab/php/warn.php on line 2\nint(6)\nPHP Fatal error:  Uncaught TypeError: Unsupported operand types: string + int in /home/kali/lab/php/warn.php:4\nStack trace:\n#0 {main}\n  thrown in /home/kali/lab/php/warn.php on line 4',
+      note: '第 2 行先给出一条警告："5 apples" 以数字开头，PHP 取出 5 继续算。第 3 行打印出 6。第 4 行的 "apples" 完全不是数字，程序直接终止。',
+    },
+  ]}
+/>
+
+规则是：数字形式的字符串当作数字；以数字开头、后面还有别的东西的，取开头那部分并给警告；完全不是数字的，从 PHP 8 起抛出 `TypeError`。（来源：[Numeric strings](#source-php-numeric-strings)）
+
+## 二、两个等号和三个等号
+
+### 1. 先转换再比，还是连类型一起比
+
+<CodeFile file="labs/php-types-and-arrays/compare.php" />
+
+<TerminalSession
+  title="八组比较"
+  steps={[
+    { cmd: 'php compare.php', out: 'bool(true)\nbool(false)\nbool(true)\nbool(false)\nbool(true)\nbool(true)\nbool(false)\nbool(false)' },
+  ]}
+/>
+
+<DataTable
+  caption="compare.php 的八行"
+  headers={["比较", "结果", "说明"]}
+  rows={[
+    ["1 == \"1\"", "true", "== 先做类型转换再比"],
+    ["1 === \"1\"", "false", "=== 不转换：一个是 int，一个是 string"],
+    ["\"10\" == \"1e1\"", "true", "两边都是数字形式的字符串，按数值比。1e1 是科学计数法，等于 10"],
+    ["\"10\" === \"1e1\"", "false", "两个不同的字符串"],
+    ["100 == \"1e2\"", "true", "同理，1e2 是 100"],
+    ["null == false", "true", "两者转成布尔值都是假"],
+    ["0 == \"a\"", "false", "\"a\" 不是数字，PHP 8 把 0 转成 \"0\" 再按字符串比"],
+    ["\"abc\" == 0", "false", "同上"],
+  ]}
+  columnRatios={[1.1, 0.6, 3.2]}
+/>
+
+（来源：[Comparison Operators](#source-php-comparison)）
+
+<Callout variant="warning" title="旧教程里的结论可能是错的">
+最后两行在 PHP 7 及更早的版本里结果是 **true**：那时字符串和数字比较，会先把字符串转成数字，`"a"` 变成 0。PHP 8 改掉了这条规则。网上很多文章和老项目是按旧规则写的，读的时候先看清它说的是哪个版本。
+</Callout>
+
+两个等号的结果取决于一套转换规则，而且这套规则还在不同版本间变过。三个等号只有一条规则：类型和值都相同。**写程序时默认用 `===` 和 `!==`，只在确实需要转换时才用 `==`。**
+
+### 2. in_array 也有同样的问题
+
+<CodeFile file="labs/php-types-and-arrays/strict.php" mark="3-4" />
+
+<TerminalSession
+  title="查一个值在不在数组里"
+  steps={[
+    { cmd: 'php strict.php', out: 'bool(true)\nbool(false)\narray(3) {\n  [0]=>\n  string(3) "200"\n  [1]=>\n  string(3) "404"\n  [2]=>\n  string(3) "500"\n}\nbool(false)\nbool(true)', note: '前两行：不加第三个参数时，in_array 用 == 比较，1 和 "1" 被当成相等。后面：explode 拆出来的全是字符串。' },
+  ]}
+/>
+
+`in_array` 默认用 `==` 比较，第三个参数传 `true` 才用 `===`。所以它的写法也定下来：**`in_array($x, $list, true)`**。（来源：[in_array](#source-php-in-array)）
+
+## 三、数组：既是列表也是字典
+
+### 1. 两种用法
+
+<CodeFile file="labs/php-types-and-arrays/arrays.php" />
+
+<TerminalSession
+  title="列表、字典、遍历"
+  steps={[
+    { cmd: 'php arrays.php', out: '4 tools, first is curl\nhttp is on 80\nssh => 22\nhttp => 80\nhttps => 443\ndns => 53\nbool(false)\nssh, http, https, dns' },
+  ]}
+/>
+
+Python 有列表和字典两种东西，PHP 只有一种：**数组**。它本质上是一个有序的「键 → 值」映射，键可以是整数也可以是字符串。
+
+<DataTable
+  caption="数组的常用写法"
+  headers={["写法", "含义", "Python 里的对应"]}
+  rows={[
+    ["[\"curl\", \"nc\"]", "不写键，自动用 0、1、2…", "[\"curl\", \"nc\"]"],
+    ["[\"ssh\" => 22]", "用 => 写出键和值", "{\"ssh\": 22}"],
+    ["$a[] = 值", "在末尾追加，键是现有最大整数键加 1", "a.append(值)"],
+    ["$a[\"dns\"] = 53", "设置一个键的值", "a[\"dns\"] = 53"],
+    ["count($a)", "元素个数", "len(a)"],
+    ["foreach ($a as $k => $v)", "遍历键和值，按加入的顺序", "for k, v in a.items()"],
+    ["isset($a[\"ftp\"])", "这个键存在并且值不是 null", "\"ftp\" in a"],
+    ["implode(\", \", $a) / explode(\",\", $s)", "拼成字符串 / 拆成数组", "\", \".join(a) / s.split(\",\")"],
+  ]}
+  columnRatios={[1.6, 2, 1.6]}
+/>
+
+（来源：[Arrays](#source-php-array)、[foreach](#source-php-foreach)、[isset](#source-php-isset)）
+
+### 2. 用数组计数
+
+第 8 课用 Python 的字典统计过每个 IP 出现的次数，同一件事的 PHP 写法：
+
+<CodeFile file="labs/php-types-and-arrays/visits.php" mark="9" />
+
+<TerminalSession
+  title="按次数排序"
+  steps={[
+    { cmd: 'php visits.php', out: '3 192.0.2.10\n2 198.51.100.7\n1 203.0.113.5' },
+  ]}
+/>
+
+第 9 行是计数的惯用写法：这个 IP 已经有计数就取出来，没有就当 0，加 1 存回去。`??` 在第 27 课见过。`arsort` 按值从大到小排序，并保留每个值对应的键。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["Warning: Undefined array key \"…\"", "取了一个不存在的键", "先用 isset 判断，或者用 $a[\"k\"] ?? 默认值"],
+    ["Warning: A non-numeric value encountered", "拿一个以数字开头、后面带着别的东西的字符串做算术", "先检查输入是不是纯数字"],
+    ["Fatal error: Uncaught TypeError: Unsupported operand types: string + int", "拿完全不是数字的字符串做算术", "同上"],
+    ["echo 一个值什么都没打印", "值是 false、null 或空字符串", "改用 var_dump 看清它到底是什么"],
+    ["本来该不相等的两个值，if 判断成了相等", "用了 ==，触发了类型转换", "改用 ===；in_array 加第三个参数 true"],
+    ["\"$a[\"k\"]\" 这种写法报语法错误", "双引号里嵌套双引号", "写成 \"{$a['k']}\"，或者用点号拼接"],
+    ["拼接字符串结果是数字", "用了加号", "PHP 的字符串拼接是点号"],
+  ]}
+  columnRatios={[1.9, 1.7, 1.7]}
+/>
+
+局限：这一课没有讲多维数组、`array_map` 这类函数、类型声明。它们在第 30 课和之后的项目里遇到时再讲。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'var_dump($x)', description: '打印类型和值。调试首选。' },
+    { term: '"…$x…" / \'…\'', description: '双引号展开变量，单引号原样。' },
+    { term: 'A . B', description: '字符串拼接。' },
+    { term: '+ - * /', description: '算术，会把数字形式的字符串转成数字。/ 结果可能是小数。' },
+    { term: '(int) / (bool) / (string)', description: '强制转换类型。' },
+    { term: '假值', description: 'false、0、0.0、""、"0"、空数组、null。' },
+    { term: '=== / !==', description: '类型和值都相同 / 不同。默认用它们。' },
+    { term: '== / !=', description: '先转换类型再比。' },
+    { term: '[1, 2] / ["k" => "v"]', description: '数组：列表写法 / 键值写法。' },
+    { term: 'foreach ($a as $k => $v)', description: '遍历键和值。' },
+    { term: 'in_array($x, $a, true)', description: '严格判断 $x 在不在数组里。' },
+    { term: 'isset($a["k"])', description: '键存在且值不是 null。' },
+  ]}
+/>
+
+<KeyTakeaway>
+PHP 的值有类型，但运算符会自动转换它：加号把操作数当数字，点号当字符串；完全不是数字的字符串参与算术时，PHP 8 会抛出 TypeError。`==` 先转换再比较，规则复杂而且在 PHP 8 改过；`===` 要求类型和值都相同，应当默认使用，`in_array` 也要加上第三个参数 `true`。PHP 的数组是有序的键值映射，同时承担列表和字典的角色。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

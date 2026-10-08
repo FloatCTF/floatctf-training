@@ -1,0 +1,221 @@
+{
+ "source": [
+  "def double(n):",
+  "    result = n * 2",
+  "    return result",
+  "",
+  "x = double(4)",
+  "print(x)"
+ ],
+ "steps": [
+  {
+   "line": 1,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    }
+   },
+   "stdout": "",
+   "note": "def 开头的三行此刻没有被执行。Python 只是造出一个函数对象，并把名字 double 绑到它上面。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      }
+     ]
+    },
+    {
+     "name": "double",
+     "names": [
+      {
+       "name": "n",
+       "ref": 2
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    },
+    "2": {
+     "type": "int",
+     "repr": "4"
+    }
+   },
+   "stdout": "",
+   "note": "开始调用 double(4)：Python 为这次调用新开一块独立的名字空间，把参数名 n 绑到传进来的 4。这一行还没有执行完，要等函数返回。"
+  },
+  {
+   "line": 2,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      }
+     ]
+    },
+    {
+     "name": "double",
+     "names": [
+      {
+       "name": "n",
+       "ref": 2
+      },
+      {
+       "name": "result",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    },
+    "2": {
+     "type": "int",
+     "repr": "4"
+    },
+    "3": {
+     "type": "int",
+     "repr": "8"
+    }
+   },
+   "stdout": "",
+   "note": "现在执行的是函数体。result 绑到 8，它和 n 都只存在于这次调用的名字空间里。"
+  },
+  {
+   "line": 3,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      }
+     ]
+    },
+    {
+     "name": "double",
+     "names": [
+      {
+       "name": "n",
+       "ref": 2
+      },
+      {
+       "name": "result",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    },
+    "2": {
+     "type": "int",
+     "repr": "4"
+    },
+    "3": {
+     "type": "int",
+     "repr": "8"
+    }
+   },
+   "stdout": "",
+   "returned": {
+    "type": "int",
+    "repr": "8"
+   },
+   "note": "return 把 8 交回给调用的地方，函数到此结束。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      },
+      {
+       "name": "x",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    },
+    "3": {
+     "type": "int",
+     "repr": "8"
+    }
+   },
+   "stdout": "",
+   "note": "函数返回后，它的名字空间被丢弃，n 和 result 都不存在了。交回来的 8 被绑给全局的名字 x，这一行才算执行完。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "double",
+       "ref": 1
+      },
+      {
+       "name": "x",
+       "ref": 3
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "函数",
+     "repr": "double(n)"
+    },
+    "3": {
+     "type": "int",
+     "repr": "8"
+    }
+   },
+   "stdout": "8\n",
+   "note": "打印 x 的值。"
+  }
+ ],
+ "error": null,
+ "file": "public/labs/python-functions-and-modules/double.py"
+}

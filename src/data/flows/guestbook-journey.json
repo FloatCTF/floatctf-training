@@ -1,0 +1,32 @@
+[
+  {
+    "label": "填表提交",
+    "detail": "浏览器把表单里的 name 和 body 放进请求正文，用 POST 发给 post.php。表单上的 required、maxlength 只在浏览器里起作用。",
+    "state": "normal"
+  },
+  {
+    "label": "服务器再查一遍",
+    "detail": "post.php 先确认是 POST，再去掉首尾空白、检查是否为空、按字符数检查长度。不合格就回 400，后面的代码不再执行。",
+    "state": "normal"
+  },
+  {
+    "label": "预处理语句写库",
+    "detail": "INSERT 的 SQL 文本里只有问号，名字和留言作为参数单独交给数据库。内容里有引号、尖括号都只是普通文字，原样存进去。",
+    "state": "normal"
+  },
+  {
+    "label": "303 跳回首页",
+    "detail": "post.php 回 303 和 Location: index.php，浏览器接着用 GET 请求首页。这时再刷新，刷新的是首页，不会把留言再提交一次。",
+    "state": "normal"
+  },
+  {
+    "label": "查询并转义输出",
+    "detail": "index.php 按 id 倒序取出全部留言，每一段来自用户的文字都先经过 e()，也就是 htmlspecialchars，再放进 HTML。",
+    "state": "normal"
+  },
+  {
+    "label": "浏览器显示",
+    "detail": "尖括号已经变成 &lt; 和 &gt;，浏览器把它们显示成字符本身，留言里写什么就显示什么，不会变成页面的一部分。",
+    "state": "success"
+  }
+]

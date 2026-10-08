@@ -1,0 +1,333 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-01",
+  "scope": "基础学期第 1 批：vm-kali-setup、shell-files-and-paths、shell-permissions-and-pipes、data-representation",
+  "commandReplay": {
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali（sudo 组），登录 shell zsh 5.9.2（kali-defaults 配置），LANG=en_US.UTF-8，终端 80 列；用 pexpect 驱动真实的交互式会话",
+    "method": "从四课 MDX 中按页面顺序取出全部 TerminalSession 命令（PowerShell 示例除外），在重置后的容器里依次执行，把输出与页面逐条比对",
+    "commands": 109,
+    "identical": 97,
+    "differing": 12,
+    "differences": [
+      {
+        "kind": "时间戳",
+        "count": 4,
+        "detail": "ls -l 的修改时间取决于执行时刻"
+      },
+      {
+        "kind": "进程号",
+        "count": 2,
+        "detail": "sleep 300 & 与 ps 的 PID、终端号因环境而异"
+      },
+      {
+        "kind": "不换行空格",
+        "count": 1,
+        "detail": "tree 用 U+00A0 缩进，页面用普通空格，显示相同"
+      },
+      {
+        "kind": "应答回显",
+        "count": 3,
+        "detail": "sudo 密码提示与 command-not-found 的 n 应答，差别来自采集脚本的回显处理"
+      },
+      {
+        "kind": "有意截取",
+        "count": 1,
+        "detail": "sudo apt install -y htop 只保留到 Summary 第一行，页面已注明省略"
+      },
+      {
+        "kind": "通知时机",
+        "count": 1,
+        "detail": "kill %1 之后 zsh 的 terminated 通知前多一个空行；通知也可能推迟到下一条命令时出现，页面已说明"
+      }
+    ],
+    "fixedByReplay": [
+      "第 4 课缺少 cd ~/lab，xxd notes/first.txt 与 sh roundtrip.sh 在新终端里会找不到文件，已补上"
+    ],
+    "notReproduced": [
+      "第 1 课的 PowerShell Get-FileHash 示例（输出格式引自微软文档）",
+      "第 1 课 VMware 图形界面的安装、导入、快照步骤（依据 Kali 与 Broadcom 官方文档）"
+    ]
+  },
+  "rfc4648TestVectors": {
+    "f": {
+      "base64": "Zg==",
+      "ok": true
+    },
+    "fo": {
+      "base64": "Zm8=",
+      "ok": true
+    },
+    "foo": {
+      "base64": "Zm9v",
+      "ok": true
+    },
+    "foob": {
+      "base64": "Zm9vYg==",
+      "ok": true
+    },
+    "fooba": {
+      "base64": "Zm9vYmE=",
+      "ok": true
+    },
+    "foobar": {
+      "base64": "Zm9vYmFy",
+      "ok": true
+    },
+    "Man": {
+      "base64": "TWFu",
+      "ok": true
+    },
+    "中": {
+      "base64": "5Lit",
+      "ok": true
+    },
+    "a b&c=中": {
+      "base64": "YSBiJmM95Lit",
+      "ok": true
+    }
+  },
+  "browser": {
+    "target": "http://localhost:4321/",
+    "engine": "Playwright Chromium",
+    "pages": [
+      {
+        "check": "desk vm-kali-setup http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 3,
+        "sources": 15
+      },
+      {
+        "check": "desk shell-files-and-paths http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 5
+      },
+      {
+        "check": "desk shell-permissions-and-pipes http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 9
+      },
+      {
+        "check": "desk data-representation http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 8,
+        "sources": 6
+      },
+      {
+        "check": "phone vm-kali-setup http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 3,
+        "sources": 15
+      },
+      {
+        "check": "phone shell-files-and-paths http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 5
+      },
+      {
+        "check": "phone shell-permissions-and-pipes http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 9
+      },
+      {
+        "check": "phone data-representation http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 8,
+        "sources": 6
+      },
+      {
+        "check": "dark vm-kali-setup http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 3,
+        "sources": 15
+      },
+      {
+        "check": "dark shell-files-and-paths http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 5
+      },
+      {
+        "check": "dark shell-permissions-and-pipes http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 9,
+        "sources": 9
+      },
+      {
+        "check": "dark data-representation http=200",
+        "horizontalOverflow": 0,
+        "h1": 1,
+        "brokenAnchors": [],
+        "elementsWiderThanViewport": [],
+        "exercises": 3,
+        "terminalSessions": 8,
+        "sources": 6
+      }
+    ],
+    "interactions": {
+      "path": {
+        "presentation": "interactive",
+        "default": "最终指向 /home/kali/lab/notes/first.txt（文件）",
+        "from web: notes/first.txt": "在 /home/kali/lab/web 里找不到 notes：No such file or directory",
+        "from web: ../notes/first.txt": "最终指向 /home/kali/lab/notes/first.txt（文件）",
+        "typed ~/lab/./web/../notes": "最终指向 /home/kali/lab/notes（目录）",
+        "typed through file": "在 /home/kali/lab/web 里找不到 notes：No such file or directory"
+      },
+      "perm": {
+        "default": [
+          "$ chmod 644 hello.sh",
+          "-rw-r--r-- 1 kali kali 26 Oct  1 12:35 hello.sh"
+        ],
+        "755": [
+          "$ chmod 755 hello.sh",
+          "-rwxr-xr-x 1 kali kali 26 Oct  1 12:35 hello.sh"
+        ],
+        "640 then u+x": [
+          "$ chmod 740 hello.sh",
+          "-rwxr----- 1 kali kali 26 Oct  1 12:35 hello.sh"
+        ],
+        "meaning": "所有者可以读、写、执行；同组用户可以读；其他人没有任何权限。",
+        "keyboard toggle o+r": "$ chmod 744 hello.sh"
+      },
+      "misc": {
+        "copy buttons visible": 8,
+        "download href": "/labs/data-representation/roundtrip.sh",
+        "download status": 200,
+        "download bytes": 638
+      },
+      "reduced": {
+        "shell-files-and-paths": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 503,
+          "exercises": 3,
+          "details": 3
+        },
+        "shell-permissions-and-pipes": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 271,
+          "exercises": 3,
+          "details": 3
+        },
+        "data-representation": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 539,
+          "exercises": 3,
+          "details": 3
+        }
+      },
+      "nojs": {
+        "shell-files-and-paths": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 503,
+          "exercises": 3,
+          "details": 3
+        },
+        "shell-permissions-and-pipes": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 271,
+          "exercises": 3,
+          "details": 3
+        },
+        "data-representation": {
+          "presentation": "static",
+          "controls": 0,
+          "text_len": 539,
+          "exercises": 3,
+          "details": 3
+        }
+      },
+      "print": {
+        "vm-kali-setup": {
+          "answers_visible": 3,
+          "terminals": 3,
+          "copy_hidden": true,
+          "header_hidden": true
+        },
+        "shell-files-and-paths": {
+          "answers_visible": 3,
+          "terminals": 9,
+          "copy_hidden": true,
+          "header_hidden": true
+        },
+        "shell-permissions-and-pipes": {
+          "answers_visible": 3,
+          "terminals": 9,
+          "copy_hidden": true,
+          "header_hidden": true
+        },
+        "data-representation": {
+          "answers_visible": 3,
+          "terminals": 8,
+          "copy_hidden": true,
+          "header_hidden": true
+        }
+      }
+    },
+    "consoleErrors": []
+  },
+  "siteChecks": {
+    "pathPage": "已上线 4 / 37；四课可点击；「下一课」标在第 05 课",
+    "homeEntry": "7 个阶段 · 37 课 · 已上线 4；下一课 05",
+    "categoryPanel": "工程工具面板默认停在已有课上线的系列（环境与命令行），3 条可进入",
+    "pagination": "路线内的课按路线顺序翻页：第 3 课的下一课是第 4 课（跨分类）；第 4 课提示下一课还在准备",
+    "prerequisiteLinks": "第 2、3、4 课的前置知识链接到上一课"
+  },
+  "notCovered": [
+    "真实 Windows + VMware 虚拟机上的端到端操作",
+    "真实移动设备与屏幕阅读器",
+    "纸张分页",
+    "生产 nginx 与 CSP"
+  ]
+}

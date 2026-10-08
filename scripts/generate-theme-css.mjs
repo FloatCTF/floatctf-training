@@ -13,6 +13,8 @@ const keyMap = {
   heading: '--training-heading',
   border: '--training-border',
   accent: '--training-accent',
+  classZero: '--training-class-zero',
+  classOne: '--training-class-one',
   link: '--training-link',
   danger: '--training-danger',
   safe: '--training-safe',
@@ -38,8 +40,7 @@ function declarations(colors, indent = '  ') {
     .join('\n');
 }
 
-async function main() {
-  const config = JSON.parse(await readFile(themesPath, 'utf8'));
+export function renderThemeCss(config) {
   if (!Array.isArray(config.themes) || config.themes.length === 0) throw new Error('themes.json 缺少 themes。');
   const ids = new Set();
   const blocks = ['/* 由 scripts/generate-theme-css.mjs 生成。颜色只来自 config/themes.json。 */'];
@@ -57,11 +58,16 @@ async function main() {
       blocks.push(`${theme.selector} {\n${declarations(theme.colors)}\n}`);
     }
   }
-  await writeFile(outputPath, `${blocks.join('\n\n')}\n`, 'utf8');
+  return `${blocks.join('\n\n')}\n`;
+}
+
+async function main() {
+  const config = JSON.parse(await readFile(themesPath, 'utf8'));
+  await writeFile(outputPath, renderThemeCss(config), 'utf8');
   process.stdout.write(`已生成 ${path.relative(root, outputPath)}，共 ${config.themes.length} 套主题。\n`);
 }
 
-main().catch((error) => {
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) main().catch((error) => {
   process.stderr.write(`主题生成失败：${error.stack || error.message}\n`);
   process.exitCode = 1;
 });

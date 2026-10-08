@@ -1,11 +1,11 @@
-import { useEffect, useId, useMemo, useRef, useState, type CSSProperties } from 'react';
-import { gsap } from 'gsap';
+import { useId, useMemo, useRef, useState, type CSSProperties } from 'react';
 import {
-  keyboardRangeValue,
   useInView,
   useMotionPresentation,
   type MotionLevel,
 } from './motion-utils';
+import { useGsapTween } from './motion-gsap';
+import { RangeControl, SimLedger } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -74,17 +74,14 @@ export default function RetrievalSandbox({ motionLevel = 'simulation' }: Props) 
 
   const presentation = useMotionPresentation(root, motionLevel);
 
-  useEffect(() => {
-    if (!root.current || !visible || presentation !== 'interactive') return undefined;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        '[data-retrieval-point]',
-        { opacity: 0.42, scale: 0.88, transformOrigin: 'center' },
-        { opacity: 1, scale: 1, duration: 0.28, stagger: 0.035, ease: 'power2.out' },
-      );
-    }, root.current);
-    return () => context.revert();
-  }, [presentation, queryId, topK, visible]);
+  useGsapTween(
+    root,
+    Boolean(visible) && presentation === 'interactive',
+    '[data-retrieval-point]',
+    { opacity: 0.42, scale: 0.88, transformOrigin: 'center' },
+    { opacity: 1, scale: 1, duration: 0.28, stagger: 0.035, ease: 'power2.out' },
+    [queryId, topK],
+  );
 
   const resultText = ranking
     .slice(0, topK)
@@ -117,23 +114,13 @@ export default function RetrievalSandbox({ motionLevel = 'simulation' }: Props) 
               </button>
             ))}
           </div>
-          <label>
-            <span>送入上下文的文档数 top-k：{topK}</span>
-            <input
-              type="range"
-              min={TOP_K_MIN}
-              max={TOP_K_MAX}
-              step="1"
-              value={topK}
-              onChange={(event) => setTopK(Number(event.currentTarget.value))}
-              onKeyDown={(event) => {
-                const next = keyboardRangeValue(event.key, topK, TOP_K_MIN, TOP_K_MAX, 1);
-                if (next == null) return;
-                event.preventDefault();
-                setTopK(next);
-              }}
-            />
-          </label>
+          <RangeControl
+            label={<>送入上下文的文档数 top-k：{topK}</>}
+            min={TOP_K_MIN}
+            max={TOP_K_MAX}
+            value={topK}
+            onChange={setTopK}
+          />
         </div>
       )}
 
@@ -189,18 +176,16 @@ export default function RetrievalSandbox({ motionLevel = 'simulation' }: Props) 
         {DOCUMENTS.map((document) => <span key={document.id}><b>{document.id}</b>{document.label}</span>)}
       </div>
 
-      <div className="learning-sim-ledger retrieval-ledger" role="table" aria-label="三组固定 query 的 top-2 检索结果">
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          <span role="columnheader">固定 query</span><span role="columnheader">Top 1</span><span role="columnheader">Top 2</span>
-        </div>
-        {STATIC_ROWS.map(({ query: rowQuery, results }) => (
-          <div className="learning-sim-ledger-row" role="row" key={rowQuery.id}>
-            <span role="cell">{rowQuery.label}</span>
-            {results.map(({ document, score }) => <span role="cell" key={document.id}>{document.id} · {document.label}（{score.toFixed(2)}）</span>)}
-          </div>
-        ))}
-      </div>
-      <p className="static-content-note">固定 top-2 记录与交互使用同一组向量现场计算，完整保留在打印、减少动态和无 JavaScript 状态中。</p>
+      <SimLedger
+        className="retrieval-ledger"
+        ariaLabel="三组固定 query 的 top-2 检索结果"
+        columns={['固定 query', 'Top 1', 'Top 2']}
+        rows={STATIC_ROWS.map(({ query: rowQuery, results }) => [
+          rowQuery.label,
+          ...results.map(({ document, score }) => `${document.id} · ${document.label}（${score.toFixed(2)}）`),
+        ])}
+        note="固定 top-2 记录与交互使用同一组向量现场计算，完整保留在打印、减少动态和无 JavaScript 状态中。"
+      />
     </section>
   );
 }

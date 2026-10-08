@@ -1,0 +1,415 @@
+{
+  "lessonPlan": {
+    "audience": "会用 php -S 跑页面、学过 C 的固定类型和 Python 的字典的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "同一个值在不同运算里被自动换成不同的类型：加号把字符串当数字，点号把数字当字符串，两个等号先换类型再比，三个等号连类型一起比；数组既是列表也是字典",
+    "learningObjectives": [
+      "说出 PHP 的基本类型，用 var_dump 看一个值的类型和内容",
+      "预测加号、点号和类型转换会把一个值变成什么",
+      "说清 == 与 === 的区别，并在比较和 in_array 里默认使用严格比较",
+      "用数字下标和字符串键创建数组，用 foreach 遍历，用 isset 判断键是否存在",
+      "用数组完成计数统计，并对照 Python 的字典说出写法差别"
+    ],
+    "prerequisites": [
+      "php-request-lifecycle",
+      "python-collections",
+      "c-types-and-control-flow"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-loose-equal",
+      "kind": "mechanism",
+      "title": "为什么 \"10\" == \"1e1\"",
+      "question": "\"10\" == \"1e1\" 的结果是 true，\"10\" === \"1e1\" 是 false。两个字符串明明长得不一样，两个等号为什么认为它们相等？在一个检查用户输入的程序里，你会用哪一个？为什么？",
+      "answer": "两个等号比较之前会先做类型转换：PHP 发现两边都是数字形式的字符串（\"1e1\" 是科学计数法，表示 10），就把它们当成数字来比，10 等于 10，所以是 true。三个等号不做任何转换，要求类型相同、值也相同，两个不同的字符串当然不相等。检查用户输入时一律用 ===（以及 in_array 的第三个参数 true）：输入完全由对方决定，两个等号的转换规则会让一些形式上完全不同的输入被判成相等，程序的判断就不再是你以为的那样。",
+      "sourceIds": [
+        "php-comparison",
+        "php-numeric-strings"
+      ]
+    },
+    {
+      "id": "check-predict-juggle",
+      "kind": "prediction",
+      "title": "预测六个 var_dump",
+      "question": "写出下面每一行 var_dump 的输出。一、\"3\" + \"4\"。二、\"3\" . \"4\"。三、\"1e3\" == \"1000\"。四、0 == \"\"。五、[] == false。六、$a = [\"x\" => 1, \"y\" => 2]; $a[] = 3; 之后的 count($a)。",
+      "answer": "一、int(7)：加号要数字，两个数字形式的字符串被转换后相加。二、string(2) \"34\"：点号是字符串拼接，结果是字符串。三、bool(true)：两边都是数字形式的字符串，按数值比较，1000 等于 1000。四、bool(false)：PHP 8 起，数字和非数字的字符串比较时，把数字转成字符串再比，\"0\" 不等于 \"\"。五、bool(true)：空数组转换成布尔值是 false。六、int(3)：$a[] = 3 追加一个元素，键是 0（数组里还没有整数键），共三个元素。",
+      "sourceIds": [
+        "php-comparison",
+        "php-boolean",
+        "php-array",
+        "php-string-operators"
+      ]
+    },
+    {
+      "id": "check-count-status",
+      "kind": "practice",
+      "title": "统计状态码",
+      "question": "写 status.php：把字符串 \"200,404,200,500,404,200,302\" 用 explode 拆成数组，统计每个状态码出现的次数，按次数从多到少打印，每行「次数 状态码」。最后用 in_array 严格比较判断里面有没有 \"500\"，打印 yes 或 no。",
+      "answer": "参考写法：$codes = explode(\",\", \"200,404,200,500,404,200,302\"); $counts = []; foreach ($codes as $code) { $counts[$code] = ($counts[$code] ?? 0) + 1; } arsort($counts); 然后 foreach ($counts as $code => $n) { echo \"$n $code\\n\"; }；最后 echo in_array(\"500\", $codes, true) ? \"yes\" : \"no\", \"\\n\";。自查标准：输出四行统计，第一行是 3 200，第二行是 2 404；最后一行是 yes。注意要和 \"500\" 这个字符串比，因为 explode 拆出来的都是字符串；如果写成 in_array(500, $codes, true)，结果是 no。",
+      "sourceIds": [
+        "php-array",
+        "php-in-array",
+        "php-foreach"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "类型与自动转换",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能预测 \"5\" + 3 和 \"5\" . 3 的结果。"
+    },
+    {
+      "kind": "动手",
+      "title": "两个等号和三个等号",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "能说出 in_array 为什么要加第三个参数 true。"
+    },
+    {
+      "kind": "进阶",
+      "title": "数组：既是列表也是字典",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "visits.php 打印出按次数排好的三行。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual types introduction dynamically typed var_dump",
+      "PHP manual type juggling numeric strings leading numeric TypeError",
+      "PHP manual comparison operators loose strict numeric strings PHP 8",
+      "PHP manual booleans converting to bool false values",
+      "PHP manual arrays ordered map keys foreach in_array strict isset"
+    ],
+    "notes": "七个脚本在 public/labs/php-types-and-arrays/。全部在 kalilinux/kali-rolling 容器（PHP 8.4.24）里用 php 命令实际运行，页面输出取自运行记录。比较规则以 PHP 8 为准：0 == \"a\" 在 PHP 7 及以前是 true，PHP 8 起是 false，页面已说明，旧教程里的结论不能照搬。验收题的预期输出用同一环境运行核对过。"
+  },
+  "sources": [
+    {
+      "id": "php-types",
+      "kind": "official-doc",
+      "title": "PHP Manual: Types: Introduction",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.intro.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-dynamic"
+      ]
+    },
+    {
+      "id": "php-juggling",
+      "kind": "official-doc",
+      "title": "PHP Manual: Type Juggling",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.type-juggling.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-juggling"
+      ]
+    },
+    {
+      "id": "php-numeric-strings",
+      "kind": "official-doc",
+      "title": "PHP Manual: Numeric strings",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.numeric-strings.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-numeric-strings"
+      ]
+    },
+    {
+      "id": "php-boolean",
+      "kind": "official-doc",
+      "title": "PHP Manual: Booleans",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.boolean.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-bool-false"
+      ]
+    },
+    {
+      "id": "php-string-operators",
+      "kind": "official-doc",
+      "title": "PHP Manual: String Operators",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.operators.string.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-concat"
+      ]
+    },
+    {
+      "id": "php-string",
+      "kind": "official-doc",
+      "title": "PHP Manual: Strings",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.string.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-quotes"
+      ]
+    },
+    {
+      "id": "php-comparison",
+      "kind": "official-doc",
+      "title": "PHP Manual: Comparison Operators",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.operators.comparison.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-equal-identical",
+        "claim-php8-compare"
+      ]
+    },
+    {
+      "id": "php-array",
+      "kind": "official-doc",
+      "title": "PHP Manual: Arrays",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.types.array.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-array"
+      ]
+    },
+    {
+      "id": "php-foreach",
+      "kind": "official-doc",
+      "title": "PHP Manual: foreach",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/control-structures.foreach.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-foreach"
+      ]
+    },
+    {
+      "id": "php-var-dump",
+      "kind": "official-doc",
+      "title": "PHP Manual: var_dump",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.var-dump.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-dynamic"
+      ]
+    },
+    {
+      "id": "php-in-array",
+      "kind": "official-doc",
+      "title": "PHP Manual: in_array",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.in-array.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-in-array-strict"
+      ]
+    },
+    {
+      "id": "php-isset",
+      "kind": "official-doc",
+      "title": "PHP Manual: isset",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.isset.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-isset"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-dynamic",
+      "text": "PHP 是动态类型语言，默认不需要指定变量的类型，类型在运行时确定。查看一个表达式的类型和值用 var_dump()。",
+      "sourceIds": [
+        "php-types",
+        "php-var-dump"
+      ]
+    },
+    {
+      "id": "claim-juggling",
+      "text": "PHP 的变量声明里不需要写类型，变量的类型由它存放的值决定；在某些上下文里，PHP 会尝试自动转换值的类型。",
+      "sourceIds": [
+        "php-juggling"
+      ]
+    },
+    {
+      "id": "claim-numeric-strings",
+      "text": "在数字上下文里，数字形式的字符串被当作数字；以数字开头、后面跟着其他字符的字符串也被使用，但同时产生 E_WARNING；不是数字形式的字符串则抛出 TypeError（自 PHP 8.0 起）。含有夹在数字之间的字母 E 的字符串会被当成科学计数法。",
+      "sourceIds": [
+        "php-numeric-strings"
+      ]
+    },
+    {
+      "id": "claim-bool-false",
+      "text": "转换成 bool 时，以下值被视为 false：false 本身、整数 0、浮点数 0.0、空字符串和字符串 \"0\"、没有元素的数组、NULL；其他值都视为 true。",
+      "sourceIds": [
+        "php-boolean"
+      ]
+    },
+    {
+      "id": "claim-concat",
+      "text": "点号是字符串拼接运算符。",
+      "sourceIds": [
+        "php-string-operators"
+      ]
+    },
+    {
+      "id": "claim-quotes",
+      "text": "单引号里的字符串不展开变量；双引号里的字符串会解释转义序列，并展开其中的变量名。",
+      "sourceIds": [
+        "php-string"
+      ]
+    },
+    {
+      "id": "claim-equal-identical",
+      "text": "$a == $b 在类型转换之后相等即为 true；$a === $b 要求相等并且类型相同。两边都是数字形式的字符串，或者一边是数字、另一边是数字形式的字符串时，按数值比较；=== 和 !== 不做类型转换。",
+      "sourceIds": [
+        "php-comparison"
+      ]
+    },
+    {
+      "id": "claim-php8-compare",
+      "text": "PHP 8.0 之前，字符串与数字比较时会先把字符串转换成数字，可能产生出人意料的结果，例如 0 == \"a\" 为 true。",
+      "sourceIds": [
+        "php-comparison"
+      ]
+    },
+    {
+      "id": "claim-array",
+      "text": "PHP 的数组实际上是有序映射，把值关联到键上；键可以是整数或字符串，同一个数组里可以同时有两种键。不指定键时，新键是现有最大整数键加 1，没有正整数键时为 0。",
+      "sourceIds": [
+        "php-array"
+      ]
+    },
+    {
+      "id": "claim-foreach",
+      "text": "foreach 用来遍历数组和对象，可以同时取出每个元素的键。",
+      "sourceIds": [
+        "php-foreach"
+      ]
+    },
+    {
+      "id": "claim-in-array-strict",
+      "text": "in_array 的第三个参数 strict 设为 true 时，还会检查类型是否相同。",
+      "sourceIds": [
+        "php-in-array"
+      ]
+    },
+    {
+      "id": "claim-isset",
+      "text": "isset 判断一个变量是否已声明并且不是 null。",
+      "sourceIds": [
+        "php-isset"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "types",
+      "path": "public/labs/php-types-and-arrays/types.php",
+      "command": "php types.php",
+      "expectedResult": "var_dump 依次打印 int(80)、float(0.75)、string(4) \"kali\"、bool(true)、NULL，然后是 int string 和两行字符串。"
+    },
+    {
+      "id": "juggle",
+      "path": "public/labs/php-types-and-arrays/juggle.php",
+      "command": "php juggle.php",
+      "expectedResult": "int(8)、string(2) \"53\"、float(5)、float(3.5)、int(3)、int(42)、bool(false)、bool(false)、bool(true)。"
+    },
+    {
+      "id": "compare",
+      "path": "public/labs/php-types-and-arrays/compare.php",
+      "command": "php compare.php",
+      "expectedResult": "true、false、true、false、true、true、false、false。"
+    },
+    {
+      "id": "arrays",
+      "path": "public/labs/php-types-and-arrays/arrays.php",
+      "command": "php arrays.php",
+      "expectedResult": "4 tools, first is curl；http is on 80；四行键值；bool(false)；ssh, http, https, dns。"
+    },
+    {
+      "id": "strict",
+      "path": "public/labs/php-types-and-arrays/strict.php",
+      "command": "php strict.php",
+      "expectedResult": "in_array(1, …) 为 true，加 true 后为 false；拆出的数组里都是字符串，和 404 严格比较为 false，和 \"404\" 为 true。"
+    },
+    {
+      "id": "visits",
+      "path": "public/labs/php-types-and-arrays/visits.php",
+      "command": "php visits.php",
+      "expectedResult": "三行：3 192.0.2.10、2 198.51.100.7、1 203.0.113.5。"
+    },
+    {
+      "id": "warn",
+      "path": "public/labs/php-types-and-arrays/warn.php",
+      "command": "php warn.php",
+      "expectedResult": "int(6) 之后是 Warning: A non-numeric value encountered，最后 Fatal error: Uncaught TypeError: Unsupported operand types: string + int。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "type-juggling",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

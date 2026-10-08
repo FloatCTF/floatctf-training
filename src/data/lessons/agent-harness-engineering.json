@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "agent-harness-engineering",
-    "slug": "agent-harness-engineering",
-    "categoryId": "ai-ml",
-    "title": "AI Agent 工程方法：从 Prompt 到执行图",
     "audience": "已经理解大语言模型基本机制，希望系统理解 AI 应用与 Agent 工程方法的本科生和工程师",
     "durationMinutes": 90,
     "primaryMode": "mechanism",
@@ -16,7 +11,7 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "explanatory",
     "visualStory": "发布简报任务贯穿七层；上下文窗口演化主交互把检索、工具结果、压缩和 Lost in the Middle 位置衰减连成一条动态主线；轨迹回放作为辅助交互呈现 verify 失败与 replan 的证据流动，MCP 架构、Skill 加载与执行图用静态图示收束结构关系",
@@ -29,12 +24,69 @@
       "用节点、边、共享状态、并行、汇合和人工检查点解释 Agent 执行图，并判断何时不需要图"
     ],
     "prerequisites": [
-      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
-      "了解 API、JSON、Git 与自动化测试的基本概念"
+      "ai-literacy",
+      "python-network-scripting",
+      "git-local-workflow",
+      "了解自动化测试的基本概念"
     ],
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "判断完成条件",
+      "question": "Agent 的回答写着“任务完成”，但外部测试失败。控制器应依据什么决定停止和成功？",
+      "answer": "成功由预先约定的外部检查决定；失败进入有预算的修复或人工检查路径。达到预算上限时停止并报告失败。模型自述可以保留在轨迹中，成功状态由检查结果确定。",
+      "sourceIds": [
+        "anthropic-agent-evals"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "读取失败轨迹",
+      "question": "教学轨迹为“读取需求 → 修改文件 → 测试失败 → 宣布成功”。指出首个需要分支的位置，并补一条退出条件。",
+      "answer": "在“测试失败”节点分支到诊断和修复；只有测试通过才进入成功。退出条件可设为最多 3 次修复，耗尽后报告失败和证据。这里的 3 次是题设预算。",
+      "sourceIds": [
+        "anthropic-effective-agents"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "画出有界反馈",
+      "question": "在纸上画一个包含工具调用、外部校验、重试和人工检查的执行图，标出每条条件边。",
+      "answer": "可用“工具调用 → 校验；通过 → 完成；失败且预算充足 → 修复 → 再校验；预算耗尽或权限不足 → 人工检查”。合格图应有可到达的停止节点，重试次数或成本上限明确。",
+      "sourceIds": [
+        "anthropic-effective-agents"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "规格与能力接入",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "写出工具的输入和成功条件。"
+    },
+    {
+      "kind": "动手",
+      "title": "上下文与执行",
+      "heading": "四、",
+      "minutes": 30,
+      "checkpoint": "检查失败轨迹和外部证据。"
+    },
+    {
+      "kind": "进阶",
+      "title": "反馈与拓扑",
+      "heading": "六、",
+      "minutes": 35,
+      "checkpoint": "画出有退出条件的图，完成自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -52,16 +104,11 @@
     ],
     "notes": "课程优先采用原始论文、协议规范、官方文档和官方工程复盘。Graph Engineering 的传播起点使用原帖存档核对，技术含义由 LangGraph、Google ADK、AutoGen 与 Anthropic 多 Agent 官方资料交叉验证。页面把 Harness、Loop 与 Graph Engineering 标为工作定义或新兴说法，不将其写成边界统一的标准学科。2026-08-22 新增轨迹回放交互；2026-08-23 完成上下文窗口演化、MCP 架构和表格降密重构，事实主张与来源关系保持不变。"
   },
-  "versionInfo": {
-    "targetVersion": "AI Agent 工程术语与官方框架文档，2026-08-02 核验快照",
-    "environment": "模型应用、工具型 Agent、AI Coding Agent 与多 Agent 工作流；正文使用静态案例直接展示机制",
-    "verifiedAt": "2026-08-02",
-    "knownDifferences": "Prompt、Context、Harness、Loop 与 Graph Engineering 的边界在不同团队和框架中存在重叠；Graph Engineering 于 2026 年 7 月集中传播，尚无统一标准；MCP、Skills、LangGraph、ADK 和 AutoGen 的产品接口会继续变化。"
-  },
   "sources": [
     {
       "id": "anthropic-prompt-overview",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Prompt engineering overview",
       "publisher": "Anthropic",
       "url": "https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview",
@@ -75,6 +122,7 @@
     {
       "id": "mcp-architecture",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "Model Context Protocol architecture overview",
       "publisher": "Model Context Protocol",
       "url": "https://modelcontextprotocol.io/docs/learn/architecture",
@@ -89,6 +137,7 @@
     {
       "id": "mcp-tools-spec",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "MCP Tools Specification 2025-11-25",
       "publisher": "Model Context Protocol",
       "url": "https://modelcontextprotocol.io/specification/2025-11-25/server/tools",
@@ -102,6 +151,7 @@
     {
       "id": "agent-skills-spec",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "Agent Skills Specification",
       "publisher": "Agent Skills",
       "url": "https://agentskills.io/specification",
@@ -115,6 +165,7 @@
     {
       "id": "openai-skills",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Skills",
       "publisher": "OpenAI Developers",
       "url": "https://developers.openai.com/plugins/concepts/skills",
@@ -128,6 +179,7 @@
     {
       "id": "anthropic-context-engineering",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Effective context engineering for AI agents",
       "publisher": "Anthropic",
       "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
@@ -152,6 +204,7 @@
     {
       "id": "langchain-context-engineering",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Context Engineering for Agents",
       "publisher": "LangChain",
       "url": "https://www.langchain.com/blog/context-engineering-for-agents",
@@ -164,6 +217,7 @@
     {
       "id": "openai-harness-engineering",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Harness engineering: leveraging Codex in an agent-first world",
       "publisher": "OpenAI",
       "url": "https://openai.com/index/harness-engineering/",
@@ -176,6 +230,7 @@
     {
       "id": "langchain-harness-boundaries",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Agent Frameworks, Runtimes, and Harnesses—oh my!",
       "publisher": "LangChain",
       "url": "https://www.langchain.com/blog/agent-frameworks-runtimes-and-harnesses-oh-my",
@@ -188,6 +243,7 @@
     {
       "id": "anthropic-agent-evals",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Demystifying evals for AI agents",
       "publisher": "Anthropic",
       "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
@@ -213,6 +269,7 @@
     {
       "id": "anthropic-effective-agents",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Building effective agents",
       "publisher": "Anthropic",
       "url": "https://www.anthropic.com/engineering/building-effective-agents",
@@ -225,6 +282,7 @@
     {
       "id": "langchain-loop-engineering",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "The Art of Loop Engineering",
       "publisher": "LangChain",
       "url": "https://www.langchain.com/blog/the-art-of-loop-engineering",
@@ -237,6 +295,7 @@
     {
       "id": "langgraph-graph-api",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "LangGraph Graph API overview",
       "publisher": "LangChain",
       "url": "https://docs.langchain.com/oss/python/langgraph/graph-api",
@@ -250,6 +309,7 @@
     {
       "id": "google-adk-graphs",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "ADK Graph-based workflows",
       "publisher": "Google",
       "url": "https://adk.dev/graphs/",
@@ -263,6 +323,7 @@
     {
       "id": "autogen-graphflow",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "GraphFlow (Workflows)",
       "publisher": "Microsoft AutoGen",
       "url": "https://microsoft.github.io/autogen/stable/user-guide/agentchat-user-guide/graph-flow.html",
@@ -276,6 +337,7 @@
     {
       "id": "anthropic-multi-agent",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "How we built our multi-agent research system",
       "publisher": "Anthropic",
       "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
@@ -434,9 +496,6 @@
         "graph-origin-archive"
       ]
     }
-  ],
-  "assessments": [
-    "none"
   ],
   "visualNarrative": {
     "kind": "context-window-evolution",

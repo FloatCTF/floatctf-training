@@ -1,0 +1,371 @@
+---
+title: Python 三：函数、模块与虚拟环境
+description: 把代码拆成函数，用 import 复用标准库和自己的模块，在 Kali 上用虚拟环境安装第三方包
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/python-functions-and-modules.json';
+import callTrace from '../../../data/steppers/python-function-call.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 is_valid_port(n) 并用 80、0、65535、70000 测试，依次打印 True、False、True、False。' },
+  { title: '把上一课的代码改成函数', detail: '写函数 to_fahrenheit(c)，返回 c * 9 / 5 + 32。调用它打印 0 度和 100 度对应的华氏温度，应当是 32.0 和 212.0。' },
+  { title: '拆成两个文件', detail: '把 is_valid_port 放进 netcheck.py，再写 scan_input.py：读入一个端口号，导入 netcheck 并调用函数，打印 valid 或 invalid。' },
+  { title: '清理虚拟环境', detail: '练习完后执行 deactivate 退出虚拟环境。.venv 目录可以保留到下次课，也可以用 rm -r .venv 删掉重建。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 07"
+  kicker="Functions, Modules, venv"
+  lines={[
+    { text: "Python 三" },
+    { text: "函数、模块与虚拟环境", accent: true },
+  ]}
+  summary="脚本长到几十行之后，同样的几行代码会反复出现。函数把一段代码包起来起个名字，模块把函数放进别的文件，虚拟环境让你安全地用上别人写好的包。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：print()、len()、input() 是什么
+
+前两课一直在用 `print()`、`len()`、`int()`、`input()`。它们的共同点是：名字后面跟一对括号，括号里放进一些值，然后得到一个结果或完成一件事。这样的东西叫**函数**。
+
+这些函数是 Python 自带的。这一课学三件事：自己定义函数，使用放在别的文件里的函数，以及安装别人发布的函数库。
+
+## 一、定义函数、参数与返回值
+
+### 1. def：给一段代码起名字
+
+<CodeFile file="labs/python-functions-and-modules/greet.py" />
+
+<TerminalSession
+  title="定义一次，调用两次"
+  steps={[
+    { cmd: 'cd ~/lab/python' },
+    { cmd: 'python3 greet.py', out: 'hello, kali\nhello, root' },
+  ]}
+/>
+
+- `def greet(name):` 定义一个叫 greet 的函数。括号里的 `name` 是**参数**：调用时传进来的值会绑到这个名字上。
+- 缩进的部分是**函数体**。定义函数时函数体不会执行，调用时才执行。
+- `greet("kali")` 是**调用**：把 `"kali"` 传给参数 name，然后执行函数体。
+
+### 2. return：把结果交回去
+
+`greet` 只是打印，没有产生可以继续使用的结果。要让函数算出一个值并交回给调用它的地方，用 `return`：
+
+<CodeFile file="labs/python-functions-and-modules/double.py" />
+
+这六行的执行顺序不是从上到下。逐步走一遍：
+
+<CodeStepper
+  client:visible
+  trace={callTrace}
+  title="一次函数调用的全过程"
+  intro="右边会同时出现两组名字：全局的，和函数这次调用自己的。注意第 5 行出现了两次。"
+/>
+
+<TerminalSession
+  title="运行验证"
+  steps={[
+    { cmd: 'python3 double.py', out: '8' },
+  ]}
+/>
+
+（来源：[More Control Flow Tools](#source-py-controlflow)）
+
+### 3. return 和 print 不是一回事
+
+<CodeFile file="labs/python-functions-and-modules/no_return.py" />
+
+<TerminalSession
+  title="一个只打印，一个真的交回了值"
+  steps={[
+    {
+      cmd: 'python3 no_return.py',
+      out: '3\nNone 3',
+      note: '第一行的 3 是 add_print 在函数里打印的。第二行是最后的 print(x, y)：x 是 None，y 是 3。',
+    },
+  ]}
+/>
+
+`add_print` 把 3 显示在了屏幕上，但没有 return，调用它得到的是 `None`。**None** 是 Python 里表示「没有值」的特殊值。函数执行到末尾都没遇到 return，交回的就是 None。
+
+<DataTable
+  caption="print 与 return"
+  headers={["", "print(值)", "return 值"]}
+  rows={[
+    ["做什么", "把值显示在屏幕上", "把值交回给调用的地方，并结束函数"],
+    ["给谁用", "给人看", "给程序接着用"],
+    ["之后还能用这个值吗", "不能，它只是屏幕上的字", "能，可以赋给变量、参与计算、作为条件"],
+  ]}
+  columnRatios={[1.2, 2, 2.4]}
+/>
+
+### 4. 函数里的名字只在函数里有效
+
+<CodeFile file="labs/python-functions-and-modules/scope.py" />
+
+<TerminalSession
+  title="函数里把 count 设成 0，外面的 count 不受影响"
+  steps={[
+    { cmd: 'python3 scope.py', out: 'inside: 0\noutside: 5' },
+  ]}
+/>
+
+每次调用函数，Python 都为它新开一块存放名字的空间。函数里赋值的名字都放在这块空间里，叫**局部变量**；函数外面的叫**全局变量**。`reset()` 里的 `count = 0` 新建的是一个局部的 count，函数结束后就没了，全局的 count 始终是 5。（来源：[More Control Flow Tools](#source-py-controlflow)、[Execution model](#source-py-executionmodel)）
+
+这个规则带来的好处是：函数内部怎么命名都不会意外改掉外面的东西。函数和外界交换数据的正路只有两条，参数进，return 出。
+
+### 5. 参数的默认值
+
+<CodeFile file="labs/python-functions-and-modules/checks.py" />
+
+`min_length=8` 给第二个参数设了默认值：调用时不传它，就用 8；传了，就用传的值。文件最后四行的作用下一节讲，先运行：
+
+<TerminalSession
+  title="同一个函数，传一个参数或两个参数"
+  steps={[
+    {
+      cmd: 'python3 checks.py',
+      out: 'False\nTrue\nTrue',
+      note: '"kali123" 长 7：按默认的 8 不够，按 6 就够。',
+    },
+  ]}
+/>
+
+## 二、模块：用别人的代码，拆自己的代码
+
+### 1. import 标准库
+
+Python 自带了大量现成的函数，按用途分装在一个个**模块**里，统称标准库。用之前先 `import`：
+
+<TerminalSession
+  title="三个标准库模块"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'import math' },
+    { cmd: 'math.sqrt(16)', out: '4.0', note: '模块名.函数名。sqrt 是平方根。' },
+    { cmd: 'math.pi', out: '3.141592653589793' },
+    { cmd: 'import hashlib' },
+    { cmd: 'hashlib.sha256(b"kali").hexdigest()', out: "'fc5669b52ce4e283ad1d5d182de88ff9faec6672bace84ac2ce4c083f54fe2bc'", note: '第 1 课校验镜像用的 SHA256，Python 里一行就能算。b"kali" 前面的 b 表示字节，后面的课讲。' },
+    { cmd: 'from base64 import b64encode', note: '另一种写法：只把模块里的某一个名字拿进来，之后用的时候不用再写模块名。' },
+    { cmd: 'b64encode(b"hello")', out: "b'aGVsbG8='", note: '第 4 课的 Base64。' },
+  ]}
+/>
+
+（来源：[math](#source-py-math)、[hashlib](#source-py-hashlib)、[base64](#source-py-base64)）
+
+### 2. 自己的文件也是模块
+
+一个 `.py` 文件就是一个模块，模块名是文件名去掉 `.py`。`checks.py` 里的函数可以被同一目录下的其他脚本导入使用：
+
+<CodeFile file="labs/python-functions-and-modules/main.py" />
+
+<TerminalSession
+  title="main.py 用的是 checks.py 里的函数"
+  steps={[
+    { cmd: 'python3 main.py', stdin: ['kali-2026-ok'], out: 'password: kali-2026-ok\nok' },
+    { cmd: 'python3 main.py', stdin: ['abc'], out: 'password: abc\ntoo short' },
+  ]}
+/>
+
+（来源：[Modules](#source-py-modules)）
+
+注意运行 `main.py` 时，`checks.py` 最后那三行 `print` 没有执行。原因在这一行：
+
+```text
+if __name__ == "__main__":
+```
+
+每个模块里都有一个现成的变量 `__name__`。直接运行这个文件时，它的值是 `"__main__"`；被别的文件 import 时，它的值是模块名：
+
+<TerminalSession
+  title="被导入时 __name__ 是模块名"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'import checks', note: '在 ~/lab/python 目录里启动 python3，才能找到 checks。' },
+    { cmd: 'checks.is_strong("kali123")', out: 'False' },
+    { cmd: 'checks.is_strong("kali123", 6)', out: 'True' },
+    { cmd: 'checks.__name__', out: "'checks'" },
+  ]}
+/>
+
+所以写在 `if __name__ == "__main__":` 下面的代码，只在这个文件被直接运行时执行。常见的用法是把测试用的调用放在这里：单独运行时自测，被导入时保持安静。
+
+### 3. 导入出错怎么读
+
+<TerminalSession
+  title="两种常见的导入错误"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    {
+      cmd: 'maths.sqrt(16)',
+      out: 'Traceback (most recent call last):\n  File "<python-input-0>", line 1, in <module>\n    maths.sqrt(16)\n    ^^^^^\nNameError: name \'maths\' is not defined',
+      note: '模块名拼错，或者忘了先 import。',
+    },
+    {
+      cmd: 'import nosuchmodule',
+      out: 'Traceback (most recent call last):\n  File "<python-input-1>", line 1, in <module>\n    import nosuchmodule\nModuleNotFoundError: No module named \'nosuchmodule\'',
+      note: '没有这个模块：名字写错了，或者它是需要另外安装的第三方包。',
+    },
+  ]}
+/>
+
+（来源：[Built-in Exceptions](#source-py-exceptions)）
+
+## 三、虚拟环境与 pip
+
+### 1. 在 Kali 上直接 pip install 会被拒绝
+
+标准库之外，还有大量别人发布的包，用 `pip` 安装。但在 Kali 上直接装会看到这样一大段：
+
+<TerminalSession
+  title="系统环境不让 pip 动"
+  steps={[
+    {
+      cmd: 'pip install cowsay',
+      out: String.raw`error: externally-managed-environment
+
+× This environment is externally managed
+╰─> To install Python packages system-wide, try apt install
+    python3-xyz, where xyz is the package you are trying to
+    install.
+
+    If you wish to install a non-Kali-packaged Python package,
+    create a virtual environment using python3 -m venv path/to/venv.
+    Then use path/to/venv/bin/python and path/to/venv/bin/pip. Make
+    sure you have python3-full installed.
+
+    If you wish to install a non-Kali-packaged Python application,
+    it may be easiest to use pipx install xyz, which will manage a
+    virtual environment for you. Make sure you have pipx installed.
+
+    For more information, refer to the following:
+    * https://www.kali.org/docs/general-use/python3-external-packages/
+    * /usr/share/doc/python3.14/README.venv
+
+note: If you believe this is a mistake, please contact your Python installation or OS distribution provider. You can override this, at the risk of breaking your Python installation or OS, by passing --break-system-packages.
+hint: See PEP 668 for the detailed specification.`,
+      note: '这不是故障。第一行是结论，下面三段是三种正确的做法。',
+    },
+  ]}
+/>
+
+原因是 Kali 自带的很多工具本身就是 Python 程序，它们依赖的包由 apt 统一管理。pip 再往同一个地方装东西，可能把这些工具弄坏。报错里给了三条出路：系统里有的包用 `apt install python3-包名`；自己的项目用**虚拟环境**；独立的命令行工具用 `pipx`。（来源：[Pip install and Python's externally managed](#source-kali-pip)）
+
+<Callout variant="danger" title="不要加 --break-system-packages">
+报错最后提到可以用 `--break-system-packages` 强行安装。网上很多教程也这么教。这个选项的名字已经说明了后果，别用。
+</Callout>
+
+### 2. 虚拟环境：项目自己的一份 Python
+
+**虚拟环境**是项目目录里的一个文件夹，里面有一份独立的 Python 和 pip。在里面装的包只属于这个项目，和系统互不影响。（来源：[Virtual Environments and Packages](#source-py-venv)）
+
+<TerminalSession
+  title="创建、激活、安装、使用、退出"
+  steps={[
+    { cmd: 'python3 -m venv .venv', note: '在当前目录创建一个名为 .venv 的虚拟环境。名字以 . 开头，ls 默认不显示它，ls -a 能看到。' },
+    { cmd: 'source .venv/bin/activate', note: '激活。提示符的开头会多出 (.venv)，表示现在用的是这个环境。' },
+    { cmd: 'which python3', out: '/home/kali/lab/python/.venv/bin/python3', note: '现在的 python3 是虚拟环境里的那一份。' },
+    {
+      cmd: 'pip install cowsay',
+      out: 'Collecting cowsay\n  Downloading cowsay-6.1-py3-none-any.whl.metadata (5.6 kB)\nDownloading cowsay-6.1-py3-none-any.whl (25 kB)\nInstalling collected packages: cowsay\nSuccessfully installed cowsay-6.1',
+      note: '这次成功了。版本号以你安装时的最新版为准。',
+    },
+    {
+      cmd: `python3 -c "import cowsay; cowsay.cow('hello kali')"`,
+      out: String.raw`  __________
+| hello kali |
+  ==========
+          \
+           \
+             ^__^
+             (oo)\_______
+             (__)\       )\/\
+                 ||----w |
+                 ||     ||`,
+    },
+    { cmd: 'pip list', out: 'Package Version\n------- -------\ncowsay  6.1\npip     26.1.2', note: '这个环境里只有刚装的包和 pip 自己。' },
+    { cmd: 'deactivate', note: '退出虚拟环境，提示符开头的 (.venv) 消失。' },
+    { cmd: 'which python3', out: '/usr/bin/python3' },
+    {
+      cmd: 'python3 -c "import cowsay"',
+      out: 'Traceback (most recent call last):\n  File "<string>", line 1, in <module>\n    import cowsay\nModuleNotFoundError: No module named \'cowsay\'',
+      note: '系统的 Python 里没有 cowsay。它只装在了虚拟环境里。',
+    },
+  ]}
+/>
+
+用虚拟环境的习惯只有一条：**每次开新终端做这个项目，先 cd 进项目目录，再 source .venv/bin/activate**。忘了激活，就会看到 ModuleNotFoundError。
+
+<DataTable
+  caption="本课的常见报错"
+  headers={["最后一行或现象", "原因", "处理"]}
+  rows={[
+    ["调用函数得到 None", "函数里只 print 没有 return", "把要交回的值写在 return 后面"],
+    ["函数里改了变量，外面没变", "函数里赋值的是局部变量", "把新值 return 出来，在外面重新赋值"],
+    ["NameError: name 'xxx' is not defined", "用了没有 import 的模块，或在函数外用了函数里的局部变量", "补上 import；局部变量只能在函数里用"],
+    ["ModuleNotFoundError: No module named 'checks'", "当前目录里没有 checks.py", "cd 到脚本所在的目录再运行"],
+    ["ModuleNotFoundError: No module named 'cowsay'", "没有激活虚拟环境", "source .venv/bin/activate"],
+    ["error: externally-managed-environment", "在系统环境里直接 pip install", "先创建并激活虚拟环境"],
+    ["TypeError: greet() missing 1 required positional argument: 'name'", "调用时少传了参数", "按定义里的参数个数传值"],
+  ]}
+  columnRatios={[2, 1.5, 1.6]}
+/>
+
+边界：虚拟环境隔离的只是 Python 的包。它不是虚拟机，在里面运行的程序照样能读写你的文件、访问网络。安装来路不明的包和运行来路不明的程序一样有风险。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'def 名字(参数):', description: '定义函数。函数体缩进。' },
+    { term: 'return 值', description: '把值交回并结束函数。没有 return 时交回 None。' },
+    { term: 'def f(a, b=8):', description: 'b 有默认值，调用时可以不传。' },
+    { term: 'import 模块', description: '导入后用 模块.名字 访问。' },
+    { term: 'from 模块 import 名字', description: '只导入一个名字，直接使用。' },
+    { term: 'if __name__ == "__main__":', description: '下面的代码只在直接运行这个文件时执行。' },
+    { term: 'python3 -m venv .venv', description: '创建虚拟环境。' },
+    { term: 'source .venv/bin/activate', description: '激活。提示符前出现 (.venv)。' },
+    { term: 'pip install 包名 / pip list', description: '在激活的环境里安装、查看。' },
+    { term: 'deactivate', description: '退出虚拟环境。' },
+  ]}
+/>
+
+<KeyTakeaway>
+函数是有名字的一段代码：参数把值带进去，return 把结果带出来，函数里的名字不会影响外面。一个 .py 文件就是一个模块，import 之后用点号访问里面的东西。在 Kali 上装第三方包，先建虚拟环境并激活，再用 pip。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 60 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

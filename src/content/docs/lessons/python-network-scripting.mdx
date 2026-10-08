@@ -1,0 +1,362 @@
+---
+title: Python 七：用 requests 和 socket 写脚本
+description: 用 requests 发 GET 和 POST、解析 JSON、用 Session 保持登录，写出自动翻页的脚本并处理连接失败，再用 socket 亲手发一个请求，看清库替你做了什么
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import HttpExchange from '../../../components/http-exchange';
+import manifest from '../../../data/lessons/python-network-scripting.json';
+import socketGet from '../../../data/http/socket-get.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 expensive.py。终端应当打印 4 items written，expensive.txt 里是 item-09 到 item-12 四行。' },
+  { title: '给 fetch_items.py 加上错误处理', detail: '照 safe_get.py 的写法，让它在练习站没启动时打印一句提示，不出现 Traceback。先停掉练习站再运行它来测试。' },
+  { title: '用 socket 发一个 POST', detail: '仿照 raw_get.py 写 raw_login.py：请求行改成 POST /login HTTP/1.1，加上 Content-Type: application/x-www-form-urlencoded 和 Content-Length: 29 两个头，空行之后写 user=student&password=kali123。打印出的响应第一行应当是 HTTP/1.1 302 Found，里面有一行 Set-Cookie。' },
+  { title: '对照三种写法', detail: '用一句话分别写出：同一个登录请求，用 curl、用 requests、用 socket 各需要你自己写哪些东西。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 15"
+  kicker="requests, Session, socket"
+  lines={[
+    { text: "Python 七" },
+    { text: "用 requests 和 socket 写脚本", accent: true },
+  ]}
+  summary="上一课的每个请求都是你亲手敲的。这一课把这件事交给 Python：让脚本替你翻页、登录、把结果存下来。最后再往下看一层，看清这些方便的写法底下发生了什么。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：三页可以手敲，三百页呢
+
+上一课的作业让你依次请求 `/api/items?page=1`、`page=2`、`page=3`，再数一共有多少项。三页，敲三条命令，不算麻烦。
+
+如果有三百页，或者你事先根本不知道有几页呢？
+
+这类「把同一件事重复很多遍，每次只改一点点」的工作，正是第 6 课的循环擅长的。缺的只是一样东西：让 Python 能发出 HTTP 请求。
+
+## 一、requests：让 Python 当客户端
+
+### 1. 准备
+
+这一课沿用上一课的练习站。在终端 A 里把它启动起来：
+
+<TerminalSession
+  environment="KALI 终端 A"
+  replay="skip"
+  title="启动练习站，让它一直运行"
+  steps={[
+    { cmd: 'cd ~/lab/http' },
+    { cmd: 'python3 server.py', out: 'Practice site on http://127.0.0.1:8000/  (Ctrl+C to stop)' },
+  ]}
+/>
+
+`requests` 是 Python 里最常用的 HTTP 库。它不属于标准库，但 Kali 已经装好了，直接 `import` 就能用。下面的交互模式都在终端 B 里、`~/lab/http` 目录下启动。
+
+### 2. 发一个 GET，看拿回来什么
+
+<TerminalSession
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  title="一个请求，一个响应对象"
+  steps={[
+    { cmd: 'import requests' },
+    { cmd: 'r = requests.get("http://127.0.0.1:8000/hello", params={"name": "kali"})', note: '发出请求，把响应存进 r。params 里的字典会变成网址里问号后面的部分。' },
+    { cmd: 'r.status_code', out: '200', note: '状态码，一个整数。' },
+    { cmd: 'r.url', out: "'http://127.0.0.1:8000/hello?name=kali'", note: '最终请求的完整网址。?name=kali 是 requests 替你拼的。' },
+    { cmd: 'r.text', out: "'Hello, kali!\\n'", note: '响应的正文，一个字符串。' },
+    { cmd: 'r.headers["Content-Type"]', out: "'text/plain; charset=utf-8'", note: '响应头，用起来像字典。' },
+    { cmd: 'r = requests.get("http://127.0.0.1:8000/nosuch")' },
+    { cmd: 'r.status_code', out: '404' },
+    { cmd: 'r.ok', out: 'False', note: '404 不会让 Python 报错。请求发出去了，响应也收到了，只是结果不如意。要自己检查。' },
+  ]}
+/>
+
+上一课在 `curl -i` 的输出里用眼睛找的东西，现在都是 `r` 的属性：
+
+<DataTable
+  caption="响应对象的常用属性"
+  headers={["写法", "是什么", "对应 HTTP 响应的哪一部分"]}
+  rows={[
+    ["r.status_code", "整数，例如 200", "状态行里的状态码"],
+    ["r.ok", "True 或 False", "状态码是不是表示成功"],
+    ["r.headers", "像字典，按名字取值", "头部"],
+    ["r.text", "字符串", "正文，已按编码解码成文字"],
+    ["r.json()", "字典或列表", "正文，按 JSON 解析之后的结果"],
+  ]}
+  columnRatios={[1, 1.4, 2]}
+/>
+
+（来源：[Requests: Quickstart](#source-requests-quickstart)）
+
+### 3. JSON：给程序读的正文
+
+练习站的 `/api/items` 返回的不是给人看的句子，而是一种叫 **JSON** 的格式。它的写法和 Python 的字典、列表几乎一样，专门用来在程序之间传数据。
+
+<TerminalSession
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  title="把正文变成字典"
+  steps={[
+    { cmd: 'import requests' },
+    { cmd: 'r = requests.get("http://127.0.0.1:8000/api/items", params={"page": 3})' },
+    { cmd: 'r.text', out: '\'{"page": 3, "total": 12, "items": [{"id": 11, "name": "item-11", "price": 55}, {"id": 12, "name": "item-12", "price": 60}]}\\n\'', note: '正文是一个字符串。它长得像字典，但现在还只是一串字符。' },
+    { cmd: 'data = r.json()', note: '按 JSON 的规则解析这串字符。' },
+    { cmd: 'type(data)', out: "<class 'dict'>", note: '现在是真正的字典了，第 8 课学的操作都能用。' },
+    { cmd: 'data["total"]', out: '12' },
+    { cmd: 'len(data["items"])', out: '2', note: 'items 对应的是一个列表，里面每一项又是一个字典。' },
+    { cmd: 'data["items"][0]["name"]', out: "'item-11'", note: '一层一层往里取：items 列表的第 0 项的 name。' },
+  ]}
+/>
+
+### 4. POST 和 Session
+
+<TerminalSession
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  title="登录，以及怎样保持登录"
+  steps={[
+    { cmd: 'import requests' },
+    { cmd: 'url = "http://127.0.0.1:8000/login"' },
+    { cmd: 'r = requests.post(url, data={"user": "student", "password": "kali123"}, allow_redirects=False)', note: 'data 里的字典会变成表单格式的正文，和 curl -d 发的一样。allow_redirects=False 先不让它自动跳转，好看清登录请求本身的响应。' },
+    { cmd: 'r.status_code', out: '302' },
+    { cmd: 'r.headers["Location"]', out: "'/me'" },
+    { cmd: '"session" in r.cookies', out: 'True', note: '服务器发来的 Cookie 在 r.cookies 里。' },
+    { cmd: 'requests.get("http://127.0.0.1:8000/me").status_code', out: '401', note: '可是再发一个请求，还是没登录。requests.get 每次都是全新的请求，不会带上刚才的 Cookie。' },
+    { cmd: 's = requests.Session()', note: 'Session 对象会记住收到的 Cookie，并在之后的请求里自动带上。' },
+    { cmd: 'r = s.post(url, data={"user": "student", "password": "kali123"})', note: '这次用 s.post，而且不关跳转。' },
+    { cmd: 'r.status_code', out: '200' },
+    { cmd: 'r.url', out: "'http://127.0.0.1:8000/me'", note: '它跟着 302 去了 /me，并且带上了 Cookie，所以是 200。' },
+    { cmd: 'len(r.history)', out: '1', note: '中途经过的响应记在 history 里，这里有一个，就是那个 302。' },
+    { cmd: 's.get("http://127.0.0.1:8000/me").text', out: "'Welcome back, student.\\n'", note: '之后凡是用 s 发的请求，都是登录状态。' },
+  ]}
+/>
+
+和上一课的 `curl` 对照：
+
+<DataTable
+  caption="同一件事的两种写法"
+  headers={["要做的事", "curl", "requests"]}
+  rows={[
+    ["带查询参数", "把 ?name=kali 写进网址", "params={\"name\": \"kali\"}"],
+    ["提交表单", "-d 'user=…&password=…'", "data={\"user\": …, \"password\": …}"],
+    ["跟随跳转", "加 -L 才跟", "默认就跟。allow_redirects=False 关掉"],
+    ["保存并带上 Cookie", "-c 文件 和 -b 文件", "用同一个 Session 对象发请求"],
+    ["加请求头", "-H '名字: 值'", "headers={\"名字\": \"值\"}"],
+  ]}
+  columnRatios={[1, 1.5, 2]}
+/>
+
+（来源：[Requests: Quickstart](#source-requests-quickstart)、[Requests: Advanced Usage](#source-requests-advanced)）
+
+## 二、写两个自动化脚本
+
+### 1. 自动翻页
+
+回到引导问题。不知道有几页，就一直翻，翻到某一页是空的为止：
+
+<CodeFile file="labs/python-network-scripting/fetch_items.py" mark="8-12" note="用 mousepad 新建这个文件，保存在 ~/lab/http 里。" />
+
+<DataTable
+  caption="逐行读 fetch_items.py 的循环"
+  headers={["行", "做什么"]}
+  rows={[
+    ["8", "while True 一直循环，靠里面的 break 结束"],
+    ["9", "请求第 page 页。timeout=5 表示最多等 5 秒，对方没反应就放弃"],
+    ["10", "把正文按 JSON 解析，取出 items 列表"],
+    ["11 到 12", "列表是空的，说明翻过头了，结束循环"],
+    ["13 到 15", "这一页的每一项：计数加 1，价格累加"],
+    ["17", "页码加 1，回到第 9 行请求下一页"],
+  ]}
+  columnRatios={[0.8, 4]}
+/>
+
+<TerminalSession
+  title="终端 B：运行它"
+  steps={[
+    { cmd: 'cd ~/lab/http' },
+    { cmd: 'python3 fetch_items.py', out: 'page 1 -> 5 items\npage 2 -> 5 items\npage 3 -> 2 items\nitems: 12\ntotal price: 390', note: '它一共发了四个请求：第 4 页是空的，循环在那里结束。看终端 A 的日志可以数出来。' },
+  ]}
+/>
+
+<Callout variant="info" title="永远写上 timeout">
+不写 `timeout`，对方一直不回应时，你的脚本就会一直等下去，看起来像卡死了。给每个请求都写上一个合理的秒数。
+</Callout>
+
+### 2. 登录之后取数据
+
+<CodeFile file="labs/python-network-scripting/my_page.py" note="同一个 s 先登录，再访问需要登录的页面。" />
+
+<TerminalSession
+  title="终端 B：运行它"
+  steps={[
+    { cmd: 'python3 my_page.py', out: '200 http://127.0.0.1:8000/me\n200 Welcome back, student.', note: '第一行是登录请求最终到达的地方，第二行是再次访问 /me 的结果。' },
+  ]}
+/>
+
+### 3. 连不上的时候
+
+回到终端 A，按 `Ctrl` + `C` 停掉练习站。然后在终端 B 里再运行一次：
+
+<TerminalSession
+  title="终端 B：服务器不在了"
+  steps={[
+    {
+      cmd: 'python3 fetch_items.py',
+      setup: "pkill -f 'server.p[y]'; sleep 1",
+      out: "Traceback (most recent call last):\n…（中间是七十多行调用过程）\nrequests.exceptions.ConnectionError: HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/items?page=1 (Caused by NewConnectionError(\"HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 111] Connection refused\"))",
+      note: '照第 10 课的读法，先看最后一行。异常类型是 ConnectionError，末尾的 Connection refused 就是第 13 课见过的「那个端口上没有程序在听」。',
+    },
+  ]}
+/>
+
+网络请求比读文件更容易失败：服务器没开、网断了、地址写错了。第 10 课学的 `try` 和 `except` 在这里用得上：
+
+<CodeFile file="labs/python-network-scripting/safe_get.py" mark="5-12" note="raise_for_status() 在状态码表示失败时抛出 HTTPError，让 404、500 这类结果也走到 except 里。" />
+
+<TerminalSession
+  title="终端 B：同一个故障，换一种结局"
+  steps={[
+    { cmd: 'python3 safe_get.py', out: 'cannot connect: is the practice site running?', note: '练习站还停着。脚本接住了异常，打印了一句人能看懂的话。' },
+  ]}
+/>
+
+做完这一步，回到终端 A 把练习站重新启动，下一节还要用。
+
+（来源：[Requests: Quickstart](#source-requests-quickstart)）
+
+## 三、socket：requests 底下那一层
+
+### 1. 自己把请求写出来
+
+`requests` 很方便，但它没有任何魔法。第 13 课你用 `nc` 手敲过请求，证明了请求只是一段文字。Python 的 `socket` 模块做的就是 `nc` 那件事：建立一条 TCP 连接，然后收发字节。
+
+<CodeFile file="labs/python-network-scripting/raw_get.py" note="第 3 行就是你在 nc 里手敲的内容。\r\n 是 HTTP 规定的换行。" />
+
+<DataTable
+  caption="逐行读 raw_get.py"
+  headers={["行", "做什么"]}
+  rows={[
+    ["3", "把整个请求写成一个字符串：请求行、两个头部，最后多一个 \\r\\n 表示空行"],
+    ["5", "向 127.0.0.1 的 8000 端口建立 TCP 连接。三次握手发生在这一行"],
+    ["6", "网络上传的是字节。先用 encode 把字符串变成 bytes，再全部发出去"],
+    ["7 到 12", "一次最多收 4096 个字节，循环着收。收到空的 bytes 说明对方关了连接，结束"],
+    ["14 到 15", "收到的也是 bytes，decode 之后才是能读的文字"],
+  ]}
+  columnRatios={[0.8, 4]}
+/>
+
+<TerminalSession
+  title="终端 B：运行它"
+  steps={[
+    {
+      cmd: 'python3 raw_get.py',
+      setup: '(setsid python3 server.py >/dev/null 2>&1 &); sleep 1',
+      out: '158 bytes received\nHTTP/1.1 200 OK\nServer: PracticeSite/1.0\nDate: Thu, 01 Oct 2026 16:51:50 GMT\nContent-Type: text/plain; charset=utf-8\nContent-Length: 15\n\nHello, socket!',
+      note: '拿到的是原封不动的整个响应：状态行、头部、空行、正文。Date 与你的不同。',
+    },
+  ]}
+/>
+
+脚本发出去的和收回来的，逐部分点开看：
+
+<HttpExchange
+  client:visible
+  trace={socketGet}
+  title="raw_get.py 发出的请求和收到的响应"
+  eyebrow="HTTP / socket 这一层"
+  intro="左边是第 3 行那个字符串，右边是 recv 收到的全部内容。点任意一部分，看它在 requests 里对应什么。"
+  motionLevel="subtle"
+/>
+
+（来源：[socket](#source-py-socket)、[Socket Programming HOWTO](#source-py-socket-howto)、[RFC 9112](#source-rfc9112)）
+
+### 2. requests 替你做了什么
+
+<DataTable
+  caption="同一个请求的三层"
+  headers={["要做的事", "用 socket", "用 requests"]}
+  rows={[
+    ["把域名换成地址、建立连接", "create_connection 一行", "自动"],
+    ["按格式拼出请求行和头部", "自己写字符串，\\r\\n 和空行都不能错", "自动，只要给网址、params、data"],
+    ["字符串和字节互转", "自己 encode 和 decode", "自动，r.text 已经是字符串"],
+    ["把响应拆成状态码、头部、正文", "自己从文字里切", "r.status_code、r.headers、r.text"],
+    ["跳转、Cookie、JSON", "全部自己处理", "自动跟随、Session、r.json()"],
+  ]}
+  columnRatios={[1.5, 1.8, 1.8]}
+/>
+
+平时写脚本用 `requests`。需要 `socket` 的场合有两种：对方说的不是 HTTP，而是别的协议；或者你要发出一个格式故意不合常规的请求，而 `requests` 不让你那样写。这两种情况下学期都会遇到。
+
+<Callout variant="warning" title="脚本的速度和你的责任">
+脚本一秒钟能发出几百个请求。对自己的练习站怎么跑都行。对别人的网站，未经允许的大量自动请求会给对方造成负担，可能违反对方的使用条款，严重时违法。本学期的脚本只对 `127.0.0.1` 和社团提供的练习环境运行。
+</Callout>
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["requests.exceptions.ConnectionError … Connection refused", "练习站没有在运行", "回终端 A 启动它"],
+    ["ModuleNotFoundError: No module named 'requests'", "在第 7 课建的虚拟环境里运行，那里面没有装 requests", "执行 deactivate 退出虚拟环境再运行"],
+    ["requests.exceptions.JSONDecodeError", "对一个正文不是 JSON 的响应调用了 r.json()", "先 print(r.status_code, r.text) 看拿到的到底是什么"],
+    ["登录成功，下一个请求却是 401", "两个请求没有用同一个 Session", "先 s = requests.Session()，之后都用 s.get、s.post"],
+    ["KeyError: 'items'", "响应的结构和你以为的不一样，常常是因为状态码不是 200", "先检查 r.status_code，再取字段"],
+    ["socket 脚本运行后一直不结束", "请求末尾少了空行，或者没有写 Connection: close", "检查字符串是不是以 \\r\\n\\r\\n 结尾"],
+    ["TypeError: a bytes-like object is required, not 'str'", "把字符串直接交给了 sendall", "先 .encode() 成 bytes"],
+  ]}
+  columnRatios={[1.8, 1.6, 1.6]}
+/>
+
+局限：`r.ok` 和 `raise_for_status()` 只看状态码。有的网站登录失败时也返回 200，只是页面上写着「密码错误」。判断一件事有没有成功，最终要看响应的内容，这需要你先用浏览器或 `curl` 弄清楚成功和失败各长什么样。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'requests.get(网址, params={…}, timeout=5)', description: '发 GET。params 变成查询参数。' },
+    { term: 'requests.post(网址, data={…}, timeout=5)', description: '发 POST。data 变成表单正文。' },
+    { term: 'r.status_code / r.ok', description: '状态码 / 是否成功。' },
+    { term: 'r.text / r.json()', description: '正文字符串 / 按 JSON 解析成字典或列表。' },
+    { term: 'r.headers["名字"]', description: '取一个响应头。' },
+    { term: 'r.raise_for_status()', description: '状态码表示失败时抛出 HTTPError。' },
+    { term: 's = requests.Session()', description: '之后用 s.get、s.post，Cookie 自动保存和携带。' },
+    { term: 'except requests.exceptions.ConnectionError', description: '接住连不上的情况。' },
+    { term: 'socket.create_connection((地址, 端口))', description: '建立一条 TCP 连接。' },
+    { term: 's.sendall(bytes) / s.recv(4096)', description: '发送字节 / 接收最多 4096 个字节，空的表示对方已关闭。' },
+  ]}
+/>
+
+<KeyTakeaway>
+`requests` 让 Python 成为 HTTP 客户端：`get` 和 `post` 发请求，`params` 和 `data` 传参数，响应的状态码、头部、正文都是对象的属性，`Session` 负责保管 Cookie。配合循环和 `try`，就能把重复的请求交给脚本。它底下仍然是一条 TCP 连接上来回的文字，用 `socket` 可以把这段文字亲手写出来。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

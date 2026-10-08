@@ -1,0 +1,402 @@
+{
+  "lessonPlan": {
+    "audience": "已经能启动本地服务器、用 curl 和 nc 连接端口的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "concept",
+    "supportingModes": [
+      "tool",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "把一次真实的 HTTP 请求和响应摆在一起，逐部分点开：方法、目标、头部、空行、正文、状态码；再看登录时服务器怎样用 Set-Cookie 发出会话编号、客户端怎样用 Cookie 带回去",
+    "learningObjectives": [
+      "读懂一个 HTTP 请求的各部分：方法、目标、头部、空行、正文",
+      "读懂一个 HTTP 响应的各部分，说出 200、302、401、404 各表示什么",
+      "用 curl 发出 GET 和 POST 请求，用 -i、-v 查看头部",
+      "解释 HTTP 无状态是什么意思，以及 Cookie 怎样让服务器认出同一个人",
+      "在浏览器的开发者工具里找到一次请求的头部、正文和 Cookie"
+    ],
+    "prerequisites": [
+      "network-basics",
+      "data-representation",
+      "会开两个终端，一个运行服务器，一个发请求"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-stateless-cookie",
+      "kind": "mechanism",
+      "title": "服务器凭什么认出你",
+      "question": "你先用 curl -c cookies.txt 登录成功，再用 curl -b cookies.txt 访问 /me，得到 Welcome back, student.。这是两个互相独立的请求，服务器凭什么知道第二个请求来自刚才登录的人？如果第二次不带 -b cookies.txt，会得到什么？为什么？",
+      "answer": "HTTP 本身是无状态的，服务器不会因为两个请求先后到达就把它们联系起来。登录成功时，服务器在响应里用 Set-Cookie 头发给客户端一个随机的会话编号，同时在自己这边记下「这个编号属于 student」。-c cookies.txt 让 curl 把这个编号存进文件，-b cookies.txt 让 curl 在下一个请求里用 Cookie 头把它带回去。服务器看到编号，查到对应的用户，于是认出了你。不带 -b 时请求里没有 Cookie 头，服务器查不到任何会话，返回 401 和 Please log in first.。认人靠的是每个请求都带上的那个编号。",
+      "sourceIds": [
+        "rfc9110",
+        "rfc6265",
+        "mdn-http-overview"
+      ]
+    },
+    {
+      "id": "check-predict-status",
+      "kind": "prediction",
+      "title": "预测四个响应",
+      "question": "对本课的练习服务器发下面四个请求，分别预测状态码，并说出响应里最值得注意的一个头部或一行正文。一、GET /old。二、GET /me，不带 Cookie。三、POST /login，正文是 user=student&password=123456。四、GET /api/items?page=3。",
+      "answer": "一、302，头部里有 Location: /hello，告诉客户端该去哪。二、401，正文是 Please log in first.，因为请求里没有会话编号。三、401，正文是 Wrong user or password.，密码不对；响应里不会有 Set-Cookie。四、200，Content-Type 是 application/json，正文是一段 JSON，里面有 item-11 和 item-12 两项（一共 12 项，每页 5 项，第三页只剩两项）。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "check-three-clients",
+      "kind": "practice",
+      "title": "同一个请求，三种发法",
+      "question": "用三种方式请求练习服务器的 /hello，名字参数换成你自己名字的拼音。一、用 curl，并让它显示响应头部。二、用 nc 手敲，注意 HTTP/1.1 的请求必须带 Host 头。三、用虚拟机里的 Firefox 打开，并在开发者工具的网络面板里找到这次请求。",
+      "answer": "一、curl -i 'http://127.0.0.1:8000/hello?name=zhangsan'，第一行是 HTTP/1.1 200 OK，空行之后是 Hello, zhangsan!。二、nc 127.0.0.1 8000，然后依次输入 GET /hello?name=zhangsan HTTP/1.1、Host: 127.0.0.1:8000、Connection: close，再按一次回车留一个空行；应当收到同样的状态行、头部和正文。三、在 Firefox 地址栏输入 http://127.0.0.1:8000/hello?name=zhangsan，按 F12 打开开发者工具，切到 Network（网络）面板后刷新页面，点列表里的那一行，右侧 Headers（标头）里能看到状态 200 和请求头。自查标准：三种方式拿到的正文相同；你能在终端 A 的日志里找到对应的三行；你能指出浏览器发出的 User-Agent 和 curl 的不一样。",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc9112",
+        "firefox-network-monitor"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "请求和响应长什么样",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能在 curl -v 的输出里指出请求行、状态行、空行和正文。"
+    },
+    {
+      "kind": "动手",
+      "title": "POST、登录与 Cookie",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "用 cookies.txt 访问 /me，得到 Welcome back, student.。"
+    },
+    {
+      "kind": "进阶",
+      "title": "在浏览器里看同一件事",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "在网络面板里找到 POST /login 的 302 和它的 Set-Cookie。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "RFC 9110 HTTP semantics stateless GET POST status code classes 302 401 404 Host User-Agent Location",
+      "RFC 9112 HTTP/1.1 message format request-line status-line",
+      "RFC 6265 Set-Cookie Cookie HttpOnly",
+      "MDN overview of HTTP stateless not sessionless",
+      "MDN using HTTP cookies session management",
+      "curl man page --show-headers --verbose --data --cookie --cookie-jar --location --header",
+      "Firefox DevTools network monitor request details headers cookies"
+    ],
+    "notes": "练习服务器 public/labs/http-basics/server.py 只用 Python 标准库，监听 127.0.0.1:8000。全部 curl 与 nc 命令在 kalilinux/kali-rolling 容器里实际运行，服务器在第二个终端里运行，页面输出取自运行记录；Date 头、日志时间、客户端临时端口和随机生成的会话编号每次不同，页面已注明。两个报文拆解图的数据由 scripts/lab/http-trace.py 向同一个服务器发真实请求后拆分生成。浏览器一节另用容器里的 Firefox ESR 140（无界面）打开首页并提交登录表单，核对了服务器日志里依次出现 POST /login 302 和 GET /me 200，即浏览器自动跟随了跳转并带上了 Cookie；开发者工具界面上的操作步骤依据 Firefox 官方文档写成，没有在图形界面里逐步点过。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：curl 8.21.0、netcat-traditional 1.10、Python 3.14.7、Firefox ESR 140",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh。练习服务器在第二个终端里运行。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "Date 头、服务器日志的时间、curl -v 里的客户端端口、会话编号每次不同。curl -v 里以 * 开头的说明行措辞随 curl 版本变化。旧版 curl 把 -i 的长选项写作 --include。Firefox 开发者工具的面板名称随界面语言显示为中文或英文，布局随版本略有调整。"
+  },
+  "sources": [
+    {
+      "id": "rfc9110",
+      "kind": "specification",
+      "title": "RFC 9110: HTTP Semantics",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-stateless",
+        "claim-get",
+        "claim-post",
+        "claim-status-classes",
+        "claim-status-examples",
+        "claim-host-user-agent",
+        "cmd-curl-include"
+      ]
+    },
+    {
+      "id": "rfc9112",
+      "kind": "specification",
+      "title": "RFC 9112: HTTP/1.1",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9112",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-message-format",
+        "claim-host-required",
+        "cmd-curl-verbose"
+      ]
+    },
+    {
+      "id": "rfc6265",
+      "kind": "specification",
+      "title": "RFC 6265: HTTP State Management Mechanism",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc6265",
+      "publishedAt": "2011-04-01",
+      "accessedAt": "2026-10-02",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-cookie-mechanism",
+        "claim-httponly",
+        "cmd-curl-post",
+        "cmd-curl-cookie-jar"
+      ]
+    },
+    {
+      "id": "mdn-http-overview",
+      "kind": "official-doc",
+      "title": "MDN: An overview of HTTP",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Overview",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-stateful-sessions"
+      ]
+    },
+    {
+      "id": "mdn-http-cookies",
+      "kind": "official-doc",
+      "title": "MDN: Using HTTP cookies",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Cookies",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-stateful-sessions"
+      ]
+    },
+    {
+      "id": "curl-manpage",
+      "kind": "official-doc",
+      "title": "curl man page",
+      "publisher": "curl",
+      "url": "https://curl.se/docs/manpage.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-curl-options",
+        "cmd-curl-verbose",
+        "cmd-curl-include",
+        "cmd-curl-post",
+        "cmd-curl-cookie-jar"
+      ]
+    },
+    {
+      "id": "firefox-devtools",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-network-monitor"
+      ]
+    },
+    {
+      "id": "firefox-network-monitor",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: Network Monitor",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-network-monitor"
+      ]
+    },
+    {
+      "id": "firefox-request-details",
+      "kind": "official-doc",
+      "title": "Firefox DevTools User Docs: Network request details",
+      "publisher": "Mozilla",
+      "url": "https://firefox-source-docs.mozilla.org/devtools-user/network_monitor/request_details/index.html",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-request-details"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-stateless",
+      "text": "HTTP 是一种无状态的请求/响应协议，客户端和服务器通过在连接上交换报文来通信。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-message-format",
+      "text": "一个 HTTP/1.1 报文由起始行、零个或多个头部字段行、一个表示头部结束的空行和可选的报文正文组成。请求的起始行是「方法 请求目标 HTTP 版本」，响应的起始行是「HTTP 版本 状态码 原因短语」。",
+      "sourceIds": [
+        "rfc9112"
+      ]
+    },
+    {
+      "id": "claim-host-required",
+      "text": "客户端必须在所有 HTTP/1.1 请求里发送 Host 头。HTTP/1.1 默认使用持久连接，一条连接上可以进行多次请求和响应。",
+      "sourceIds": [
+        "rfc9112"
+      ]
+    },
+    {
+      "id": "claim-get",
+      "text": "GET 方法请求传送目标资源当前的表示，取回信息通常用它。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-post",
+      "text": "POST 方法请求目标资源按自己的语义处理请求里附带的内容，例如把 HTML 表单里填写的字段交给数据处理程序。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-status-classes",
+      "text": "状态码的第一位数字决定响应的类别：1xx 信息，2xx 成功，3xx 重定向，4xx 客户端错误，5xx 服务器错误。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-status-examples",
+      "text": "302 表示目标资源暂时位于另一个 URI，服务器应当在 Location 头里给出；401 表示请求缺少有效的身份凭据；404 表示服务器没有找到目标资源的当前表示。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-host-user-agent",
+      "text": "Host 头给出目标 URI 里的主机和端口，让服务器在同时服务多个主机名时区分资源；User-Agent 头包含发出请求的用户代理的信息。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-cookie-mechanism",
+      "text": "服务器用 Set-Cookie 头把名值对交给用户代理；用户代理在之后发给这个服务器的请求里，用 Cookie 头把它们带回去。",
+      "sourceIds": [
+        "rfc6265"
+      ]
+    },
+    {
+      "id": "claim-httponly",
+      "text": "HttpOnly 属性把 Cookie 的使用范围限制在 HTTP 请求里：通过非 HTTP 的接口（例如向网页脚本暴露 Cookie 的浏览器接口）访问时，用户代理不提供这个 Cookie。",
+      "sourceIds": [
+        "rfc6265"
+      ]
+    },
+    {
+      "id": "claim-stateful-sessions",
+      "text": "HTTP 本身无状态，同一条连接上先后进行的两个请求之间没有联系；Cookie 让有状态的会话成为可能。Cookie 的主要用途之一是会话管理，例如记住用户的登录状态。",
+      "sourceIds": [
+        "mdn-http-overview",
+        "mdn-http-cookies"
+      ]
+    },
+    {
+      "id": "claim-curl-options",
+      "text": "curl 的 -d 用 POST 方法发送数据，格式与浏览器提交表单时相同（application/x-www-form-urlencoded）；-c 把收到的 Cookie 写进文件；-b 把 Cookie 发给服务器，可以给出数据或文件名；-L 在服务器用 Location 头和 3XX 状态码报告页面已移动时，向新地址重新请求；-H 在请求里加上额外的头部。",
+      "sourceIds": [
+        "curl-manpage"
+      ]
+    },
+    {
+      "id": "claim-network-monitor",
+      "text": "Firefox 的网络监视器显示 Firefox 发出的全部 HTTP 请求及每个请求的详情，可以用 Ctrl+Shift+E 打开；开发者工具可以用 F12 或 Ctrl+Shift+I 打开。",
+      "sourceIds": [
+        "firefox-network-monitor",
+        "firefox-devtools"
+      ]
+    },
+    {
+      "id": "claim-request-details",
+      "text": "在网络监视器里点开一个请求，Headers 页签显示状态码、HTTP 版本和请求、响应的头部，Cookies 页签列出随请求或响应发送的 Cookie，Request 页签显示请求参数，Response 页签显示响应的完整内容。",
+      "sourceIds": [
+        "firefox-request-details"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-curl-verbose",
+      "command": "curl -v 'http://127.0.0.1:8000/hello?name=kali'",
+      "expectedResult": "以 > 开头的是发出的请求（GET /hello?name=kali HTTP/1.1 和三个头部），以 < 开头的是收到的响应（HTTP/1.1 200 OK 和四个头部），最后是正文 Hello, kali!。",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc9112"
+      ]
+    },
+    {
+      "id": "cmd-curl-include",
+      "command": "curl -i http://127.0.0.1:8000/nosuch",
+      "expectedResult": "第一行是 HTTP/1.1 404 Not Found，空行之后是 Not found.。",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "cmd-curl-post",
+      "command": "curl -v -d 'user=student&password=kali123' http://127.0.0.1:8000/login",
+      "expectedResult": "请求行是 POST /login HTTP/1.1，响应是 302 Found，带有 Location: /me 和 Set-Cookie: session=…。",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc6265"
+      ]
+    },
+    {
+      "id": "cmd-curl-cookie-jar",
+      "command": "curl -b cookies.txt http://127.0.0.1:8000/me",
+      "expectedResult": "Welcome back, student.",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc6265"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "http-exchange",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

@@ -117,7 +117,7 @@ npm run build
 - 合并前至少 1 人 Approve
 - （可选）要求 CI 通过后再合并
 
-有空可再加 GitHub Actions，在 PR 上自动跑 `npm run verify`。
+CI 已配置（`.github/workflows/ci.yml`）：push 与 PR 均自动跑 `npm run verify`（内容门禁 → 主题生成与新鲜度检查 → 字体同步 → astro check → 构建）。
 
 ## 安装 Skill（给写讲义的 Agent 用）
 

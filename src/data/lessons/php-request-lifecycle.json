@@ -1,0 +1,258 @@
+{
+  "lessonPlan": {
+    "audience": "读得懂 HTTP 请求和 HTML、写过 Python 和 C、还没写过服务器端代码的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "一次请求的四步：服务器找到 .php 文件，交给 PHP 执行，标签外的 HTML 原样输出、标签里的代码被执行，执行结果作为响应发回；客户端从头到尾看不到 PHP 代码",
+    "learningObjectives": [
+      "说出一次请求里 PHP 在哪一步工作，以及浏览器收到的是什么",
+      "用 php -S 启动内置服务器，用 php 命令直接运行脚本",
+      "读写 <?php ?> 与 <?= ?> 两种标签，用 echo 输出内容",
+      "用 $_GET 和 $_SERVER 读取请求里的数据，用 ?? 给出默认值",
+      "在服务器日志里找到 PHP 的报错，分清解析错误和运行时警告"
+    ],
+    "prerequisites": [
+      "http-basics",
+      "html-css-dom",
+      "c-compile-and-run"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-server-side",
+      "kind": "mechanism",
+      "title": "查看源代码里为什么没有 PHP",
+      "question": "用浏览器打开 hello.php，再按 Ctrl+U 查看页面源代码，里面只有 1 + 2 = 3，找不到 <?php echo 1 + 2; ?> 这一句。PHP 代码去哪了？如果有人想知道这个页面是怎么算出 3 的，他能从浏览器这一侧拿到 hello.php 的源码吗？",
+      "answer": "PHP 代码在服务器上就被执行掉了。服务器收到对 hello.php 的请求后，把文件交给 PHP 解释器；标签外的 HTML 原样输出，<?php 和 ?> 之间的代码被执行，echo 的结果写在原来代码的位置。最后发给浏览器的是这份执行结果，所以「查看源代码」看到的是 PHP 的输出，不是 PHP 的源码。正常配置下，浏览器这一侧拿不到 hello.php 的源码：请求它，得到的永远是执行之后的输出。源码只存在于服务器的硬盘上。反过来说，只要服务器配置出错、把 .php 文件当成普通文本发出来，源码就会整个泄露。",
+      "sourceIds": [
+        "php-tags",
+        "php-webserver"
+      ]
+    },
+    {
+      "id": "check-predict-request",
+      "kind": "prediction",
+      "title": "预测三个请求的结果",
+      "question": "内置服务器在运行，预测下面三条命令的输出。一、curl 'http://127.0.0.1:8000/greet.php?name=nc'，只看 Hello 那一行和 letters 那一行。二、curl 'http://127.0.0.1:8000/greet.php'，同样两行。三、curl -i http://127.0.0.1:8000/broken.php 的状态行，以及正文是否为空。",
+      "answer": "一、Hello, nc! 和 Your name has 2 letters.。二、Hello, stranger! 和 Your name has 8 letters.：请求里没有 name，$_GET['name'] ?? 'stranger' 取了默认值。三、HTTP/1.0 500 Internal Server Error，正文为空。broken.php 有语法错误，PHP 在执行之前的解析阶段就失败了，一行输出都没有产生；报错写在了服务器的日志里，没有发给客户端。",
+      "sourceIds": [
+        "php-get",
+        "php-webserver"
+      ]
+    },
+    {
+      "id": "check-info-page",
+      "kind": "practice",
+      "title": "写一个回显请求的页面",
+      "question": "写 info.php：用 HTML 显示三行，分别是请求方法、请求的路径、参数 city 的值（没有给 city 时显示 unknown）。用内置服务器运行，分别用 curl 带和不带 city 参数请求，再用浏览器打开一次。",
+      "answer": "参考写法：开头 <?php $city = $_GET['city'] ?? 'unknown'; ?>，正文里用 <p>method: <?= $_SERVER['REQUEST_METHOD'] ?></p>、<p>path: <?= htmlspecialchars($_SERVER['REQUEST_URI']) ?></p>、<p>city: <?= htmlspecialchars($city) ?></p>。自查标准：curl 'http://127.0.0.1:8000/info.php?city=Chengdu' 显示 method: GET、path: /info.php?city=Chengdu、city: Chengdu；不带参数时 city: unknown；终端 A 的日志里每个请求有一行 [200]；服务器日志里没有 Warning。",
+      "sourceIds": [
+        "php-get",
+        "php-superglobals"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "PHP 在请求里做了什么",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能说出浏览器收到的为什么只有 3，没有 echo。"
+    },
+    {
+      "kind": "动手",
+      "title": "读取请求里的数据",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "同一个 greet.php，带不同的 name 得到不同的页面。"
+    },
+    {
+      "kind": "进阶",
+      "title": "出错的时候看哪里",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能在终端 A 的日志里找到 Parse error 和它的行号。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual built-in web server php -S development only",
+      "PHP manual PHP tags opening and closing short echo tag",
+      "PHP manual superglobals $_GET $_SERVER",
+      "PHP manual htmlspecialchars"
+    ],
+    "notes": "五个 PHP 文件在 public/labs/php-request-lifecycle/。全部命令在 kalilinux/kali-rolling 容器（PHP 8.4.24）里实际运行，内置服务器在第二个终端里运行，页面输出取自运行记录；服务器日志里的时间和客户端端口、响应里的 Date 头每次不同，比对时按形状处理。Kali 默认桌面安装自带 php8.4-cli（kali-linux-default 的依赖），已用 apt 的模拟安装核对。CLI 版 PHP 默认 display_errors 为 Off，所以错误只进日志不进页面；页面演示了用 -d display_errors=1 打开它，并说明只用于开发。"
+  },
+  "sources": [
+    {
+      "id": "php-webserver",
+      "kind": "official-doc",
+      "title": "PHP Manual: Built-in web server",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/features.commandline.webserver.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-builtin-server"
+      ]
+    },
+    {
+      "id": "php-tags",
+      "kind": "official-doc",
+      "title": "PHP Manual: PHP tags",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.basic-syntax.phptags.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-tags",
+        "claim-omit-close"
+      ]
+    },
+    {
+      "id": "php-superglobals",
+      "kind": "official-doc",
+      "title": "PHP Manual: Superglobals",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/language.variables.superglobals.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-superglobals"
+      ]
+    },
+    {
+      "id": "php-get",
+      "kind": "official-doc",
+      "title": "PHP Manual: $_GET",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/reserved.variables.get.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-get"
+      ]
+    },
+    {
+      "id": "php-htmlspecialchars",
+      "kind": "official-doc",
+      "title": "PHP Manual: htmlspecialchars",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-htmlspecialchars"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-builtin-server",
+      "text": "PHP 的命令行版本自带一个 Web 服务器，用 php -S 地址:端口 启动；请求的路径按启动时所在的当前目录查找。它是为开发设计的，可以用于测试或在受控环境里演示，不是完整的 Web 服务器，不应在公共网络上使用。",
+      "sourceIds": [
+        "php-webserver"
+      ]
+    },
+    {
+      "id": "claim-tags",
+      "text": "PHP 处理一个文件时，识别开始和结束标签 <?php 与 ?>，用它们划出 PHP 代码执行的范围；标签以外的内容被 PHP 解析器忽略，所以 PHP 可以嵌在各种文档里。<?= 是 <?php echo 的简写。",
+      "sourceIds": [
+        "php-tags"
+      ]
+    },
+    {
+      "id": "claim-omit-close",
+      "text": "文件以 PHP 代码结尾时，最好省略末尾的 ?>，以免在它后面意外多出空白或换行。",
+      "sourceIds": [
+        "php-tags"
+      ]
+    },
+    {
+      "id": "claim-superglobals",
+      "text": "$_SERVER、$_GET、$_POST、$_COOKIE、$_SESSION 等是超全局变量，在脚本的任何作用域里都能直接使用。",
+      "sourceIds": [
+        "php-superglobals"
+      ]
+    },
+    {
+      "id": "claim-get",
+      "text": "$_GET 是一个关联数组，存放通过 URL 参数（查询字符串）传给当前脚本的变量；只要有查询字符串就会填充，不管请求方法是什么。",
+      "sourceIds": [
+        "php-get"
+      ]
+    },
+    {
+      "id": "claim-htmlspecialchars",
+      "text": "有些字符在 HTML 里有特殊含义，要保留它们本来的意思就得写成 HTML 实体；htmlspecialchars 返回做了这种转换的字符串。",
+      "sourceIds": [
+        "php-htmlspecialchars"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "hello",
+      "path": "public/labs/php-request-lifecycle/hello.php",
+      "command": "php -S 127.0.0.1:8000 之后 curl http://127.0.0.1:8000/hello.php",
+      "expectedResult": "得到一段 HTML，其中是 1 + 2 = 3 和 Running on PHP 8.4.24.，没有任何 PHP 代码。"
+    },
+    {
+      "id": "greet",
+      "path": "public/labs/php-request-lifecycle/greet.php",
+      "command": "curl 'http://127.0.0.1:8000/greet.php?name=kali'",
+      "expectedResult": "Hello, kali! 和 Your name has 4 letters."
+    },
+    {
+      "id": "request",
+      "path": "public/labs/php-request-lifecycle/request.php",
+      "command": "curl 'http://127.0.0.1:8000/request.php?id=7&sort=name'",
+      "expectedResult": "method: GET、path: /request.php?id=7&sort=name，以及 $_GET 的 var_dump。"
+    },
+    {
+      "id": "broken",
+      "path": "public/labs/php-request-lifecycle/broken.php",
+      "command": "php -l broken.php",
+      "expectedResult": "PHP Parse error: syntax error, unexpected token \"echo\", expecting \",\" or \";\" in broken.php on line 4"
+    },
+    {
+      "id": "notice",
+      "path": "public/labs/php-request-lifecycle/notice.php",
+      "command": "curl http://127.0.0.1:8000/notice.php",
+      "expectedResult": "页面上只有 Hello, ；服务器日志里有 PHP Warning: Undefined array key \"name\"。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "php-request",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

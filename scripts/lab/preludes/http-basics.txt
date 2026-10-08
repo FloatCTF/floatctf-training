@@ -1,0 +1,2 @@
+# 第 14 课：清掉上次的练习目录和还在运行的练习服务器，把练习站脚本放到「下载」目录，模拟学员用浏览器下载之后的状态。
+rm -rf ~/lab/http; pkill -f 'server.p[y]'; pkill -f 'http.serve[r]'; mkdir -p ~/Downloads; cp ~/lab/python/server.py ~/Downloads/; true

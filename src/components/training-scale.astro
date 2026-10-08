@@ -1,27 +1,23 @@
 ---
-// 预训练规模直觉：把两侧统一成 token 后做纯算术换算；语料 token 数引自 GPT-3 论文
+// 规模直觉：两侧都用 token 做算术。3000 亿是 GPT-3 论文里的累计训练量，不是表 2.2 的语料库合计。
 const LIFE_TOKENS = 80 * 365 * 10000; // 假设 80 年 × 每天机械处理 1 万 token ≈ 2.92 亿 token
-const CORPUS_TOKENS = 3000e8; // GPT-3 预训练约 3000 亿 token
+const CORPUS_TOKENS = 3000e8; // GPT-3 训练累计处理约 3000 亿 token
 const RATIO = CORPUS_TOKENS / LIFE_TOKENS; // ≈ 1027 个假设的「人生处理量」
 const BAR_X = 200;
 const BAR_MAX = 420;
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="training-scale lesson-diagram not-content" aria-label="预训练语料规模的统一 token 量级对比">
-  <header>
-    <p class="lesson-diagram__eyebrow">规模直觉 / PRETRAINING SCALE</p>
-    <h3 class="lesson-diagram__title">3000 亿 token 的量级有多大</h3>
-  </header>
+<LessonDiagram eyebrow="规模直觉 / TOKENS SEEN" title="累计处理 3000 亿 token 的量级" ariaLabel="GPT-3 累计训练 token 与假设的人生处理量对比" class="training-scale" headered note="这项换算只比较 token 数量，不代表人的真实阅读速度、理解能力，也不表示模型像人一样阅读。3,000 亿是训练累计处理量。表 2.2 五项语料合计约 4,990 亿 token，按权重抽样，不是把语料库原样遍历一遍。" noteClass="training-scale__note">
   <div class="training-scale__body">
-    <svg viewBox="0 0 660 250" role="img" aria-label="两条长度对比条：假设连续八十年每天机械处理一万 token，总量约 2.9 亿 token；GPT-3 预训练语料约 3000 亿 token，约为前者的一千倍">
-      <title>预训练语料 token 量级对比</title>
+    <svg viewBox="0 0 660 250" role="img" aria-label="两条长度对比条：假设连续八十年每天机械处理一万 token，总量约 2.9 亿 token；GPT-3 训练累计处理约 3000 亿 token，约为前者的一千倍">
+      <title>累计训练 token 量级对比</title>
 
       <text class="ts-label" x="20" y="72">假设的人生处理量</text>
       <text class="ts-sub" x="20" y="92">80 年 × 每天 1 万 token</text>
       <rect class="ts-bar ts-bar--life" x={BAR_X} y="58" width="16" height="26" rx="3" />
       <text class="ts-value" x={BAR_X + 26} y="76">≈ 2.9 亿 token</text>
 
-      <text class="ts-label" x="20" y="152">GPT-3 预训练语料</text>
+      <text class="ts-label" x="20" y="152">GPT-3 累计训练量</text>
       <text class="ts-sub" x="20" y="172">约 3000 亿 token</text>
       <rect class="ts-bar ts-bar--corpus" x={BAR_X} y="138" width={BAR_MAX} height="26" rx="3" />
       <g class="ts-break">
@@ -31,11 +27,8 @@ const BAR_MAX = 420;
       <text class="ts-value" x={BAR_X + BAR_MAX - 8} y="128" text-anchor="end">≈ {Math.round(RATIO / 10) * 10} 个人生（条长按真实比例只画了 1/1000 再截断）</text>
       <text class="ts-value" x={BAR_X + 6} y="190">换算：每天机械处理 1 万 token，需要约 {Math.round(CORPUS_TOKENS / 10000 / 365 / 100) * 100} 年</text>
 
-      <text class="ts-note" x="20" y="234">模型训练目标是预测下一个 token；3000 亿来自 GPT-3 论文，其余数字是统一 token 单位后的算术换算。</text>
+      <text class="ts-note" x="20" y="234">3000 亿是论文中的累计训练 token，不是语料库大小。其余数字是统一 token 单位后的算术换算。</text>
     </svg>
   </div>
-  <p class="lesson-diagram__note training-scale__note">
-    这项换算只比较 token 数量，不代表人的真实阅读速度、理解能力，也不表示模型像人一样阅读。
-    规模本身不保证质量：数据配比、去重和清洗同样写在训练剧本里。
-  </p>
-</section>
+
+</LessonDiagram>

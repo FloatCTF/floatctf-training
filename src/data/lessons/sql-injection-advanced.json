@@ -1,12 +1,7 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "sql-injection-advanced",
-    "slug": "sql-injection-advanced",
-    "categoryId": "web-security",
-    "title": "SQL 注入进阶：预编译边界与代码审计",
     "audience": "已完成 SQL 注入基础、能阅读 PHP/Java/Python 数据访问代码的学员",
-    "durationMinutes": 90,
+    "durationMinutes": 60,
     "primaryMode": "mechanism",
     "supportingModes": [
       "code",
@@ -48,6 +43,7 @@
     {
       "id": "owasp-sqli-prevention",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "SQL Injection Prevention Cheat Sheet",
       "publisher": "OWASP Foundation",
       "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html",
@@ -68,8 +64,23 @@
       ]
     },
     {
+      "id": "php-pdo-emulate",
+      "kind": "official-doc",
+      "dateType": "snapshot",
+      "title": "PDO 预定义常量：ATTR_EMULATE_PREPARES",
+      "publisher": "PHP Group",
+      "url": "https://www.php.net/manual/en/pdo.constants.php",
+      "publishedAt": "2026-09-22",
+      "accessedAt": "2026-09-22",
+      "notes": "手册页持续更新；publishedAt 记录核验日期。条目说明该属性用于强制模拟或尝试原生预编译，驱动无法预编译时会退回模拟。",
+      "supports": [
+        "interview-q3"
+      ]
+    },
+    {
       "id": "cwe-89",
       "kind": "specification",
+      "dateType": "snapshot",
       "title": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command",
       "publisher": "MITRE",
       "url": "https://cwe.mitre.org/data/definitions/89.html",
@@ -186,10 +197,6 @@
       ]
     }
   ],
-  "assessments": [
-    "interview",
-    "exercise"
-  ],
   "visualNarrative": {
     "kind": "code-compare",
     "primaryAnimations": 0,
@@ -209,7 +216,7 @@
       "id": "interview-q1",
       "question": "参数化查询和“手动转义输入”有什么本质差别？",
       "level": 1,
-      "answer": "参数化把输入作为数据绑定进已编译结构；转义只是尝试让输入在某一上下文看起来安全，仍依赖编码与上下文判断正确。",
+      "answer": "参数化把语句模板和数据值分开处理。服务端预编译时数据库分开接收模板和值；客户端模拟时驱动先转义再拼成完整 SQL。两者都不同于业务代码直接拼接，但模拟模式的安全边界取决于驱动和字符编码。手动转义只是试图让输入在某一上下文看起来安全。",
       "keyPoints": [
         "结构绑定与字符处理",
         "上下文依赖",
@@ -255,7 +262,7 @@
       "id": "interview-q3",
       "question": "真预编译和模拟预编译差在哪里？",
       "level": 2,
-      "answer": "服务端预处理通常由数据库分别接收语句与绑定值；模拟预处理可能由客户端驱动转义参数后生成完整 SQL 文本，安全边界取决于驱动实现、配置与字符编码。",
+      "answer": "真预编译由数据库分开接收语句模板和绑定值。模拟预编译由客户端驱动转义参数后拼成完整 SQL。PHP PDO 的 PDO::ATTR_EMULATE_PREPARES 控制这条选择；驱动无法原生预编译时会退回模拟。安全边界取决于驱动、这个开关和连接字符集。",
       "keyPoints": [
         "服务端分别接收语句和值",
         "客户端模拟",
@@ -264,13 +271,15 @@
       "bonus": "审计时应查阅具体驱动文档并验证配置，避免仅凭 API 名称判断。",
       "sourceIds": [
         "tib3rius-interview",
-        "owasp-sqli-prevention"
+        "owasp-sqli-prevention",
+        "php-pdo-emulate"
       ],
       "questionSourceIds": [
         "tib3rius-interview"
       ],
       "answerSourceIds": [
-        "owasp-sqli-prevention"
+        "owasp-sqli-prevention",
+        "php-pdo-emulate"
       ]
     },
     {

@@ -1,0 +1,33 @@
+{
+  "server": "public/labs/http-basics/server.py",
+  "address": ["127.0.0.1", 8000],
+  "request": {
+    "method": "POST",
+    "target": "/login",
+    "headers": [["Host", "127.0.0.1:8000"], ["User-Agent", "curl/8.21.0"], ["Accept", "*/*"], ["Content-Length", "29"], ["Content-Type", "application/x-www-form-urlencoded"]],
+    "body": "user=student&password=kali123"
+  },
+  "notes": {
+    "method": "POST 是「请处理我交给你的这份数据」。登录、发帖、提交表单都用它。",
+    "target": "数据交给谁处理。这次没有问号，要提交的内容不放在这里。",
+    "version": "HTTP 的版本。",
+    ">Host": "发给哪个主机和端口。",
+    ">User-Agent": "客户端的自我介绍。",
+    ">Accept": "愿意接收的内容类型。",
+    ">Content-Length": "正文有 29 个字节。服务器靠它知道该读多少。",
+    ">Content-Type": "正文的格式。这是网页表单默认的格式：名字=值，用 & 连接。",
+    "blank": "空行，头部结束。",
+    "body": "请求的正文：表单里填的两项。它和头部一样是明文，用 http:// 时路上的设备都能看见。",
+    "<version": "服务器用的 HTTP 版本。",
+    "status": "302 表示「你要的东西在别处」，具体在哪看 Location。",
+    "reason": "给人看的简短说明。",
+    "<Server": "服务器软件的自我介绍。",
+    "<Date": "响应生成的时间。",
+    "<Content-Type": "正文的类型。",
+    "<Content-Length": "正文的字节数。",
+    "<Location": "接下来该去的地址。浏览器看到 302 会自动去请求它。",
+    "<Set-Cookie": "服务器交给你一个编号，要你以后每次请求都带上。session 是名字，等号后面是随机生成的值；Path=/ 表示访问这个站点的任何路径都带；HttpOnly 表示网页里的脚本读不到它。",
+    "<blank": "空行，头部结束。",
+    "<body": "正文。浏览器因为要跳转，通常不会显示它。"
+  }
+}

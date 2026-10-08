@@ -1,0 +1,282 @@
+---
+title: PHP 三：表单、Cookie 与会话
+description: 用 $_GET 和 $_POST 接收表单，把输入放进页面之前先转义，用 setcookie 和 $_SESSION 记住用户，用 password_hash 存密码，写出一个完整的登录流程
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/php-forms-and-sessions.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '给 users.php 加一个 teacher，用 curl 走完登录、访问、退出，最后一步是 401。' },
+  { title: '在浏览器里走一遍', detail: '用 Firefox 打开 http://127.0.0.1:8000/login.php，登录之后按 F12，在 Storage（存储）面板的 Cookies 里找到 PHPSESSID。删掉它再刷新 me.php，看会发生什么。' },
+  { title: '给计数器加一个重置', detail: '写 reset.php：清空 $_SESSION 里的 visits。用同一个 Cookie 文件依次访问 counter.php 两次、reset.php 一次、counter.php 一次，最后应当显示 1。' },
+  { title: '对照 Python 版', detail: '把第 14 课 server.py 里的登录代码和这一课的 login.php 并排放着读，各列出三处做法不同的地方，并说明哪一种更好。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PHP / LESSON 29"
+  kicker="Forms, Cookies, Sessions"
+  lines={[
+    { text: "PHP 三" },
+    { text: "表单、Cookie 与会话", accent: true },
+  ]}
+  summary="第 14 课你用 curl 走过一遍登录：提交表单，拿到 Set-Cookie，带着它再来。那时服务器是现成的。这一课换到另一边，用 PHP 把这个服务器写出来，并且写对：输入要转义，密码要散列，会话要换号。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：把第 14 课的练习站翻过来
+
+第 14 课的 `server.py` 里，登录是这样实现的：把表单正文拆开，和一个写在代码里的密码比较，对了就生成一个随机编号，放进 `Set-Cookie`，同时在服务器的字典里记下「这个编号是 student」。
+
+每一步都是手写的。PHP 把其中大部分做成了现成的：表单数据已经拆好放在 `$_POST` 里，会话编号的生成、发送、读取都由 `session_start()` 完成。你要做的，是在正确的地方做正确的检查。
+
+## 一、接收表单，转义输出
+
+### 1. 启动服务器
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="在练习目录里启动"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    { cmd: 'php -S 127.0.0.1:8000', out: '[Fri Oct  2 14:06:03 2026] PHP 8.4.24 Development Server (http://127.0.0.1:8000) started\n…' },
+  ]}
+/>
+
+这一课的文件都已经放在 `~/lab/php` 里。下面的命令在终端 B 里敲。
+
+### 2. GET 表单
+
+<CodeFile file="labs/php-forms-and-sessions/search.php" mark="2,9,12-14" />
+
+<TerminalSession
+  title="终端 B：提交一次搜索"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    {
+      cmd: "curl 'http://127.0.0.1:8000/search.php?q=kali+linux'",
+      out: '<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><title>Search</title></head>\n<body>\n<form method="get" action="search.php">\n  <input name="q" value="kali linux">\n  <button>Search</button>\n</form>\n<p>You searched for: kali linux</p>\n</body>\n</html>',
+      note: '网址里的加号代表空格。PHP 已经把它解码好放进了 $_GET。',
+    },
+  ]}
+/>
+
+第 12 到 14 行是 PHP 在 HTML 里写条件的方式：`if (…):` 和 `endif;` 之间的 HTML 只在条件成立时输出。`foreach (…):` 和 `endforeach;` 也是同样的写法。
+
+两种提交方式在 PHP 里的区别只是放在哪个数组里：
+
+<DataTable
+  caption="表单数据去了哪"
+  headers={["表单的 method", "数据在请求的哪里", "PHP 里读", "适合"]}
+  rows={[
+    ["get", "网址的查询参数", "$_GET", "搜索、翻页这类只读取不修改的操作"],
+    ["post", "请求正文", "$_POST", "登录、提交、修改数据"],
+  ]}
+  columnRatios={[0.9, 1.3, 0.8, 2.2]}
+/>
+
+（来源：[$_GET](#source-php-get)、[$_POST](#source-php-post)）
+
+### 3. 为什么一定要转义
+
+<CodeFile file="labs/php-forms-and-sessions/raw.php" note="同一个输入，一行直接输出，一行转义后输出。" />
+
+<TerminalSession
+  title="终端 B：输入里带着 HTML 标签"
+  steps={[
+    {
+      cmd: "curl -s 'http://127.0.0.1:8000/raw.php?name=%3Cb%3Ekali%3C%2Fb%3E'",
+      out: '<p>raw:     <b>kali</b></p>\n<p>escaped: &lt;b&gt;kali&lt;/b&gt;</p>',
+      note: '%3C 和 %3E 是第 4 课讲过的 URL 编码，代表 < 和 >。用户提交的是 <b>kali</b>。',
+    },
+  ]}
+/>
+
+用浏览器打开同一个网址：第一行的 kali 是**粗体**，因为浏览器把用户输入里的 `<b>` 当成了标签；第二行原样显示 `<b>kali</b>` 这几个字符。
+
+这就是问题所在：**不转义时，用户输入的内容会变成页面的一部分 HTML。** 这里只是一个加粗标签，无伤大雅；但用户能写进页面的绝不只是加粗。第 17 课讲过，页面里的脚本可以读写整个 DOM、带着 Cookie 发请求。下学期的 XSS 一课会专门讲这件事的后果。
+
+`htmlspecialchars` 把 `<`、`>`、`&`、引号换成 HTML 实体，浏览器就只把它们当作字符显示。PHP 手册的入门教程里也是这样写的：它让人无法往你的页面里注入 HTML 标签或 JavaScript。（来源：[Dealing with Forms](#source-php-forms)、[htmlspecialchars](#source-php-htmlspecialchars)）
+
+<Callout variant="warning" title="规矩">
+凡是来自请求的数据，`$_GET`、`$_POST`、`$_COOKIE`，以及以后从数据库里读出来的、最初由用户写进去的内容，放进 HTML 之前一律经过 `htmlspecialchars`。没有例外。
+</Callout>
+
+## 二、Cookie 与会话
+
+### 1. Cookie
+
+<CodeFile file="labs/php-forms-and-sessions/theme.php" />
+
+<TerminalSession
+  title="终端 B：设置和读取 Cookie"
+  steps={[
+    {
+      cmd: "curl -i 'http://127.0.0.1:8000/theme.php?theme=dark'",
+      out: 'HTTP/1.1 200 OK\nHost: 127.0.0.1:8000\nDate: Fri, 02 Oct 2026 14:06:09 GMT\nConnection: close\nX-Powered-By: PHP/8.4.24\nSet-Cookie: theme=dark\nContent-type: text/html; charset=UTF-8\n\ntheme saved',
+      note: 'setcookie 生成的就是第 14 课见过的 Set-Cookie 响应头。',
+    },
+    { cmd: "curl -b 'theme=dark' http://127.0.0.1:8000/theme.php", out: 'theme: dark', note: '请求里带着 Cookie，PHP 把它放进 $_COOKIE。' },
+    { cmd: 'curl http://127.0.0.1:8000/theme.php', out: 'theme: light' },
+  ]}
+/>
+
+`setcookie` 是在设置响应头，所以必须在任何输出之前调用，包括 `<html>` 这样的 HTML 和空白。（来源：[setcookie](#source-php-setcookie)）
+
+注意第二条命令：Cookie 的值是你自己在命令行里写的。浏览器这一侧想写什么都行。所以 Cookie 适合存「主题偏好」这种改了也无所谓的东西，**不能用来存「我是谁」**。
+
+### 2. 会话：客户端只拿一个编号
+
+<CodeFile file="labs/php-forms-and-sessions/counter.php" mark="2-3" />
+
+<TerminalSession
+  title="终端 B：带着编号和不带编号"
+  steps={[
+    { cmd: 'curl -s -c jar.txt -b jar.txt http://127.0.0.1:8000/counter.php', out: 'visits in this session: 1\nsession id: 2f9cbd56c2c192c2541fc8293edaafbf', note: '-c 存下服务器发来的 Cookie，-b 下次带上。会话编号是随机生成的，你的不一样。' },
+    { cmd: 'curl -s -c jar.txt -b jar.txt http://127.0.0.1:8000/counter.php', out: 'visits in this session: 2\nsession id: 2f9cbd56c2c192c2541fc8293edaafbf', note: '同一个编号，计数接着加。' },
+    { cmd: 'curl -s http://127.0.0.1:8000/counter.php', out: 'visits in this session: 1\nsession id: 7d7dcd5e1f9fff7e04ca9e32533cbefd', note: '不带 Cookie，PHP 当成一个新访客，开了一个新会话。' },
+  ]}
+/>
+
+`session_start()` 做了第 14 课里手写的全部事情：请求里有会话编号就按编号找到这个会话的数据，没有就生成一个新编号并通过 `Set-Cookie` 发出去。数据放在 `$_SESSION` 数组里，脚本结束时 PHP 把它存回服务器上的会话文件。（来源：[Sessions: Basic usage](#source-php-session-basic)、[session_start](#source-php-session-start)）
+
+<DataTable
+  caption="Cookie 和会话"
+  headers={["", "Cookie", "会话"]}
+  rows={[
+    ["数据存在哪", "浏览器", "服务器（默认是 /var/lib/php/sessions 下的文件）"],
+    ["客户端手里有什么", "数据本身", "一个随机的会话编号，放在名为 PHPSESSID 的 Cookie 里"],
+    ["客户端能改吗", "能，想写什么写什么", "只能换编号。数据本身碰不到"],
+    ["PHP 里读写", "setcookie() / $_COOKIE", "session_start() 之后用 $_SESSION"],
+  ]}
+  columnRatios={[1, 1.6, 2.6]}
+/>
+
+## 三、一个完整的登录
+
+### 1. 密码不存明文
+
+<CodeFile file="labs/php-forms-and-sessions/make_hash.php" />
+
+<TerminalSession
+  title="终端 B：生成和核对密码散列"
+  steps={[
+    { cmd: 'php make_hash.php', out: '$2y$12$6n02eUnn.gDHzBLyiXYSauw4xOkiWD7BzI8gMFrkrhwzeIeoaIr0W\nbool(true)\nbool(false)', note: '每次运行散列都不同，因为每次都随机加了盐。但 password_verify 都认得它。' },
+  ]}
+/>
+
+数据库或文件里只存 `password_hash` 生成的散列，登录时用 `password_verify` 核对。散列是单向的：从它算不回原来的密码。即使存密码的文件被人拿走，拿到的也不是密码本身。散列开头的 `$2y$12$` 说明了算法（bcrypt）和代价，后面跟着随机的盐和结果，核对需要的信息都在这一串里。（来源：[password_hash](#source-php-password-hash)、[password_verify](#source-php-password-verify)）
+
+<CodeFile file="labs/php-forms-and-sessions/users.php" note="练习用的账号：student，密码 kali123。文件里只有散列。" />
+
+### 2. 登录页和受保护的页
+
+<CodeFile file="labs/php-forms-and-sessions/login.php" mark="6,10,11,12,14" />
+
+<CodeFile file="labs/php-forms-and-sessions/me.php" mark="4-8" />
+
+<DataTable
+  caption="login.php 的关键几行"
+  headers={["行", "做什么"]}
+  rows={[
+    ["6", "只在 POST 时处理登录。GET 请求只显示表单"],
+    ["8 到 10", "取出提交的用户名和密码，找到这个用户的散列，用 password_verify 核对。用户不存在和密码错误给出同一句提示"],
+    ["11", "登录成功，先换一个新的会话编号"],
+    ["12", "在会话里记下这个人是谁"],
+    ["13 到 14", "跳转到 me.php，然后 exit 结束脚本，后面的 HTML 不再输出"],
+  ]}
+  columnRatios={[0.6, 4]}
+/>
+
+第 11 行的 `session_regenerate_id(true)` 把会话编号换成一个新的，并保留会话里的数据。登录前的那个编号可能已经被别人知道了，比如是别人设法让你的浏览器用上的。登录成功之后立刻换号，旧编号就作废了。（来源：[session_regenerate_id](#source-php-session-regenerate)）
+
+### 3. 用 curl 走一遍
+
+<TerminalSession
+  title="终端 B：未登录、登录失败、登录成功、退出"
+  steps={[
+    { cmd: 'curl -i http://127.0.0.1:8000/me.php', out: 'HTTP/1.1 401 Unauthorized\nHost: 127.0.0.1:8000\nDate: Fri, 02 Oct 2026 14:06:13 GMT\nConnection: close\nX-Powered-By: PHP/8.4.24\nSet-Cookie: PHPSESSID=4ea111751b0c34181d66cd68c1f1a8d6; path=/\nExpires: Thu, 19 Nov 1981 08:52:00 GMT\nCache-Control: no-store, no-cache, must-revalidate\nPragma: no-cache\nContent-Type: text/plain; charset=utf-8\n\nPlease log in first.', note: 'session_start 给这个新访客开了一个会话。Expires 那几行是 PHP 为会话页面自动加的，让浏览器不要缓存它。' },
+    { cmd: "curl -s -c s.txt -b s.txt -d 'user=student&password=wrong' http://127.0.0.1:8000/login.php | grep Wrong", out: '<p>Wrong user or password.</p>' },
+    { cmd: 'tail -n 1 s.txt', out: '127.0.0.1\tFALSE\t/\tFALSE\t0\tPHPSESSID\td3c3a2a1f0f1c8e4b5a6978877665544', note: '登录失败也有一个会话编号。记下它的开头几位。' },
+    {
+      cmd: "curl -i -c s.txt -b s.txt -d 'user=student&password=kali123' http://127.0.0.1:8000/login.php",
+      out: 'HTTP/1.1 302 Found\nHost: 127.0.0.1:8000\nDate: Fri, 02 Oct 2026 14:06:14 GMT\nConnection: close\nX-Powered-By: PHP/8.4.24\nExpires: Thu, 19 Nov 1981 08:52:00 GMT\nCache-Control: no-store, no-cache, must-revalidate\nPragma: no-cache\nSet-Cookie: PHPSESSID=dd4d7104b936579e2c8abd13b05fbd5f; path=/\nLocation: me.php\nContent-type: text/html; charset=UTF-8',
+      note: '302 跳转到 me.php。Set-Cookie 里是一个和刚才不同的新编号：session_regenerate_id 换的。',
+    },
+    { cmd: 'curl -c s.txt -b s.txt http://127.0.0.1:8000/me.php', out: 'Welcome back, student.' },
+    { cmd: 'curl -c s.txt -b s.txt http://127.0.0.1:8000/logout.php', out: 'Logged out.' },
+    { cmd: 'curl -s -o /dev/null -w "%{http_code}\\n" -c s.txt -b s.txt http://127.0.0.1:8000/me.php', out: '401', note: '-w 只打印状态码。会话已经销毁，同一个编号不再代表任何人。' },
+  ]}
+/>
+
+练完之后在终端 A 按 `Ctrl` + `C` 停掉服务器。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["Warning: Cannot modify header information - headers already sent", "setcookie、header 或 session_start 之前已经有了输出，常常是 <?php 前面多了一个空行", "把这些调用放在文件最开头；文件开头不要有任何空白"],
+    ["登录成功了，下一页还是未登录", "下一页忘了 session_start()；或者 curl 没有用 -c 和 -b 保存、带上 Cookie", "每个用到 $_SESSION 的文件开头都要 session_start()"],
+    ["Warning: Undefined array key \"user\"", "直接用 GET 打开了处理 POST 的代码", "先判断 $_SERVER['REQUEST_METHOD'] === 'POST'，再用 ?? 给默认值"],
+    ["header('Location: …') 之后的代码还在执行", "跳转只是加了一个响应头，脚本并没有停", "跳转之后紧跟 exit;"],
+    ["password_verify 永远返回 false", "散列在复制时被截断了，或者在双引号里，$2y 被当成了变量", "散列写在单引号里；var_dump 看一下长度，应当是 60"],
+    ["页面上出现了用户输入的 HTML 效果", "输出时没有 htmlspecialchars", "加上"],
+  ]}
+  columnRatios={[2, 1.8, 1.6]}
+/>
+
+边界：这一课的写法够用于学习，离真实网站还差几件事：会话 Cookie 应当加上 `HttpOnly` 和 `SameSite` 属性（`session_start` 可以传参数设置）；表单应当防止别的网站代替用户提交；登录失败的次数应当有限制。这些下学期在对应的漏洞专题里讲。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '$_GET / $_POST', description: '查询参数 / 表单正文。都是字符串，可能不存在。' },
+    { term: 'htmlspecialchars($s)', description: '放进 HTML 之前转义。没有例外。' },
+    { term: '<?php if (…): ?> … <?php endif; ?>', description: '在 HTML 里写条件。' },
+    { term: 'setcookie("名", "值")', description: '发 Set-Cookie。必须在任何输出之前。' },
+    { term: '$_COOKIE["名"]', description: '读请求里的 Cookie。客户端可以随意改。' },
+    { term: 'session_start()', description: '开启或恢复会话。用 $_SESSION 之前必须调用。' },
+    { term: '$_SESSION["user"] = …', description: '存在服务器上的会话数据。' },
+    { term: 'session_regenerate_id(true)', description: '登录成功后换一个新的会话编号。' },
+    { term: 'password_hash($p, PASSWORD_DEFAULT)', description: '生成密码散列，只存它。' },
+    { term: 'password_verify($p, $hash)', description: '核对密码。' },
+    { term: 'header("Location: …"); exit;', description: '跳转并结束脚本。' },
+  ]}
+/>
+
+<KeyTakeaway>
+表单数据在 `$_GET` 或 `$_POST` 里，放进页面之前一律用 `htmlspecialchars` 转义。Cookie 存在客户端，任何人都能改，只适合存无关紧要的偏好。会话把数据留在服务器上，客户端只拿一个随机编号，`session_start()` 之后通过 `$_SESSION` 读写。密码只存 `password_hash` 的散列，用 `password_verify` 核对；登录成功后用 `session_regenerate_id` 换号。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

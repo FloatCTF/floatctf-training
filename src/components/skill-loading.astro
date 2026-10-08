@@ -23,13 +23,9 @@ const LAYERS = [
     size: 'full',
   },
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="skill-loading lesson-diagram not-content" aria-labelledby="skill-loading-title">
-  <header>
-    <p class="lesson-diagram__eyebrow">SKILLS / 按需逐层加载</p>
-    <h3 id="skill-loading-title" class="lesson-diagram__title">Skill 的三层加载：先看名片，再翻正文，最后开资料柜</h3>
-  </header>
+<LessonDiagram eyebrow="SKILLS / 按需逐层加载" title="Skill 的三层加载：先看名片，再翻正文，最后开资料柜" labelledBy="skill-loading-title" titleId="skill-loading-title" class="skill-loading" headered note="卡片宽度示意上下文成本。名称与描述帮助模型判断是否触发；正文提供执行骨架；大资料只在对应步骤读取。 逐层加载让上下文窗口保留给当前任务真正需要的信息。" noteClass="skill-loading__note">
   <ol class="skill-loading__steps" aria-label="Skill 的三个加载层级">
     {LAYERS.map((layer, i) => (
       <li class="skill-loading__step">
@@ -52,8 +48,5 @@ const LAYERS = [
       </li>
     ))}
   </ol>
-  <p class="lesson-diagram__note skill-loading__note">
-    卡片宽度示意上下文成本。名称与描述帮助模型判断是否触发；正文提供执行骨架；大资料只在对应步骤读取。
-    逐层加载让上下文窗口保留给当前任务真正需要的信息。
-  </p>
-</section>
+
+</LessonDiagram>

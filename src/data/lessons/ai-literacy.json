@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "ai-literacy",
-    "slug": "ai-literacy",
-    "categoryId": "ai-ml",
-    "title": "大模型原理：从 Token 到对齐",
     "audience": "已经掌握机器学习训练闭环，希望理解大语言模型核心机制与输出边界的本科生和工程师",
     "durationMinutes": 90,
     "primaryMode": "concept",
@@ -15,7 +10,7 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "simulation",
     "visualStory": "两条视觉主线：QKᵀ 注意力热力矩阵（主交互，整句两两配对 + 因果遮罩 + 语义头/位置头切换）与概率分布（采样实验台拖温度与 top-p 亲手落笔）；token 向量空间、自回归循环、因果遮罩矩阵与预训练规模对比图静态锚定；困惑度用 p → −ln(p) → 1/p 验算表落地",
@@ -28,13 +23,68 @@
       "沿完整生成链路说明上下文、采样和外部验证怎样影响输出"
     ],
     "prerequisites": [
-      "已完成 machine-learning-foundations《AI 如何学习：从任务到泛化》",
-      "已完成 neural-network-foundations《神经网络：从神经元到架构》",
+      "machine-learning-foundations",
+      "neural-network-foundations",
       "理解向量、概率与函数的基本含义"
     ],
     "safetyScope": "not-applicable",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "区分屏蔽与低权重",
+      "question": "因果注意力中，第 3 个位置能看到第 4 个位置吗？被屏蔽与可见但权重为零有什么区别？",
+      "answer": "第 3 个位置可见第 1 至第 3 个位置。第 4 个位置被因果规则排除；可见位置仍在允许集合中，权重为零表示该次加权的贡献为零。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "计算矩阵规模",
+      "question": "单个注意力头中，序列长度从 128 变成 256，完整两两位置矩阵各有多少元素，扩大几倍？",
+      "answer": "128² = 16,384，256² = 65,536，扩大 4 倍。这是完整矩阵的元素数量；实际显存还受实现、数据类型、批量和层数影响。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "读取选中行",
+      "question": "在注意力矩阵选择语义头和“它”，记录“服务器”“配置文件”的权重，再切换到位置头，比较最高权重落在哪。",
+      "answer": "语义头中“服务器”为 55%，“配置文件”为 22%；位置头中前一个词“因为”为 58%。两种头使用同一因果边界，示意数据展示内容匹配和邻近位置匹配的不同。",
+      "sourceIds": [
+        "vaswani-2017"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "输入与注意力",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "区分 token、Q/K/V 和遮罩。"
+    },
+    {
+      "kind": "动手",
+      "title": "训练与采样",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "比较注意力头与采样参数。"
+    },
+    {
+      "kind": "进阶",
+      "title": "窗口成本与验收",
+      "heading": "四、",
+      "minutes": 30,
+      "checkpoint": "计算矩阵规模，完成三题自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -108,6 +158,7 @@
     {
       "id": "stanford-cs336-2025",
       "kind": "university-course",
+      "dateType": "snapshot",
       "title": "CS336: Language Modeling from Scratch",
       "publisher": "Stanford University",
       "url": "https://cs336.stanford.edu/spring2025/index.html",
@@ -120,6 +171,7 @@
     {
       "id": "hf-llm-course",
       "kind": "official-doc",
+      "dateType": "snapshot",
       "title": "Hugging Face LLM Course",
       "publisher": "Hugging Face",
       "url": "https://huggingface.co/learn/llm-course/chapter1/1",
@@ -277,9 +329,6 @@
         "hallucination-survey-2022"
       ]
     }
-  ],
-  "assessments": [
-    "none"
   ],
   "visualNarrative": {
     "kind": "attention-matrix",

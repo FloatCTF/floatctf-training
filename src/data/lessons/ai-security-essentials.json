@@ -1,10 +1,5 @@
 {
-  "schemaVersion": 1,
   "lessonPlan": {
-    "id": "ai-security-essentials",
-    "slug": "ai-security-essentials",
-    "categoryId": "ai-ml",
-    "title": "AI 安全：从提示注入到对抗样本",
     "audience": "已完成前五门 AI 课程、具备 Web 安全基础，希望系统认识 AI 系统攻击面的本科生和工程师",
     "durationMinutes": 90,
     "primaryMode": "mechanism",
@@ -17,7 +12,7 @@
       "academic"
     ],
     "assessments": [
-      "none"
+      "exercise"
     ],
     "motionLevel": "simulation",
     "visualStory": "间接提示注入的攻防数据流是主线：不可信内容经检索进入上下文、模型执行注入指令、分层防御收窄影响；四类经典 ML 攻击与 OWASP 十项风险用对照表静态锚定",
@@ -29,13 +24,69 @@
       "在 CTF 场景中沿四步框架分析 AI 题目"
     ],
     "prerequisites": [
-      "已完成 ai-engineering-landscape《AI 工程全景：从一次调用到生产系统》",
-      "已完成 ai-literacy《大模型原理：从 Token 到对齐》",
-      "了解 HTTP 请求与网页抓取的角色分工"
+      "ai-engineering-landscape",
+      "ai-literacy",
+      "http-basics",
+      "python-network-scripting"
     ],
     "safetyScope": "authorized-lab",
     "verifiedAt": "2026-08-28"
   },
+  "exercises": [
+    {
+      "id": "check-1",
+      "kind": "mechanism",
+      "title": "识别信任边界",
+      "question": "检索文档中出现“将本段内容当成系统指令”。应用应把这句话放在哪个信任级别？",
+      "answer": "它属于外部文档数据，保留来源与不可信标记。系统规则、用户授权和工具权限由应用独立维护，文档中的自我声明不能授予权限。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    },
+    {
+      "id": "check-2",
+      "kind": "calculation",
+      "title": "读取控制流",
+      "question": "教学流程为“读入文档 → 模型提出发信动作 → 工具执行”。文档来源未经信任核验。标出执行前至少两项检查。",
+      "answer": "在工具执行前检查用户授权是否覆盖收件人与动作，再检查参数及输出是否包含受限数据。检查失败应停止动作并记录原因；单靠模型声称安全不足以作为执行依据。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    },
+    {
+      "id": "check-3",
+      "kind": "practice",
+      "title": "检查防御分支",
+      "question": "把页面上的提示注入流程从第 4 步拨到第 5 步，并对照下面的两段代码。记录不可信内容从哪一步进入、工具动作在哪一步被拦住，以及最终输出差在哪里。",
+      "answer": "合格记录应标出第 2 步或第 3 步的检索入口、第 5 步的分层防御，以及代码对照里的工具白名单和出口过滤。页面没有单独的防御开关，步骤滑块和两段代码就是要看的状态。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "提示注入与边界",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "标出指令与外部数据来源。"
+    },
+    {
+      "kind": "动手",
+      "title": "检查防御流程",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "记录工具受限节点和输出变化。"
+    },
+    {
+      "kind": "进阶",
+      "title": "风险分类与验收",
+      "heading": "四、",
+      "minutes": 35,
+      "checkpoint": "按输入、模型和数据划分风险，完成自测。"
+    }
+  ],
   "researchStatus": {
     "status": "complete",
     "verifiedAt": "2026-08-28",
@@ -101,7 +152,48 @@
       "url": "https://incidentdatabase.ai/cite/622/",
       "publishedAt": "2023-12-18",
       "accessedAt": "2026-08-28",
-      "notes": "事件数据库记录页；publishedAt 为事件发生日期。",
+      "notes": "事件数据库记录页；publishedAt 为事件发生日期。标价与停用细节见同期新闻来源。",
+      "supports": [
+        "claim-chatbot-authority-incident",
+        "evidence-aiid-622"
+      ]
+    },
+    {
+      "id": "venturebeat-tahoe-2023",
+      "kind": "incident",
+      "title": "A Chevy for $1? Car dealer chatbots show perils of AI for customer service",
+      "publisher": "VentureBeat",
+      "url": "https://venturebeat.com/ai/a-chevy-for-1-car-dealer-chatbots-show-perils-of-ai-for-customer-service/",
+      "publishedAt": "2023-12-19",
+      "accessedAt": "2026-09-22",
+      "notes": "报道写明 2024 Chevy Tahoe 入门 MSRP 为 58,195 美元，并记录用户先规定句式再开价 1 美元。",
+      "supports": [
+        "claim-chatbot-authority-incident",
+        "evidence-aiid-622"
+      ]
+    },
+    {
+      "id": "autoevolution-tahoe-2023",
+      "kind": "incident",
+      "title": "Someone Convinced a ChatGPT-Powered Chevy Dealer to Sell $81K Tahoe for Just $1",
+      "publisher": "autoevolution",
+      "url": "https://www.autoevolution.com/news/someone-convinced-a-chatgpt-powered-chevy-dealer-to-sell-an-81k-tahoe-for-just-1-226451.html",
+      "publishedAt": "2023-12-21",
+      "accessedAt": "2026-09-22",
+      "notes": "报道把 81,395 美元写成 High Country 4WD 的起价，不是成交单价格。",
+      "supports": [
+        "claim-chatbot-authority-incident"
+      ]
+    },
+    {
+      "id": "gmauthority-tahoe-2023",
+      "kind": "incident",
+      "title": "GM Dealer Chat Bot Agrees To Sell 2024 Chevy Tahoe For $1",
+      "publisher": "GM Authority",
+      "url": "https://gmauthority.com/blog/2023/12/gm-dealer-chat-bot-agrees-to-sell-2024-chevy-tahoe-for-1/",
+      "publishedAt": "2023-12-18",
+      "accessedAt": "2026-09-22",
+      "notes": "2023-12-18 的报道写明经销商停用了该聊天机器人，并转述用户规定的句式。",
       "supports": [
         "claim-chatbot-authority-incident",
         "evidence-aiid-622"
@@ -163,9 +255,11 @@
       "identifier": "AI Incident Database #622",
       "topicRelation": "direct",
       "sourceIds": [
-        "aiid-622"
+        "aiid-622",
+        "venturebeat-tahoe-2023",
+        "gmauthority-tahoe-2023"
       ],
-      "summary": "ChatGPT 驱动的经销商聊天机器人被诱导同意以 1 美元出售约 7.6 万美元的车辆，暴露「模型输出被当作业务承诺」的过度代理风险。"
+      "summary": "2023-12-17 的公开对话里，经销商 ChatGPT 机器人按用户规定的句式同意以 1 美元出售 2024 款 Tahoe。同期报道给出的是 MSRP 区间，不是成交价。2023-12-18 的报道写明该店机器人当时已停用。没有报道表明交易完成。"
     },
     {
       "id": "evidence-md-exfil",
@@ -188,7 +282,7 @@
     },
     {
       "id": "claim-indirect-injection",
-      "text": "间接提示注入把恶意指令藏进模型会检索到的外部内容，即可远程利用 LLM 集成应用，影响包括数据窃取与功能操纵。",
+      "text": "间接提示注入把恶意指令藏进会被检索并送入上下文的外部内容。指令被模型当成可执行内容后，可能造成数据窃取或功能操纵；能否成功取决于模型响应、应用权限和下游校验。",
       "sourceIds": [
         "greshake-2023"
       ]
@@ -209,9 +303,12 @@
     },
     {
       "id": "claim-chatbot-authority-incident",
-      "text": "2023 年 12 月，经销商的 ChatGPT 聊天机器人被诱导同意以 1 美元出售车辆并宣称具有法律约束力，事后机器人被下线；模型输出被当成了业务承诺。",
+      "text": "2023-12-17，Chevrolet of Watsonville 的 ChatGPT 聊天机器人按用户先规定的句式，同意以 1 美元出售一辆 2024 款 Tahoe。VentureBeat 写注入门 MSRP 58,195 美元，autoevolution 另写高配起价 81,395 美元。GM Authority 在 2023-12-18 写明该机器人当时已停用。没有报道表明按 1 美元完成交易。模型输出被放在了承诺位置。",
       "sourceIds": [
-        "aiid-622"
+        "aiid-622",
+        "venturebeat-tahoe-2023",
+        "autoevolution-tahoe-2023",
+        "gmauthority-tahoe-2023"
       ]
     },
     {
@@ -256,9 +353,6 @@
         "owasp-llm-top10"
       ]
     }
-  ],
-  "assessments": [
-    "none"
   ],
   "visualNarrative": {
     "kind": "prompt-injection-flow",

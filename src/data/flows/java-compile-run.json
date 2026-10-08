@@ -1,0 +1,32 @@
+[
+  {
+    "label": "写源码",
+    "detail": "Hello.java 是一个文本文件。里面的 public class Hello 必须和文件名一致。",
+    "state": "normal"
+  },
+  {
+    "label": "javac 编译",
+    "detail": "javac Hello.java 检查语法和类型。有错就报错，不生成任何文件；没错就生成 Hello.class。",
+    "state": "normal"
+  },
+  {
+    "label": "得到字节码",
+    "detail": "Hello.class 里不是 CPU 能直接执行的机器码，而是给 Java 虚拟机（JVM）的指令，叫字节码。同一个 .class 文件拿到 Windows、Linux、macOS 上都能运行。",
+    "state": "normal"
+  },
+  {
+    "label": "java 启动 JVM",
+    "detail": "java Hello 启动一个 JVM，按类名找到 Hello.class 并加载。注意这里写的是类名，不是文件名。",
+    "state": "normal"
+  },
+  {
+    "label": "从 main 开始执行",
+    "detail": "JVM 调用 Hello 类的 public static void main(String[] args)。字节码由 JVM 的解释器逐条执行，或者由即时编译器（JIT）先编译成机器码再执行。",
+    "state": "normal"
+  },
+  {
+    "label": "输出与退出",
+    "detail": "main 执行完，程序退出，退出码 0。如果中途抛出没人处理的异常，JVM 打印异常和调用位置，退出码 1。",
+    "state": "success"
+  }
+]

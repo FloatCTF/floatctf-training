@@ -3,12 +3,6 @@ title: SQL 注入：从字符串拼接到参数化查询
 description: 追踪输入进入 SQL 的路径，比较拼接查询与参数化查询，并用本地演示验证修复
 pageType: lesson
 template: splash
-lessonId: sql-injection
-categoryId: web-security
-sources: ["owasp-sqli-prevention", "cwe-89", "node-sqlite", "cve-2023-34362", "progress-moveit-advisory", "cve-2023-48788", "nvd-cve-2023-48788", "fortinet-cve-2023-48788", "appsec-interview-gist", "tib3rius-interview"]
-motionLevel: explanatory
-safetyScope: authorized-lab
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -19,19 +13,19 @@ import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import SecurityDisclaimer from '../../../components/security-disclaimer.astro';
-import InterviewAccordion from '../../../components/interview-accordion';
-import ScrollReveal from '../../../components/scroll-reveal';
+import InterviewAccordion from '../../../components/interview-accordion.astro';
+import ScrollReveal from '../../../components/scroll-reveal.astro';
 import manifest from '../../../data/lessons/sql-injection.json';
+import LabDownload from '../../../components/lab-download.astro';
 
 export const vulnerableSnippet = `// 错误：把输入直接拼进 SQL 结构
 const sql = "SELECT * FROM users WHERE username='" + username +
   "' AND password='" + password + "'";
 db.query(sql);`;
 
-export const secureSnippet = `// 正确：语句结构固定，输入只作为绑定值
-import { DatabaseSync } from "node:sqlite";
-const db = new DatabaseSync(":memory:");
-const sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+export const secureSnippet = `// 核心片段：db 已连接，输入只作为绑定值
+const sql = "SELECT * FROM users " +
+  "WHERE username = ? AND password = ?";
 db.prepare(sql).get(username, password);`;
 
 <LessonHero
@@ -93,23 +87,52 @@ CWE-89 将这类问题描述为未正确中和 SQL 命令中的特殊元素；OW
 
 验证只能在授权靶场或本地实验中进行。课程不提供面向公共目标的扫描或拖库步骤。
 
-## 本地演示：拼接 vs 绑定
+## 本地演示：参数绑定防御回归
 
 运行环境：Node.js 22.13 或更高版本。该版本可以直接使用内置的 `node:sqlite`。
 
+<LabDownload file="sql-binding-check.mjs" label="下载完整防御检查脚本" />
+
+新建工作目录，将下载文件保存到该目录后运行。
+
 ```bash
-node examples/sql-injection-demo.mjs
+mkdir training-lab
+cd training-lab
+# 将下载的 sql-binding-check.mjs 放在当前目录
+node sql-binding-check.mjs
 ```
 
 预期输出包含：
 
 ```text
+PASS 普通值精确匹配
+PASS 单引号作为普通数据保存与查询
+PASS 分号作为普通数据保存与查询
+PASS 未登记值返回空结果
+PASS 标识符映射与数量边界
+完成：5 组防御检查通过
+```
+
+脚本在内存 SQLite 中使用虚构联系人数据，验证引号与分号保持数据语义、未登记值返回空结果、未知排序键和越界数量被拒绝。成功判据为五组 PASS 且进程退出码为 0；断言失败会报告对应检查。运行结束自动关闭数据库。
+
+这个脚本只证明防御路径成立。要看见同一输入在拼接查询里的不同结果，在项目根目录再运行：
+
+```bash
+node examples/sql-injection-demo.mjs
+```
+
+预期：
+
+```text
+脆弱查询： SELECT username, role FROM users WHERE username = 'admin' --' AND password = 'wrong-password'
 脆弱结果： {"username":"admin","role":"admin"}
 参数化结果： null
 合法结果： {"username":"alice","role":"user"}
 ```
 
-脚本在当前进程中创建内存 SQLite 数据库。脆弱查询真实执行被改写的 SQL；参数化查询通过 `prepare().get()` 绑定同一输入，并返回空结果。数据库不会连接网络或写入磁盘。
+数据库只在当前进程的内存里，不连网络，也不写磁盘。`admin' --` 在这条 SQLite 语句里注释掉了密码条件，所以错误密码仍返回 admin。参数化查询把这串字符当成用户名本身，查不到行，结果是 `null`。合法用户名和正确密码仍能查到 alice。
+
+下面是查询构造的核心片段。完整可运行的防御回归以上方下载文件为准。
 
 <CodeCompare
   language="javascript"
@@ -136,7 +159,7 @@ node examples/sql-injection-demo.mjs
 
 OWASP 把预编译语句、安全存储过程与允许列表输入验证作为主要控制措施，并把转义视为最后手段。（来源：[OWASP](#source-owasp-sqli-prevention)）
 
-<ScrollReveal client:visible motionLevel="explanatory" label="防御复盘">
+<ScrollReveal motionLevel="explanatory" label="防御复盘">
   <p>修复一个登录点后，继续搜索项目中所有原始查询、报表导出和动态排序。二次拼接路径经常藏在“看起来已经转义过”的存储字段里。</p>
 </ScrollReveal>
 
@@ -166,7 +189,7 @@ OWASP 把预编译语句、安全存储过程与允许列表输入验证作为�
 
 先给定义与边界，再说明成立条件，然后给出参数化与权限收敛，最后用已核验案例收束。
 
-<InterviewAccordion client:visible questions={manifest.interviewQuestions} />
+<InterviewAccordion questions={manifest.interviewQuestions} />
 
 <KeyTakeaway>
 SQL 注入的核心是输入影响了 SQL 解析结果。参数化 API 把输入绑定为值；动态标识符、权限、错误回显和二次拼接需要独立控制。

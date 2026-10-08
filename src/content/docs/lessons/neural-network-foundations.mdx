@@ -3,12 +3,6 @@ title: 神经网络：从神经元到架构
 description: 从神经元、激活函数、参数形状与容量讲到反向传播、四类架构与部署监控，理解多层网络怎样学习表示
 pageType: lesson
 template: splash
-lessonId: neural-network-foundations
-categoryId: ai-ml
-sources: ["threeblueonebrown-neural-networks", "pytorch-autograd", "pytorch-optimization", "stanford-cs231n-backprop", "d2l-mlp", "d2l-dropout", "d2l-image-augmentation", "d2l-index", "d2l-cnn", "d2l-rnn", "vaswani-2017", "tensorflow-playground", "google-production-monitoring"]
-motionLevel: explanatory
-safetyScope: not-applicable
-researchStatus: complete
 ---
 import LearningObjectives from '../../../components/learning-objectives.astro';
 import Prerequisites from '../../../components/prerequisites.astro';
@@ -16,6 +10,8 @@ import LessonHero from '../../../components/lesson-hero.astro';
 import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
 import IntuitionBox from '../../../components/intuition-box.astro';
 import StepList from '../../../components/step-list.astro';
 import XorExplorer from '../../../components/xor-explorer';
@@ -54,13 +50,15 @@ export const learningLoopSteps = [
   <Prerequisites items={manifest.lessonPlan.prerequisites} />
 </div>
 
+<LessonPacing segments={manifest.segments} />
+
 ## 引导问题：表达能力从哪里来
 
 先看一个具体任务：识别手写数字。一张 28×28 像素的手写「3」，在计算机眼里是 784 个亮度数字（0 全白、1 全黑）。要让程序说出「这是 3」，需要一条从 784 个数字到 10 个类别的映射规则。这条规则没法用 if-else 写出来：每个人的「3」写法都不同，你无法枚举所有情况。下面四张图就是四种写法的「3」在像素里的样子。
 
 <DigitThreeVariants />
 
-上一课学到的模型核心仍是一条直线：线性回归用 `wx + b` 预测数值，逻辑回归用 `wᵀx + b` 加 sigmoid 输出概率。直线把输入空间切成两半，而 XOR 四个点、图像中的数字笔画、句子里相隔很远的指代关系，都不服从这种划分。
+上一课亲手拟合的是直线：线性回归用 `wx + b` 预测数值，逻辑回归用 `wᵀx + b` 加 sigmoid 输出概率。那一课也讲过，表格任务上树模型可以做非线性切分。直线和单棵规则仍然切不开 XOR 那种对角交错，也切不开图像笔画和长距离指代。本课要补的是隐藏层。
 
 训练闭环本身不需要更换。数据、损失、梯度、优化器和独立评估继续工作，改变的是模型内部的结构：把单层变换换成多层非线性变换，让网络在训练中组合出有用的中间表示。本课沿四个问题展开：多层结构为什么能表达更复杂的关系，参数量怎样计算与控制，梯度怎样到达每一层参数，四类架构分别适合什么数据。
 
@@ -138,13 +136,13 @@ x₁  x₂  y
 总参数量：23
 ```
 
-数连线就是数权重：每条连线一个权重，每个神经元一个偏置。把这个网络放大到手写数字任务，输入层变成 784、输出层变成 10，一个隐藏层取 100 个神经元，参数量就是 (784×100 + 100) + (100×10 + 10) = 78,510。参数越多能表达的规律越复杂，同时也越需要数据来约束它们，这是下一节容量问题的起点。
+数连线就是数权重：每条连线一个权重，每个神经元一个偏置。把这个网络放大到手写数字任务，输入层变成 784、输出层变成 10，一个隐藏层取 100 个神经元，参数量就是 (784×100 + 100) + (100×10 + 10) = 79,510。参数越多能表达的规律越复杂，同时也越需要数据来约束它们，这是下一节容量问题的起点。
 
 批量大小为 `B` 时，第一层输入形状为 `[B, 4]`，权重形状为 `[4, 3]`，输出形状为 `[B, 3]`。检查张量形状是定位神经网络实现错误的基础方法。
 
 ## 四、容量和正则化共同影响拟合程度
 
-上一节末尾留了一个问题：识别数字的网络有 78,510 个参数，而训练集可能只有几百张图。参数比样本还多几百倍，会发生什么？——模型有足够的自由度把训练样本「背」下来，包括它们的噪声。这就是**容量**问题的入口：**深度**表示计算层数量，**宽度**表示一层的单元或通道数，**容量**描述模型能够表达的函数范围。容量增加通常提高训练集拟合能力，同时提高数据、优化和评估要求。
+上一节末尾留了一个问题：识别数字的网络有 79,510 个参数，而训练集可能只有几百张图。参数比样本还多几百倍，会发生什么？——模型有足够的自由度把训练样本「背」下来，包括它们的噪声。这就是**容量**问题的入口：**深度**表示计算层数量，**宽度**表示一层的单元或通道数，**容量**描述模型能够表达的函数范围。容量增加通常提高训练集拟合能力，同时提高数据、优化和评估要求。
 
 <DataTable
   caption="常见容量控制手段"
@@ -161,7 +159,7 @@ Dropout 与数据增强的机制和适用条件在 D2L 有专门章节展开。�
 
 ## 五、反向传播怎样计算每个参数的梯度
 
-先看困境：训练损失 L 算出来了，要更新的是 78,510 个参数。每个参数对这次误差「贡献」了多少？逐个试探是试不起的——改一个参数就要把 784 个像素重新算一遍。反向传播用一条聪明的路径把这件事变成一次额外的前向量大小的计算：从损失出发，把责任沿着计算图逐级往回传。
+先看困境：训练损失 L 算出来了，要更新的是 79,510 个参数。每个参数对这次误差「贡献」了多少？逐个试探是试不起的——改一个参数就要把 784 个像素重新算一遍。反向传播用一条聪明的路径把这件事变成一次额外的前向量大小的计算：从损失出发，把责任沿着计算图逐级往回传。
 
 ### 1. 前向传播、反向传播和优化器分工明确
 
@@ -202,7 +200,7 @@ w 的梯度：dL/dw = (dL/dŷ)(dŷ/da)(da/dw)
 
 ### 3. 把责任流回每一个参数：完整走一遍
 
-两个参数的链条学会了，真实网络多了两件事：**分支**（一个隐藏单元的输出既影响参数 v，也继续往前传）和**闸门**（ReLU 在负区间直接把责任拦成 0）。下面的演示就是第一节手算过的那个 2-2-1 网络：前向的数字你已经逐个验算过，现在从损失 L 出发，逐步把责任送回每个参数。重点盯住 h₂：责任明明走到了门口，却被关着的 ReLU 门拦下——那一刻你就亲眼看到了「梯度消失」的最小案例。
+两个参数的链条学会了，真实网络多了两件事：**分支**（一个隐藏单元的输出既影响参数 v，也继续往前传）和**闸门**（ReLU 在负区间直接把责任拦成 0）。下面的演示接上第一节手算过的两个隐藏单元：x₁ = 1.0、x₂ = 0.5、a₁ = 0.2、a₂ = 0。输出层的 v₁、v₂ 和损失是这一节新加上的，前向数字会在演示里再算一遍。重点盯住 h₂：责任走到门口，被关着的 ReLU 乘成 0。这是一条支路的局部零梯度，还不是后面要说的多层连乘。
 
 <BackpropPlayground client:visible motionLevel="explanatory" />
 
@@ -222,7 +220,7 @@ w 的梯度：dL/dw = (dL/dŷ)(dŷ/da)(da/dw)
 
 ### 5. 深层网络还要管理梯度尺度和数值稳定性
 
-刚才演示里 h₂ 的梯度被 ReLU 拦成 0，是梯度消失的最小案例。真实网络动辄几十层，这样的连乘每层都在发生，梯度尺度和数值稳定性必须当作工程问题管理：
+刚才演示里 h₂ 的梯度被 ReLU 拦成 0，是一个神经元在负区间不传递责任。梯度消失是另一件事：很多层各自的局部导数绝对值都小于 1，连乘之后早期层的梯度接近 0。饱和的 Sigmoid 或 Tanh 更容易造成这种连乘；ReLU 在正区间的导数是 1，常用来避开这种饱和，但它在负区间又会把单条支路直接乘成 0。深层网络里这两件事都要管：
 
 <DataTable
   caption="深层训练的常见问题"
@@ -320,5 +318,9 @@ Google 的生产 ML 监控指南要求分别检查原始数据、特征工程结
 <KeyTakeaway>
 记住本课的两幅画：**前向是亮度从输入逐层流向损失**（数字穿过网络，激活即亮度），**反向是责任从损失逐级流回每个参数**（路径相乘、分支相加，ReLU 负区间把责任拦成 0）。容量决定这幅画能画多复杂，连接方式决定它擅长什么数据：全连接任意组合、卷积局部共享、循环沿时间展开、注意力全局直连。
 </KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
 
 <SourceList sources={manifest.sources} />

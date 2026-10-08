@@ -5,11 +5,9 @@ const soft = [
   { label: '退款', value: 10 },
   { label: '其他', value: 5 },
 ];
+import LessonDiagram from './lesson-diagram.astro';
 ---
-
-<section class="distillation-comparison lesson-diagram not-content" aria-label="知识蒸馏教师学生示意">
-  <p class="lesson-diagram__eyebrow">DISTILLATION / 教师到学生</p>
-  <h3 class="lesson-diagram__title">软分布把“第二像谁”也交给小模型</h3>
+<LessonDiagram eyebrow="DISTILLATION / 教师到学生" title="软分布把“第二像谁”也交给小模型" ariaLabel="知识蒸馏教师学生示意" class="distillation-comparison" note="硬标签只给“延迟”一个答案；软分布同时保留“损坏比退款更相近”的类别关系。图中比例相加为 100%，仅用于解释软目标，不代表实验测量值。">
   <div class="distillation-flow">
     <article class="distillation-model distillation-model--teacher">
       <span>TEACHER</span>
@@ -32,5 +30,5 @@ const soft = [
       <small>任务收窄 · 部署成本低</small>
     </article>
   </div>
-  <p class="lesson-diagram__note">硬标签只给“延迟”一个答案；软分布同时保留“损坏比退款更相近”的类别关系。图中比例相加为 100%，仅用于解释软目标，不代表实验测量值。</p>
-</section>
+
+</LessonDiagram>

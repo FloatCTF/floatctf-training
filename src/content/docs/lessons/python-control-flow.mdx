@@ -1,0 +1,316 @@
+---
+title: Python 二：条件与循环
+description: 用 if 让程序做判断，用 while 和 for 让程序重复做事，学会顺着执行流逐行读代码
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/python-control-flow.json';
+import totalTrace from '../../../data/steppers/python-for-total.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '统计 1 到 100 之间能被 7 整除的数，输出应当是 14 735。' },
+  { title: '只打印奇数', detail: '用 for 和 if 打印 1 到 20 之间的所有奇数，每行一个，一共 10 行。' },
+  { title: '改 login.py', detail: '把最多尝试次数从 3 次改成 5 次。提示：代码里有三处 3 需要一起改。改完后想一想，怎样写才能只改一处。' },
+  { title: 'FizzBuzz', detail: '打印 1 到 15：能被 3 整除的打印 Fizz，能被 5 整除的打印 Buzz，同时能被 3 和 5 整除的打印 FizzBuzz，其余打印数字本身。第 15 行应当是 FizzBuzz。注意判断的先后顺序。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PYTHON / LESSON 06"
+  kicker="Conditions, Branches, Loops"
+  lines={[
+    { text: "Python 二" },
+    { text: "条件与循环", accent: true },
+  ]}
+  summary="上一课的脚本从第一行跑到最后一行，每行执行一次。这一课让程序学会两件事：根据条件决定走哪条路，以及把一段代码重复执行很多遍。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：密码输错三次会怎样
+
+登录页面都有这样的规则：密码对了就放行，错了提示还剩几次，连错三次就锁定。
+
+用上一课学的东西写不出这个规则，因为它需要两种新能力。一是**判断**：密码对不对。二是**重复**：没输对就再问一次，最多问三次。这一课结束时，你会用十一行代码把它写出来。
+
+## 一、条件与分支
+
+### 1. 比较的结果是 True 或 False
+
+<TerminalSession
+  title="比较与逻辑运算"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: '3 > 2', out: 'True' },
+    { cmd: '3 == 3.0', out: 'True', note: '== 判断两边是否相等。注意是两个等号。' },
+    { cmd: '"a" == "A"', out: 'False', note: '字符串区分大小写。' },
+    { cmd: '3 != 4', out: 'True', note: '!= 是不等于。' },
+    { cmd: 'len("kali")', out: '4', note: 'len() 给出长度，对字符串就是字符个数。' },
+    { cmd: '5 > 3 and 5 < 4', out: 'False', note: 'and：两边都成立才成立。' },
+    { cmd: '5 > 3 or 5 < 4', out: 'True', note: 'or：有一边成立就成立。' },
+    { cmd: 'not True', out: 'False', note: 'not：取反。' },
+  ]}
+/>
+
+<DataTable
+  caption="比较运算符"
+  headers={["写法", "含义", "写法", "含义"]}
+  rows={[
+    ["==", "等于", "!=", "不等于"],
+    ["<", "小于", "<=", "小于或等于"],
+    [">", "大于", ">=", "大于或等于"],
+  ]}
+/>
+
+一个 `=` 是赋值，两个 `==` 是比较。这是初学时最常写错的地方。（来源：[Built-in Types](#source-py-stdtypes)）
+
+### 2. if：条件成立才执行
+
+<CodeFile file="labs/python-control-flow/password_check.py" />
+
+<TerminalSession
+  title="三种输入，三条路"
+  steps={[
+    { cmd: 'cd ~/lab/python' },
+    { cmd: 'python3 password_check.py', stdin: ['abc'], out: 'password: abc\ntoo short', note: '长度 3，小于 8，走第一个分支。' },
+    { cmd: 'python3 password_check.py', stdin: ['12345678'], out: 'password: 12345678\ntoo common', note: '长度够了，第一个条件不成立；接着检查 elif，成立。' },
+    { cmd: 'python3 password_check.py', stdin: ['kali-2026-ok'], out: 'password: kali-2026-ok\nok', note: '前两个条件都不成立，走 else。' },
+  ]}
+/>
+
+读这段代码的规则：
+
+- 从上往下依次检查条件，**遇到第一个成立的就执行它下面那一块**，剩下的分支全部跳过。
+- `elif` 是 else if 的缩写，可以有任意多个；`else` 兜底，可以没有。
+- 每个条件后面有一个冒号 `:`。
+
+（来源：[More Control Flow Tools](#source-py-controlflow)）
+
+### 3. 缩进就是语法
+
+`print("too short")` 前面的四个空格不是为了好看。Python 用**缩进**表示「这几行属于上面那个 if」：缩进相同的连续几行是一个代码块。（来源：[An Informal Introduction to Python](#source-py-introduction)）
+
+```text
+if 条件:
+    这一行属于 if        ← 缩进 4 个空格
+    这一行也属于 if
+这一行不属于 if，无论条件是否成立都会执行
+```
+
+约定是每一级缩进 4 个空格，直接敲四下空格最稳妥。同一个文件里不要混用 Tab 和空格，混用会报 TabError。
+
+## 二、while、for 与 break
+
+### 1. while：条件成立就再来一遍
+
+<CodeFile file="labs/python-control-flow/countdown.py" />
+
+<TerminalSession
+  title="倒数"
+  steps={[
+    { cmd: 'python3 countdown.py', out: '3\n2\n1\ngo' },
+  ]}
+/>
+
+`while` 的执行顺序是：检查条件，成立就把循环体从头到尾执行一遍，然后**回到 while 那一行重新检查条件**；不成立就跳到循环体后面继续。这里 n 每一圈减 1，减到 0 时条件 `n > 0` 不成立，循环结束。
+
+循环体里必须有让条件最终变成不成立的语句。漏掉 `n = n - 1`，这个循环永远停不下来。
+
+### 2. for 和 range()：重复固定的次数
+
+事先知道要重复几次时，用 `for` 更直接。`range()` 负责产生一串整数：
+
+<TerminalSession
+  title="range() 产生哪些数"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'list(range(5))', out: '[0, 1, 2, 3, 4]', note: 'range(5) 是 0 到 4，一共 5 个数。list() 在这里只是把它展开给你看。' },
+    { cmd: 'list(range(1, 4))', out: '[1, 2, 3]', note: '给两个数：从 1 开始，到 4 之前停。终点不包含在内。' },
+    { cmd: 'list(range(0, 10, 3))', out: '[0, 3, 6, 9]', note: '第三个数是步长。' },
+  ]}
+/>
+
+<CodeFile file="labs/python-control-flow/total.py" />
+
+这四行算的是 1 + 2 + 3。逐行走一遍，看清高亮行怎样在 `for` 和循环体之间来回：
+
+<CodeStepper
+  client:visible
+  trace={totalTrace}
+  view="values"
+  title="for 循环每一圈做了什么"
+  intro="留意三件事：i 每一圈被换成什么，total 怎样累加，最后一行什么时候才执行。"
+/>
+
+<TerminalSession
+  title="运行验证"
+  steps={[
+    { cmd: 'python3 total.py', out: '6' },
+  ]}
+/>
+
+（来源：[More Control Flow Tools](#source-py-controlflow)）
+
+<DataTable
+  caption="两种循环怎么选"
+  headers={["", "while", "for"]}
+  rows={[
+    ["什么时候用", "不知道要重复几次，只知道什么时候该停", "要对一串东西逐个处理，或重复固定次数"],
+    ["靠什么结束", "条件变成不成立", "那一串东西取完了"],
+    ["容易出的错", "忘了改条件里的变量，变成死循环", "range 的终点少写了 1"],
+  ]}
+  columnRatios={[1, 2.2, 2.2]}
+/>
+
+### 3. break：提前结束循环
+
+现在可以写开头那个登录规则了：
+
+<CodeFile file="labs/python-control-flow/login.py" />
+
+<TerminalSession
+  title="第二次输对，以及连错三次"
+  steps={[
+    {
+      cmd: 'python3 login.py',
+      stdin: ['123456', 'kali123'],
+      out: 'password: 123456\nwrong, 2 left\npassword: kali123\nwelcome',
+      note: '第二次输对，执行到 break，循环立刻结束。此时 tries 是 1，最后的 if 不成立。',
+    },
+    {
+      cmd: 'python3 login.py',
+      stdin: ['a', 'b', 'c'],
+      out: 'password: a\nwrong, 2 left\npassword: b\nwrong, 1 left\npassword: c\nwrong, 0 left\nlocked',
+      note: '三次都错，tries 加到 3，条件 tries < 3 不成立，循环正常结束，然后打印 locked。',
+    },
+  ]}
+/>
+
+这段代码里 if 套在 while 里面，缩进有两级。读的时候用缩进对齐来判断归属：`print("welcome")` 和 `break` 缩进 8 个空格，属于 if；`tries = tries + 1` 缩进 4 个空格，属于 while 但不属于 if。
+
+`break` 的作用是跳出它所在的那个循环。输对密码之后不该再执行「次数加 1」和「打印还剩几次」，所以直接 break。
+
+<Callout variant="warning" title="密码写在代码里">
+这个脚本把正确的密码直接写在了源码第一行，任何拿到文件的人都能看到。它只用来练习循环。真实的系统不会这样保存密码，后面的课会讲到。
+</Callout>
+
+## 三、三种常见的错
+
+### 1. 缩进错了
+
+<CodeFile file="labs/python-control-flow/bad_indent.py" mark="3" />
+
+<TerminalSession
+  title="if 下面没有缩进的代码块"
+  steps={[
+    {
+      cmd: 'python3 bad_indent.py',
+      out: '  File "/home/kali/lab/python/bad_indent.py", line 3\n    print("positive")\n    ^^^^^\nIndentationError: expected an indented block after \'if\' statement on line 2',
+      note: '最后一行说得很清楚：第 2 行的 if 后面应该跟一个缩进的代码块。',
+    },
+  ]}
+/>
+
+### 2. 把 == 写成了 =
+
+<TerminalSession
+  title="条件里写了赋值"
+  environment="PYTHON 交互模式"
+  prompt=">>>"
+  steps={[
+    { cmd: 'n = 3' },
+    {
+      cmd: 'if n = 3: print(n)',
+      out: '  File "<python-input-1>", line 1\n    if n = 3: print(n)\n       ^^^^^\nSyntaxError: invalid syntax. Maybe you meant \'==\' or \':=\' instead of \'=\'?',
+      note: 'Python 直接提示了：你是不是想写 ==。',
+    },
+  ]}
+/>
+
+### 3. 死循环
+
+<CodeFile file="labs/python-control-flow/loop.py" />
+
+n 从 1 开始只增不减，`n > 0` 永远成立。运行后终端没有任何输出，也不回到提示符。按 `Ctrl` + `C` 中断：
+
+<TerminalSession
+  title="用 Ctrl + C 停下来"
+  steps={[
+    {
+      cmd: 'python3 loop.py',
+      stdin: ['^C'],
+      out: '^CTraceback (most recent call last):\n  File "/home/kali/lab/python/loop.py", line 3, in <module>\n    n = n + 1\n    ^\nKeyboardInterrupt',
+      note: 'KeyboardInterrupt 表示程序是被你从键盘中断的。它显示的行号是按下那一刻正在执行的行，可能是第 2 行，也可能是第 3 行。',
+    },
+  ]}
+/>
+
+（来源：[Built-in Exceptions](#source-py-exceptions)）
+
+<DataTable
+  caption="本课的常见报错"
+  headers={["现象或最后一行", "原因", "处理"]}
+  rows={[
+    ["IndentationError: expected an indented block", "if、while、for 的下一行没有缩进", "把属于它的那几行缩进 4 个空格"],
+    ["IndentationError: unexpected indent", "某一行多缩进了", "和上下文对齐"],
+    ["SyntaxError: expected ':'", "条件后面漏了冒号", "if、elif、else、while、for 这一行的末尾都要有冒号"],
+    ["SyntaxError: invalid syntax. Maybe you meant '=='", "条件里把 == 写成了 =", "比较用两个等号"],
+    ["程序一直不结束", "while 的条件永远成立", "Ctrl + C 中断，检查循环体里有没有改变条件里的变量"],
+    ["循环少执行了一次", "range 的终点不包含在内", "要取到 n，终点写 n + 1"],
+  ]}
+  columnRatios={[1.7, 1.5, 1.8]}
+/>
+
+边界：程序不报错不等于逻辑正确。条件写反了、范围差了 1，程序照样运行，只是结果不对。这类错只能靠逐行推演和用已知答案的输入去测试来发现。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: '== != < <= > >=', description: '比较，结果是 True 或 False。' },
+    { term: 'and / or / not', description: '都成立；有一个成立；取反。' },
+    { term: 'if 条件: … elif 条件: … else: …', description: '从上往下检查，执行第一个成立的分支。' },
+    { term: '缩进', description: '每级 4 个空格。缩进相同的连续几行是一个代码块。' },
+    { term: 'while 条件:', description: '条件成立就执行循环体，然后回来再检查。' },
+    { term: 'for i in range(n):', description: 'i 依次取 0 到 n-1，循环体执行 n 次。' },
+    { term: 'range(a, b)', description: '从 a 到 b-1。终点不包含。' },
+    { term: 'break', description: '立刻跳出所在的循环。' },
+    { term: 'len(x)', description: '长度。' },
+    { term: 'Ctrl + C', description: '中断正在运行的程序。' },
+  ]}
+/>
+
+<KeyTakeaway>
+程序默认从上往下一行执行一次。`if` 让它按条件跳过一些行，`while` 和 `for` 让它回头重复一些行。哪些行受它们管，由缩进决定。读循环代码的方法是逐行推演：每一圈先看条件，再把循环体从头走到尾，记下每个变量的新值。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 60 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

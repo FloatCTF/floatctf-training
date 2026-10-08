@@ -1,0 +1,322 @@
+---
+title: C 六：结构体与动态内存
+description: 用结构体把相关的数据捆在一起，用 malloc 和 free 在堆上申请与归还内存，看清堆和栈的区别，认识释放后使用、重复释放和内存泄漏三种错误
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import CodeStepper from '../../../components/code-stepper';
+import manifest from '../../../data/lessons/c-structs-and-heap.json';
+import heapTrace from '../../../data/steppers/c-heap.json';
+import makeUserTrace from '../../../data/steppers/c-make-user.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '写出 items.c，输出 3 items, total 185，用 -fsanitize=address 运行没有报告。' },
+  { title: '制造并观察泄漏', detail: '把 items.c 里的 free 那一行删掉，用 gcc -g -fsanitize=address 编译运行，在报告里找到泄漏了多少字节、是哪一行申请的。然后把 free 加回去。' },
+  { title: '把数量改成运行时决定', detail: '让 heap.c 从键盘读入 count（用 scanf），再按这个数量 malloc。输入 5 应当打印 10 20 30 40 50。想一想：这件事用上一课的数组为什么做不到。' },
+  { title: '画出 make_user 的内存', detail: '在纸上画出 new_user 执行到 return 之前的样子：main 的栈帧、new_user 的栈帧、堆块，以及每个指针指向哪里。再画出返回之后的样子。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 24"
+  kicker="Structs, malloc, free"
+  lines={[
+    { text: "C 六" },
+    { text: "结构体与动态内存", accent: true },
+  ]}
+  summary="到上一课为止，变量都住在栈帧里：函数返回就消失，大小在写代码时就定死。这一课学会向系统另外要一块内存，要多大、用多久都由你说了算。代价是：用完得自己还。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：这块内存该放在哪
+
+假设要写一个函数，读入若干个成绩，返回给调用者。有两个麻烦：
+
+- 有多少个成绩，要到程序运行时才知道。数组的长度却得在写代码时定下来。
+- 函数里的局部数组，在函数返回时就消失了。上一课讲过，把它的地址交出去是悬垂指针。
+
+需要的是这样一块内存：**大小在运行时决定，并且不随函数返回而消失。** 栈帧给不了。这一课去另一个地方要。
+
+## 一、结构体：把几样东西捆在一起
+
+### 1. 定义和使用
+
+一个用户有名字，也有等级。用两个分开的变量来表示，很快就乱了。**结构体**把相关的几项数据组成一个新的类型：
+
+<CodeFile file="labs/c-structs-and-heap/user.c" mark="4-7" />
+
+<TerminalSession
+  title="结构体的成员"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'gcc -Wall user.c -o user' },
+    { cmd: './user', out: 'alice 2\n12', note: '等级从 1 升到了 2；整个结构体占 12 个字节：name 8 个，level 4 个。' },
+  ]}
+/>
+
+<DataTable
+  caption="user.c 里的四种写法"
+  headers={["写法", "含义"]}
+  rows={[
+    ["struct user { … };", "定义一个新类型，名叫 struct user。花括号里是它的成员，结尾有分号"],
+    ["struct user alice;", "声明一个这种类型的变量。它是一整块内存，里面依次放着各个成员"],
+    ["alice.level", "用点访问成员"],
+    ["u->level", "u 是指向结构体的指针时，用箭头访问成员。它是 (*u).level 的简写"],
+  ]}
+  columnRatios={[1.2, 3.4]}
+/>
+
+规则只有一条：**手里是结构体本身，用点；手里是指向它的指针，用箭头。**（来源：[Beej's Guide: Structs](#source-beej-structs)）
+
+`promote(&alice)` 传的是地址。和上一课的 `swap` 一样，函数要改调用者的变量，就得拿到它的地址。结构体往往比较大，即使不修改，传地址也比复制一整份省事，所以结构体几乎总是通过指针传递。
+
+### 2. 结构体有多大
+
+通常是各成员大小之和，但不总是。编译器有时会在成员之间留几个空字节，让每个成员都落在合适的地址上，这叫填充。例如 `struct { char c; int n; }` 在这台机器上占 8 个字节，而不是 5 个。需要知道大小时永远用 `sizeof`，不要自己加。（来源：[N1570](#source-n1570)）
+
+## 二、堆：自己申请，自己归还
+
+### 1. malloc 和 free
+
+<CodeFile file="labs/c-structs-and-heap/heap.c" mark="6,14,15" />
+
+<CodeStepper
+  client:visible
+  trace={heapTrace}
+  view="memory"
+  title="一块堆内存的一生"
+  eyebrow="STEP THROUGH / 栈与堆"
+  intro="main 的栈帧下面多了一栏「堆」。看第 2 步它怎样出现，第 12 步 free 之后 scores 还指着哪里。"
+/>
+
+<TerminalSession
+  title="结果"
+  steps={[
+    { cmd: 'gcc -Wall heap.c -o heap' },
+    { cmd: './heap', out: '10 20 30' },
+  ]}
+/>
+
+程序可以使用的内存里，除了栈，还有一块叫**堆**。
+
+<DataTable
+  caption="栈和堆"
+  headers={["", "栈", "堆"]}
+  rows={[
+    ["放什么", "局部变量和参数", "你用 malloc 申请的内存"],
+    ["谁来分配", "调用函数时自动分配", "你调用 malloc"],
+    ["什么时候消失", "函数返回时自动消失", "你调用 free 时。不调用就一直占着"],
+    ["大小", "写代码时定死", "运行时决定，malloc 的参数可以是变量"],
+    ["怎样访问", "直接用变量名", "只能通过指针"],
+  ]}
+  columnRatios={[1, 2, 2.4]}
+/>
+
+（来源：[Beej's Guide: Manual Memory Allocation](#source-beej-malloc)）
+
+逐行看 `heap.c` 的关键几步：
+
+<DataTable
+  caption="用堆的固定套路"
+  headers={["行", "写法", "说明"]}
+  rows={[
+    ["6", "int *scores = malloc(count * sizeof(int));", "要 count 个 int 那么大的内存。malloc 的参数是字节数，所以乘上 sizeof(int)。它返回这块内存的地址"],
+    ["7 到 9", "if (scores == NULL) { return 1; }", "系统给不出内存时 malloc 返回 NULL。每次都要检查"],
+    ["11", "scores[i] = …", "拿到的是一个指针，可以像数组一样用下标"],
+    ["14", "free(scores);", "用完之后归还"],
+    ["15", "scores = NULL;", "归还之后把指针清掉，免得之后误用"],
+  ]}
+  columnRatios={[0.5, 2, 2.6]}
+/>
+
+`malloc` 给的内存没有被初始化，里面的内容不确定，和未赋值的局部变量一样。（来源：[malloc(3)](#source-man-malloc3)）
+
+### 2. 堆块不随函数返回而消失
+
+回到引导问题的第二个麻烦。在函数里申请堆内存，把地址返回给调用者：
+
+<CodeFile file="labs/c-structs-and-heap/make_user.c" mark="10-15" />
+
+<CodeStepper
+  client:visible
+  trace={makeUserTrace}
+  view="memory"
+  title="函数返回了，堆块还在"
+  eyebrow="STEP THROUGH / 栈与堆"
+  intro="留意第 6 步：new_user 的栈帧消失了，堆块原封不动，main 的 bob 接手了它的地址。"
+/>
+
+<TerminalSession
+  title="结果"
+  steps={[
+    { cmd: 'gcc -Wall make_user.c -o make_user' },
+    { cmd: './make_user', out: 'bob 1' },
+  ]}
+/>
+
+这是上一课 `dangling.c` 的正确写法。两者都返回了一个地址，区别在于那个地址指向哪里：栈帧里的局部变量随函数返回而作废，堆块要等到 `free` 才作废。
+
+随之而来的是责任：`new_user` 申请了内存却没有释放，它把这个责任连同指针一起交给了调用者。`main` 用完之后必须 `free(bob)`。谁最后拿着指针，谁负责释放。
+
+## 三、三种内存错误
+
+栈上的内存由系统替你管。堆上的内存由你管，于是多了三种出错的方式。它们的共同点是：**编译能通过，程序也常常「看起来」正常。**
+
+### 1. 释放后使用
+
+<CodeFile file="labs/c-structs-and-heap/uaf.c" mark="7-8" />
+
+<TerminalSession
+  title="free 之后还去读"
+  steps={[
+    {
+      cmd: 'gcc -Wall uaf.c -o uaf',
+      out: 'uaf.c: In function ‘main’:\nuaf.c:8:5: warning: pointer ‘score’ used after ‘free’ [-Wuse-after-free=]\n    8 |     printf("%d\\n", *score);\n      |     ^~~~~~~~~~~~~~~~~~~~~~\nuaf.c:7:5: note: call to ‘free’ here\n    7 |     free(score);\n      |     ^~~~~~~~~~~',
+      note: '这个例子足够简单，编译器看出来了。真实程序里 free 和使用往往隔着好几个函数，编译器就看不出了。',
+    },
+    { cmd: './uaf', out: '…（一个每次运行都不同的数。采集时是 1652380725）', note: '没有崩溃，打印了一个莫名其妙的数。本来存的是 90。' },
+  ]}
+/>
+
+`free` 之后，`score` 里的地址没有变，但那块内存已经还给了系统。系统可能在里面放了自己的管理信息，也可能已经把它分给了程序里别的 `malloc`。继续通过旧指针读写，读到的是别人的数据，写下去改的也是别人的数据。
+
+### 2. 重复释放
+
+<CodeFile file="labs/c-structs-and-heap/dfree.c" mark="7-8" />
+
+<TerminalSession
+  title="同一块内存还了两次"
+  steps={[
+    { cmd: 'gcc dfree.c -o dfree' },
+    { cmd: './dfree', out: 'free(): double free detected in tcache 2\nzsh: abort  ./dfree', note: '这一次 C 库自己发现了，主动中止了程序。它并不总能发现。' },
+    { cmd: 'echo $?', out: '134' },
+  ]}
+/>
+
+（来源：[malloc(3)](#source-man-malloc3)、[signal(7)](#source-man-signal7)）
+
+### 3. 内存泄漏
+
+<CodeFile file="labs/c-structs-and-heap/leak.c" mark="6" note="循环三次，每次申请 100 个字节，从不释放。" />
+
+<TerminalSession
+  title="申请了不还"
+  steps={[
+    { cmd: 'gcc -Wall leak.c -o leak' },
+    { cmd: './leak', out: 'done', note: '没有任何异常。' },
+  ]}
+/>
+
+每一圈循环结束，`block` 这个指针变量就消失了，而它指向的堆块没有人释放，也再没有人知道它的地址。这块内存直到程序退出都被白白占着。一个运行几秒的小程序看不出问题；一个连续运行几个月的服务器程序，每处理一个请求漏一点，迟早把内存耗尽。
+
+### 4. 让工具替你盯着
+
+这三种错误，肉眼和编译器都靠不住。第 22 课用过的 AddressSanitizer 可以在运行时抓住它们：
+
+<TerminalSession
+  title="释放后使用"
+  steps={[
+    { cmd: 'gcc -g -fsanitize=address uaf.c -o uaf', note: '-g 让报告里能显示行号。这次没加 -Wall，所以编译器没有出声。' },
+    {
+      cmd: './uaf',
+      out: '=================================================================\n==419==ERROR: AddressSanitizer: heap-use-after-free on address 0x7b804e5e0010 at pc 0x55586493a253 bp 0x7ffc64fcf110 sp 0x7ffc64fcf108\nREAD of size 4 at 0x7b804e5e0010 thread T0\n    #0 0x55586493a252 in main /home/kali/lab/c/uaf.c:8\n…\n0x7b804e5e0010 is located 0 bytes inside of 4-byte region [0x7b804e5e0010,0x7b804e5e0014)\nfreed by thread T0 here:\n…\n    #1 0x55586493a1fe in main /home/kali/lab/c/uaf.c:7\n…\npreviously allocated by thread T0 here:\n…\n    #1 0x55586493a1b3 in main /home/kali/lab/c/uaf.c:5\n…',
+      note: '报告给了三个行号：第 8 行读了它，第 7 行释放了它，第 5 行申请了它。地址和进程号每次不同。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  title="内存泄漏"
+  steps={[
+    { cmd: 'gcc -g -fsanitize=address leak.c -o leak' },
+    {
+      cmd: './leak',
+      out: 'done\n\n=================================================================\n==425==ERROR: LeakSanitizer: detected memory leaks\n\nDirect leak of 300 byte(s) in 3 object(s) allocated from:\n…\n    #1 0x55894632b1b3 in main /home/kali/lab/c/leak.c:6\n…\nSUMMARY: AddressSanitizer: 300 byte(s) leaked in 3 allocation(s).',
+      note: '程序正常结束之后，它清点了一遍：有 3 块、共 300 字节的内存没有释放，是第 6 行申请的。',
+    },
+  ]}
+/>
+
+（来源：[AddressSanitizer](#source-asan-wiki)、[gcc(1)](#source-man-gcc)）
+
+<DataTable
+  caption="三种内存错误"
+  headers={["名字", "做了什么", "常见表现", "习惯"]}
+  rows={[
+    ["释放后使用", "free 之后还通过旧指针读写", "读到垃圾，或者悄悄改坏别的数据", "free 之后立刻把指针设成 NULL"],
+    ["重复释放", "对同一块内存 free 两次", "被 C 库发现时中止；没发现时堆的内部结构被破坏", "同上。free(NULL) 是安全的，什么都不做"],
+    ["内存泄漏", "malloc 之后没有 free", "没有症状，内存占用越来越高", "每写一个 malloc，同时想好在哪里 free"],
+  ]}
+  columnRatios={[0.8, 1.6, 1.9, 1.9]}
+/>
+
+<Callout variant="warning" title="这三种错误不只是 bug">
+前两种错误的共同点是：程序在使用一块自己已经不拥有的内存，而那块内存里现在放的是什么，取决于程序之后又做了哪些事。下学期会看到，很多严重的安全漏洞就属于这两类。现在的目标是不写出它们，并且在它们出现时认得出来。
+</Callout>
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["error: ‘p’ is a pointer; did you mean to use ‘->’?", "对指针用了点", "照提示改成箭头"],
+    ["warning: pointer ‘…’ used after ‘free’", "free 之后又用了那个指针", "调整顺序：先用完，再 free"],
+    ["free(): double free detected in tcache 2", "同一块内存释放了两次", "free 之后把指针设成 NULL"],
+    ["zsh: segmentation fault，出在 malloc 之后的第一次使用", "malloc 失败返回了 NULL，没有检查", "malloc 之后立刻判断是不是 NULL"],
+    ["堆上的字符串或数组后面出现乱码，或者偶尔崩溃", "申请的字节数少了：忘了乘 sizeof，或者字符串没给结尾的空字符留位置", "malloc(个数 * sizeof(类型))；字符串要 strlen + 1"],
+    ["LeakSanitizer: detected memory leaks", "有 malloc 没有对应的 free", "看报告里的行号，找到那次 malloc，补上 free"],
+  ]}
+  columnRatios={[1.9, 1.6, 1.6]}
+/>
+
+边界：AddressSanitizer 只能发现运行时**实际走到**的错误。一段有问题的代码如果这次没被执行，它就不会报告。它也会让程序变慢、占更多内存，所以只在开发和测试时打开。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'struct user { char name[8]; int level; };', description: '定义结构体类型。结尾有分号。' },
+    { term: 'u.level / p->level', description: '结构体用点，指向结构体的指针用箭头。' },
+    { term: 'malloc(n * sizeof(int))', description: '在堆上申请 n 个 int 的内存，返回地址；失败返回 NULL。' },
+    { term: 'free(p); p = NULL;', description: '归还，然后把指针清掉。' },
+    { term: '栈 / 堆', description: '自动分配、随函数返回消失 / 手动申请、free 才消失。' },
+    { term: '释放后使用', description: 'free 之后还用旧指针。' },
+    { term: '重复释放', description: '同一块内存 free 两次。' },
+    { term: '内存泄漏', description: 'malloc 了没有 free。' },
+    { term: 'gcc -g -fsanitize=address', description: '运行时报告上面三种错误，给出行号。' },
+  ]}
+/>
+
+<KeyTakeaway>
+结构体把相关的数据捆成一个类型，本体用点、指针用箭头访问成员。堆是栈之外的另一块内存：`malloc` 申请、`free` 归还，大小可以在运行时决定，也不随函数返回而消失，但只能通过指针访问，并且要自己负责释放。由此产生三种错误：释放后使用、重复释放、内存泄漏。它们编译时不报错，运行时常常没有症状，要靠 `-fsanitize=address` 这样的工具来发现。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

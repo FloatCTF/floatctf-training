@@ -1,9 +1,9 @@
-import { useEffect, useId, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import { useId, useRef, useState } from 'react';
 import {
   useMotionPresentation,
   type MotionLevel,
 } from './motion-utils';
+import { useGsapTween } from './motion-gsap';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -79,6 +79,7 @@ const GRID_Y = 66;
 export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
+  const maskId = useId();
   const [headId, setHeadId] = useState<string>('semantic');
   const [focus, setFocus] = useState(5);
 
@@ -94,19 +95,14 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
   const reason = head.id === 'semantic' ? (FOCUS_REASONS[TOKENS[focus]] ?? GENERIC_REASON) : head.note;
   const rowWeights = head.weights[focus];
 
-  useEffect(() => {
-    if (!root.current || !interactive) return undefined;
-    const cells = root.current.querySelectorAll('[data-at-cell]');
-    if (cells.length === 0) return undefined;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        `[data-at-row='${focus}'] [data-at-cell]`,
-        { opacity: 0.35 },
-        { opacity: 1, duration: 0.26, stagger: 0.03, ease: 'power2.out' },
-      );
-    }, root.current);
-    return () => context.revert();
-  }, [focus, headId, interactive]);
+  useGsapTween(
+    root,
+    interactive,
+    `[data-at-row='${focus}'] [data-at-cell]`,
+    { opacity: 0.35 },
+    { opacity: 1, duration: 0.26, stagger: 0.03, ease: 'power2.out' },
+    [focus, headId],
+  );
 
   return (
     <section
@@ -158,6 +154,10 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
 
       <figure className="at-matrix__figure">
         <svg viewBox="0 0 470 452" role="img" aria-label={`${N}×${N} 因果注意力热力矩阵，行是 Query，列是 Key，右上三角被因果遮罩屏蔽`}>
+          <defs><pattern id={maskId} width="6" height="6" patternUnits="userSpaceOnUse">
+            <rect width="6" height="6" fill="var(--training-surface-bg)" />
+            <path d="M-1 1L1-1M0 6L6 0M5 7L7 5" stroke="var(--training-muted)" strokeWidth="1" />
+          </pattern></defs>
           <title>QKᵀ 注意力热力矩阵</title>
           <text className="at-axis-label" x={GRID_X + (N * CELL) / 2} y="20" textAnchor="middle">Key（被看的位置）→</text>
           <text className="at-axis-label" x="16" y={GRID_Y + (N * CELL) / 2} textAnchor="middle" transform={`rotate(-90 16 ${GRID_Y + (N * CELL) / 2})`}>Query（发问的位置）→</text>
@@ -192,6 +192,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
                     <rect
                       key={`m-${row}-${col}`}
                       className="at-cell at-cell--masked"
+                      style={{ fill: `url(#${maskId})` }}
                       x={GRID_X + col * CELL}
                       y={GRID_Y + row * CELL}
                       width={CELL - 2}
@@ -238,6 +239,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
         <figcaption>
           颜色越深权重越高；选中行内标出百分比。右上三角的斜纹格子是因果遮罩：写第 t 个词时看不到后面的词。
           第 1 行（第一个词）只能看自己，权重 100% 落在自己身上。
+          <span className="chart-scroll-hint">横向滑动查看完整矩阵；选中行的全部百分比与屏蔽状态列在图下。</span>
         </figcaption>
       </figure>
 
@@ -258,7 +260,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
               <span className="attention-token__track" aria-hidden="true">
                 <span className="attention-token__fill" style={{ inlineSize: `${Math.max(weight * 100, 2)}%` }} />
               </span>
-              <span className="attention-token__value">{index <= focus && weight > 0 ? `${Math.round(weight * 100)}%` : ''}</span>
+              <span className="attention-token__value">{index <= focus ? `${Math.round(weight * 100)}%` : '屏蔽'}</span>
             </div>
           );
         })}

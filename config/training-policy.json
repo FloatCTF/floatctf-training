@@ -1,5 +1,4 @@
 {
-  "schemaVersion": 1,
   "defaults": {
     "language": "zh-CN",
     "address": "你",
@@ -16,8 +15,13 @@
     },
     "motionLevel": "explanatory",
     "securityScope": "authorized-lab",
-    "securityAssessments": ["interview", "lab-check"],
-    "generalAssessments": ["exercise"]
+    "securityAssessments": [
+      "interview",
+      "lab-check"
+    ],
+    "generalAssessments": [
+      "exercise"
+    ]
   },
   "runtimeQuestions": {
     "maxCount": 3
@@ -36,7 +40,12 @@
     "minQuestions": 8,
     "maxQuestions": 12,
     "minPerLevel": 2,
-    "levels": [1, 2, 3, 4]
+    "levels": [
+      1,
+      2,
+      3,
+      4
+    ]
   },
   "evidence": {
     "security": {
@@ -109,13 +118,62 @@
     "comparison",
     "troubleshooting"
   ],
-  "evidenceProfiles": ["security", "academic", "versioned-tool", "stable-technical"],
-  "sourceKinds": ["cve", "advisory", "incident", "paper", "specification", "textbook", "university-course", "official-doc", "release-note", "interview-report"],
-  "assessments": ["interview", "quiz", "exercise", "lab-check", "project", "none"],
-  "difficultyLevels": ["beginner", "intermediate", "advanced"],
-  "motionLevels": ["static", "subtle", "explanatory", "simulation"],
-  "topicStatuses": ["completed", "planned"],
-  "researchStatuses": ["complete", "partial", "blocked"],
-  "safetyScopes": ["authorized-lab", "localhost", "ctf", "not-applicable"],
-  "qaStatuses": ["pass", "fail", "not-applicable", "not-run"]
+  "evidenceProfiles": [
+    "security",
+    "academic",
+    "versioned-tool",
+    "stable-technical"
+  ],
+  "sourceKinds": [
+    "cve",
+    "advisory",
+    "incident",
+    "paper",
+    "specification",
+    "textbook",
+    "university-course",
+    "official-doc",
+    "release-note",
+    "interview-report"
+  ],
+  "assessments": [
+    "interview",
+    "quiz",
+    "exercise",
+    "lab-check",
+    "project",
+    "none"
+  ],
+  "difficultyLevels": [
+    "beginner",
+    "intermediate",
+    "advanced"
+  ],
+  "motionLevels": [
+    "static",
+    "subtle",
+    "explanatory",
+    "simulation"
+  ],
+  "topicStatuses": [
+    "completed",
+    "planned"
+  ],
+  "researchStatuses": [
+    "complete",
+    "partial",
+    "blocked"
+  ],
+  "safetyScopes": [
+    "authorized-lab",
+    "localhost",
+    "ctf",
+    "not-applicable"
+  ],
+  "qaStatuses": [
+    "pass",
+    "fail",
+    "not-applicable",
+    "not-run"
+  ]
 }

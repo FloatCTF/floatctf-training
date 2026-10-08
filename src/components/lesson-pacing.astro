@@ -1,0 +1,15 @@
+---
+interface Segment { kind: string; title: string; heading: string; minutes: number; checkpoint: string }
+interface Props { segments: Segment[] }
+const { segments } = Astro.props;
+const headings = (Astro.locals as unknown as { starlightRoute: { headings: { depth: number; slug: string; text: string }[] } }).starlightRoute.headings;
+---
+<nav class="lesson-pacing not-content" aria-label="分段学习安排">
+  <p><strong>分三段学习</strong> · 用时为建议，含本段阅读与检查。</p>
+  <ol>
+    {segments.map((segment) => {
+      const heading = headings.find((item) => item.depth === 2 && item.text.startsWith(segment.heading));
+      return <li><a href={heading ? `#${heading.slug}` : '#_top'}>{segment.kind} · {segment.title} · {segment.minutes} 分钟</a><span>检查点：{segment.checkpoint}</span></li>;
+    })}
+  </ol>
+</nav>

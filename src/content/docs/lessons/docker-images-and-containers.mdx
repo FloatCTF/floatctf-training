@@ -1,0 +1,300 @@
+---
+title: Docker 一：镜像、容器、端口与卷
+description: 弄清镜像、容器和镜像仓库，安装 Docker 并用 run、ps、logs、exec、rm 管理容器，用 -p 发布端口，用绑定挂载和卷把数据放到容器外面
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import NestedLayers from '../../../components/nested-layers.astro';
+import manifest from '../../../data/lessons/docker-images-and-containers.json';
+
+export const layers = [
+  { role: 'HOST / 你的电脑', name: 'Windows', detail: '第 1 课的最外层。' },
+  { role: 'HYPERVISOR / 虚拟机软件', name: 'VMware Workstation', detail: '模拟出一整台电脑。' },
+  { role: 'GUEST / 客户机', name: 'Kali Linux', detail: '一整套操作系统，有自己的内核。Docker 装在这一层。' },
+  { role: 'CONTAINERS / 容器', name: 'nginx、PHP、数据库……', detail: '每个容器是 Kali 里一个隔离开的进程，带着自己的一套文件，但共用 Kali 的内核。启动只要一两秒。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用 nginx:alpine 把 ~/lab/docker/notes 发布到 9090 端口，改文件后不重启容器也能看到新内容。' },
+  { title: '进容器里看看', detail: '起一个 nginx:alpine 容器，用 docker exec -it 容器名 sh 进到它里面，执行 ls /、ps、cat /etc/os-release，然后 exit。写下你看到的和 Kali 有什么不同。' },
+  { title: '清点自己的 Docker', detail: '执行 docker images、docker ps -a、docker volume ls，把不再需要的容器、卷删掉。说出 docker rm 和 docker rmi 各删的是什么。' },
+  { title: '读一页官方文档', detail: '读 Docker 官方的 What is a container?，用三句话说明容器和第 1 课的虚拟机有什么不同。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="DOCKER / LESSON 33"
+  kicker="Images, Containers, Ports, Volumes"
+  lines={[
+    { text: "Docker 一" },
+    { text: "镜像、容器、端口与卷", accent: true },
+  ]}
+  summary="下学期的每个靶场都是一套要装好几样软件、配好几处设置的环境。手工搭一次要一下午，搭坏了还得重来。Docker 把这样的环境打包成一个镜像，一条命令就能跑起来，用完删掉也不留痕迹。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：怎样把一个环境原样交给别人
+
+这学期你在 Kali 里装过 PHP、SQLite 驱动、gdb，每装一样就多一条命令。假设社团要给三十个人发一个练习环境：一个特定版本的 PHP、一个数据库、几份配置文件。
+
+让每个人照着文档自己装，总有人版本不对、漏了一步、改错了配置。第 1 课的虚拟机能解决这个问题，可是一个虚拟机动辄几个 GB，启动一次要一分钟。
+
+Docker 的做法是：把环境做成一个**镜像**，大家拿到同一个镜像，各自运行出一个**容器**。容器里的东西和做镜像的人那里一模一样，启动只要一两秒。
+
+## 一、镜像、容器与仓库
+
+### 1. 三个词
+
+<DataTable
+  caption="Docker 的三个基本概念"
+  headers={["词", "是什么", "类比"]}
+  rows={[
+    ["镜像", "一个只读的模板：一套文件加上「启动时运行什么」。做好之后不能修改", "第 19 课编译出来的可执行文件"],
+    ["容器", "由镜像运行起来的一个隔离的进程。可以有很多个，各自独立", "运行那个可执行文件得到的进程"],
+    ["镜像仓库", "存放和分享镜像的地方。默认是 Docker Hub", "软件源，apt 从那里下载软件"],
+  ]}
+  columnRatios={[0.7, 2.8, 1.8]}
+/>
+
+（来源：[What is a container?](#source-dk-container)、[What is an image?](#source-dk-image)、[What is a registry?](#source-dk-registry)）
+
+### 2. 容器和虚拟机
+
+<NestedLayers
+  eyebrow="LAYERS / 再往里一层"
+  title="容器在第 1 课那张图的哪里"
+  layers={layers}
+  note="虚拟机模拟的是一整台电脑，里面要装一整套操作系统；容器只是一个被隔离开的进程，借用所在系统的内核。"
+/>
+
+Docker 官方的说法：虚拟机是一整套操作系统，有自己的内核、驱动和程序；容器只是一个带着运行所需文件的隔离进程，多个容器共用同一个内核。所以容器小、启动快，一台机器上能同时跑很多个。（来源：[What is a container?](#source-dk-container)）
+
+### 3. 安装
+
+Kali 默认没有装 Docker。在虚拟机里执行：
+
+<TerminalSession
+  replay="skip"
+  title="安装 Docker（只需一次）"
+  steps={[
+    { cmd: 'sudo apt install -y docker.io docker-buildx docker-compose', note: 'docker.io 是 Docker 本身，另外两个下一课用。' },
+    { cmd: 'sudo usermod -aG docker $USER', note: '把自己加进 docker 组，以后不用每条命令都加 sudo。' },
+  ]}
+/>
+
+加完组之后，**注销再重新登录**（或者重启虚拟机），新的组才会生效。没生效时会看到 `permission denied while trying to connect to the Docker daemon socket`。
+
+<Callout variant="warning" title="docker 组等于 root">
+Docker 官方文档明确写着：docker 组相当于授予了 root 级别的权限。能使用 Docker 的人，可以让容器挂载系统的任何目录。在自己的练习虚拟机里这样配置没有问题；在多人共用的服务器上，不要随手把人加进 docker 组。
+</Callout>
+
+（来源：[Linux post-installation steps](#source-dk-postinstall)）
+
+### 4. 第一个容器
+
+<TerminalSession
+  title="确认装好了，跑一个最小的镜像"
+  steps={[
+    { cmd: "docker version --format '{{.Client.Version}} {{.Server.Version}}'", out: '28.5.2+dfsg4 28.5.2+dfsg4', note: '前一个是命令行客户端的版本，后一个是后台守护进程的版本。两个都出来，说明连上了。' },
+    {
+      cmd: 'docker run hello-world',
+      out: "Unable to find image 'hello-world:latest' locally\n…（下载镜像的进度，这里省略）\n\nHello from Docker!\nThis message shows that your installation appears to be working correctly.\n…（后面是一段说明）",
+      note: '本地没有这个镜像，Docker 先去 Docker Hub 下载，再用它运行一个容器。容器打印完这段话就结束了。',
+    },
+    { cmd: "docker images --format '{{.Repository}}:{{.Tag}}'", out: 'hello-world:latest', note: '镜像留在了本地，下次运行不用再下载。冒号后面是标签，通常表示版本，没写就是 latest。' },
+    { cmd: "docker ps -a --format '{{.Image}}\\t{{.State}}'", out: 'hello-world\texited', note: '容器也还在，只是已经退出了。' },
+  ]}
+/>
+
+`hello-world` 打印出来的那段说明，把刚才发生的事写得很清楚：客户端联系守护进程，守护进程从 Docker Hub 拉取镜像，用镜像创建一个容器运行，把容器的输出送回你的终端。
+
+## 二、容器的一生
+
+### 1. 在后台跑一个网站
+
+<TerminalSession
+  title="启动 nginx，发布到本机 8080 端口"
+  steps={[
+    {
+      cmd: 'docker run -d --name web -p 8080:80 nginx:alpine',
+      out: "Unable to find image 'nginx:alpine' locally\n…（下载镜像的进度）\n7d0e92f361c670ed712fc1dec552087e82dc3e88dc0c3fda75c2b88e102bb796",
+      note: 'nginx 是一个网页服务器，alpine 版的镜像很小。最后一行是容器的编号，你的不一样。',
+    },
+    { cmd: "docker ps --format 'table {{.Names}}\\t{{.Image}}\\t{{.Ports}}'", out: 'NAMES     IMAGE          PORTS\nweb       nginx:alpine   0.0.0.0:8080->80/tcp, [::]:8080->80/tcp', note: 'PORTS 一栏：本机 8080 端口转发到容器的 80 端口。' },
+    { cmd: "curl -s http://127.0.0.1:8080/ | grep title", out: '<title>Welcome to nginx!</title>' },
+  ]}
+/>
+
+<DataTable
+  caption="docker run -d --name web -p 8080:80 nginx:alpine"
+  headers={["部分", "含义"]}
+  rows={[
+    ["-d", "在后台运行，终端马上回来。不加的话，容器会占着当前终端"],
+    ["--name web", "给容器起名字，之后用名字操作它。不起名字，Docker 会随机起一个"],
+    ["-p 8080:80", "本机端口:容器端口。冒号左边是你访问的，右边是容器里程序监听的"],
+    ["nginx:alpine", "用哪个镜像"],
+  ]}
+  columnRatios={[1, 4]}
+/>
+
+容器有自己独立的网络，里面的 nginx 监听的是容器自己的 80 端口，外面默认访问不到。`-p` 在隔离上开了一个口子：发到本机 8080 端口的请求，转发给容器的 80 端口。第 13 课讲的地址和端口在这里全都用上了。（来源：[Publishing and exposing ports](#source-dk-publishing)、[docker container run](#source-dk-run)）
+
+### 2. 看日志，进去执行命令
+
+<TerminalSession
+  title="容器里发生了什么"
+  steps={[
+    { cmd: 'docker logs web 2>/dev/null | tail -n 1', out: '172.18.0.1 - - [02/Oct/2026:14:35:43 +0000] "GET / HTTP/1.1" 200 896 "-" "curl/8.21.0" "-"', note: '刚才那次 curl 的访问日志。和第 3 课分析过的 access.log 是同一种格式。开头的地址和时间与你的不同。' },
+    { cmd: 'docker exec web cat /etc/os-release | head -n 1', out: 'NAME="Alpine Linux"', note: '在容器里执行一条命令。容器里是另一个 Linux 发行版，但它用的仍然是 Kali 的内核。' },
+  ]}
+/>
+
+（来源：[docker container logs](#source-dk-logs)、[docker container exec](#source-dk-exec)）
+
+### 3. 删掉容器，改动也没了
+
+<TerminalSession
+  title="在容器里改首页，然后重建容器"
+  steps={[
+    { cmd: "docker exec web sh -c 'echo hello from inside > /usr/share/nginx/html/index.html'" },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: 'hello from inside', note: '首页被改了。' },
+    { cmd: 'docker rm -f web', out: 'web', note: 'rm 删除容器，-f 表示正在运行也强制删。' },
+    { cmd: 'docker run -d --name web -p 8080:80 nginx:alpine', out: 'aae24181b1066c73727ac7ed5146e2474b3378e1beee5608315dbde94ae7df64', note: '这次没有下载：镜像已经在本地了。' },
+    { cmd: "curl -s http://127.0.0.1:8080/ | grep title", out: '<title>Welcome to nginx!</title>', note: '又是默认首页。' },
+    { cmd: 'docker rm -f web', out: 'web' },
+  ]}
+/>
+
+镜像是只读的。容器运行时对文件的改动，记在这个容器自己的一层里；删除容器，这一层也随之删除。新容器又从原封不动的镜像开始。这是 Docker 好用的地方：环境搞乱了，删掉重来就是干净的。但它也意味着：**要留下来的数据，不能只放在容器里。**（来源：[Persisting container data](#source-dk-persisting)、[What is an image?](#source-dk-image)）
+
+## 三、数据放在容器外面
+
+### 1. 绑定挂载：用本机的目录
+
+<TerminalSession
+  title="把本机的目录挂进容器"
+  steps={[
+    { cmd: 'mkdir -p ~/lab/docker/site' },
+    { cmd: 'cd ~/lab/docker' },
+    { cmd: "echo '<h1>my site</h1>' > site/index.html" },
+    { cmd: 'docker run -d --name web -p 8080:80 -v ~/lab/docker/site:/usr/share/nginx/html:ro nginx:alpine', out: '1ddec42e1e843b3e3643f2819c4fe7a9e751dd4cd81a297430fb07b4f0d2f402', note: '-v 本机目录:容器里的目录。末尾的 :ro 表示容器只能读不能写。' },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: '<h1>my site</h1>' },
+    { cmd: "echo '<h1>my site, edited</h1>' > site/index.html", note: '在本机改文件。' },
+    { cmd: 'curl -s http://127.0.0.1:8080/', out: '<h1>my site, edited</h1>', note: '容器里立刻看到了，不用重启。' },
+  ]}
+/>
+
+**绑定挂载**把本机的一个目录直接挂到容器里的某个位置，两边看到的是同一份文件。写代码时很方便：在本机用编辑器改，容器里马上生效；容器删掉，文件还在本机。（来源：[Bind mounts](#source-dk-bind-mounts)、[Sharing local files](#source-dk-sharing)）
+
+### 2. 卷：交给 Docker 保管
+
+<TerminalSession
+  title="两个容器先后用同一个卷"
+  steps={[
+    { cmd: 'docker volume create notes', out: 'notes' },
+    { cmd: "docker run --rm -v notes:/data nginx:alpine sh -c 'echo first note > /data/notes.txt'", note: '--rm 让这个容器执行完就自动删除。它往卷里写了一个文件。' },
+    { cmd: 'docker run --rm -v notes:/data nginx:alpine cat /data/notes.txt', out: 'first note', note: '另一个全新的容器挂上同一个卷，读到了刚才写的内容。' },
+    { cmd: "docker volume ls --format '{{.Name}}'", out: 'notes' },
+  ]}
+/>
+
+**卷**是由 Docker 创建和管理的一块存储，写法和绑定挂载一样，冒号左边写卷的名字而不是路径。它不属于任何容器，容器删了它还在。数据库的数据文件通常放在卷里。（来源：[Volumes](#source-dk-volumes)）
+
+<DataTable
+  caption="两种把数据放到容器外面的方式"
+  headers={["", "绑定挂载", "卷"]}
+  rows={[
+    ["写法", "-v /本机/路径:/容器里的路径", "-v 卷名:/容器里的路径"],
+    ["数据在哪", "本机你指定的目录", "Docker 自己的存储目录"],
+    ["适合", "代码、配置：要在本机直接编辑的东西", "数据库文件这类程序自己读写的数据"],
+  ]}
+  columnRatios={[0.6, 2, 2]}
+/>
+
+## 常见报错与排错
+
+<TerminalSession
+  title="名字被占用，端口被占用"
+  steps={[
+    {
+      cmd: 'docker run -d --name web -p 8080:80 nginx:alpine',
+      out: "docker: Error response from daemon: Conflict. The container name \"/web\" is already in use by container \"1ddec42e1e843b3e3643f2819c4fe7a9e751dd4cd81a297430fb07b4f0d2f402\". You have to remove (or rename) that container to be able to reuse that name.\n\nRun 'docker run --help' for more information",
+      note: '上一节的 web 还在运行。',
+    },
+    {
+      cmd: 'docker run -d -p 8080:80 nginx:alpine',
+      out: "05a851559ce7b69082836489edbea739c9a82606aee54e88f6252723ac7ca2b1\ndocker: Error response from daemon: failed to set up container networking: driver failed programming external connectivity on endpoint serene_panini (a81b09a91cc900d760276807b3a8a066a6cdf8344b3e2ef2c0628ed1615d8f9a): Bind for 0.0.0.0:8080 failed: port is already allocated\n\nRun 'docker run --help' for more information",
+      note: '不给名字就不会撞名，但 8080 端口已经发布给了 web。注意第一行：容器其实已经创建了，只是没能启动。',
+    },
+    { cmd: "docker ps -a --format '{{.Image}}\\t{{.State}}'", out: 'nginx:alpine\tcreated\nnginx:alpine\trunning\nhello-world\texited' },
+    { cmd: 'docker container prune -f', out: 'Deleted Containers:\n05a851559ce7b69082836489edbea739c9a82606aee54e88f6252723ac7ca2b1\nfa09a824e8f4c462c0f14745c57bc4db5bff2df9da49e79b3702dac23e865dea\n\nTotal reclaimed space: 0B', note: '删掉所有没在运行的容器：刚才那个 created 的，和最早的 hello-world。' },
+    { cmd: 'docker rm -f web', out: 'web' },
+    { cmd: 'docker volume rm notes', out: 'notes' },
+    { cmd: 'docker ps -a', out: 'CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES', note: '一个容器都不剩。镜像还在，docker images 可以看到。' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答", "原因", "处理"]}
+  rows={[
+    ["permission denied while trying to connect to the Docker daemon socket", "当前用户不在 docker 组里，或者加了组还没重新登录", "sudo usermod -aG docker $USER，然后注销重新登录"],
+    ["Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?", "守护进程没启动", "sudo systemctl start docker"],
+    ["Conflict. The container name \"/web\" is already in use", "同名的容器已经存在，不管是否在运行", "docker rm -f web 删掉旧的，或者换个名字"],
+    ["Bind for 0.0.0.0:8080 failed: port is already allocated", "本机这个端口已经发布给了别的容器", "换一个本机端口，或者停掉占着它的容器"],
+    ["curl: (7) Failed to connect", "-p 写反了，或者访问的是容器端口而不是本机端口", "看 docker ps 的 PORTS 一栏，箭头左边才是本机端口"],
+    ["拉取镜像很慢或失败", "访问 Docker Hub 的网络不通", "检查虚拟机能否上网；必要时按社团提供的方式配置镜像加速"],
+  ]}
+  columnRatios={[2.1, 1.7, 1.7]}
+/>
+
+边界：容器的隔离不等于虚拟机的隔离。容器共用宿主的内核，以特权方式运行或者挂载了敏感目录的容器，能影响到宿主。下学期跑来路不明的靶场镜像时，放在练习虚拟机里运行，不要放在自己的主力系统上。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'docker run -d --name 名字 -p 本机:容器 镜像', description: '在后台运行一个容器并发布端口。' },
+    { term: 'docker ps / docker ps -a', description: '运行中的容器 / 全部容器。' },
+    { term: 'docker logs 名字', description: '看容器的输出。' },
+    { term: 'docker exec 名字 命令 / docker exec -it 名字 sh', description: '在容器里执行一条命令 / 进到容器里。' },
+    { term: 'docker rm -f 名字', description: '删除容器。' },
+    { term: 'docker images / docker rmi 镜像', description: '本地的镜像 / 删除镜像。' },
+    { term: '-v /本机/目录:/容器/目录[:ro]', description: '绑定挂载。' },
+    { term: 'docker volume create 卷名 / -v 卷名:/容器/目录', description: '创建卷 / 挂载卷。' },
+    { term: 'docker container prune -f', description: '删掉所有已停止的容器。' },
+    { term: 'docker 组', description: '等于 root 权限。' },
+  ]}
+/>
+
+<KeyTakeaway>
+镜像是只读的环境模板，容器是由镜像运行起来的隔离进程，镜像仓库存放和分享镜像。容器共用宿主的内核，所以比虚拟机小得多、快得多。`docker run` 加 `-p` 把容器的端口发布到本机，`ps`、`logs`、`exec`、`rm` 管理容器的一生。容器删除时，它在镜像之上做的改动也一起消失；要保留的数据用绑定挂载放在本机目录，或者放进由 Docker 管理的卷。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 40 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

@@ -1,0 +1,14 @@
+---
+// 滚动进入视口时的一次性淡入：纯 CSS（view timeline 渐进增强），不依赖 JavaScript。
+// motionLevel 为 subtle/static 时不做动画，保持与动效预算一致。
+interface Props {
+  motionLevel?: 'subtle' | 'explanatory' | 'simulation';
+  label?: string;
+}
+
+const { motionLevel = 'explanatory', label = '补充说明' } = Astro.props;
+---
+
+<div class="scroll-reveal" data-motion-level={motionLevel} aria-label={label}>
+  <slot />
+</div>

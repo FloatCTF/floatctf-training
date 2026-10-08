@@ -1,5 +1,6 @@
 ---
-import catalog from '../data/catalog.json';
+import { findCategory, findTopic } from '../data/catalog';
+import { withBase } from '../lib/base-url';
 import { Icon } from '@astrojs/starlight/components';
 
 interface Heading {
@@ -8,17 +9,10 @@ interface Heading {
   text: string;
 }
 
-interface CatalogTopic {
-  id: string;
-  categoryId: string;
-  title: string;
-  status: 'completed' | 'planned';
-}
-
 interface RouteData {
   entry: {
+    id: string;
     data: {
-      lessonId?: string;
       title: string;
     };
   };
@@ -37,12 +31,9 @@ interface Props {
 const { variant = 'standalone' } = Astro.props;
 
 const route = (Astro.locals as unknown as { starlightRoute: RouteData }).starlightRoute;
-const lessonId = route.entry.data.lessonId;
-const catalogTopics = catalog.topics as CatalogTopic[];
-const topic = catalogTopics.find((item) => item.id === lessonId && item.status === 'completed');
-const category = catalog.categories.find((item) => item.id === topic?.categoryId);
-const base = import.meta.env.BASE_URL === '/' ? '' : import.meta.env.BASE_URL.replace(/\/$/, '');
-const withBase = (pagePath: string) => `${base}${pagePath}`;
+const lessonId = String(route.entry.id).replace(/^lessons\//, '');
+const topic = findTopic(lessonId);
+const category = topic ? findCategory(topic.categoryId) : undefined;
 
 const sections: OutlineSection[] = [];
 for (const heading of route.headings.filter((item) => item.depth === 2 || item.depth === 3)) {
@@ -83,11 +74,13 @@ for (const heading of route.headings.filter((item) => item.depth === 2 || item.d
                 {section.heading.text}
               </a>
               {section.children.length > 0 && (
+                <details class="lesson-outline-subsections"><summary>展开本章小节</summary>
                 <ol>
                   {section.children.map((heading) => (
                     <li><a href={`#${heading.slug}`}>{heading.text}</a></li>
                   ))}
                 </ol>
+                </details>
               )}
             </li>
           ))}
@@ -100,6 +93,18 @@ for (const heading of route.headings.filter((item) => item.depth === 2 || item.d
 <script>
   document.querySelectorAll<HTMLDetailsElement>('[data-lesson-outline]').forEach((outline) => {
     const summary = outline.querySelector('summary');
+    const links = Array.from(outline.querySelectorAll<HTMLAnchorElement>('.lesson-outline-section'));
+    const headings = links.map((link) => document.getElementById(decodeURIComponent(link.hash.slice(1))));
+    const updateCurrent = () => {
+      let current = 0;
+      headings.forEach((heading, index) => { if (heading && heading.getBoundingClientRect().top <= 140) current = index; });
+      links.forEach((link, index) => {
+        if (index === current) link.setAttribute('aria-current', 'location'); else link.removeAttribute('aria-current');
+      });
+    };
+    const observer = new IntersectionObserver(updateCurrent, { rootMargin: '-100px 0px -65% 0px' });
+    headings.forEach((heading) => { if (heading) observer.observe(heading); });
+    updateCurrent();
     outline.querySelectorAll('a').forEach((link) => {
       link.addEventListener('click', () => {
         outline.open = false;

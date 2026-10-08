@@ -1,0 +1,393 @@
+{
+  "lessonPlan": {
+    "audience": "已经写过若干 Python 脚本、还没用过版本管理的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "文件在工作区、暂存区和仓库三个区之间的流动：逐条执行 git init、add、commit，观察同一个文件的状态怎样变化、提交怎样连成一条链、分支名怎样跟着移动",
+    "learningObjectives": [
+      "说出 Git 记录的是什么，以及提交、仓库、工作区、暂存区各指什么",
+      "完成首次配置，用 git init 建立仓库",
+      "用 git status 判断每个文件处于哪种状态，读懂它给出的提示",
+      "用 git add 和 git commit 记录改动，写出说明做了什么的提交信息",
+      "用 git log、git diff 和 git show 查看历史与改动",
+      "用 git restore 撤销还没提交的改动，用 .gitignore 让 Git 忽略不该提交的文件"
+    ],
+    "prerequisites": [
+      "python-files-and-exceptions",
+      "shell-permissions-and-pipes",
+      "会用 echo 加重定向创建和追加文件"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-01"
+  },
+  "exercises": [
+    {
+      "id": "check-three-areas",
+      "kind": "mechanism",
+      "title": "改了两处，只想提交一处",
+      "question": "你修改了 a.py 和 b.py 两个文件。执行 git add a.py 之后立刻 git commit -m \"Fix a\"。这次提交里包含 b.py 的修改吗？提交之后 git status 会怎样显示 b.py？用三个区的关系解释。",
+      "answer": "不包含。git commit 只把暂存区里的内容存成提交，而 git add a.py 只把 a.py 的修改放进了暂存区，b.py 的修改还停在工作区。提交之后 git status 显示 b.py 是 modified，列在 Changes not staged for commit 下面。暂存区的作用就在这里：它让你自己挑选哪些改动进入下一次提交，一次提交只做一件事。",
+      "sourceIds": [
+        "progit-what-is-git",
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "check-predict-status",
+      "kind": "prediction",
+      "title": "四步之后 git status 显示什么",
+      "question": "在一个干净的仓库里依次执行：echo x >> notes.txt（notes.txt 是已经提交过的文件）、git add notes.txt、echo y >> notes.txt、git status。notes.txt 会出现在 git status 的哪几个分组里？如果此时直接 git commit，提交里的 notes.txt 末尾是 x 还是 x 加 y？",
+      "answer": "notes.txt 会同时出现在两个分组里：Changes to be committed 下一次，Changes not staged for commit 下一次。原因是 git add 放进暂存区的是执行那一刻的文件内容，也就是只加了 x 的版本；之后再追加的 y 只存在于工作区。此时 git commit，提交里的版本末尾只有 x。想把 y 也带上，要再执行一次 git add notes.txt。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "check-first-repo",
+      "kind": "practice",
+      "title": "给 Python 练习建一个仓库",
+      "question": "把 ~/lab/python 变成一个 Git 仓库：初始化；写一个 .gitignore，忽略 .venv/、__pycache__/ 和 report.txt；把其余文件一次性加入并提交，提交信息写清楚这是什么。然后用 git status 和 git log --oneline 自查。",
+      "answer": "参考步骤：cd ~/lab/python；git init；用三条 echo 把 .venv/、__pycache__/、report.txt 各写成 .gitignore 的一行（第一条用 >，后两条用 >>）；git status 确认列表里没有这三项；git add .（点表示当前目录下所有没被忽略的文件）；git commit -m \"Add Python practice scripts\"。自查标准：git status 显示 nothing to commit, working tree clean；git log --oneline 只有一行；ls -a 仍能看到 .venv，说明它留在工作区但没有进仓库。",
+      "sourceIds": [
+        "progit-recording",
+        "gitignore"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "Git 记录的是什么",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出一个文件从改动到进入仓库要经过哪两步。"
+    },
+    {
+      "kind": "动手",
+      "title": "建仓库，做三次提交",
+      "heading": "二、",
+      "minutes": 40,
+      "checkpoint": "git log --oneline 显示三行提交。"
+    },
+    {
+      "kind": "进阶",
+      "title": "撤销与查看旧版本",
+      "heading": "三、",
+      "minutes": 25,
+      "checkpoint": "能把改乱的文件恢复成上一次提交的样子。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-01",
+    "queries": [
+      "Pro Git what is git snapshots three states working tree staging area",
+      "Pro Git first-time git setup user.name user.email init.defaultBranch",
+      "Pro Git recording changes status add commit diff gitignore",
+      "Pro Git undoing things git restore --staged",
+      "git-scm docs git-restore gitignore git-status",
+      "MIT Missing Semester 2026 version control git"
+    ],
+    "notes": "概念讲法参考 Pro Git 前两章与 MIT Missing Semester「先讲数据模型、再讲命令」的顺序，正文与例子自写。全部命令在 kalilinux/kali-rolling 容器（git 2.53.0）里以 kali 用户、交互式 zsh 实际运行，页面输出取自运行记录；重放时固定了提交时间与作者信息，所以提交哈希可以复现，学员自己的哈希会不同，正文已说明。三个区与提交图的数据由 scripts/lab/git-trace.py 执行同一组命令后读取 git 的真实状态生成，哈希与页面一致。"
+  },
+  "versionInfo": {
+    "targetVersion": "Git 2.53.0（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，交互式 zsh，git 2.53.0。重放时固定了提交时间（2026-10-01 10:00 +0800）与作者信息，所以页面上的提交哈希可以复现。",
+    "verifiedAt": "2026-10-01",
+    "knownDifferences": "提交哈希由内容、作者和时间共同决定，学员的哈希与页面不同。git status 的提示文字随 Git 版本略有调整；2.23 之前的版本没有 git restore 和 git switch。全局配置里已有其他条目时，git config --global --list 会多出几行。"
+  },
+  "sources": [
+    {
+      "id": "progit-what-is-git",
+      "kind": "textbook",
+      "title": "Pro Git: 1.3 What is Git?",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Getting-Started-What-is-Git%3F",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-snapshots",
+        "claim-three-states",
+        "claim-only-adds-data",
+        "cmd-log-oneline"
+      ]
+    },
+    {
+      "id": "progit-setup",
+      "kind": "textbook",
+      "title": "Pro Git: 1.6 First-Time Git Setup",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-identity",
+        "cmd-git-version",
+        "cmd-config-identity"
+      ]
+    },
+    {
+      "id": "progit-recording",
+      "kind": "textbook",
+      "title": "Pro Git: 2.2 Recording Changes to the Repository",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Recording-Changes-to-the-Repository",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-tracked-untracked",
+        "claim-git-add",
+        "claim-git-diff",
+        "claim-gitignore",
+        "claim-commit-snapshot-of-staging",
+        "cmd-status-untracked",
+        "cmd-commit"
+      ]
+    },
+    {
+      "id": "progit-undoing",
+      "kind": "textbook",
+      "title": "Pro Git: 2.4 Undoing Things",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/book/en/v2/Git-Basics-Undoing-Things",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "Pro Git 第二版由 Scott Chacon 与 Ben Straub 撰写、Apress 出版，在线版持续修订，以 CC BY-NC-SA 3.0 授权；页面未标注逐章修订日期，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-restore",
+        "claim-restore-dangerous",
+        "cmd-restore"
+      ]
+    },
+    {
+      "id": "git-status",
+      "kind": "official-doc",
+      "title": "Git Reference: git-status",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/git-status",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的手册页，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-git-status",
+        "cmd-status-untracked"
+      ]
+    },
+    {
+      "id": "git-restore",
+      "kind": "official-doc",
+      "title": "Git Reference: git-restore",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/git-restore",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的手册页，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-restore",
+        "cmd-restore"
+      ]
+    },
+    {
+      "id": "gitignore",
+      "kind": "official-doc",
+      "title": "Git Reference: gitignore",
+      "publisher": "git-scm.com",
+      "url": "https://git-scm.com/docs/gitignore",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "持续更新的手册页，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-gitignore"
+      ]
+    },
+    {
+      "id": "missing-semester-git",
+      "kind": "university-course",
+      "title": "The Missing Semester of Your CS Education (2026): Version Control and Git",
+      "publisher": "MIT",
+      "url": "https://missing.csail.mit.edu/2026/version-control/",
+      "publishedAt": "2026-10-01",
+      "accessedAt": "2026-10-01",
+      "dateType": "snapshot",
+      "notes": "课程页面未标注发布日期，publishedAt 记录核验快照日期。内容以 CC BY-NC-SA 授权；本课只参考其「先讲数据模型、再讲命令」的顺序。",
+      "supports": [
+        "claim-course-order"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-snapshots",
+      "text": "Git 把数据看作一系列快照：每次提交时，它记下当时所有文件的样子并保存一个指向这个快照的引用；没有变化的文件不会重复保存，只保留指向已有内容的链接。",
+      "sourceIds": [
+        "progit-what-is-git"
+      ]
+    },
+    {
+      "id": "claim-three-states",
+      "text": "文件有已修改、已暂存、已提交三种主要状态，对应 Git 项目的三个区域：工作区、暂存区和 Git 目录。基本流程是在工作区修改文件，选择性地暂存要进入下一次提交的改动，然后提交，把暂存区里的文件作为快照永久保存到 Git 目录。",
+      "sourceIds": [
+        "progit-what-is-git"
+      ]
+    },
+    {
+      "id": "claim-identity",
+      "text": "安装 Git 之后首先要设置用户名和邮箱，因为每一次提交都会用到这些信息，并且写进提交之后不可更改。",
+      "sourceIds": [
+        "progit-setup"
+      ]
+    },
+    {
+      "id": "claim-tracked-untracked",
+      "text": "工作目录里的每个文件要么已跟踪、要么未跟踪。已跟踪的文件是上一次快照里有的以及新暂存的文件；其余都是未跟踪的。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-git-add",
+      "text": "git add 是多用途命令：开始跟踪新文件、暂存改动、把冲突的文件标记为已解决。可以把它理解为「把这份内容加入下一次提交」。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-git-status",
+      "text": "git status 显示三类路径：暂存区与当前提交有差异的、工作区与暂存区有差异的、以及工作区里没有被跟踪也没有被忽略的。",
+      "sourceIds": [
+        "git-status"
+      ]
+    },
+    {
+      "id": "claim-git-diff",
+      "text": "git diff 显示还没有暂存的改动具体增删了哪些行；git diff --staged 比较暂存区和上一次提交。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-gitignore",
+      "text": ".gitignore 文件列出希望 Git 忽略的未跟踪文件，每行一个模式；已经被 Git 跟踪的文件不受它影响。",
+      "sourceIds": [
+        "gitignore",
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-restore",
+      "text": "git restore 用恢复源里的内容还原工作区里指定的路径；加 --staged 时还原的是暂存区，也就是取消暂存。",
+      "sourceIds": [
+        "git-restore",
+        "progit-undoing"
+      ]
+    },
+    {
+      "id": "claim-restore-dangerous",
+      "text": "git restore <文件> 是一条危险的命令：对这个文件做的本地改动会全部消失，Git 直接用上一次暂存或提交的版本替换了它。",
+      "sourceIds": [
+        "progit-undoing"
+      ]
+    },
+    {
+      "id": "claim-only-adds-data",
+      "text": "Git 的操作几乎都只是往数据库里添加数据。还没提交的改动可能丢失或弄乱，但快照一旦提交进 Git 就很难丢失。",
+      "sourceIds": [
+        "progit-what-is-git"
+      ]
+    },
+    {
+      "id": "claim-commit-snapshot-of-staging",
+      "text": "提交记录的是暂存区里设定好的快照；没有暂存的改动仍然以已修改的状态留在工作区。git diff 本身只显示尚未暂存的改动。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "claim-course-order",
+      "text": "MIT Missing Semester 的版本控制一讲把版本控制系统定义为跟踪源代码改动、保留修改历史并便于协作的工具。",
+      "sourceIds": [
+        "missing-semester-git"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-git-version",
+      "command": "git --version",
+      "expectedResult": "git version 2.53.0（版本号以实际安装的为准）",
+      "sourceIds": [
+        "progit-setup"
+      ]
+    },
+    {
+      "id": "cmd-config-identity",
+      "command": "git config --global user.name \"Kali Student\"",
+      "expectedResult": "没有输出；之后 git config --global --list 能看到 user.name=Kali Student。",
+      "sourceIds": [
+        "progit-setup"
+      ]
+    },
+    {
+      "id": "cmd-status-untracked",
+      "command": "git status",
+      "expectedResult": "新建文件后显示 Untracked files 分组并列出 portcheck.py；git add 之后改列在 Changes to be committed 下。",
+      "sourceIds": [
+        "git-status",
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "cmd-commit",
+      "command": "git commit -m \"Add port check script\"",
+      "expectedResult": "第一行形如 [main (root-commit) 91ee7f5] Add port check script，随后是 1 file changed, 1 insertion(+)。",
+      "sourceIds": [
+        "progit-recording"
+      ]
+    },
+    {
+      "id": "cmd-log-oneline",
+      "command": "git log --oneline",
+      "expectedResult": "三次提交之后显示三行，最新的在最上面，并标有 (HEAD -> main)。",
+      "sourceIds": [
+        "progit-what-is-git"
+      ]
+    },
+    {
+      "id": "cmd-restore",
+      "command": "git restore portcheck.py",
+      "expectedResult": "没有输出；工作区里对 portcheck.py 的未暂存改动被丢弃，git status 显示 working tree clean。",
+      "sourceIds": [
+        "git-restore",
+        "progit-undoing"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "three-areas",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

@@ -1,44 +1,36 @@
 ---
-import catalog from '../data/catalog.json';
+import { catalog, categoriesByOrder, completedTopics, completedTopicsByCategory, difficultyLabel, findCategory, seriesByCategory, topicsByCategory, type CatalogCategory, type CatalogTopic } from '../data/catalog';
+import { withBase } from '../lib/base-url';
+import { romanNumeral } from '../lib/roman-numeral';
 import { Icon } from '@astrojs/starlight/components';
 
 interface Props { categoryId?: string }
-interface CatalogTopic {
-  id: string;
-  categoryId: string;
-  title: string;
-  summary: string;
-  difficulty: string;
-  status: 'completed' | 'planned';
-  pagePath: string | null;
-  order: number;
-}
 const { categoryId } = Astro.props;
-const catalogTopics = catalog.topics as CatalogTopic[];
-const base = import.meta.env.BASE_URL.endsWith('/') ? import.meta.env.BASE_URL.slice(0, -1) : import.meta.env.BASE_URL;
-const withBase = (pagePath: string) => `${base}${pagePath}`;
-const romanNumerals = ['I', 'II', 'III', 'IV', 'V', 'VI', 'VII', 'VIII'];
-const difficultyLabels: Record<string, string> = {
-  beginner: '入门',
-  intermediate: '中级',
-  advanced: '进阶',
-};
-const categories = catalog.categories
-  .filter((category) => !categoryId || category.id === categoryId)
-  .sort((a, b) => a.order - b.order);
-const completedTotal = catalogTopics.filter((topic) => topic.status === 'completed').length;
+const categories = (categoryId ? [findCategory(categoryId)] : categoriesByOrder()).filter(
+  (category): category is CatalogCategory => Boolean(category),
+).sort((a, b) => Number(completedTopicsByCategory(b.id).length > 0) - Number(completedTopicsByCategory(a.id).length > 0));
+const completedTotal = completedTopics().length;
 const isHomeMap = !categoryId;
+const manifests = import.meta.glob('../data/lessons/*.json', { eager: true, import: 'default' }) as Record<string, { lessonPlan: { durationMinutes: number; audience: string } }>;
+const planFor = (id: string) => manifests[`../data/lessons/${id}.json`]?.lessonPlan;
+const sequenceLabel = (topics: { id: string; status: string; prerequisites: string[] }[]) => {
+  const completed = topics.filter((topic) => topic.status === 'completed');
+  if (completed.length === 0) return topics.length > 0 ? `${topics.length} 课规划中` : '规划中';
+  const chained = completed.every((topic, index) => index === 0 || topic.prerequisites.includes(completed[index - 1].id));
+  if (chained) return `${completed.length} 节已上线 · 按列表顺序学习`;
+  return `${completed.length} 节已上线 · 先修课已标明，其余可按主题选`;
+};
 
 const panelPayload = isHomeMap
   ? categories.map((category) => {
-      const topics = catalogTopics
-        .filter((topic) => topic.categoryId === category.id)
-        .sort((a, b) => a.order - b.order)
+      const topics = topicsByCategory(category.id)
         .map((topic) => ({
           id: topic.id,
           title: topic.title,
+          series: topic.series ?? null,
           summary: topic.summary,
-          difficulty: difficultyLabels[topic.difficulty] || topic.difficulty,
+          difficulty: difficultyLabel(topic.difficulty),
+          duration: planFor(topic.id)?.durationMinutes,
           status: topic.status,
           href: topic.status === 'completed' && topic.pagePath ? withBase(topic.pagePath) : null,
         }));
@@ -46,31 +38,50 @@ const panelPayload = isHomeMap
       return {
         id: category.id,
         name: category.name,
-        summary: category.summary,
-        roman: romanNumerals[category.order - 1] || String(category.order),
+        summary: `${category.summary}${topics[0] && planFor(topics[0].id)?.audience ? ` 适合：${planFor(topics[0].id)?.audience}。` : ''}`,
+        roman: romanNumeral(category.order),
         pagePath: withBase(category.pagePath),
         topicCount: topics.length,
         completed,
+        countLabel: sequenceLabel(topicsByCategory(category.id)),
+        series: seriesByCategory(category.id).map((group) => ({
+          name: group.name,
+          count: group.topics.length,
+          completed: group.topics.filter((topic) => topic.status === 'completed').length,
+        })),
         topics,
       };
     })
   : [];
+
+type DirectoryRow =
+  | { kind: 'series'; name: string; count: number; completed: number }
+  | { kind: 'topic'; topic: CatalogTopic };
+/** 分类页的课程列表：登记了系列的分类在每组前插入一行系列标题。 */
+const directoryRows = (categoryId: string): DirectoryRow[] => {
+  const groups = seriesByCategory(categoryId);
+  if (groups.length === 0) return topicsByCategory(categoryId).map((topic) => ({ kind: 'topic', topic }));
+  return groups.flatMap((group): DirectoryRow[] => [
+    { kind: 'series', name: group.name, count: group.topics.length, completed: group.topics.filter((topic) => topic.status === 'completed').length },
+    ...group.topics.map((topic): DirectoryRow => ({ kind: 'topic', topic })),
+  ]);
+};
 ---
 <div
   class:list={['learning-map', { 'learning-map-single': Boolean(categoryId) }]}
   data-learning-map={isHomeMap ? 'home' : 'category'}
 >
   {categories.map((category) => {
-    const topics = catalogTopics
-      .filter((topic) => topic.categoryId === category.id)
-      .sort((a, b) => a.order - b.order);
+    const topics = topicsByCategory(category.id);
     const completed = topics.filter((topic) => topic.status === 'completed').length;
-    const roman = romanNumerals[category.order - 1] || category.order;
-    const countLabel = `${String(topics.length).padStart(2, '0')} 专题　·　已完成 ${String(completed).padStart(2, '0')}`;
+    const roman = romanNumeral(category.order);
+    const firstTopic = topics.find((topic) => topic.status === 'completed');
+    const firstPlan = firstTopic ? planFor(firstTopic.id) : undefined;
+    const countLabel = sequenceLabel(topics);
 
     return isHomeMap ? (
       <a
-        class="category-directory category-trigger"
+        class:list={['category-directory', 'category-trigger', { 'category-planned': completed === 0 }]}
         href={withBase(category.pagePath)}
         data-category-id={category.id}
         aria-haspopup="dialog"
@@ -82,6 +93,7 @@ const panelPayload = isHomeMap
             <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
             <span class="category-summary">{category.summary}</span>
             <span class="category-count">{countLabel}</span>
+            {firstTopic && <span class="category-count">从《{firstTopic.title}》开始 · {firstPlan?.durationMinutes} 分钟</span>}
           </span>
           <span class="category-toggle" aria-hidden="true"><Icon name="right-arrow" size="1rem" /></span>
         </span>
@@ -92,34 +104,38 @@ const panelPayload = isHomeMap
           <span class="category-number" aria-hidden="true">{roman}</span>
           <span class="category-heading">
             <span class="category-title" id={`category-${category.id}`}>{category.name}</span>
-            <span class="category-summary">{category.summary}</span>
             <span class="category-count">{countLabel}</span>
           </span>
         </div>
         <div class="directory-topics" id={`topics-${category.id}`}>
-          {topics.length > 0 ? topics.map((topic) => topic.status === 'completed' && topic.pagePath ? (
-            <a class="directory-topic directory-topic-completed" href={withBase(topic.pagePath)}>
+          {topics.length > 0 ? directoryRows(category.id).map((row) => row.kind === 'series' ? (
+            <div class="directory-series">
+              <h3>{row.name}</h3>
+              <span>{row.completed} / {row.count} 已上线</span>
+            </div>
+          ) : row.topic.status === 'completed' && row.topic.pagePath ? (
+            <a class="directory-topic directory-topic-completed" href={withBase(row.topic.pagePath)}>
               <span class="directory-topic-copy">
-                <strong>{topic.title}</strong>
-                <span>{topic.summary}</span>
+                <strong>{row.topic.title}</strong>
+                <span>{row.topic.summary}</span>
               </span>
               <span class="directory-topic-meta">
-                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <span>{difficultyLabel(row.topic.difficulty)} · {planFor(row.topic.id)?.durationMinutes} 分钟</span>
                 <Icon name="right-arrow" size="1rem" aria-hidden="true" />
               </span>
             </a>
           ) : (
             <article class="directory-topic directory-topic-planned" aria-disabled="true">
               <span class="directory-topic-copy">
-                <strong>{topic.title}</strong>
-                <span>{topic.summary}</span>
+                <strong>{row.topic.title}</strong>
+                <span>{row.topic.summary}</span>
               </span>
               <span class="directory-topic-meta">
-                <span>{difficultyLabels[topic.difficulty] || topic.difficulty}</span>
+                <span>{difficultyLabel(row.topic.difficulty)}</span>
                 <span class="directory-status">规划中</span>
               </span>
             </article>
-          )) : <p class="directory-empty">当前分类等待首个专题。</p>}
+          )) : <p class="directory-empty">本分类规划中。<a href={withBase('/')}>返回课程地图，选择已上线课程</a>。</p>}
         </div>
       </section>
     );
@@ -151,6 +167,7 @@ const panelPayload = isHomeMap
           <div class="category-panel-count" id="category-panel-count"></div>
         </div>
       </div>
+      <div class="category-panel-series" id="category-panel-series" role="tablist" aria-label="系列" hidden></div>
       <div class="category-panel-body" id="category-panel-body"></div>
       <div class="category-panel-footer">
         <a class="category-panel-link" id="category-panel-link" href="#">
@@ -167,6 +184,7 @@ const panelPayload = isHomeMap
         const overlay = document.getElementById('category-panel-overlay');
         const panel = document.getElementById('category-panel');
         const panelClose = document.getElementById('category-panel-close');
+        const panelSeries = document.getElementById('category-panel-series');
         const panelBody = document.getElementById('category-panel-body');
         const panelLink = document.getElementById('category-panel-link');
         const panelRoman = document.getElementById('category-panel-roman');
@@ -174,7 +192,7 @@ const panelPayload = isHomeMap
         const panelSummary = document.getElementById('category-panel-summary');
         const panelCount = document.getElementById('category-panel-count');
 
-        if (!map || !dataEl || !overlay || !panel || !panelClose || !panelBody || !panelLink) return;
+        if (!map || !dataEl || !overlay || !panel || !panelClose || !panelSeries || !panelBody || !panelLink) return;
         if (map.dataset.panelReady === '1') return;
         map.dataset.panelReady = '1';
 
@@ -189,6 +207,7 @@ const panelPayload = isHomeMap
         const byId = new Map(payload.map((item) => [item.id, item]));
         let lastFocus = null;
         let sourceCard = null;
+        let currentCategory = null;
         let closingTimer = null;
         let isOpen = false;
         let naturalRect = null;
@@ -279,49 +298,106 @@ const panelPayload = isHomeMap
           document.documentElement.classList.remove('category-morphing');
         }
 
-        function pad(n) {
-          return String(n).padStart(2, '0');
+        function topicElement(topic, index) {
+          const isDone = topic.status === 'completed' && topic.href;
+          const el = document.createElement(isDone ? 'a' : 'article');
+          el.className = `directory-topic ${isDone ? 'directory-topic-completed' : 'directory-topic-planned'}`;
+          el.style.setProperty('--topic-index', String(Math.min(index, 10)));
+          if (isDone) {
+            el.href = topic.href;
+          } else {
+            el.setAttribute('aria-disabled', 'true');
+          }
+
+          const copy = document.createElement('span');
+          copy.className = 'directory-topic-copy';
+          const title = document.createElement('strong');
+          title.textContent = topic.title;
+          const summary = document.createElement('span');
+          summary.textContent = topic.summary;
+          copy.append(title, summary);
+
+          const meta = document.createElement('span');
+          meta.className = 'directory-topic-meta';
+          const difficulty = document.createElement('span');
+          difficulty.textContent = `${topic.difficulty}${topic.duration ? ` · ${topic.duration} 分钟` : ''}`;
+          const trailing = document.createElement('span');
+          trailing.className = isDone ? 'topic-trailing' : 'directory-status';
+          trailing.textContent = isDone ? '→' : '规划中';
+          meta.append(difficulty, trailing);
+
+          el.append(copy, meta);
+          return el;
+        }
+
+        function renderTopicList(topics) {
+          const frag = document.createDocumentFragment();
+          topics.forEach((topic, index) => frag.appendChild(topicElement(topic, index)));
+          panelBody.replaceChildren(frag);
+        }
+
+        /**
+         * 一次只列一个系列，面板高度不随课程总数增长。
+         * 用户点切换时让新列表逐条浮入；打开面板的首次渲染由 is-lit 的错峰负责，不重复播。
+         */
+        function showSeries(category, name, animate) {
+          panelSeries.querySelectorAll('[data-series]').forEach((button) => {
+            button.setAttribute('aria-selected', String(button.dataset.series === name));
+          });
+          renderTopicList(category.topics.filter((topic) => topic.series === name));
+          panelBody.scrollTop = 0;
+          panelBody.classList.remove('is-switching');
+          if (animate) {
+            void panelBody.offsetWidth;
+            panelBody.classList.add('is-switching');
+          }
         }
 
         function renderTopics(category) {
           const topics = category.topics || [];
+          const series = category.series || [];
+          const hasSeries = series.length > 1;
+          panelSeries.replaceChildren();
+          panelSeries.hidden = !hasSeries;
+          panelBody.classList.remove('is-switching');
+
           if (!topics.length) {
-            panelBody.innerHTML = '<p class="directory-empty">当前分类等待首个专题。</p>';
+            const empty = document.createElement('p');
+            empty.className = 'directory-empty';
+            empty.textContent = '本分类规划中。可先选择已上线的学习路线：';
+            panelBody.replaceChildren(empty);
+            payload.filter((item) => item.completed > 0).forEach((item) => {
+              const link = document.createElement('a');
+              link.className = 'directory-topic';
+              link.href = item.pagePath;
+              link.textContent = `${item.name} · ${item.completed} 节已上线`;
+              panelBody.append(link);
+            });
             return;
           }
 
-          const frag = document.createDocumentFragment();
-          topics.forEach((topic) => {
-            const isDone = topic.status === 'completed' && topic.href;
-            const el = document.createElement(isDone ? 'a' : 'article');
-            el.className = `directory-topic ${isDone ? 'directory-topic-completed' : 'directory-topic-planned'}`;
-            if (isDone) {
-              el.href = topic.href;
-            } else {
-              el.setAttribute('aria-disabled', 'true');
-            }
+          if (!hasSeries) {
+            renderTopicList(topics);
+            return;
+          }
 
-            const copy = document.createElement('span');
-            copy.className = 'directory-topic-copy';
-            const title = document.createElement('strong');
-            title.textContent = topic.title;
-            const summary = document.createElement('span');
-            summary.textContent = topic.summary;
-            copy.append(title, summary);
-
-            const meta = document.createElement('span');
-            meta.className = 'directory-topic-meta';
-            const difficulty = document.createElement('span');
-            difficulty.textContent = topic.difficulty;
-            const trailing = document.createElement('span');
-            trailing.className = isDone ? 'topic-trailing' : 'directory-status';
-            trailing.textContent = isDone ? '→' : '规划中';
-            meta.append(difficulty, trailing);
-
-            el.append(copy, meta);
-            frag.appendChild(el);
+          panelSeries.style.setProperty('--series-count', String(series.length));
+          series.forEach((item) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.setAttribute('role', 'tab');
+            button.setAttribute('aria-controls', 'category-panel-body');
+            button.dataset.series = item.name;
+            const name = document.createElement('b');
+            name.textContent = item.name;
+            const count = document.createElement('small');
+            count.textContent = `${item.count} 课`;
+            button.append(name, count);
+            panelSeries.append(button);
           });
-          panelBody.replaceChildren(frag);
+          // 默认停在最靠后的、已有课上线的系列：打开面板先看到能点进去的课；都没上线时停在第一个
+          const initial = [...series].reverse().find((item) => item.completed > 0) || series[0];
+          showSeries(category, initial.name, false);
         }
 
         function getFocusable() {
@@ -342,10 +418,11 @@ const panelPayload = isHomeMap
 
           lastFocus = trigger || document.activeElement;
           sourceCard = trigger || null;
+          currentCategory = category;
           panelRoman.textContent = category.roman;
           panelTitle.textContent = category.name;
           panelSummary.textContent = category.summary;
-          panelCount.textContent = `${pad(category.topicCount)} 专题　·　已完成 ${pad(category.completed)}`;
+          panelCount.textContent = category.countLabel;
           panelLink.href = category.pagePath;
           renderTopics(category);
 
@@ -474,6 +551,24 @@ const panelPayload = isHomeMap
 
         panelClose.addEventListener('click', closePanel);
         overlay.addEventListener('click', closePanel);
+
+        panelSeries.addEventListener('click', (event) => {
+          const button = event.target.closest('[data-series]');
+          if (!button || !currentCategory || button.getAttribute('aria-selected') === 'true') return;
+          showSeries(currentCategory, button.dataset.series, true);
+        });
+
+        // 方向键在系列之间移动并直接切换，与标签页的键盘习惯一致
+        panelSeries.addEventListener('keydown', (event) => {
+          if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+          const buttons = [...panelSeries.querySelectorAll('[data-series]')];
+          const index = buttons.indexOf(document.activeElement);
+          if (index < 0 || !currentCategory) return;
+          event.preventDefault();
+          const target = buttons[(index + (event.key === 'ArrowRight' ? 1 : -1) + buttons.length) % buttons.length];
+          target.focus();
+          showSeries(currentCategory, target.dataset.series, true);
+        });
 
         // 开着面板时改窗口大小，静止矩形会变，收起前重新量一次
         window.addEventListener('resize', () => {

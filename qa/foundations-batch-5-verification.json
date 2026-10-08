@@ -1,0 +1,912 @@
+{
+ "schemaVersion": 1,
+ "recordedAt": "2026-10-02",
+ "scope": "基础学期第 5 批：C 语言八课（第 19 到 26 课）",
+ "commandReplay": {
+  "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，以 --cap-add=SYS_PTRACE --security-opt seccomp=unconfined 运行；gcc 16.2.0、GNU Make 4.4.1、GDB 17.2、glibc 2.43",
+  "method": "sh scripts/lab/replay-lesson.sh <课 id>：把 public/labs/<课 id>/ 的源文件放进 ~/lab/c，按页面顺序重放 shell 命令与 gdb 会话并逐条比对",
+  "commands": 165,
+  "identical": 165,
+  "differing": 0,
+  "volatileOnly": 17,
+  "perLesson": {
+   "c-compile-and-run": {
+    "shell": {
+     "identical": 26,
+     "volatileOnly": 1
+    }
+   },
+   "c-types-and-control-flow": {
+    "shell": {
+     "identical": 14,
+     "volatileOnly": 0
+    }
+   },
+   "c-functions-and-stack": {
+    "shell": {
+     "identical": 17,
+     "volatileOnly": 1
+    }
+   },
+   "c-arrays-and-strings": {
+    "shell": {
+     "identical": 19,
+     "volatileOnly": 3
+    }
+   },
+   "c-pointers": {
+    "shell": {
+     "identical": 17,
+     "volatileOnly": 3
+    }
+   },
+   "c-structs-and-heap": {
+    "shell": {
+     "identical": 18,
+     "volatileOnly": 3
+    }
+   },
+   "c-files-and-projects": {
+    "shell": {
+     "identical": 23,
+     "volatileOnly": 1
+    }
+   },
+   "c-debugging-memory-errors": {
+    "shell": {
+     "identical": 12,
+     "volatileOnly": 2
+    },
+    "gdb": {
+     "identical": 19,
+     "volatileOnly": 3
+    }
+   }
+  },
+  "volatileFields": "内存地址（ASan 报告、%p 输出、gdb 里的栈地址）、编译器临时文件名 /tmp/ccXXXXXX.o、ASan 的 ==进程号==、gdb 的 process N，以及崩溃提示里的 (core dumped)。",
+  "separatelyReproduced": "各课验收题与作业的参考解答；mistakes 类文件的编译警告；Makefile 用空格代替 Tab 的报错；fopen 失败后不检查的段错误；对指针用点的报错；验收题里 gdb 断点处的变量值。"
+ },
+ "memoryTraces": {
+  "method": "scripts/lab/c-trace.py 在容器里用 gcc -g -O0 编译，用 gdb 的 Python 接口逐行 step，每步读取各栈帧的变量（类型、地址、值）并跟踪 malloc/free；指针的目标由它的值与各变量、堆块的地址比对得出",
+  "files": [
+   "c-vars.json",
+   "c-noswap.json",
+   "c-fact.json",
+   "c-oob.json",
+   "c-fill.json",
+   "c-swap.json",
+   "c-walk.json",
+   "c-heap.json",
+   "c-make-user.json"
+  ],
+  "notes": "scripts/lab/stepper-notes/"
+ },
+ "browser": {
+  "tool": "Playwright Chromium，开发服务器 http://localhost:4321",
+  "pages": [
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 7,
+    "check": "desk c-compile-and-run http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 5,
+    "check": "desk c-types-and-control-flow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 5,
+    "check": "desk c-functions-and-stack http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 10,
+    "check": "desk c-arrays-and-strings http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 4,
+    "sources": 5,
+    "check": "desk c-pointers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 8,
+    "check": "desk c-structs-and-heap http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 10,
+    "check": "desk c-files-and-projects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 8,
+    "check": "desk c-debugging-memory-errors http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 7,
+    "check": "phone c-compile-and-run http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 5,
+    "check": "phone c-types-and-control-flow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 5,
+    "check": "phone c-functions-and-stack http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 10,
+    "check": "phone c-arrays-and-strings http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 4,
+    "sources": 5,
+    "check": "phone c-pointers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 8,
+    "check": "phone c-structs-and-heap http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 10,
+    "check": "phone c-files-and-projects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 8,
+    "check": "phone c-debugging-memory-errors http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 6,
+    "tables": 4,
+    "sources": 7,
+    "check": "dark c-compile-and-run http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 7,
+    "tables": 5,
+    "sources": 5,
+    "check": "dark c-types-and-control-flow http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 8,
+    "tables": 3,
+    "sources": 5,
+    "check": "dark c-functions-and-stack http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 3,
+    "sources": 10,
+    "check": "dark c-arrays-and-strings http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "tables": 4,
+    "sources": 5,
+    "check": "dark c-pointers http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 8,
+    "check": "dark c-structs-and-heap http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "tables": 5,
+    "sources": 10,
+    "check": "dark c-files-and-projects http=200"
+   },
+   {
+    "over": 0,
+    "h1": 1,
+    "broken": [],
+    "wide": [],
+    "exercises": 3,
+    "terminals": 10,
+    "codeFiles": 3,
+    "tables": 6,
+    "sources": 8,
+    "check": "dark c-debugging-memory-errors http=200"
+   }
+  ],
+  "interactions": {
+   "c-compile-and-run": {
+    "simulator-0": {
+     "steps": 4,
+     "activeCounts": [
+      1,
+      2,
+      3,
+      4
+     ]
+    }
+   },
+   "c-types-and-control-flow": {
+    "code-stepper-0": {
+     "lines": [
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10"
+     ],
+     "output": "C 4 5000000000"
+    }
+   },
+   "c-functions-and-stack": {
+    "code-stepper-0": {
+     "lines": [
+      "10",
+      "11",
+      "12",
+      "4",
+      "5",
+      "6",
+      "7",
+      "13",
+      "14"
+     ],
+     "output": "3 5"
+    },
+    "code-stepper-1": {
+     "lines": [
+      "11",
+      "4",
+      "7",
+      "4",
+      "7",
+      "4",
+      "5",
+      "8",
+      "8",
+      "8",
+      "12",
+      "13"
+     ],
+     "output": "6"
+    }
+   },
+   "c-arrays-and-strings": {
+    "code-stepper-0": {
+     "lines": [
+      "4",
+      "5",
+      "6",
+      "5",
+      "6",
+      "5",
+      "6",
+      "5",
+      "6",
+      "5",
+      "8"
+     ],
+     "output": "200\n404\n500\n3"
+    },
+    "code-stepper-1": {
+     "lines": [
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11",
+      "12"
+     ],
+     "output": "nc!\nn"
+    }
+   },
+   "c-pointers": {
+    "code-stepper-0": {
+     "lines": [
+      "10",
+      "11",
+      "12",
+      "4",
+      "5",
+      "6",
+      "7",
+      "13",
+      "14"
+     ],
+     "output": "5 3"
+    },
+    "code-stepper-1": {
+     "lines": [
+      "4",
+      "5",
+      "6",
+      "7",
+      "8",
+      "9",
+      "10",
+      "11"
+     ],
+     "output": "80 80\n443\n8443"
+    }
+   },
+   "c-structs-and-heap": {
+    "code-stepper-0": {
+     "lines": [
+      "5",
+      "6",
+      "7",
+      "10",
+      "11",
+      "10",
+      "11",
+      "10",
+      "11",
+      "10",
+      "13",
+      "14",
+      "15",
+      "16"
+     ],
+     "output": "10 20 30"
+    },
+    "code-stepper-1": {
+     "lines": [
+      "18",
+      "11",
+      "12",
+      "13",
+      "14",
+      "15",
+      "19",
+      "20",
+      "21"
+     ],
+     "output": "bob 1"
+    }
+   },
+   "c-files-and-projects": {},
+   "c-debugging-memory-errors": {}
+  },
+  "static": {
+   "reduced": {
+    "c-compile-and-run": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 10
+    },
+    "c-types-and-control-flow": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 8
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 6
+    },
+    "c-functions-and-stack": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 13
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "c-arrays-and-strings": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 12
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 8
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "c-pointers": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 9
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 7
+    },
+    "c-structs-and-heap": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 15
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 8
+    },
+    "c-files-and-projects": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 6
+    },
+    "c-debugging-memory-errors": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 10
+    }
+   },
+   "nojs": {
+    "c-compile-and-run": {
+     "islands": [
+      {
+       "cls": "simulator",
+       "presentation": null,
+       "controls": 0,
+       "ledgerRows": 0
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-types-and-control-flow": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 8
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-functions-and-stack": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 13
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-arrays-and-strings": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 12
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 8
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-pointers": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 9
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-structs-and-heap": {
+     "islands": [
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 15
+      },
+      {
+       "cls": "code-stepper",
+       "presentation": "static",
+       "controls": 0,
+       "ledgerRows": 10
+      }
+     ],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-files-and-projects": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    },
+    "c-debugging-memory-errors": {
+     "islands": [],
+     "details": 3,
+     "terminalCopyButtons": 0
+    }
+   }
+  },
+  "print": {
+   "c-compile-and-run": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "c-types-and-control-flow": {
+    "answersVisible": 3,
+    "terminals": 6,
+    "codeFiles": 7,
+    "headerHidden": true
+   },
+   "c-functions-and-stack": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 8,
+    "headerHidden": true
+   },
+   "c-arrays-and-strings": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "c-pointers": {
+    "answersVisible": 3,
+    "terminals": 7,
+    "codeFiles": 7,
+    "headerHidden": true
+   },
+   "c-structs-and-heap": {
+    "answersVisible": 3,
+    "terminals": 8,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "c-files-and-projects": {
+    "answersVisible": 3,
+    "terminals": 6,
+    "codeFiles": 6,
+    "headerHidden": true
+   },
+   "c-debugging-memory-errors": {
+    "answersVisible": 3,
+    "terminals": 10,
+    "codeFiles": 3,
+    "headerHidden": true
+   }
+  },
+  "site": {
+   "path": "已上线 26 / 37",
+   "pathLinks": 26,
+   "nextTag": "PHP 一：请求进来到页面出去",
+   "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 26 | 下一课　27　PHP 一：请求进来到页面出去",
+   "pagination": {
+    "c-compile-and-run": {
+     "links": [
+      "/lessons/sql-basics/",
+      "/lessons/c-types-and-control-flow/"
+     ],
+     "prereq": [
+      "/lessons/shell-permissions-and-pipes/",
+      "/lessons/python-functions-and-modules/"
+     ]
+    },
+    "c-types-and-control-flow": {
+     "links": [
+      "/lessons/c-compile-and-run/",
+      "/lessons/c-functions-and-stack/"
+     ],
+     "prereq": [
+      "/lessons/c-compile-and-run/",
+      "/lessons/data-representation/",
+      "/lessons/python-control-flow/"
+     ]
+    },
+    "c-functions-and-stack": {
+     "links": [
+      "/lessons/c-types-and-control-flow/",
+      "/lessons/c-arrays-and-strings/"
+     ],
+     "prereq": [
+      "/lessons/c-types-and-control-flow/",
+      "/lessons/python-functions-and-modules/"
+     ]
+    },
+    "c-arrays-and-strings": {
+     "links": [
+      "/lessons/c-functions-and-stack/",
+      "/lessons/c-pointers/"
+     ],
+     "prereq": [
+      "/lessons/c-functions-and-stack/",
+      "/lessons/data-representation/"
+     ]
+    },
+    "c-pointers": {
+     "links": [
+      "/lessons/c-arrays-and-strings/",
+      "/lessons/c-structs-and-heap/"
+     ],
+     "prereq": [
+      "/lessons/c-arrays-and-strings/",
+      "/lessons/c-functions-and-stack/"
+     ]
+    },
+    "c-structs-and-heap": {
+     "links": [
+      "/lessons/c-pointers/",
+      "/lessons/c-files-and-projects/"
+     ],
+     "prereq": [
+      "/lessons/c-pointers/",
+      "/lessons/c-arrays-and-strings/"
+     ]
+    },
+    "c-files-and-projects": {
+     "links": [
+      "/lessons/c-structs-and-heap/",
+      "/lessons/c-debugging-memory-errors/"
+     ],
+     "prereq": [
+      "/lessons/c-structs-and-heap/",
+      "/lessons/c-compile-and-run/",
+      "/lessons/python-files-and-exceptions/"
+     ]
+    },
+    "c-debugging-memory-errors": {
+     "links": [
+      "/lessons/c-files-and-projects/"
+     ],
+     "prereq": [
+      "/lessons/c-structs-and-heap/",
+      "/lessons/c-functions-and-stack/",
+      "/lessons/shell-permissions-and-pipes/"
+     ]
+    }
+   },
+   "category-cs-foundations": {
+    "links": 6,
+    "planned": 0
+   },
+   "category-programming": {
+    "links": 15,
+    "planned": 8
+   },
+   "category-engineering-tools": {
+    "links": 5,
+    "planned": 2
+   }
+  },
+  "consoleErrors": []
+ },
+ "kaliDefaults": "apt-get install -s kali-linux-default kali-desktop-xfce 的模拟安装里有 gcc、make、libc6-dev、build-essential、manpages-dev；没有 gdb、valgrind。",
+ "notRun": [
+  "真实 Kali 虚拟机",
+  "mousepad 里编辑保存源文件",
+  "首次安装 gdb 的输出",
+  "真实移动设备、屏幕阅读器、纸张分页",
+  "生产 nginx 与 CSP"
+ ]
+}

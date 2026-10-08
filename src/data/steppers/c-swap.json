@@ -1,0 +1,366 @@
+{
+ "kind": "c-memory",
+ "file": "public/labs/c-pointers/swap.c",
+ "flags": "",
+ "source": [
+  "#include <stdio.h>",
+  "",
+  "void swap(int *a, int *b) {",
+  "    int tmp = *a;",
+  "    *a = *b;",
+  "    *b = tmp;",
+  "}",
+  "",
+  "int main(void) {",
+  "    int x = 3;",
+  "    int y = 5;",
+  "    swap(&x, &y);",
+  "    printf(\"%d %d\\n\", x, y);",
+  "    return 0;",
+  "}"
+ ],
+ "steps": [
+  {
+   "line": 10,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "main 的栈帧里有了 x。"
+  },
+  {
+   "line": 11,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "又有了 y。"
+  },
+  {
+   "line": 12,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "a",
+       "value": "…ec1c",
+       "target": "main 的 x"
+      },
+      {
+       "type": "int *",
+       "addr": "…ebe0",
+       "size": 8,
+       "name": "b",
+       "value": "…ec18",
+       "target": "main 的 y"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "调用 swap(&x, &y)。&x 是 x 的地址。swap 的栈帧里，a 和 b 是指针：它们自己占 8 个字节，里面存的是 x 和 y 的地址。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "3"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "a",
+       "value": "…ec1c",
+       "target": "main 的 x"
+      },
+      {
+       "type": "int *",
+       "addr": "…ebe0",
+       "size": 8,
+       "name": "b",
+       "value": "…ec18",
+       "target": "main 的 y"
+      },
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "*a 的意思是「到 a 指的地方去取值」。取到的是 main 的 x，也就是 3，存进 tmp。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "5"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "a",
+       "value": "…ec1c",
+       "target": "main 的 x"
+      },
+      {
+       "type": "int *",
+       "addr": "…ebe0",
+       "size": 8,
+       "name": "b",
+       "value": "…ec18",
+       "target": "main 的 y"
+      },
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "*a = *b：把 b 指的地方的值，写到 a 指的地方。被改的是 main 的 x，它变成了 5。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "3"
+      }
+     ]
+    },
+    {
+     "name": "swap",
+     "vars": [
+      {
+       "type": "int *",
+       "addr": "…ebe8",
+       "size": 8,
+       "name": "a",
+       "value": "…ec1c",
+       "target": "main 的 x"
+      },
+      {
+       "type": "int *",
+       "addr": "…ebe0",
+       "size": 8,
+       "name": "b",
+       "value": "…ec18",
+       "target": "main 的 y"
+      },
+      {
+       "type": "int",
+       "addr": "…ebfc",
+       "size": 4,
+       "name": "tmp",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "*b = tmp：把 3 写到 b 指的地方，main 的 y 变成 3。"
+  },
+  {
+   "line": 7,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "",
+   "note": "swap 返回，栈帧消失。但它通过地址改掉的 x 和 y 留下来了。"
+  },
+  {
+   "line": 13,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "5 3\n",
+   "note": "打印 5 3，交换成功。"
+  },
+  {
+   "line": 14,
+   "frames": [
+    {
+     "name": "main",
+     "vars": [
+      {
+       "type": "int",
+       "addr": "…ec1c",
+       "size": 4,
+       "name": "x",
+       "value": "5"
+      },
+      {
+       "type": "int",
+       "addr": "…ec18",
+       "size": 4,
+       "name": "y",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "heap": [],
+   "stdout": "5 3\n",
+   "note": "main 返回。"
+  }
+ ],
+ "error": null
+}

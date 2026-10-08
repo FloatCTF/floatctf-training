@@ -1,11 +1,7 @@
-import { readFileSync } from 'node:fs';
 import { defineConfig } from 'astro/config';
 import react from '@astrojs/react';
 import starlight from '@astrojs/starlight';
-
-const catalog = JSON.parse(
-  readFileSync(new URL('./src/data/catalog.json', import.meta.url), 'utf8'),
-);
+import { categoriesByOrder, completedTopicsByCategory } from './src/data/catalog.ts';
 
 const normalizeBase = (value) => {
   const withLeadingSlash = value.startsWith('/') ? value : `/${value}`;
@@ -15,20 +11,16 @@ const normalizeBase = (value) => {
 const base = normalizeBase(process.env.TRAINING_BASE || '/');
 const site = process.env.TRAINING_SITE || 'http://training.local';
 
-const sidebar = [...catalog.categories]
-  .sort((a, b) => a.order - b.order)
-  .map((category) => ({
-    label: category.name,
-    items: [
-      { label: '分类概览', slug: `categories/${category.id}` },
-      ...catalog.topics
-        .filter((topic) => topic.categoryId === category.id && topic.status === 'completed')
-        .map((topic) => ({
-          label: topic.title,
-          slug: topic.pagePath.replace(/^\//, '').replace(/\/$/, ''),
-        })),
-    ],
-  }));
+const sidebar = categoriesByOrder().map((category) => ({
+  label: category.name,
+  items: [
+    { label: '分类概览', slug: `categories/${category.id}` },
+    ...completedTopicsByCategory(category.id).map((topic) => ({
+      label: topic.title,
+      slug: topic.pagePath.replace(/^\//, '').replace(/\/$/, ''),
+    })),
+  ],
+}));
 
 export default defineConfig({
   site,
@@ -58,6 +50,7 @@ export default defineConfig({
         Sidebar: './src/components/training-sidebar.astro',
         TwoColumnContent: './src/components/training-two-column-content.astro',
         Head: './src/components/training-head.astro',
+        Pagination: './src/components/training-pagination.astro',
       },
       sidebar,
       tableOfContents: { minHeadingLevel: 2, maxHeadingLevel: 3 },

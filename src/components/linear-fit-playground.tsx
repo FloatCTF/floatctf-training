@@ -1,40 +1,24 @@
 import { useId, useMemo, useRef, useState } from 'react';
 import {
   useMotionPresentation,
-  keyboardRangeValue,
   type MotionLevel,
 } from './motion-utils';
+import { leastSquares, meanSquaredError, polyEval, polyfit, type Point } from '../lib/linear-fit';
+import { RangeControl, SimLedger } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
   initialMode?: 'linear' | 'generalization';
 }
 
-const POINTS = [
+const POINTS: Point[] = [
   { x: 50, y: 205 },
   { x: 68, y: 262 },
   { x: 85, y: 334 },
   { x: 102, y: 401 },
-] as const;
+];
 
-// 最小二乘闭式解：w = Sxy / Sxx，b = ȳ - w·x̄
-const BEST = (() => {
-  const meanX = POINTS.reduce((s, p) => s + p.x, 0) / POINTS.length;
-  const meanY = POINTS.reduce((s, p) => s + p.y, 0) / POINTS.length;
-  let sxy = 0;
-  let sxx = 0;
-  for (const p of POINTS) {
-    sxy += (p.x - meanX) * (p.y - meanY);
-    sxx += (p.x - meanX) ** 2;
-  }
-  const w = sxy / sxx;
-  return { w, b: meanY - w * meanX };
-})();
-
-function meanSquaredError(w: number, b: number) {
-  const total = POINTS.reduce((s, p) => s + (w * p.x + b - p.y) ** 2, 0);
-  return total / POINTS.length;
-}
+const BEST = leastSquares(POINTS);
 
 // 绘图区：x ∈ [56, 604]，y ∈ [40, 360]
 // 数据坐标：x ∈ [-24, 176]（万元轴为 y ∈ [120, 460]），纵横比按视觉斜率校准，
@@ -52,8 +36,8 @@ function lineY(w: number, b: number, x: number) {
   return w * x + b;
 }
 
-// ===== 过拟合实验：同一批房价数据，训练 8 户 / 考试 4 户，拖动多项式阶数 =====
-const HOUSES = [
+// ===== 过拟合实验：另一批房价示意点，训练 8 户 / 验证 4 户，拖动多项式阶数 =====
+const HOUSES: Point[] = [
   { x: 20, y: 128 }, { x: 28, y: 150 }, { x: 36, y: 176 }, { x: 44, y: 196 },
   { x: 52, y: 205 }, { x: 60, y: 224 }, { x: 68, y: 238 }, { x: 76, y: 232 },
   { x: 84, y: 249 }, { x: 92, y: 248 }, { x: 100, y: 261 }, { x: 108, y: 255 },
@@ -67,55 +51,23 @@ const TSCALE = 44;
 const GX = (x: number) => 56 + ((x - 10) / 105) * 548;
 const GY = (y: number) => 360 - ((y - 100) / 190) * 320;
 
-function solve(matrix: number[][], vector: number[]): number[] {
-  const n = vector.length;
-  const a = matrix.map((row, i) => [...row, vector[i]]);
-  for (let col = 0; col < n; col += 1) {
-    let pivot = col;
-    for (let row = col + 1; row < n; row += 1) {
-      if (Math.abs(a[row][col]) > Math.abs(a[pivot][col])) pivot = row;
-    }
-    [a[col], a[pivot]] = [a[pivot], a[col]];
-    const diag = a[col][col] || 1e-12;
-    for (let row = 0; row < n; row += 1) {
-      if (row === col) continue;
-      const factor = a[row][col] / diag;
-      for (let k = col; k <= n; k += 1) a[row][k] -= factor * a[col][k];
-    }
-  }
-  return a.map((row, i) => row[n] / (row[i] || 1e-12));
-}
-
 // 在训练点上拟合 degree 阶多项式（x 归一化改善条件数，加微量岭项保数值稳定）
-function polyfit(degree: number) {
-  const xs = TRAIN_IDX.map((i) => HOUSES[i].x);
-  const ys = TRAIN_IDX.map((i) => HOUSES[i].y);
-  const n = degree + 1;
-  const ata: number[][] = Array.from({ length: n }, () => Array(n).fill(0));
-  const aty: number[] = Array(n).fill(0);
-  for (let s = 0; s < xs.length; s += 1) {
-    const t = (xs[s] - TCENTER) / TSCALE;
-    const basis = [1];
-    for (let k = 1; k < n; k += 1) basis.push(basis[k - 1] * t);
-    for (let i = 0; i < n; i += 1) {
-      aty[i] += basis[i] * ys[s];
-      for (let j = 0; j < n; j += 1) ata[i][j] += basis[i] * basis[j];
-    }
-  }
-  for (let i = 0; i < n; i += 1) ata[i][i] += 1e-8;
-  return solve(ata, aty);
+function fitPolynomial(degree: number) {
+  return polyfit(
+    TRAIN_IDX.map((i) => HOUSES[i].x),
+    TRAIN_IDX.map((i) => HOUSES[i].y),
+    degree,
+    { center: TCENTER, scale: TSCALE, ridge: 1e-8 },
+  );
 }
 
-function polyEval(coeffs: number[], x: number) {
-  const t = (x - TCENTER) / TSCALE;
-  let result = 0;
-  for (let k = coeffs.length - 1; k >= 0; k -= 1) result = result * t + coeffs[k];
-  return result;
+function evalPolynomial(coeffs: readonly number[], x: number) {
+  return polyEval(coeffs, x, { center: TCENTER, scale: TSCALE });
 }
 
-function splitError(coeffs: number[]) {
+function splitError(coeffs: readonly number[]) {
   const mseOf = (indices: number[]) =>
-    indices.reduce((s, i) => s + (polyEval(coeffs, HOUSES[i].x) - HOUSES[i].y) ** 2, 0) / indices.length;
+    indices.reduce((s, i) => s + (evalPolynomial(coeffs, HOUSES[i].x) - HOUSES[i].y) ** 2, 0) / indices.length;
   return { train: mseOf(TRAIN_IDX), test: mseOf(TEST_IDX) };
 }
 
@@ -130,11 +82,25 @@ const DEGREE_PRESETS = [
   { degree: 7, label: '7 阶：过拟合' },
 ];
 
+const REFERENCE_SPLIT = splitError(fitPolynomial(3));
+const TRAIN_MEAN = TRAIN_IDX.reduce((sum, i) => sum + HOUSES[i].y, 0) / TRAIN_IDX.length;
+const BASELINE_SPLIT = splitError([TRAIN_MEAN]);
+function describeSplit(split: { train: number; test: number }) {
+  if (split.train > REFERENCE_SPLIT.train * 2 && split.test > REFERENCE_SPLIT.test * 2) {
+    return '欠拟合：训练与验证误差均明显高于 3 阶，模型容量不足。';
+  }
+  if (split.train < REFERENCE_SPLIT.train && split.test > REFERENCE_SPLIT.test * 2) {
+    return '过拟合：训练误差继续下降，验证误差却明显高于 3 阶。';
+  }
+  return '合适候选：验证误差接近 3 阶参考水平，优先比较验证误差并兼顾复杂度。';
+}
+
 export default function LinearFitPlayground({ motionLevel = 'explanatory', initialMode = 'linear' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
   const chartTitleId = useId();
   const chartDescriptionId = useId();
+  const plotId = useId();
   const [w, setW] = useState(Number(BEST.w.toFixed(2)));
   const [b, setB] = useState(Number(BEST.b.toFixed(1)));
   const [mode, setMode] = useState<'linear' | 'generalization'>(initialMode);
@@ -150,25 +116,20 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
   });
 
   const interactive = presentation === 'interactive';
-  const mse = useMemo(() => meanSquaredError(w, b), [w, b]);
-  const bestMse = useMemo(() => meanSquaredError(BEST.w, BEST.b), []);
+  const mse = useMemo(() => meanSquaredError(POINTS, w, b), [w, b]);
+  const bestMse = useMemo(() => meanSquaredError(POINTS, BEST.w, BEST.b), []);
 
-  const coeffs = useMemo(() => polyfit(degree), [degree]);
+  const coeffs = useMemo(() => fitPolynomial(degree), [degree]);
   const split = useMemo(() => splitError(coeffs), [coeffs]);
   const curvePath = useMemo(() => {
     const points: string[] = [];
     for (let x = 16; x <= 112; x += 2) {
-      const y = polyEval(coeffs, x);
+      const y = evalPolynomial(coeffs, x);
       points.push(`${points.length === 0 ? 'M' : 'L'} ${GX(x).toFixed(1)} ${GY(Math.max(80, Math.min(310, y))).toFixed(1)}`);
     }
     return points.join(' ');
   }, [coeffs]);
-  const ratio = split.train > 0 ? split.test / split.train : 0;
-  const splitVerdict = ratio < 1.4
-    ? '训练与考试误差接近：模型抓住了趋势，也没有背题（合适区间）。'
-    : ratio < 3
-      ? '考试误差开始超过训练误差：容量正在越过数据的承受力。'
-      : '训练误差极低、考试误差飙升：曲线硬穿每个训练点，把噪声也当成了规律（过拟合）。';
+  const splitVerdict = describeSplit(split);
 
   const midY = w * 76 + b;
   const outOfView = midY < 100 || midY > 480;
@@ -203,7 +164,7 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
         <p className="attention-explorer__static-note">
           {mode === 'linear'
             ? '静态模式展示最小二乘解的直线与固定误差记录（交互态可拖动 w 与 b）。'
-            : '静态模式展示 1/3/7 阶的固定拟合记录（交互态可拖动阶数，亲眼看训练与考试误差分叉）。'}
+            : '静态模式展示 1/3/7 阶的固定拟合记录（交互态可拖动阶数，亲眼看训练与验证误差分叉）。'}
         </p>
       )}
 
@@ -215,7 +176,7 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
                 <title id={chartTitleId}>面积与成交价散点、当前直线和每个点的误差</title>
                 <desc id={chartDescriptionId}>横轴是面积，纵轴是成交价。四个数据点是真实记录，直线由当前的 w 与 b 决定，虚线段表示每个点的预测误差。</desc>
                 <defs>
-                  <clipPath id="fit-plot-area">
+                  <clipPath id={`${plotId}-linear`}>
                     <rect x="56" y="40" width="548" height="320" />
                   </clipPath>
                 </defs>
@@ -224,7 +185,7 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
                 ))}
                 <line className="learning-axis" x1="56" y1="360" x2="604" y2="360" />
                 <line className="learning-axis" x1="56" y1="40" x2="56" y2="360" />
-                <g clipPath="url(#fit-plot-area)">
+                <g clipPath={`url(#${plotId}-linear)`}>
                   <line className="fit-line" x1={PX(-24)} y1={lineLeft} x2={PX(176)} y2={lineRight} />
                   {POINTS.map((p) => (
                     <line
@@ -243,7 +204,7 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
                 <text className="learning-chart-label" x="552" y="384">面积（m²）</text>
                 <text className="learning-chart-label" x="14" y="52">万元</text>
               </svg>
-              <figcaption>蓝点是成交记录，直线由当前 w 与 b 画出，红色虚线段是每个点的预测误差。</figcaption>
+              <figcaption>蓝点是成交记录，直线由当前 w 与 b 画出，红色虚线段是每个点的预测误差。<span className="chart-scroll-hint">横向滑动可查看完整坐标，误差读数列在图下。</span></figcaption>
             </figure>
 
             <div className="fit-playground__readout">
@@ -259,40 +220,24 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
 
           {interactive && (
             <div className="simulator-control fit-playground__controls">
-              <label>
-                <span>斜率 w：每平米涨 {w.toFixed(2)} 万（范围 0 到 5）</span>
-                <input
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="0.01"
-                  value={w}
-                  onChange={(event) => setW(Number(event.currentTarget.value))}
-                  onKeyDown={(event) => {
-                    const next = keyboardRangeValue(event.key, w, 0, 5, 0.05);
-                    if (next == null) return;
-                    event.preventDefault();
-                    setW(next);
-                  }}
-                />
-              </label>
-              <label>
-                <span>截距 b：起点 {b.toFixed(1)} 万（范围 -100 到 200）</span>
-                <input
-                  type="range"
-                  min="-100"
-                  max="200"
-                  step="1"
-                  value={b}
-                  onChange={(event) => setB(Number(event.currentTarget.value))}
-                  onKeyDown={(event) => {
-                    const next = keyboardRangeValue(event.key, b, -100, 200, 5);
-                    if (next == null) return;
-                    event.preventDefault();
-                    setB(next);
-                  }}
-                />
-              </label>
+              <RangeControl
+                label={<>斜率 w：每平米涨 {w.toFixed(2)} 万（范围 0 到 5）</>}
+                min={0}
+                max={5}
+                step={0.01}
+                keyboardStep={0.05}
+                value={w}
+                onChange={setW}
+              />
+              <RangeControl
+                label={<>截距 b：起点 {b.toFixed(1)} 万（范围 -100 到 200）</>}
+                min={-100}
+                max={200}
+                step={1}
+                keyboardStep={5}
+                value={b}
+                onChange={setB}
+              />
               <div className="learning-sim-actions" aria-label="预设直线">
                 {PRESETS.map((preset) => (
                   <button
@@ -310,39 +255,33 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
             </div>
           )}
 
-          <div className="learning-sim-ledger" role="table" aria-label="三条候选直线的固定误差记录">
-            <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-              <span role="columnheader">候选直线</span>
-              <span role="columnheader">w</span>
-              <span role="columnheader">b</span>
-              <span role="columnheader">MSE</span>
-            </div>
-            {PRESETS.map((preset) => (
-              <div className="learning-sim-ledger-row" role="row" key={preset.id}>
-                <span role="cell">{preset.label}</span>
-                <span role="cell">{preset.w.toFixed(2)}</span>
-                <span role="cell">{preset.b.toFixed(1)}</span>
-                <span role="cell">{meanSquaredError(preset.w, preset.b).toFixed(1)}</span>
-              </div>
-            ))}
-          </div>
-          <p className="static-content-note">三条候选的固定误差记录完整保留在打印、减少动态和无 JavaScript 状态中；手动学习无法穷举所有组合，梯度下降的作用就是自动找到损失最小的参数。</p>
+          <SimLedger
+            ariaLabel="三条候选直线的固定误差记录"
+            columns={['候选直线', 'w', 'b', 'MSE']}
+            rows={PRESETS.map((preset) => [
+              preset.label,
+              preset.w.toFixed(2),
+              preset.b.toFixed(1),
+              meanSquaredError(POINTS, preset.w, preset.b).toFixed(1),
+            ])}
+            note="三条候选的固定误差记录完整保留在打印、减少动态和无 JavaScript 状态中；手动学习无法穷举所有组合，梯度下降的作用就是自动找到损失最小的参数。"
+          />
         </>
       ) : (
         <>
           <div className="fit-playground__layout">
             <figure className="fit-playground__figure">
               <svg viewBox="0 0 640 420" role="img" aria-labelledby={`${chartTitleId} ${chartDescriptionId}`}>
-                <title id={chartTitleId}>{`${degree} 阶多项式在训练点上的拟合与考试点上的误差`}</title>
-                <desc id={chartDescriptionId}>实心蓝点是训练样本，空心橙点是考试样本。曲线由当前阶数的多项式画出，考试点到曲线的虚线段是泛化误差。</desc>
+                <title id={chartTitleId}>{`${degree} 阶多项式在训练点上的拟合与验证点上的误差`}</title>
+                <desc id={chartDescriptionId}>实心蓝点是训练样本，空心橙点是验证样本。曲线由当前阶数的多项式画出，验证点到曲线的虚线段是用来选型的误差。最终测试集不在这张图里。</desc>
                 <defs>
-                  <clipPath id="fit-plot-area-g">
+                  <clipPath id={`${plotId}-generalization`}>
                     <rect x="56" y="40" width="548" height="320" />
                   </clipPath>
                 </defs>
                 <line className="learning-axis" x1="56" y1="360" x2="604" y2="360" />
                 <line className="learning-axis" x1="56" y1="40" x2="56" y2="360" />
-                <g clipPath="url(#fit-plot-area-g)">
+                <g clipPath={`url(#${plotId}-generalization)`}>
                   <path className="fit-line fit-line--curve" d={curvePath} />
                   {TEST_IDX.map((i) => (
                     <line
@@ -351,7 +290,7 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
                       x1={GX(HOUSES[i].x)}
                       y1={GY(HOUSES[i].y)}
                       x2={GX(HOUSES[i].x)}
-                      y2={GY(Math.max(80, Math.min(310, polyEval(coeffs, HOUSES[i].x))))}
+                      y2={GY(Math.max(80, Math.min(310, evalPolynomial(coeffs, HOUSES[i].x))))}
                     />
                   ))}
                 </g>
@@ -364,39 +303,29 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
                 <text className="learning-chart-label" x="552" y="384">面积（m²）</text>
                 <text className="learning-chart-label" x="14" y="52">万元</text>
               </svg>
-              <figcaption>实心蓝点是 8 户训练样本，曲线只看它们拟合；空心橙点是 4 户考试样本，虚线段是它们的误差。</figcaption>
+              <figcaption>实心蓝点是 8 户训练样本，曲线只看它们拟合；空心橙点是 4 户验证样本，虚线段是它们的误差。这 4 户用来比较阶数，不是最终测试集。<span className="chart-scroll-hint">横向滑动可查看完整坐标，误差读数列在图下。</span></figcaption>
             </figure>
 
             <div className="fit-playground__readout">
               <div className="fit-playground__stats" aria-live="polite">
                 <div><span>多项式阶数</span><strong>{degree}</strong></div>
                 <div><span>训练 MSE</span><strong>{split.train.toFixed(1)}</strong></div>
-                <div><span>考试 MSE</span><strong>{split.test.toFixed(1)}</strong></div>
-                <div><span>考试 / 训练</span><strong>{formatGeneralizationRatio(split.train, split.test)}</strong></div>
+                <div><span>验证 MSE</span><strong>{split.test.toFixed(1)}</strong></div>
+                <div><span>验证 / 训练</span><strong>{formatGeneralizationRatio(split.train, split.test)}</strong></div>
               </div>
-              <p className="learning-sim-explanation">{splitVerdict} 把阶数从 1 拉到 7：训练误差一路下降，考试误差先降后升——分叉的那一点就是容量超过数据的时刻。</p>
+              <p className="learning-sim-explanation">{splitVerdict} 在 1／3／7 阶中，3 阶验证 MSE 最低。只预测训练均价的基线验证 MSE 为 {BASELINE_SPLIT.test.toFixed(1)}。误差比仅作辅助。这 4 户验证样本用来在候选里选型，最终性能还需一份没有参与选型的测试集。</p>
             </div>
           </div>
 
           {interactive && (
             <div className="simulator-control fit-playground__controls">
-              <label>
-                <span>多项式阶数：{degree}（1 到 7）</span>
-                <input
-                  type="range"
-                  min="1"
-                  max={MAX_DEGREE}
-                  step="1"
-                  value={degree}
-                  onChange={(event) => setDegree(Number(event.currentTarget.value))}
-                  onKeyDown={(event) => {
-                    const next = keyboardRangeValue(event.key, degree, 1, MAX_DEGREE, 1);
-                    if (next == null) return;
-                    event.preventDefault();
-                    setDegree(next);
-                  }}
-                />
-              </label>
+              <RangeControl
+                label={<>多项式阶数：{degree}（1 到 7）</>}
+                min={1}
+                max={MAX_DEGREE}
+                value={degree}
+                onChange={setDegree}
+              />
               <div className="learning-sim-actions" aria-label="预设阶数">
                 {DEGREE_PRESETS.map((preset) => (
                   <button key={preset.degree} type="button" onClick={() => setDegree(preset.degree)}>
@@ -407,27 +336,20 @@ export default function LinearFitPlayground({ motionLevel = 'explanatory', initi
             </div>
           )}
 
-          <div className="learning-sim-ledger" role="table" aria-label="1/3/7 阶多项式的固定误差记录">
-            <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-              <span role="columnheader">阶数</span>
-              <span role="columnheader">训练 MSE</span>
-              <span role="columnheader">考试 MSE</span>
-              <span role="columnheader">读法</span>
-            </div>
-            {DEGREE_PRESETS.map((preset) => {
-              const fixed = splitError(polyfit(preset.degree));
-              const fixedRatio = fixed.train > 0 ? fixed.test / fixed.train : 0;
-              return (
-                <div className="learning-sim-ledger-row" role="row" key={preset.degree}>
-                  <span role="cell">{preset.degree} 阶</span>
-                  <span role="cell">{fixed.train.toFixed(1)}</span>
-                  <span role="cell">{fixed.test.toFixed(1)}</span>
-                  <span role="cell">{fixedRatio < 1.4 ? '两者接近' : `${formatGeneralizationRatio(fixed.train, fixed.test)}，分叉`}</span>
-                </div>
-              );
+          <SimLedger
+            ariaLabel="1/3/7 阶多项式的固定误差记录"
+            columns={['阶数', '训练 MSE', '验证 MSE', '读法']}
+            rows={DEGREE_PRESETS.map((preset) => {
+              const fixed = splitError(fitPolynomial(preset.degree));
+              return [
+                `${preset.degree} 阶`,
+                fixed.train.toFixed(1),
+                fixed.test.toFixed(1),
+                describeSplit(fixed).split('：')[0],
+              ];
             })}
-          </div>
-          <p className="static-content-note">固定记录由同一套最小二乘拟合现场计算，完整保留在打印、减少动态和无 JavaScript 状态中。考试样本从未参与拟合。</p>
+            note="固定记录由同一套最小二乘拟合现场计算，完整保留在打印、减少动态和无 JavaScript 状态中。验证样本从未参与拟合，也还不是最终测试集。"
+          />
         </>
       )}
     </section>

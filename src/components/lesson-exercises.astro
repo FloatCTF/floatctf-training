@@ -1,0 +1,49 @@
+---
+import { completedTopicsByCategory, findTopic } from '../data/catalog';
+import { pathPosition } from '../data/paths';
+import { withBase } from '../lib/base-url';
+
+interface Exercise {
+  id: string;
+  kind: string;
+  title: string;
+  question: string;
+  answer: string;
+  sourceIds: string[];
+}
+interface Props { exercises: Exercise[] }
+const { exercises } = Astro.props;
+const labels: Record<string, string> = { mechanism: '机制判断', calculation: '读数与计算', prediction: '预测输出', practice: '小型实践' };
+const route = (Astro.locals as unknown as { starlightRoute?: { entry?: { id?: string } } }).starlightRoute;
+const lessonId = String(route?.entry?.id ?? '').replace(/^lessons\//, '');
+const topic = findTopic(lessonId);
+const siblings = topic ? completedTopicsByCategory(topic.categoryId) : [];
+const index = siblings.findIndex((item) => item.id === lessonId);
+const position = pathPosition(lessonId);
+// 学习路线上的课指向路线里紧接着的下一课；其余课沿用分类内的顺序。
+const next = position
+  ? (position.next && position.next.id === position.upcoming?.id ? position.next : undefined)
+  : (index >= 0 ? siblings[index + 1] : undefined);
+const closing = position
+  ? (position.upcoming ? `三题都能说明理由后，这一课就过关了；下一课《${position.upcoming.title}》还在准备中。` : '三题都能说明理由后，整条学习路线就学完了。')
+  : '三题都能说明理由后，本分类已上线的课就到这里。';
+---
+<section class="lesson-exercises not-content" aria-label="三题学习验收">
+  <p>先写下判断、过程或观察记录，再展开答案核对依据。{
+    next?.pagePath
+      ? <>三题都能说明理由后，进入下一课 <a href={withBase(next.pagePath)}>{next.title}</a>。</>
+      : <>{closing}</>
+  }</p>
+  {exercises.map((exercise, index) => (
+    <article id={`exercise-${exercise.id}`}>
+      <h3>{index + 1}. {exercise.title} <small>{labels[exercise.kind]}</small></h3>
+      <p>{exercise.question}</p>
+      <details>
+        <summary>展开参考答案与依据</summary>
+        <p>{exercise.answer}</p>
+        <p>机制依据：{exercise.sourceIds.map((id, i) => <Fragment>{i > 0 && ' · '}<a href={`#source-${id}`}>来源 {i + 1}</a></Fragment>)}</p>
+      </details>
+      <div class="exercise-print"><p><strong>参考答案：</strong>{exercise.answer}</p></div>
+    </article>
+  ))}
+</section>

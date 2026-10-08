@@ -1,0 +1,372 @@
+{
+  "lessonPlan": {
+    "audience": "会用 php -S 跑页面、读得懂 HTTP 的 Cookie 与会话的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "code",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "第 14 课用 Python 手写的登录流程，换成 PHP 的写法：表单数据进 $_POST，Cookie 进 $_COOKIE，会话编号由 PHP 自动生成和读取，服务器这一侧的数据放在 $_SESSION 里",
+    "learningObjectives": [
+      "用 $_GET 和 $_POST 接收表单数据，区分两种提交方式",
+      "把用户输入放进页面之前用 htmlspecialchars 转义，并说出不转义会发生什么",
+      "用 setcookie 和 $_COOKIE 读写 Cookie",
+      "用 session_start 和 $_SESSION 保存登录状态，说出会话数据存在哪里",
+      "用 password_hash 和 password_verify 存储和核对密码"
+    ],
+    "prerequisites": [
+      "php-types-and-arrays",
+      "http-basics"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-session-vs-cookie",
+      "kind": "mechanism",
+      "title": "用户名存在哪里",
+      "question": "登录成功后，login.php 执行了 $_SESSION['user'] = $user;。浏览器里存的 Cookie 是什么？用户名 student 存在哪里？如果把它改成 setcookie('user', $user) 直接存进 Cookie，me.php 改成读 $_COOKIE['user']，会出什么问题？",
+      "answer": "浏览器里只存了一个 Cookie：PHPSESSID，值是一串随机的会话编号。用户名 student 存在服务器上，PHP 把 $_SESSION 的内容保存在会话文件里，按会话编号找到它。改成直接把用户名放进 Cookie 后，Cookie 的值完全由浏览器这一侧决定：任何人都可以在请求里带上 user=student（第 14 课用 curl -b 就这样做过），me.php 就会把他当成 student。会话的做法之所以可靠，是因为客户端手里只有一个随机编号，真正的数据在服务器上，编号猜不出来。",
+      "sourceIds": [
+        "php-session-basic",
+        "php-setcookie"
+      ]
+    },
+    {
+      "id": "check-predict-sessions",
+      "kind": "prediction",
+      "title": "预测计数器",
+      "question": "依次执行下面四条命令，预测每次打印的 visits 是几。一、curl -s -c a.txt -b a.txt …/counter.php。二、同样的命令再执行一次。三、curl -s …/counter.php（不带 -b）。四、curl -s -c a.txt -b a.txt …/counter.php。",
+      "answer": "一、1：第一次请求没有会话编号，PHP 新建一个会话，计数从 0 加到 1，编号通过 Set-Cookie 发下来，被 -c 存进 a.txt。二、2：-b 带上了编号，PHP 找到同一个会话，在 1 的基础上加 1。三、1：没带编号，PHP 又新建了一个会话，这个新会话和 a.txt 里的那个无关。四、3：又带上了 a.txt 里的编号，回到原来那个会话，在 2 的基础上加 1。",
+      "sourceIds": [
+        "php-session-basic",
+        "php-session-start"
+      ]
+    },
+    {
+      "id": "check-logout-link",
+      "kind": "practice",
+      "title": "给登录流程加一个用户",
+      "question": "给 users.php 加一个用户 teacher，密码自己定。用 php -r 生成密码散列填进去（不要把明文密码写进文件），然后用 curl 完成一次 teacher 的登录、访问 me.php、退出，最后确认退出后 me.php 返回 401。",
+      "answer": "参考步骤：php -r 'echo password_hash(\"你的密码\", PASSWORD_DEFAULT), PHP_EOL;' 生成一行以 $2y$ 开头的散列；在 users.php 的数组里加一行 'teacher' => '刚才的散列',（用单引号，散列里的 $ 不会被当成变量）。然后 curl -c t.txt -b t.txt -d 'user=teacher&password=你的密码' http://127.0.0.1:8000/login.php 应当得到 302；curl -c t.txt -b t.txt …/me.php 打印 Welcome back, teacher.；访问 logout.php 之后再访问 me.php，状态码是 401。自查标准：users.php 里只有散列，没有明文密码。",
+      "sourceIds": [
+        "php-password-hash",
+        "php-password-verify"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "接收表单，转义输出",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "能说出 raw 和 escaped 两行在浏览器里分别显示成什么。"
+    },
+    {
+      "kind": "动手",
+      "title": "Cookie 与会话",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "带不带 Cookie，计数器给出不同的数，并能说明原因。"
+    },
+    {
+      "kind": "进阶",
+      "title": "一个完整的登录",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "用 curl 走完登录、访问、退出，最后一步是 401。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "PHP manual $_POST $_GET tutorial dealing with forms htmlspecialchars",
+      "PHP manual sessions basic usage session_start session_regenerate_id",
+      "PHP manual setcookie $_COOKIE before any output",
+      "PHP manual password_hash password_verify PASSWORD_DEFAULT bcrypt salt"
+    ],
+    "notes": "八个 PHP 文件在 public/labs/php-forms-and-sessions/。全部命令在 kalilinux/kali-rolling 容器（PHP 8.4.24）里实际运行，内置服务器在第二个终端里运行，页面输出取自运行记录；会话编号、bcrypt 散列、Date 头每次不同，比对时按形状处理。会话文件存在 /var/lib/php/sessions，这是 Debian 系 PHP 的默认设置。练习站的账号密码只用于本机练习；users.php 里存的是 password_hash 生成的散列。本课只讲为什么要转义、怎样转义，不演示利用未转义输出的方法。"
+  },
+  "sources": [
+    {
+      "id": "php-post",
+      "kind": "official-doc",
+      "title": "PHP Manual: $_POST",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/reserved.variables.post.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-post"
+      ]
+    },
+    {
+      "id": "php-get",
+      "kind": "official-doc",
+      "title": "PHP Manual: $_GET",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/reserved.variables.get.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-get-any-method"
+      ]
+    },
+    {
+      "id": "php-forms",
+      "kind": "official-doc",
+      "title": "PHP Manual: Dealing with Forms",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/tutorial.forms.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-escape"
+      ]
+    },
+    {
+      "id": "php-htmlspecialchars",
+      "kind": "official-doc",
+      "title": "PHP Manual: htmlspecialchars",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.htmlspecialchars.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-escape"
+      ]
+    },
+    {
+      "id": "php-setcookie",
+      "kind": "official-doc",
+      "title": "PHP Manual: setcookie",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.setcookie.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-setcookie"
+      ]
+    },
+    {
+      "id": "php-session-basic",
+      "kind": "official-doc",
+      "title": "PHP Manual: Sessions: Basic usage",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/session.examples.basic.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-session"
+      ]
+    },
+    {
+      "id": "php-session-start",
+      "kind": "official-doc",
+      "title": "PHP Manual: session_start",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.session-start.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-session-start"
+      ]
+    },
+    {
+      "id": "php-session-regenerate",
+      "kind": "official-doc",
+      "title": "PHP Manual: session_regenerate_id",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.session-regenerate-id.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-regenerate"
+      ]
+    },
+    {
+      "id": "php-password-hash",
+      "kind": "official-doc",
+      "title": "PHP Manual: password_hash",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.password-hash.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-password-hash"
+      ]
+    },
+    {
+      "id": "php-password-verify",
+      "kind": "official-doc",
+      "title": "PHP Manual: password_verify",
+      "publisher": "The PHP Documentation Group",
+      "url": "https://www.php.net/manual/en/function.password-verify.php",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。核对时手册对应 PHP 8.4/8.5。",
+      "supports": [
+        "claim-password-verify"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-post",
+      "text": "$_POST 是一个关联数组，存放通过 HTTP POST 方法传给当前脚本的变量，适用于请求的 Content-Type 是 application/x-www-form-urlencoded 或 multipart/form-data 的情况。",
+      "sourceIds": [
+        "php-post"
+      ]
+    },
+    {
+      "id": "claim-get-any-method",
+      "text": "只要请求里有查询字符串，$_GET 就会被填充，与请求方法无关。",
+      "sourceIds": [
+        "php-get"
+      ]
+    },
+    {
+      "id": "claim-escape",
+      "text": "htmlspecialchars 把在 HTML 里有特殊含义的字符正确编码，这样别人就无法往你的页面里注入 HTML 标签或 JavaScript。",
+      "sourceIds": [
+        "php-forms",
+        "php-htmlspecialchars"
+      ]
+    },
+    {
+      "id": "claim-setcookie",
+      "text": "setcookie 定义一个随 HTTP 头一起发送的 Cookie；和其他头部一样，必须在脚本产生任何输出之前调用。Cookie 设置之后，在下一次页面请求时可以通过 $_COOKIE 数组读取。Cookie 的值存在客户端的电脑上，不要存敏感信息。",
+      "sourceIds": [
+        "php-setcookie"
+      ]
+    },
+    {
+      "id": "claim-session",
+      "text": "会话是按唯一的会话编号为每个用户存储数据的简单方法，用来在多次页面请求之间保持状态。会话编号通常通过会话 Cookie 发给浏览器，再用这个编号取回已有的会话数据；没有编号时，PHP 会新建一个会话并生成新的编号。会话开始后，PHP 用会话数据填充 $_SESSION；默认用文件保存会话数据。",
+      "sourceIds": [
+        "php-session-basic"
+      ]
+    },
+    {
+      "id": "claim-session-start",
+      "text": "session_start() 根据 GET、POST 或 Cookie 传来的会话编号，新建一个会话或恢复当前的会话。",
+      "sourceIds": [
+        "php-session-start"
+      ]
+    },
+    {
+      "id": "claim-regenerate",
+      "text": "session_regenerate_id() 用一个新的会话编号替换当前的编号，并保留当前会话里的数据。",
+      "sourceIds": [
+        "php-session-regenerate"
+      ]
+    },
+    {
+      "id": "claim-password-hash",
+      "text": "password_hash() 用强单向散列算法生成新的密码散列，PASSWORD_DEFAULT 目前使用 bcrypt；不手工提供盐时，它为每个密码随机生成盐，这是推荐的用法。",
+      "sourceIds": [
+        "php-password-hash"
+      ]
+    },
+    {
+      "id": "claim-password-verify",
+      "text": "password_verify() 核对给定的密码与散列是否匹配；password_hash() 返回的散列里已经包含算法、代价和盐，核对所需的信息都在里面。",
+      "sourceIds": [
+        "php-password-verify"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "search",
+      "path": "public/labs/php-forms-and-sessions/search.php",
+      "command": "curl 'http://127.0.0.1:8000/search.php?q=kali+linux'",
+      "expectedResult": "表单的输入框里填好了 kali linux，下面一行 You searched for: kali linux。"
+    },
+    {
+      "id": "raw",
+      "path": "public/labs/php-forms-and-sessions/raw.php",
+      "command": "curl -s 'http://127.0.0.1:8000/raw.php?name=%3Cb%3Ekali%3C%2Fb%3E'",
+      "expectedResult": "raw 那一行原样带着 <b> 标签，escaped 那一行变成 &lt;b&gt;kali&lt;/b&gt;。"
+    },
+    {
+      "id": "counter",
+      "path": "public/labs/php-forms-and-sessions/counter.php",
+      "command": "curl -s -c jar.txt -b jar.txt http://127.0.0.1:8000/counter.php（执行两次）",
+      "expectedResult": "第一次 visits 是 1，第二次是 2，会话编号相同。"
+    },
+    {
+      "id": "theme",
+      "path": "public/labs/php-forms-and-sessions/theme.php",
+      "command": "curl -i 'http://127.0.0.1:8000/theme.php?theme=dark'",
+      "expectedResult": "响应头里有 Set-Cookie: theme=dark，正文 theme saved。"
+    },
+    {
+      "id": "make-hash",
+      "path": "public/labs/php-forms-and-sessions/make_hash.php",
+      "command": "php make_hash.php",
+      "expectedResult": "一行以 $2y$12$ 开头的散列（每次不同），然后 bool(true) 和 bool(false)。"
+    },
+    {
+      "id": "users",
+      "path": "public/labs/php-forms-and-sessions/users.php",
+      "command": "php -r 'var_dump(array_keys(require \"users.php\"));'",
+      "expectedResult": "一个只含 student 的数组。"
+    },
+    {
+      "id": "login",
+      "path": "public/labs/php-forms-and-sessions/login.php",
+      "command": "curl -i -c s.txt -b s.txt -d 'user=student&password=kali123' http://127.0.0.1:8000/login.php",
+      "expectedResult": "302，Location: me.php，并带一个新的 PHPSESSID。"
+    },
+    {
+      "id": "me",
+      "path": "public/labs/php-forms-and-sessions/me.php",
+      "command": "curl -c s.txt -b s.txt http://127.0.0.1:8000/me.php",
+      "expectedResult": "登录后打印 Welcome back, student.；未登录时 401 和 Please log in first.。"
+    },
+    {
+      "id": "logout",
+      "path": "public/labs/php-forms-and-sessions/logout.php",
+      "command": "curl -c s.txt -b s.txt http://127.0.0.1:8000/logout.php",
+      "expectedResult": "Logged out."
+    }
+  ],
+  "visualNarrative": {
+    "kind": "session-store",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

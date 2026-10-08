@@ -1,4 +1,5 @@
 ---
+const manifests = import.meta.glob('../data/lessons/*.json', { eager: true, import: 'default' }) as Record<string, { lessonPlan: { audience: string; durationMinutes: number } }>;
 interface HeroLine {
   text: string;
   accent?: boolean;
@@ -14,6 +15,10 @@ interface Props {
 }
 
 const { series, unit, kicker, lines, summary } = Astro.props;
+const route = (Astro.locals as unknown as { starlightRoute: { entry: { id: string }; headings: { depth: number; slug: string; text: string }[] } }).starlightRoute;
+const id = route.entry.id.replace(/^lessons\//, '');
+const plan = manifests[`../data/lessons/${id}.json`]?.lessonPlan;
+const firstHeading = route.headings.find((heading) => heading.depth === 2);
 const titleLength = lines.reduce((total, line) => total + line.text.replace(/\s+/g, '').length, 0);
 const lengthClass = titleLength <= 10 ? 'lesson-title-short' : titleLength <= 16 ? 'lesson-title-medium' : 'lesson-title-long';
 ---
@@ -26,10 +31,12 @@ const lengthClass = titleLength <= 10 ? 'lesson-title-short' : titleLength <= 16
     <p class="lesson-hero-kicker">{kicker}</p>
     <div class="lesson-display-title" aria-hidden="true">
       {lines.map((line) => (
-        <span class:list={[{ 'lesson-title-accent': line.accent, 'lesson-title-latin': line.latin }]}>{line.text}</span>
+        <span class:list={[{ 'lesson-title-accent': line.accent, 'lesson-title-latin': line.latin, 'lesson-title-code': /^CWE-/.test(line.text) }]}>{line.text}</span>
       ))}
     </div>
     <span class="lesson-accent-rule" aria-hidden="true"></span>
     <p class="lesson-hero-summary">{summary}</p>
+    {plan && <p class="lesson-hero-meta">{plan.audience} · 建议 {plan.durationMinutes} 分钟</p>}
+    {firstHeading && <a href={`#${firstHeading.slug}`}>开始阅读：{firstHeading.text} →</a>}
   </div>
 </section>

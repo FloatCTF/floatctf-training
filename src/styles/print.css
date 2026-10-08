@@ -1,6 +1,5 @@
 @media print {
-  pre,
-  .table-scroll { overflow: visible; white-space: pre-wrap; }
+  pre { overflow: visible; white-space: pre-wrap; }
   .data-table {
     break-inside: avoid;
   }
@@ -64,9 +63,7 @@
   .request-journey-map,
   .skill-loading__steps,
   .skill-loading__step,
-  .choice-ladder__step,
   .choice-ladder__item,
-  .lesson-meta,
   .security-disclaimer,
   .category-directory { break-inside: avoid; box-shadow: none; }
   a { color: var(--training-link); text-decoration: underline; }
@@ -141,7 +138,7 @@
     break-after: avoid;
   }
 
-  :where(.dark-code, .code-panel, .table-scroll, .simulator, .containment-explorer, .stack-explorer, .callout, .intuition-box, .key-takeaway, .cheat-sheet, .source-list, .security-disclaimer) {
+  :where(.code-panel, .simulator, .containment-explorer, .stack-explorer, .callout, .intuition-box, .key-takeaway, .cheat-sheet, .source-list, .security-disclaimer) {
     break-inside: avoid;
   }
 
@@ -277,20 +274,17 @@
     line-height: 1.55;
   }
 
-  .dark-code,
   .code-panel,
   .page-lesson .simulator {
     border: 1pt solid var(--training-heading);
   }
 
-  .dark-code figcaption,
   .code-panel header,
   .page-lesson .simulator > h2 {
     background: var(--training-code-bg) !important;
     color: var(--training-code-text) !important;
   }
 
-  .dark-code pre,
   .code-panel pre,
   .simulator-control {
     background: var(--training-code-bg) !important;
@@ -319,7 +313,28 @@
     display: none !important;
   }
 
+  .lesson-exercises details { display: none; }
+  .lesson-exercises .exercise-print { display: block; }
+  .answer-hint { display: none; }
+  .fit-playground__figure, .at-matrix__figure { overflow: visible; }
+  .fit-playground__figure svg, .at-matrix__figure svg { min-inline-size: 0; max-inline-size: 100%; }
+
   a[href^='http']::after { overflow-wrap: anywhere; font-size: 0.76em; content: ' (' attr(href) ')';
     color: var(--training-muted);
   }
+  .terminal-session,
+  .code-stepper,
+  .git-graph,
+  .http-exchange,
+  .nested-layers,
+  .path-explorer,
+  .permission-bits,
+  .encoding-explorer {
+    break-inside: avoid;
+    box-shadow: none;
+  }
+  .terminal-session__body { overflow: visible; }
+  .terminal-session__out { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .terminal-session__copy { display: none !important; }
+  .encoding-explorer__scroll { overflow: visible; }
 }

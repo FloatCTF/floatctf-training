@@ -1,0 +1,368 @@
+---
+title: 命令行二：权限、管道与进程
+description: 读懂 rwx 权限并用 chmod 修改，用重定向和管道组合命令分析日志，查看和结束进程，用 apt 装软件
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import LabDownload from '../../../components/lab-download.astro';
+import PermissionBits from '../../../components/permission-bits';
+import manifest from '../../../data/lessons/shell-permissions-and-pipes.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用一条管道命令统计 404 请求的来源 IP，把命令和输出抄下来，写一句你的判断。' },
+  { title: '统计状态码并存档', detail: "执行 cut -d' ' -f9 access.log | sort | uniq -c > status.txt，再 cat status.txt。应当有五行，其中 200 出现 12 次，404 出现 5 次。" },
+  { title: '写一个自己的脚本', detail: "用 echo 和 >、>> 写出 info.sh，三行内容依次是 #!/bin/sh、whoami、pwd。给它加上执行权限后用 ./info.sh 运行，应当输出 kali 和 /home/kali/lab。" },
+  { title: '装一个软件并用它看进程', detail: '用 sudo apt install -y htop 安装 htop，运行 htop 看一眼正在运行的进程，按 q 退出。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="SHELL / LESSON 03"
+  kicker="Permissions, Pipes, Processes"
+  lines={[
+    { text: "命令行二" },
+    { text: "权限、管道与进程", accent: true },
+  ]}
+  summary="上一课解决「东西在哪」。这一课解决另外三件事：谁有权动它，怎样把几条小命令接成一条流水线，以及正在运行的程序怎么看、怎么停。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：一份日志里，谁在乱翻
+
+网站服务器会把每一次访问记成一行日志。假设你拿到一份日志，想知道两件事：哪个 IP 访问得最多，哪个 IP 在不停地试探不存在的页面。
+
+用眼睛数是不现实的，真实日志动辄几十万行。这一课结束时，你会用下面这一行命令回答第一个问题：
+
+```text
+cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 1
+```
+
+它由五条小命令接成，每条只做一件很简单的事。在学会把它们接起来之前，先处理一个更基础的问题：权限。
+
+## 一、权限：谁能对文件做什么
+
+### 1. 逐列读 ls -l
+
+进入练习目录，先把上节课建的文件设成一个确定的权限，再看它：
+
+<TerminalSession
+  title="长格式的第一栏就是权限"
+  steps={[
+    { cmd: 'cd ~/lab' },
+    { cmd: 'chmod 644 notes/first.txt', note: '先照抄。这条命令的含义就是本节要讲的内容。' },
+    { cmd: 'ls -l notes/first.txt', out: '-rw-r--r-- 1 kali kali 11 Oct  1 12:35 notes/first.txt', note: '日期是你建文件的时间。' },
+  ]}
+/>
+
+第一栏 `-rw-r--r--` 一共十个字符，拆成 1 + 3 + 3 + 3 来读：
+
+<DataTable
+  caption="-rw-r--r-- 的拆法"
+  headers={["位置", "这里的值", "含义"]}
+  rows={[
+    ["第 1 个字符", "-", "类型。- 是普通文件，d 是目录"],
+    ["第 2 到 4 个", "rw-", "所有者（这里是 kali）的权限：可读、可写、不可执行"],
+    ["第 5 到 7 个", "r--", "所属组里其他用户的权限：只读"],
+    ["第 8 到 10 个", "r--", "其余所有人的权限：只读"],
+  ]}
+  columnRatios={[1, 1, 3]}
+/>
+
+后面两个 `kali` 分别是文件的所有者和所属组。
+
+三种权限的含义对文件和目录略有不同：
+
+<DataTable
+  caption="r、w、x 分别允许什么"
+  headers={["权限", "对文件", "对目录"]}
+  rows={[
+    ["r 读", "读取内容，例如 cat", "列出里面有什么，例如 ls"],
+    ["w 写", "修改内容", "在里面创建、删除文件"],
+    ["x 执行", "把它当程序运行", "进入它、访问里面的文件，例如 cd"],
+  ]}
+  columnRatios={[1, 2, 2.4]}
+/>
+
+（来源：[Structure of File Mode Bits](#source-coreutils-mode-structure)）
+
+### 2. 字母和数字是同一件事
+
+每类用户的三个权限各是一个开关。把 r 记作 4、w 记作 2、x 记作 1，开着的加起来，就得到一位 0 到 7 的数字。三类用户三位数字，`rw-r--r--` 就是 `644`。（来源：[Numeric Modes](#source-coreutils-numeric-modes)）
+
+<PermissionBits client:visible />
+
+### 3. 亲手验证 x 权限
+
+写一个只有两行的脚本，看看有没有 x 权限的区别。
+
+<TerminalSession
+  title="同一个文件：能看，不能跑，加了 x 就能跑"
+  steps={[
+    { cmd: "echo '#!/bin/sh' > hello.sh", note: '第一行告诉系统：这个文件交给 /bin/sh 来解释执行。' },
+    { cmd: "echo 'echo \"it works\"' >> hello.sh", note: '>> 是往文件末尾追加一行。' },
+    { cmd: 'cat hello.sh', out: '#!/bin/sh\necho "it works"' },
+    { cmd: 'chmod 644 hello.sh' },
+    { cmd: 'ls -l hello.sh', out: '-rw-r--r-- 1 kali kali 26 Oct  1 12:35 hello.sh' },
+    { cmd: './hello.sh', out: 'zsh: permission denied: ./hello.sh', note: './ 表示「当前目录下的这个文件」。它没有 x 权限，系统拒绝把它当程序运行。' },
+    { cmd: 'chmod +x hello.sh', note: '+x 给三类用户都加上执行权限。' },
+    { cmd: 'ls -l hello.sh', out: '-rwxr-xr-x 1 kali kali 26 Oct  1 12:35 hello.sh' },
+    { cmd: './hello.sh', out: 'it works' },
+  ]}
+/>
+
+`chmod` 有两种写法。数字写法一次设定全部九位，例如 `chmod 640 hello.sh`；符号写法只改指定的部分，例如 `chmod u+x hello.sh` 只给所有者加上执行权限，`chmod +x` 给三类用户都加。
+
+<Callout variant="info" title="新文件的初始权限">
+新建文件默认是什么权限，由系统的 umask 设置决定。你用 `ls -l` 看刚建的文件，可能是 `-rw-rw-r--`，也可能是 `-rw-r--r--`，两种都正常。需要确定的权限时，用 chmod 明确设一次。
+</Callout>
+
+### 4. sudo：临时借用管理员权限
+
+有些文件普通用户读不了：
+
+<TerminalSession
+  title="权限不够，以及 sudo"
+  steps={[
+    { cmd: 'ls -l /etc/shadow', out: '-rw-r----- 1 root shadow 604 Oct  1 12:26 /etc/shadow', note: '所有者是 root，其他人一栏是 ---。这个文件存着所有账号的密码哈希。大小和日期与你的不同。' },
+    { cmd: 'cat /etc/shadow', out: 'cat: /etc/shadow: Permission denied', note: 'kali 既不是 root，也不在 shadow 组里，落在「其他人」一栏。' },
+    { cmd: 'sudo whoami', out: '[sudo] password for kali: \nroot', note: 'sudo 让后面这一条命令以 root 身份执行。输入的是 kali 自己的密码，屏幕不回显。' },
+  ]}
+/>
+
+**root** 是系统的管理员账号，不受权限位限制。`sudo` 只对它后面的那一条命令生效，执行完你仍然是 kali。安装软件、修改系统配置这类操作需要它；日常操作不需要，也不应该加。（来源：[All about sudo](#source-kali-sudo)）
+
+## 二、重定向与管道
+
+### 1. 准备练习用的日志
+
+下载下面这份 20 行的示例日志。在 Kali 里用浏览器打开本页点击下载，文件会保存到 `~/Downloads`。
+
+<LabDownload file="labs/shell-permissions-and-pipes/access.log" label="下载示例日志" />
+
+<TerminalSession
+  title="把日志搬进练习目录，先看看长什么样"
+  steps={[
+    { cmd: 'mv ~/Downloads/access.log .', note: '最后的 . 是当前目录。浏览器保存到了别处的话，换成实际的路径。' },
+    { cmd: 'wc -l access.log', out: '20 access.log', note: 'wc -l 数行数。' },
+    {
+      cmd: 'head -n 3 access.log',
+      out: '192.0.2.10 - - [01/Oct/2026:09:12:01 +0800] "GET / HTTP/1.1" 200 5123\n192.0.2.10 - - [01/Oct/2026:09:12:02 +0800] "GET /static/app.js HTTP/1.1" 200 18210\n198.51.100.7 - - [01/Oct/2026:09:12:05 +0800] "GET /robots.txt HTTP/1.1" 200 68',
+    },
+  ]}
+/>
+
+每行用空格隔开，第 1 段是访问者的 IP，第 7 段是请求的路径，第 9 段是**状态码**：200 表示请求成功，404 表示服务器没有找到请求的资源。（来源：[RFC 9110](#source-rfc9110)）HTTP 的细节在后面的课里讲，现在只把它们当作一列一列的文字。
+
+### 2. 重定向：把输出存进文件
+
+命令的输出默认打印在屏幕上。**重定向**把它改送到文件里。
+
+<TerminalSession
+  title="> 覆盖写入，>> 追加，2> 存报错"
+  steps={[
+    { cmd: "grep ' 404 ' access.log > notfound.txt", note: 'grep 挑出包含指定文字的行。屏幕上什么都没有，因为结果进了文件。' },
+    { cmd: 'wc -l notfound.txt', out: '5 notfound.txt' },
+    { cmd: "echo 'checked by kali' >> notfound.txt" },
+    {
+      cmd: 'tail -n 2 notfound.txt',
+      out: '192.0.2.44 - - [01/Oct/2026:09:13:01 +0800] "GET /favicon.ico HTTP/1.1" 404 162\nchecked by kali',
+      note: 'tail -n 2 只看最后两行。原来的 5 行还在，新的一行接在后面。',
+    },
+    { cmd: 'ls nosuch 2> err.txt', note: '报错没有出现在屏幕上。' },
+    { cmd: 'cat err.txt', out: "ls: cannot access 'nosuch': No such file or directory" },
+  ]}
+/>
+
+<DataTable
+  caption="三个重定向符号"
+  headers={["写法", "作用", "注意"]}
+  rows={[
+    ["命令 > 文件", "把正常输出写进文件", "文件已存在时先清空再写。原内容会丢"],
+    ["命令 >> 文件", "把正常输出追加到文件末尾", "原内容保留"],
+    ["命令 2> 文件", "把报错信息写进文件", "正常输出和报错是两条独立的通道，2 指的是报错那一条"],
+  ]}
+  columnRatios={[1, 1.6, 2.2]}
+/>
+
+（来源：[zsh Manual: Redirection](#source-zsh-redirection)）
+
+### 3. 管道：前一条的输出是后一条的输入
+
+**管道**写作 `|`。它把左边命令的输出直接交给右边的命令当输入，中间不经过文件。（来源：[zsh Manual: Shell Grammar](#source-zsh-grammar)）
+
+写管道的方法是一段一段地加，每加一段就看一眼结果。下面从取出 IP 开始，逐步回答「谁访问得最多」。
+
+<TerminalSession
+  title="一段一段接出答案"
+  steps={[
+    {
+      cmd: "cut -d' ' -f1 access.log | head -n 4",
+      out: '192.0.2.10\n192.0.2.10\n198.51.100.7\n192.0.2.10',
+      note: "cut -d' ' -f1 按空格切开每一行，只留第 1 段。先用 head 看前 4 行，确认取对了。",
+    },
+    {
+      cmd: "cut -d' ' -f1 access.log | sort | uniq -c",
+      out: '      8 192.0.2.10\n      2 192.0.2.44\n      6 198.51.100.7\n      4 203.0.113.5',
+      note: 'sort 把相同的 IP 排到一起，uniq -c 把相邻的重复行合并并数出次数。uniq 只合并相邻的行，所以前面必须先 sort。',
+    },
+    {
+      cmd: "cut -d' ' -f1 access.log | sort | uniq -c | sort -rn",
+      out: '      8 192.0.2.10\n      6 198.51.100.7\n      4 203.0.113.5\n      2 192.0.2.44',
+      note: 'sort -rn 按数字从大到小排。',
+    },
+    {
+      cmd: "cut -d' ' -f1 access.log | sort | uniq -c | sort -rn | head -n 1",
+      out: '      8 192.0.2.10',
+      note: '只留第一行：访问最多的是 192.0.2.10，共 8 次。',
+    },
+  ]}
+/>
+
+同一套接法换一个字段，就能回答另一个问题。把 `-f1` 换成 `-f9`，统计的就是各状态码出现的次数：
+
+<TerminalSession
+  title="换一列，换一个问题"
+  steps={[
+    {
+      cmd: "cut -d' ' -f9 access.log | sort | uniq -c",
+      out: '     12 200\n      1 302\n      1 403\n      5 404\n      1 500',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="这条流水线上的五个工具"
+  headers={["命令", "做什么"]}
+  rows={[
+    ["grep 文字", "只留下包含这段文字的行"],
+    ["cut -d' ' -f1", "按空格切列，只留第 1 列"],
+    ["sort", "排序。-n 按数字，-r 倒序"],
+    ["uniq -c", "合并相邻的重复行，前面标上次数"],
+    ["head -n 3 / tail -n 3", "只留前 3 行 / 后 3 行"],
+  ]}
+  columnRatios={[1, 2.4]}
+/>
+
+这种「提取、排序、计数」的组合借鉴自 MIT Missing Semester 课程里分析登录日志的例子。（来源：[Missing Semester](#source-missing-semester-shell)）
+
+## 三、进程与装软件
+
+### 1. 进程：正在运行的程序
+
+程序运行起来之后叫**进程**（process），每个进程有一个编号，叫 PID。
+
+<TerminalSession
+  title="放到后台、查看、结束"
+  steps={[
+    { cmd: 'sleep 300 &', out: '[1] 4959', note: 'sleep 300 什么都不做，等 300 秒。末尾的 & 让它在后台运行，提示符立刻回来。[1] 是作业号，后面是 PID，你的数字会不同。' },
+    { cmd: 'jobs', out: '[1]  + running    sleep 300', note: 'jobs 列出这个终端里的后台作业。' },
+    {
+      cmd: 'ps',
+      out: '    PID TTY          TIME CMD\n   4864 pts/3    00:00:00 zsh\n   4959 pts/3    00:00:00 sleep\n   4960 pts/3    00:00:00 ps',
+      note: 'ps 列出当前终端里的进程：shell 本身、后台的 sleep，以及 ps 自己。',
+    },
+    { cmd: 'kill %1', out: '[1]  + terminated  sleep 300', note: 'kill 请一个进程结束。%1 指 1 号作业，也可以写 PID。zsh 随后报告这个作业已结束，这行通知有时要等到你敲下一条命令才出现。' },
+    { cmd: 'jobs', note: '没有输出：后台已经没有作业了。' },
+  ]}
+/>
+
+在前台运行、占着终端不放的程序，用上节课学的 `Ctrl` + `C` 中断。（来源：[zsh Manual: Jobs & Signals](#source-zsh-jobs)）
+
+### 2. 用 apt 装软件
+
+Kali 的软件装在统一的软件源里，用 `apt` 管理。装软件会改动系统目录，所以需要 sudo。
+
+<TerminalSession
+  title="没装的命令、忘了 sudo、正确安装"
+  steps={[
+    {
+      cmd: 'htop',
+      out: "Command 'htop' not found, but can be installed with:\nsudo apt install htop\nDo you want to install it? (N/y)n",
+      note: 'Kali 认出这是一个还没装的软件。这里输入 n 回车，下面手动装一次。',
+    },
+    {
+      cmd: 'apt install htop',
+      out: 'Error: Could not open lock file /var/lib/dpkg/lock-frontend - open (13: Permission denied)\nError: Unable to acquire the dpkg frontend lock (/var/lib/dpkg/lock-frontend), are you root?',
+      note: '忘了 sudo。最后一句 are you root? 就是提示。',
+    },
+    {
+      cmd: 'sudo apt install -y htop',
+      out: 'Installing:\n  htop\n\nInstalling dependencies:\n  libunwind8\n\nSuggested packages:\n  libnl-3-200  libnl-genl-3-200  lm-sensors  lsof  strace\n\nSummary:\n  Upgrading: 0, Installing: 2, Removing: 0, Not Upgrading: 2\n  …（后面是下载和安装的进度，这里省略）',
+      note: '-y 表示对确认提问自动回答「是」。依赖的包和数字因环境而异。',
+    },
+    { cmd: 'which htop', out: '/usr/bin/htop', note: 'which 告诉你一个命令对应的程序文件在哪。有输出就说明装上了。' },
+    { cmd: 'htop --version', out: 'htop 3.5.3' },
+  ]}
+/>
+
+（来源：[apt(8)](#source-apt-manpage)）
+
+`htop` 是一个全屏的进程查看器。输入 `htop` 回车进入，按 `q` 退出。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的报错"
+  headers={["终端的回答", "原因", "处理"]}
+  rows={[
+    ["zsh: permission denied: ./hello.sh", "文件没有 x 权限", "chmod +x hello.sh"],
+    ["cat: /etc/shadow: Permission denied", "你对这个文件没有读权限", "先想清楚是否真的需要读它。确实需要时用 sudo"],
+    ["Error: Could not open lock file … are you root?", "装软件忘了加 sudo", "在命令前加 sudo 重新执行"],
+    ["uniq -c 的结果里同一个值出现了好几行", "uniq 只合并相邻的重复行，前面没有排序", "在 uniq 之前加一段 sort"],
+    ["本想追加，结果文件里只剩最后一行", "把 >> 写成了 >", "> 会先清空文件。重要文件操作前先 cp 一份"],
+    ["cut 取出来的列不对", "分隔符或列号数错了", "先接一段 head -n 3 看输出，再往后接"],
+  ]}
+  columnRatios={[1.6, 1.4, 1.6]}
+/>
+
+边界：`sudo` 会绕过全部权限检查，`sudo rm -r` 写错路径可以删掉整个系统。只在命令确实需要管理员权限时加它，加之前把整条命令再读一遍。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'ls -l', description: '第一栏是权限：类型 1 位，所有者、同组、其他人各 3 位。' },
+    { term: 'chmod 644 / 755 文件', description: '数字写法：r=4，w=2，x=1，每类用户加起来一位。' },
+    { term: 'chmod +x / u+x 文件', description: '符号写法：给所有人或只给所有者加执行权限。' },
+    { term: 'sudo 命令', description: '以 root 身份执行这一条命令。' },
+    { term: '> / >> / 2>', description: '覆盖写入；追加；把报错写入文件。' },
+    { term: '命令A | 命令B', description: 'A 的输出作为 B 的输入。' },
+    { term: 'grep / cut / sort / uniq -c', description: '筛行；取列；排序；合并相邻重复并计数。' },
+    { term: 'wc -l / head / tail', description: '数行数；看开头；看结尾。' },
+    { term: '命令 & / jobs / kill %1', description: '后台运行；列后台作业；结束 1 号作业。' },
+    { term: 'ps / htop', description: '列出进程；全屏查看进程，q 退出。' },
+    { term: 'sudo apt install -y 包名', description: '安装软件。which 命令名 可以确认装在哪。' },
+  ]}
+/>
+
+<KeyTakeaway>
+权限是九个开关：所有者、同组、其他人各有读 4、写 2、执行 1，`ls -l` 看，`chmod` 改。管道 `|` 把一条命令的输出交给下一条，`>` 和 `>>` 把输出存进文件。写管道时一段一段加，每加一段看一眼结果。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

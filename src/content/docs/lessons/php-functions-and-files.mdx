@@ -1,0 +1,248 @@
+---
+title: PHP 四：函数、include 与文件
+description: 定义带类型声明的函数，用 require 把公共代码和页面头尾拆成单独的文件，用 file_put_contents 和 file 读写服务器上的文件，并只允许按名单选择文件
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/php-functions-and-files.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '加上 about.php，并在导航里放上它的链接。三个页面的导航应当一样。' },
+  { title: '给留言加上时间', detail: '改 notes.php：写入时在每条留言前面加上 date(\'Y-m-d H:i\') 和一个空格。提交两条，cat notes.txt 检查。' },
+  { title: '把格式化函数用起来', detail: '在 notes.php 的列表下面显示一行 notes.txt is … 字节数，用 lib.php 里的 format_size 和 PHP 的 filesize 函数。' },
+  { title: '看看留言里的特殊字符', detail: '提交一条内容为 <i>hi</i> & bye 的留言。分别看 cat notes.txt 的结果和 curl 拿到的 <li>，说明为什么两者不一样，以及哪一种是对的。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="PHP / LESSON 30"
+  kicker="Functions, require, Files"
+  lines={[
+    { text: "PHP 四" },
+    { text: "函数、include 与文件", accent: true },
+  ]}
+  summary="到上一课为止，每个功能都是一个独立的 PHP 文件，开头的几行和页面的头尾在每个文件里各抄一遍。这一课把重复的部分拆出来，让一个小站点有了结构；再让它把数据写进文件，第一次真正记住用户提交的东西。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：改一处导航，要改几个文件
+
+假设你的网站有十个页面，每个页面顶上都有一行导航。现在要在导航里加一个链接。
+
+如果导航是复制粘贴到十个文件里的，就得改十次，而且总有一次会漏掉。第 25 课的 C 用头文件解决了同样的问题：公共的东西只写一份，谁要用就包含进来。PHP 也有这样的机制，而且它包含的不只是函数，还可以是一段 HTML。
+
+## 一、函数
+
+### 1. 定义和调用
+
+<CodeFile file="labs/php-functions-and-files/lib.php" />
+
+<CodeFile file="labs/php-functions-and-files/use_lib.php" mark="2,8" />
+
+<TerminalSession
+  title="调用 lib.php 里的函数"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    {
+      cmd: 'php use_lib.php',
+      out: "512 B\n2 KB\nHello, kali!\nWelcome back, kali!\nPHP Fatal error:  Uncaught TypeError: format_size(): Argument #1 ($bytes) must be of type int, string given, called in /home/kali/lab/php/use_lib.php on line 8 and defined in /home/kali/lab/php/lib.php:2\nStack trace:\n#0 /home/kali/lab/php/use_lib.php(8): format_size()\n#1 {main}\n  thrown in /home/kali/lab/php/lib.php on line 2",
+      note: '前四行正常。最后一行传进去的是字符串，函数要的是 int，PHP 拒绝调用。',
+    },
+  ]}
+/>
+
+<DataTable
+  caption="function greet(string $name, string $greeting = 'Hello'): string"
+  headers={["部分", "含义"]}
+  rows={[
+    ["string $name", "参数前面写类型。调用时实参不是这个类型，就抛出 TypeError"],
+    ["$greeting = 'Hello'", "默认值。调用时不传这个参数，就用 'Hello'"],
+    [": string", "返回值的类型，写在括号后面"],
+  ]}
+  columnRatios={[1.4, 3.4]}
+/>
+
+第 28 课讲过，PHP 会自动转换类型，`"5" + 3` 得 8。**类型声明**关掉了函数入口处的这种自由：参数必须是声明的类型，否则直接报错，而不是悄悄转换后算出一个莫名其妙的结果。自己写函数时，给参数和返回值都写上类型。（来源：[Type declarations](#source-php-declarations)、[Functions](#source-php-functions)）
+
+### 2. require 和 __DIR__
+
+`use_lib.php` 第 2 行的 `require __DIR__ . '/lib.php';` 把 `lib.php` 的内容包含进来执行，之后就能调用里面定义的函数。
+
+`__DIR__` 是当前这个文件所在的目录。为什么不直接写 `require 'lib.php'`？因为相对路径是相对于「从哪里运行」来解释的，换个目录运行就可能找不到。`__DIR__` 永远指向这个文件自己所在的位置，拼出来的路径不会错。（来源：[Magic constants](#source-php-magic-constants)）
+
+## 二、把页面拆开
+
+### 1. 公共的头和尾
+
+先在终端 A 里启动服务器：
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动服务器"
+  steps={[
+    { cmd: 'cd ~/lab/php' },
+    { cmd: 'php -S 127.0.0.1:8000', out: '[Fri Oct  2 14:09:50 2026] PHP 8.4.24 Development Server (http://127.0.0.1:8000) started\n…' },
+  ]}
+/>
+
+<CodeFile file="labs/php-functions-and-files/header.php" note="用到一个变量 $title，由包含它的页面事先设好。" />
+
+<CodeFile file="labs/php-functions-and-files/footer.php" />
+
+<CodeFile file="labs/php-functions-and-files/index.php" mark="2-3,6" />
+
+<TerminalSession
+  title="终端 B：三个文件拼成一页"
+  steps={[
+    {
+      cmd: 'curl http://127.0.0.1:8000/index.php',
+      out: '<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><title>Home</title></head>\n<body>\n<nav><a href="index.php">Home</a> | <a href="notes.php">Notes</a></nav>\n<h1>Home</h1>\n<p>Welcome to the practice site.</p>\n<footer>Practice site</footer>\n</body>\n</html>',
+      note: '浏览器拿到的是一个完整的页面，看不出它来自三个文件。',
+    },
+  ]}
+/>
+
+被包含的文件和包含它的文件共用同一套变量，所以 `index.php` 先设 `$title`，`header.php` 就能用。现在导航只写在 `header.php` 一处，改一次，所有页面都变。
+
+### 2. include 和 require 的区别
+
+<CodeFile file="labs/php-functions-and-files/missing.php" />
+
+<TerminalSession
+  title="终端 B：包含一个不存在的文件"
+  steps={[
+    {
+      cmd: 'php missing.php',
+      out: "start\nPHP Warning:  include(/home/kali/lab/php/nosuch.php): Failed to open stream: No such file or directory in /home/kali/lab/php/missing.php on line 3\nPHP Warning:  include(): Failed opening '/home/kali/lab/php/nosuch.php' for inclusion (include_path='.:/usr/share/php') in /home/kali/lab/php/missing.php on line 3\nafter include\nPHP Warning:  require(/home/kali/lab/php/nosuch.php): Failed to open stream: No such file or directory in /home/kali/lab/php/missing.php on line 5\nPHP Fatal error:  Uncaught Error: Failed opening required '/home/kali/lab/php/nosuch.php' (include_path='.:/usr/share/php') in /home/kali/lab/php/missing.php:5\nStack trace:\n#0 {main}\n  thrown in /home/kali/lab/php/missing.php on line 5",
+      note: 'include 失败只是警告，after include 照样打印了。require 失败直接终止，after require 没有出现。',
+    },
+  ]}
+/>
+
+缺了函数库或页面头部，后面的代码多半也没法正确运行，与其带着错误继续，不如立刻停下。所以**包含程序必需的文件一律用 `require`**。（来源：[include](#source-php-include)、[require](#source-php-require)）
+
+## 三、读写服务器上的文件
+
+### 1. 一个留言本
+
+<CodeFile file="labs/php-functions-and-files/notes.php" mark="6-7,14,23" />
+
+<DataTable
+  caption="notes.php 的读和写"
+  headers={["行", "做什么"]}
+  rows={[
+    ["6", "去掉留言首尾的空白，空留言不保存"],
+    ["7", "把留言加一个换行写进 notes.txt。FILE_APPEND 追加到末尾而不是覆盖；LOCK_EX 在写的时候锁住文件，两个人同时提交也不会写乱"],
+    ["9 到 10", "写完跳回留言页。第 29 课讲过，跳转之后要 exit"],
+    ["14", "读文件：file 把每一行变成数组的一个元素，FILE_IGNORE_NEW_LINES 去掉行尾的换行"],
+    ["23", "输出每一条留言，经过 htmlspecialchars"],
+  ]}
+  columnRatios={[0.6, 4]}
+/>
+
+（来源：[file_put_contents](#source-php-file-put-contents)、[file](#source-php-file)）
+
+<TerminalSession
+  title="终端 B：提交两条留言"
+  steps={[
+    { cmd: "curl -s -d 'text=buy more coffee' http://127.0.0.1:8000/notes.php", note: '没有输出：响应是一个跳转，curl 默认不跟。' },
+    { cmd: "curl -s -d 'text=<b>bold?</b>' http://127.0.0.1:8000/notes.php" },
+    { cmd: "curl -s http://127.0.0.1:8000/notes.php | grep '<li>'", out: '  <li>buy more coffee</li>\n  <li>&lt;b&gt;bold?&lt;/b&gt;</li>' },
+    { cmd: 'cat notes.txt', out: 'buy more coffee\n<b>bold?</b>', note: '文件里存的是原样的内容。转义发生在输出的时候。' },
+    { cmd: 'wc -l notes.txt', out: '2 notes.txt' },
+  ]}
+/>
+
+注意最后两步的对照：**存的时候原样存，输出到 HTML 的时候再转义。** 同一条数据以后可能要输出到别的地方，比如导出成文本、写进 JSON，每个地方需要的处理不同，所以在离开程序、进入某种格式的那一刻做对应的转义。
+
+这就是本学期最后一课留言板的雏形，到时会把文件换成数据库。
+
+### 2. 读哪个文件，由谁决定
+
+<CodeFile file="labs/php-functions-and-files/page.php" mark="2-5,9,14" />
+
+<TerminalSession
+  title="终端 B：在名单里，和不在名单里"
+  steps={[
+    { cmd: "curl 'http://127.0.0.1:8000/page.php?name=rules'", out: 'Be kind. No spam.' },
+    {
+      cmd: "curl -i 'http://127.0.0.1:8000/page.php?name=secret'",
+      out: 'HTTP/1.1 404 Not Found\nHost: 127.0.0.1:8000\nDate: Fri, 02 Oct 2026 14:09:53 GMT\nConnection: close\nX-Powered-By: PHP/8.4.24\nContent-Type: text/plain; charset=utf-8\n\nNo such page.',
+    },
+  ]}
+/>
+
+`page.php` 让访问者用 `name` 参数选择要看的说明页。关键在于：**请求里的值只用来在名单里查找，拼进文件路径的永远是名单里写死的文件名。** 不在名单里，一律 404。
+
+<Callout variant="warning" title="不要把请求里的值直接拼成路径">
+`file_get_contents(__DIR__ . '/' . $_GET['name'])` 这样的写法，等于让访问者自己决定服务器读哪个文件。你无法预料对方会填什么，程序也就无法保证只读到你想给人看的那几个文件。`include`、`require` 也是一样，而且后果更严重：被包含的文件会被当作 PHP 代码执行。读写和包含文件时，路径只能由程序决定。
+</Callout>
+
+练完之后在终端 A 按 `Ctrl` + `C` 停掉服务器。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["Uncaught TypeError: …(): Argument #1 … must be of type int, string given", "传给函数的值类型不对，常见于直接把 $_GET 里的字符串传进去", "先检查和转换输入，例如 (int) 或 ctype_digit，再调用"],
+    ["Failed opening required '…'", "require 的文件路径不对", "用 __DIR__ . '/文件名' 拼路径"],
+    ["Fatal error: Cannot redeclare function …", "同一个定义函数的文件被包含了两次", "改用 require_once，它保证同一个文件只包含一次"],
+    ["Warning: Undefined variable $title", "header.php 里用到的变量，包含它的页面没有先设好", "在 require 之前给变量赋值"],
+    ["file_put_contents(…): Failed to open stream: Permission denied", "PHP 进程对那个目录没有写权限", "第 3 课的 ls -l 和 chmod。练习时文件放在自己的目录里"],
+    ["留言提交之后，刷新页面又提交了一次", "处理完 POST 之后没有跳转，浏览器刷新时重新发送了表单", "处理完 POST 就 header('Location: …'); exit;"],
+  ]}
+  columnRatios={[2, 1.7, 1.6]}
+/>
+
+局限：这一课没有讲命名空间、自动加载（`autoload`）和 Composer。真实的 PHP 项目用它们来组织几十上百个文件，原理和 `require` 相同，第 36 课读 Java 项目时会见到类似的结构。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'function f(int $x, string $s = "a"): string { … }', description: '带类型声明和默认值的函数。' },
+    { term: 'require __DIR__ . "/lib.php";', description: '包含必需的文件，失败即终止。' },
+    { term: 'include / require_once', description: '失败只警告 / 同一文件只包含一次。' },
+    { term: '__DIR__', description: '当前文件所在的目录。' },
+    { term: 'file_put_contents($f, $s, FILE_APPEND | LOCK_EX)', description: '追加写入，写时加锁。' },
+    { term: 'file_get_contents($f)', description: '整个文件读成字符串。' },
+    { term: 'file($f, FILE_IGNORE_NEW_LINES)', description: '整个文件读成数组，每行一个元素。' },
+    { term: 'file_exists($f)', description: '文件是否存在。' },
+    { term: '$pages = ["about" => "about.txt"]', description: '用名单决定能读哪些文件。' },
+  ]}
+/>
+
+<KeyTakeaway>
+函数参数和返回值写上类型，类型不符时 PHP 直接报错而不是悄悄转换。公共的函数和页面片段各放一个文件，用 `require __DIR__ . '/文件'` 包含进来；必需的文件用 `require`，找不到就停下。`file_put_contents` 和 `file` 读写服务器上的文件，存的时候原样存，输出到 HTML 时再转义。读哪个文件、包含哪个文件，只能由程序按名单决定，不能直接用请求里的值拼路径。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

@@ -1,9 +1,10 @@
 ---
+import TitledBox from './titled-box.astro';
+
 interface Props { title?: string }
 const { title = '重点结论' } = Astro.props;
 ---
-<aside class="key-takeaway" aria-label={title}>
-  <p class="component-kicker">KEY TAKEAWAY</p>
-  <h2>{title}</h2>
+
+<TitledBox class="key-takeaway" kicker="KEY TAKEAWAY" title={title}>
   <slot />
-</aside>
+</TitledBox>

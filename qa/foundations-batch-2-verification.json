@@ -1,0 +1,474 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-10-01",
+  "scope": "基础学期第 2 批：Python 六课（第 5 到 10 课）",
+  "commandReplay": {
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali，Python 3.14.7，pip 26.1.2；shell 命令在交互式 zsh 里执行，>>> 会话在默认的 Python 交互环境里执行，均由 pexpect 驱动",
+    "method": "sh scripts/lab/replay-lesson.sh <课 id>：清空容器里的 ~/lab/python，放入 public/labs/<课 id>/ 的材料，按页面顺序重放全部 TerminalSession 并逐条比对",
+    "commands": 194,
+    "identical": 193,
+    "differing": 1,
+    "perLesson": {
+      "python-variables-and-types": {
+        "shell": {
+          "identical": 5,
+          "differing": 0
+        },
+        "python": {
+          "identical": 28,
+          "differing": 0
+        }
+      },
+      "python-control-flow": {
+        "shell": {
+          "identical": 10,
+          "differing": 0
+        },
+        "python": {
+          "identical": 13,
+          "differing": 0
+        }
+      },
+      "python-functions-and-modules": {
+        "shell": {
+          "identical": 17,
+          "differing": 1
+        },
+        "python": {
+          "identical": 13,
+          "differing": 0
+        }
+      },
+      "python-collections": {
+        "shell": {
+          "identical": 4,
+          "differing": 0
+        },
+        "python": {
+          "identical": 30,
+          "differing": 0
+        }
+      },
+      "python-strings-and-bytes": {
+        "shell": {
+          "identical": 4,
+          "differing": 0
+        },
+        "python": {
+          "identical": 43,
+          "differing": 0
+        }
+      },
+      "python-files-and-exceptions": {
+        "shell": {
+          "identical": 16,
+          "differing": 0
+        },
+        "python": {
+          "identical": 10,
+          "differing": 0
+        }
+      }
+    },
+    "differences": [
+      {
+        "lesson": "python-functions-and-modules",
+        "command": "pip install cowsay",
+        "detail": "重放时 pip 命中了本地缓存，显示 Using cached；首次安装显示 Downloading。页面采用首次安装的输出。"
+      }
+    ],
+    "exerciseAndHomeworkAnswers": "六课验收题与课后作业给出的预期输出，均用参考解答在同一容器里运行核对过（seconds、temp、collatz、sevens、FizzBuzz、is_valid_port、bump、to_fahrenheit、codes、推导式与去重、三层解码、异或爆破密钥 93、ratio、count_404、status 报表）。"
+  },
+  "stepperTraces": {
+    "method": "scripts/lab/py-trace.py 用 sys.settrace 追踪课程材料的真实执行，生成 src/data/steppers/*.json；门禁校验数据里的源码与材料文件一致",
+    "files": [
+      "python-names.json",
+      "python-for-total.json",
+      "python-function-call.json",
+      "python-list-alias.json",
+      "python-try-except.json"
+    ],
+    "browserLineSequences": {
+      "python-variables-and-types": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5"
+      ],
+      "python-control-flow": [
+        "1",
+        "2",
+        "3",
+        "2",
+        "3",
+        "2",
+        "3",
+        "2",
+        "4"
+      ],
+      "python-functions-and-modules": [
+        "1",
+        "5",
+        "2",
+        "3",
+        "5",
+        "6"
+      ],
+      "python-collections": [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6"
+      ],
+      "python-files-and-exceptions": [
+        "1",
+        "2",
+        "3",
+        "5",
+        "6",
+        "7"
+      ]
+    },
+    "finalOutputs": {
+      "python-variables-and-types": "4 3 kali",
+      "python-control-flow": "6",
+      "python-functions-and-modules": "8",
+      "python-collections": "[1, 2, 3] [1, 2, 3] [1, 2, 3, 4]",
+      "python-files-and-exceptions": "not a number: abc\ndone"
+    }
+  },
+  "browser": {
+    "target": "http://localhost:4321/",
+    "engine": "Playwright Chromium",
+    "pages": [
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 4,
+        "sources": 10,
+        "check": "desk python-variables-and-types http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 6,
+        "sources": 6,
+        "check": "desk python-control-flow http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 6,
+        "sources": 9,
+        "check": "desk python-functions-and-modules http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 7,
+        "codeFiles": 3,
+        "sources": 6,
+        "check": "desk python-collections http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 3,
+        "sources": 10,
+        "check": "desk python-strings-and-bytes http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 7,
+        "sources": 6,
+        "check": "desk python-files-and-exceptions http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 4,
+        "sources": 10,
+        "check": "phone python-variables-and-types http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 6,
+        "sources": 6,
+        "check": "phone python-control-flow http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 6,
+        "sources": 9,
+        "check": "phone python-functions-and-modules http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 7,
+        "codeFiles": 3,
+        "sources": 6,
+        "check": "phone python-collections http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 3,
+        "sources": 10,
+        "check": "phone python-strings-and-bytes http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 7,
+        "sources": 6,
+        "check": "phone python-files-and-exceptions http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 4,
+        "sources": 10,
+        "check": "dark python-variables-and-types http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 6,
+        "sources": 6,
+        "check": "dark python-control-flow http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 6,
+        "sources": 9,
+        "check": "dark python-functions-and-modules http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 7,
+        "codeFiles": 3,
+        "sources": 6,
+        "check": "dark python-collections http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 9,
+        "codeFiles": 3,
+        "sources": 10,
+        "check": "dark python-strings-and-bytes http=200"
+      },
+      {
+        "over": 0,
+        "h1": 1,
+        "broken": [],
+        "wide": [],
+        "exercises": 3,
+        "terminals": 11,
+        "codeFiles": 7,
+        "sources": 6,
+        "check": "dark python-files-and-exceptions http=200"
+      }
+    ],
+    "staticModes": {
+      "reduced": {
+        "python-variables-and-types": {
+          "presentation": "static",
+          "ledgerRows": 5,
+          "controls": 0,
+          "details": 3
+        },
+        "python-control-flow": {
+          "presentation": "static",
+          "ledgerRows": 9,
+          "controls": 0,
+          "details": 3
+        },
+        "python-functions-and-modules": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        },
+        "python-collections": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        },
+        "python-files-and-exceptions": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        }
+      },
+      "nojs": {
+        "python-variables-and-types": {
+          "presentation": "static",
+          "ledgerRows": 5,
+          "controls": 0,
+          "details": 3
+        },
+        "python-control-flow": {
+          "presentation": "static",
+          "ledgerRows": 9,
+          "controls": 0,
+          "details": 3
+        },
+        "python-functions-and-modules": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        },
+        "python-collections": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        },
+        "python-files-and-exceptions": {
+          "presentation": "static",
+          "ledgerRows": 6,
+          "controls": 0,
+          "details": 3
+        }
+      }
+    },
+    "print": {
+      "python-variables-and-types": {
+        "answersVisible": 3,
+        "terminals": 9,
+        "codeFiles": 4,
+        "headerHidden": true
+      },
+      "python-control-flow": {
+        "answersVisible": 3,
+        "terminals": 9,
+        "codeFiles": 6,
+        "headerHidden": true
+      },
+      "python-functions-and-modules": {
+        "answersVisible": 3,
+        "terminals": 11,
+        "codeFiles": 6,
+        "headerHidden": true
+      },
+      "python-collections": {
+        "answersVisible": 3,
+        "terminals": 7,
+        "codeFiles": 3,
+        "headerHidden": true
+      },
+      "python-strings-and-bytes": {
+        "answersVisible": 3,
+        "terminals": 9,
+        "codeFiles": 3,
+        "headerHidden": true
+      },
+      "python-files-and-exceptions": {
+        "answersVisible": 3,
+        "terminals": 11,
+        "codeFiles": 7,
+        "headerHidden": true
+      }
+    },
+    "site": {
+      "path": "已上线 10 / 37",
+      "pathLinks": 10,
+      "nextTag": "Git 一：快照、暂存区与历史",
+      "homeEntry": "零基础从这里开始 | 新生学期路线 | 7 个阶段 · 37 课 · 已上线 10 | 下一课　11　Git 一：快照、暂存区与历史",
+      "panel": {
+        "series": "Python 7 课",
+        "links": 6,
+        "planned": 1
+      },
+      "lastPagination": "上一课 Python 五：字符串、bytes 与编码  《新生学期路线》的下一课《Git 一：快照、暂存区与历史》还在准备中。",
+      "lesson4Next": [
+        "/lessons/shell-permissions-and-pipes/",
+        "/lessons/python-variables-and-types/"
+      ]
+    },
+    "consoleErrors": []
+  },
+  "notCovered": [
+    "真实 Kali 虚拟机上的端到端操作（含 mousepad 编辑器的使用）",
+    "真实移动设备与屏幕阅读器",
+    "纸张分页",
+    "生产 nginx 与 CSP"
+  ]
+}

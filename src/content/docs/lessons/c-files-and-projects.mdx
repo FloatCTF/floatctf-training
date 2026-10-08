@@ -1,0 +1,286 @@
+---
+title: C 七：文件读写与多文件工程
+description: 用 fopen、fgets、fprintf 读写文件并处理打开失败，把程序拆成多个源文件和头文件分开编译，用最小的 Makefile 让构建只重做变过的部分
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/c-files-and-projects.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '给工程加上 smallest，make 之后 ./report 打印三行，最后一行是 smallest 128。' },
+  { title: '统计每种状态码', detail: '仿照 count404.c 写 codes.c：统计 access.log 里 200、302、403、404、500 各出现几次并打印。结果应当与第 3 课用 cut、sort、uniq -c 得到的一致：12、1、1、5、1。' },
+  { title: '把统计结果写进文件', detail: '让 codes.c 把结果用 fprintf 写进 status.txt，每行「次数 状态码」。用 cat status.txt 检查，再和第 10 课 Python 版的输出对比。' },
+  { title: '给 Makefile 加一条规则', detail: '在 Makefile 里加一个目标 run，依赖 report，命令是 ./report。执行 make run，它应当在需要时先构建，再运行。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="C / LESSON 25"
+  kicker="Files, Headers, Makefile"
+  lines={[
+    { text: "C 七" },
+    { text: "文件读写与多文件工程", accent: true },
+  ]}
+  summary="前六课的程序都只有一个文件，数据都写在代码里。真实的 C 程序要读写文件，而且由几十上百个源文件组成。这一课补上这两件事，并且学会让工具替你记住「改了哪个文件该重新编译什么」。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：程序长大以后
+
+第 10 课你用 Python 统计过日志里的 404。同一件事用 C 写，需要自己打开文件、自己准备存放每一行的缓冲区、自己检查每一步有没有失败。
+
+再往后，程序会变长。所有代码挤在一个文件里，改一个字就要全部重新编译；几个人合作时，大家还会不停地在同一个文件上冲突。
+
+所以真实的 C 工程是这样的：代码分散在很多文件里，各自编译，最后链接；再用一个工具记住它们之间的关系。下学期读开源软件的源码时，第一眼看到的就是这种结构。
+
+## 一、读写文件
+
+### 1. 读一个文件
+
+<CodeFile file="labs/c-files-and-projects/count404.c" mark="5-9,14,20" />
+
+<TerminalSession
+  title="统计日志里的 404"
+  steps={[
+    { cmd: 'cd ~/lab/c' },
+    { cmd: 'cp ~/lab/access.log .', note: '第 3 课的那份日志。找不到的话从该课重新下载。' },
+    { cmd: 'gcc -Wall count404.c -o count404' },
+    { cmd: './count404', out: '20 lines, 5 not found', note: '和第 3 课用 grep、第 10 课用 Python 得到的数字相同。' },
+  ]}
+/>
+
+<DataTable
+  caption="读文件的四个动作"
+  headers={["行", "写法", "含义"]}
+  rows={[
+    ["5", "FILE *log = fopen(\"access.log\", \"r\");", "打开文件。\"r\" 是只读。返回一个 FILE *，之后凭它读写"],
+    ["6 到 9", "if (log == NULL) { perror(…); return 1; }", "打不开时 fopen 返回 NULL。perror 打印出原因，程序以非 0 状态退出"],
+    ["14", "while (fgets(line, sizeof(line), log) != NULL)", "一次读一行到 line 里。读到文件末尾时 fgets 返回 NULL，循环结束"],
+    ["20", "fclose(log);", "用完关闭"],
+  ]}
+  columnRatios={[0.5, 2.2, 2.4]}
+/>
+
+`fgets` 是第 22 课读键盘输入时用过的函数，那时第三个参数写的是 `stdin`。键盘输入在 C 里也被当成一个文件。第 16 行的 `strstr(line, "\" 404 ")` 在一行里找一段文字，找不到返回 `NULL`。
+
+和 Python 对照：
+
+<DataTable
+  caption="同一件事的两种写法"
+  headers={["", "Python", "C"]}
+  rows={[
+    ["打开", "with open(\"access.log\") as f:", "FILE *f = fopen(\"access.log\", \"r\");"],
+    ["逐行读", "for line in f:", "while (fgets(line, sizeof(line), f) != NULL)"],
+    ["一行有多长", "不用管", "自己准备缓冲区。超过缓冲区的行会被拆成几次读入"],
+    ["关闭", "with 结束时自动关", "自己 fclose"],
+    ["打不开", "抛出 FileNotFoundError", "返回 NULL，不检查就继续用会段错误"],
+  ]}
+  columnRatios={[0.8, 1.8, 2.4]}
+/>
+
+### 2. 打不开的时候
+
+<TerminalSession
+  title="文件不在"
+  steps={[
+    { cmd: 'mv access.log a.log', note: '先把文件改个名字。' },
+    { cmd: './count404', out: 'access.log: No such file or directory', note: 'perror 打印的：你给的那段文字，冒号，系统说的原因。' },
+    { cmd: 'echo $?', out: '1', note: '程序用 return 1 告诉调用者：没有成功。' },
+    { cmd: 'mv a.log access.log' },
+  ]}
+/>
+
+（来源：[fopen(3)](#source-man-fopen3)、[perror(3)](#source-man-perror3)、[fgets(3)](#source-man-fgets3)、[Beej's Guide: File Input/Output](#source-beej-files)）
+
+### 3. 写一个文件
+
+<CodeFile file="labs/c-files-and-projects/report.c" mark="4,9-10" />
+
+<TerminalSession
+  title="fprintf：往文件里 printf"
+  steps={[
+    { cmd: 'gcc -Wall report.c -o report_demo' },
+    { cmd: './report_demo', note: '没有输出，内容写进了文件。' },
+    { cmd: 'cat report.txt', out: '404 report\ncount: 5' },
+  ]}
+/>
+
+`fprintf` 和 `printf` 的用法相同，只是多了第一个参数，指明写到哪个文件。模式 `"w"` 和 Python 一样：文件不存在就新建，存在就先清空。追加用 `"a"`。
+
+## 二、把程序拆成多个文件
+
+### 1. 三个文件
+
+下面这个小工程有三个文件。`stats.c` 里是两个做统计的函数，`main.c` 调用它们：
+
+<CodeFile file="labs/c-files-and-projects/stats.h" note="头文件：两个函数的原型。" />
+
+<CodeFile file="labs/c-files-and-projects/stats.c" mark="1" note="函数的定义。" />
+
+<CodeFile file="labs/c-files-and-projects/main.c" mark="2" note="使用这两个函数的地方。" />
+
+第 21 课讲过：调用一个函数之前，编译器必须先见过它的原型。`main.c` 要调用 `total` 和 `largest`，而它们定义在另一个文件里。办法是把原型写进一个**头文件** `stats.h`，谁要用就 `#include` 它。
+
+<DataTable
+  caption="各放什么"
+  headers={["文件", "放什么", "谁包含它"]}
+  rows={[
+    ["stats.h", "函数的原型，结构体的定义。只有声明，没有函数体", "main.c 和 stats.c 都包含"],
+    ["stats.c", "函数的定义", "不被包含。它单独编译"],
+    ["main.c", "main，以及对那些函数的调用", "不被包含"],
+  ]}
+  columnRatios={[0.7, 2.6, 1.6]}
+/>
+
+两处细节：
+
+- `#include "stats.h"` 用的是双引号，表示在当前目录里找这个文件。尖括号 `<stdio.h>` 是到系统目录里找。
+- `stats.h` 开头的 `#ifndef STATS_H`、`#define STATS_H` 和结尾的 `#endif` 是固定写法，防止同一个头文件被重复包含。每个头文件都照这样包一层，名字换成自己的。
+
+（来源：[Beej's Guide: Multifile Projects](#source-beej-multifile)）
+
+### 2. 分开编译，再链接
+
+<TerminalSession
+  title="每个 .c 各自编译成 .o"
+  steps={[
+    { cmd: 'gcc -Wall -c main.c', note: '第 19 课学的 -c：只编译，不链接，得到 main.o。' },
+    { cmd: 'gcc -Wall -c stats.c' },
+    { cmd: 'gcc main.o stats.o -o report', note: '把两个目标文件链接成可执行文件。' },
+    { cmd: './report', out: 'total   7808\nlargest 4096' },
+  ]}
+/>
+
+分开编译的好处：改了 `stats.c`，只需要重新编译它，再重新链接；`main.c` 不用动。文件越多，省下的时间越可观。
+
+如果只编译 `main.c`：
+
+<TerminalSession
+  title="少给了一个文件"
+  steps={[
+    {
+      cmd: 'gcc main.c -o report',
+      out: "/usr/bin/x86_64-linux-gnu-ld.bfd: /tmp/ccMyIiFn.o: in function `main':\nmain.c:(.text+0x38): undefined reference to `total'\n/usr/bin/x86_64-linux-gnu-ld.bfd: main.c:(.text+0x61): undefined reference to `largest'\ncollect2: error: ld returned 1 exit status",
+      note: '第 19 课见过的链接错误。头文件只让编译通过；函数的机器码在 stats.o 里，没把它交给链接器，自然找不到。',
+    },
+  ]}
+/>
+
+（来源：[gcc(1)](#source-man-gcc)）
+
+## 三、Makefile：只重做变过的部分
+
+### 1. 把依赖关系写下来
+
+每次都手敲三条命令，文件一多就记不住了，更记不住改了某个文件之后哪些需要重新编译。**make** 是专门做这件事的工具。它读一个名叫 `Makefile` 的文件：
+
+<CodeFile file="labs/c-files-and-projects/Makefile" lang="makefile" note="保存为 ~/lab/c/Makefile，没有扩展名。命令那几行的开头必须是一个 Tab，不能是空格。" />
+
+`Makefile` 由一条条**规则**组成，每条规则是这个样子：
+
+```text
+目标: 依赖 依赖 …
+<Tab>命令
+```
+
+<DataTable
+  caption="读第一条规则"
+  headers={["部分", "这里的内容", "含义"]}
+  rows={[
+    ["目标", "report", "要生成的文件"],
+    ["依赖", "main.o stats.o", "生成它需要哪些文件。它们当中任何一个比目标新，目标就过时了"],
+    ["命令", "gcc main.o stats.o -o report", "怎样生成"],
+  ]}
+  columnRatios={[0.6, 1.6, 2.8]}
+/>
+
+（来源：[GNU make: What a Rule Looks Like](#source-make-rules)）
+
+### 2. 让 make 干活
+
+<TerminalSession
+  title="同一条命令，四种反应"
+  steps={[
+    { cmd: 'rm -f report main.o stats.o', note: '先把刚才手工编译的产物删掉，从头来。' },
+    { cmd: 'make', out: 'gcc -Wall -c main.c\ngcc -Wall -c stats.c\ngcc main.o stats.o -o report', note: 'make 把它执行的每条命令都打印出来。它从第一条规则开始：要 report，先得有 main.o 和 stats.o，于是先去做它们。' },
+    { cmd: './report', out: 'total   7808\nlargest 4096' },
+    { cmd: 'make', out: "make: 'report' is up to date.", note: '什么都没变，什么都不用做。' },
+    { cmd: 'touch stats.c', note: 'touch 把文件的修改时间更新为现在，相当于假装改了它。' },
+    { cmd: 'make', out: 'gcc -Wall -c stats.c\ngcc main.o stats.o -o report', note: '只重新编译了 stats.c，然后重新链接。main.c 没有动。' },
+    { cmd: 'make clean', out: 'rm -f report main.o stats.o', note: 'make 后面可以写目标的名字。clean 这条规则没有依赖，命令是删掉所有产物。' },
+  ]}
+/>
+
+make 的判断方法很朴素：**比较修改时间。** 目标不存在，或者有任何一个依赖比目标新，就执行那条规则的命令。（来源：[GNU make: How make Processes a Makefile](#source-make-how)、[make(1)](#source-man-make)）
+
+所以依赖要写全。`main.o` 那一行写着 `main.c stats.h`：`main.c` 包含了 `stats.h`，头文件改了，`main.c` 也得重新编译。漏写了 `stats.h`，改完头文件再 `make`，它会告诉你一切都是最新的，而你运行的是旧程序。
+
+## 常见报错与排错
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["终端的回答或现象", "原因", "处理"]}
+  rows={[
+    ["access.log: No such file or directory", "fopen 失败：文件名写错，或者不在当前目录", "ls 看文件在不在；pwd 看自己在哪"],
+    ["zsh: segmentation fault，出在读文件的地方", "fopen 返回了 NULL，没有检查就交给了 fgets", "每次 fopen 之后都判断是不是 NULL"],
+    ["undefined reference to `total'", "链接时少了 stats.o", "把所有 .o 都写在链接命令里"],
+    ["error: implicit declaration of function ‘total’", "main.c 没有 #include \"stats.h\"", "补上"],
+    ["Makefile:2: *** missing separator.  Stop.", "命令那一行的开头是空格，不是 Tab", "删掉开头的空格，按一次 Tab 键"],
+    ["make: *** No rule to make target '…'.  Stop.", "要的目标或依赖在 Makefile 里找不到，常常是文件名拼错", "核对 Makefile 里的文件名和实际的文件名"],
+    ["改了头文件，make 却说 up to date", "规则的依赖里漏写了那个头文件", "把头文件加到所有包含它的 .o 的依赖里"],
+  ]}
+  columnRatios={[1.9, 1.7, 1.6]}
+/>
+
+局限：这里的 Makefile 是最小的写法，每个文件一条规则。真实工程会用变量和通配规则来避免重复，大型工程往往用 CMake 这类工具自动生成 Makefile。它们的核心都是今天这三样：目标、依赖、命令。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'FILE *f = fopen("名字", "r");', description: '打开文件。"r" 读，"w" 覆盖写，"a" 追加。失败返回 NULL。' },
+    { term: 'fgets(line, sizeof(line), f)', description: '读一行。到文件末尾返回 NULL。' },
+    { term: 'fprintf(f, "格式", …)', description: '往文件里写，用法同 printf。' },
+    { term: 'fclose(f);', description: '关闭文件。' },
+    { term: 'perror("说明");', description: '打印最近一次失败的原因。' },
+    { term: 'stats.h / stats.c', description: '头文件放原型，源文件放定义。' },
+    { term: '#include "stats.h"', description: '包含自己写的头文件，用双引号。' },
+    { term: 'gcc -c 文件.c', description: '只编译成 .o。' },
+    { term: 'gcc a.o b.o -o 程序', description: '把目标文件链接成可执行文件。' },
+    { term: '目标: 依赖 / <Tab>命令', description: 'Makefile 的一条规则。' },
+    { term: 'make / make clean', description: '构建第一个目标 / 执行 clean 规则。' },
+  ]}
+/>
+
+<KeyTakeaway>
+读写文件靠 `FILE *`：`fopen` 打开，`fgets` 逐行读，`fprintf` 写，`fclose` 关；`fopen` 失败返回 `NULL`，必须检查。程序拆成多个文件时，头文件放原型给大家包含，每个源文件单独编译成目标文件，最后链接到一起。Makefile 把「谁依赖谁、怎样生成」写下来，make 靠比较文件的修改时间，只重做过时的部分。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

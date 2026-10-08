@@ -1,0 +1,32 @@
+[
+  {
+    "label": "请求到达本机 8080",
+    "detail": "curl 访问 127.0.0.1:8080。这个端口是 web 服务发布出来的（compose.yaml 里的 ports: \"8080:80\"），Docker 把请求转给 web 容器的 80 端口。",
+    "state": "normal"
+  },
+  {
+    "label": "nginx 转发",
+    "detail": "web 容器里的 nginx 收到请求，按 nginx.conf 里的 proxy_pass，把它转发给 http://app:8000。",
+    "state": "normal"
+  },
+  {
+    "label": "按服务名找到 app",
+    "detail": "Compose 把两个服务放进同一个网络 compose_default。在这个网络里，app 这个名字会被解析成 app 容器当前的地址。",
+    "state": "normal"
+  },
+  {
+    "label": "PHP 执行 index.php",
+    "detail": "app 容器里的 php -S 监听 0.0.0.0:8000，收到请求后执行 index.php，往 /data/visits.db 里插一行，再数一共有几行。",
+    "state": "normal"
+  },
+  {
+    "label": "数据落在卷里",
+    "detail": "/data 挂的是卷 compose_data。容器删掉重建，计数还在；只有 docker compose down -v 才会把卷一起删掉。",
+    "state": "normal"
+  },
+  {
+    "label": "响应原路返回",
+    "detail": "visit #N 这一行先回到 nginx，再经过本机的 8080 端口回到 curl。curl 从头到尾只和 web 打交道，看不到 app。",
+    "state": "success"
+  }
+]

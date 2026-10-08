@@ -1,0 +1,118 @@
+---
+import { Icon } from '@astrojs/starlight/components';
+---
+<training-search data-base={import.meta.env.BASE_URL}>
+  <button type="button" data-search-open disabled aria-label="搜索课程" aria-keyshortcuts="Control+K Meta+K"><Icon name="magnifier" size="1.1rem" /><span>搜索</span></button>
+  <dialog aria-label="搜索课程">
+    <form method="dialog"><button class="search-close" aria-label="关闭搜索">关闭 ×</button></form>
+    <label for="training-query">搜索课程与机制</label>
+    <div class="search-field"><input id="training-query" type="search" placeholder="输入课名、注意力、SQL…" autocomplete="off" /><button type="button" data-search-clear>清除</button></div>
+    <p data-search-status role="status">输入完整关键词；多个关键词用空格分隔。</p>
+    <ol data-search-results></ol>
+  </dialog>
+</training-search>
+<!-- Pagefind 是构建后生成的模块，由浏览器原生 import 按需加载。 -->
+<script is:inline type="module">
+  class TrainingSearch extends HTMLElement {
+    connectedCallback() {
+      const dialog = this.querySelector('dialog');
+      const opener = this.querySelector('[data-search-open]');
+      opener.disabled = false;
+      const input = this.querySelector('input');
+      const status = this.querySelector('[data-search-status]');
+      const results = this.querySelector('ol');
+      const base = this.dataset.base;
+      let index;
+      let revision = 0;
+      let timer;
+      const open = () => { dialog.showModal(); input.focus(); };
+      opener.addEventListener('click', open);
+      dialog.addEventListener('close', () => opener.focus());
+      dialog.addEventListener('keydown', (event) => {
+        if (event.key !== 'Escape') return;
+        event.preventDefault();
+        event.stopPropagation();
+        dialog.close();
+      });
+      dialog.addEventListener('click', (event) => {
+        if (event.target !== dialog) return;
+        const box = dialog.getBoundingClientRect();
+        if (event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom) dialog.close();
+      });
+      document.addEventListener('keydown', (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+          event.preventDefault();
+          if (dialog.open) dialog.close(); else open();
+        }
+      });
+      const plain = (html) => {
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        return doc.body.textContent || '';
+      };
+      const normalize = (text) => text.normalize('NFKC').toLowerCase().replace(/\s+/g, '');
+      const search = async () => {
+        const current = ++revision;
+        const query = input.value.trim();
+        results.replaceChildren();
+        if (!query) { status.textContent = '输入完整关键词；多个关键词用空格分隔。'; return; }
+        status.textContent = '正在搜索…';
+        try {
+          const bundleUrl = new URL(`${base}pagefind/pagefind.js`, window.location.origin).href;
+          index ??= import(bundleUrl).then(async (module) => {
+            await module.options({ baseUrl: base });
+            return module;
+          }).catch((error) => { index = undefined; throw error; });
+          const response = await (await index).search(query);
+          const candidates = await Promise.all(response.results.map((result) => result.data()));
+          if (current !== revision) return;
+          const terms = query.split(/\s+/).map(normalize);
+          const matches = candidates.filter((result) => {
+            const content = normalize(`${result.meta.title || ''} ${result.content}`);
+            return terms.every((term) => content.includes(term));
+          });
+          status.textContent = matches.length ? `找到 ${matches.length} 个包含完整关键词的页面。` : '未找到相关内容。请检查拼写，或改用“SQL”“注意力”等课程关键词。';
+          for (const result of matches) {
+            const item = document.createElement('li');
+            const link = document.createElement('a');
+            link.href = result.url;
+            link.textContent = result.meta.title || '课程页面';
+            const excerpt = document.createElement('p');
+            excerpt.textContent = plain(result.excerpt);
+            item.append(link, excerpt);
+            for (const sub of (result.sub_results || []).slice(0, 3)) {
+              if (sub.url === result.url) continue;
+              const chapter = document.createElement('a');
+              chapter.href = sub.url;
+              chapter.textContent = `章节：${sub.title}`;
+              item.append(chapter);
+            }
+            results.append(item);
+          }
+        } catch {
+          if (current === revision) status.textContent = '搜索暂时不可用，请重试或从课程地图进入。';
+        }
+      };
+      input.addEventListener('input', () => { ++revision; clearTimeout(timer); timer = setTimeout(search, 180); });
+      this.querySelector('[data-search-clear]').addEventListener('click', () => { input.value = ''; clearTimeout(timer); void search(); input.focus(); });
+    }
+  }
+  if (!customElements.get('training-search')) customElements.define('training-search', TrainingSearch);
+</script>
+<style>
+  button { cursor: pointer; color: var(--training-heading); background: var(--training-surface-bg); border: 1px solid var(--training-border); min-height: 44px; padding: .4rem .7rem; }
+  [data-search-open] { display: flex; align-items: center; gap: .4rem; }
+  dialog { margin: 4rem auto auto; color: var(--training-text); background: var(--training-page-bg); border: var(--training-rule-heavy); width: min(42rem, calc(100% - 2rem)); max-height: calc(100dvh - 6rem); padding: 1.4rem; overflow: auto; }
+  dialog::backdrop { background: rgb(0 0 0 / .5); }
+  form { display: flex; justify-content: end; margin: 0 0 .5rem; }
+  label { font-weight: 700; }
+  .search-field { display: flex; gap: .5rem; margin-block: .5rem; }
+  [data-search-clear] { flex-shrink: 0; white-space: nowrap; }
+  input { min-width: 0; width: 100%; font: inherit; color: var(--training-text); background: var(--training-surface-bg); border: 1px solid var(--training-border); padding: .6rem; }
+  [data-search-status] { font-size: .875rem; }
+  ol { padding: 0; list-style: none; }
+  ol :global(li) { border-top: var(--training-rule-light); padding: 1rem 0; }
+  ol :global(a) { display: block; color: var(--training-link); }
+  ol :global(p) { font-size: .875rem; margin-block: .4rem; }
+  :is(input, button):focus-visible { outline: 2px solid var(--training-focus); outline-offset: 2px; }
+  @media print { training-search { display: none; } }
+</style>

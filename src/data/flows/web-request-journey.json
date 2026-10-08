@@ -1,0 +1,22 @@
+[
+  {
+    "label": "解析名字",
+    "detail": "程序只认 IP 地址。先把 example.com 交给 DNS，换回一个地址。",
+    "state": "normal"
+  },
+  {
+    "label": "建立连接",
+    "detail": "向这个地址的 80 端口发起 TCP 连接。双方来回三个报文，连接建立。",
+    "state": "normal"
+  },
+  {
+    "label": "发送请求",
+    "detail": "沿着这条连接发出一段文字，第一行是 GET / HTTP/1.1。",
+    "state": "normal"
+  },
+  {
+    "label": "收到响应",
+    "detail": "服务器沿同一条连接发回状态、若干说明和网页内容。",
+    "state": "success"
+  }
+]

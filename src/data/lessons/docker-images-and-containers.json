@@ -1,0 +1,428 @@
+{
+  "lessonPlan": {
+    "audience": "会用 Kali 命令行、理解端口和 HTTP、还没有用过容器的零基础新生",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "mechanism",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "在第 1 课的「电脑、虚拟机、Kali」三层里面再加一层：Kali 里运行着几个容器，各自带着自己的文件，共用 Kali 的内核；端口映射在这一层开一个口子，卷把数据放到容器外面",
+    "learningObjectives": [
+      "说出镜像、容器、镜像仓库各是什么，以及容器和虚拟机的区别",
+      "安装 Docker 并让普通用户能使用它，说出 docker 组意味着什么",
+      "用 docker run、ps、logs、exec、rm 管理容器的一生",
+      "用 -p 把容器的端口发布到本机，用 curl 访问",
+      "解释删除容器时数据为什么会消失，用绑定挂载和卷把数据放到容器外面"
+    ],
+    "prerequisites": [
+      "network-basics",
+      "shell-permissions-and-pipes",
+      "vm-kali-setup"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-10-02"
+  },
+  "exercises": [
+    {
+      "id": "check-ephemeral",
+      "kind": "mechanism",
+      "title": "改过的网页去哪了",
+      "question": "你用 docker exec 改了 web 容器里 nginx 的首页，curl 能看到 hello from inside。然后 docker rm -f web，再用同一条 docker run 起一个同名的新容器，curl 看到的又是 Welcome to nginx!。你的改动去哪了？如果希望改动留下来，有哪两种做法？",
+      "answer": "改动随着旧容器一起被删掉了。容器启动时用的是镜像里的文件，每个容器在镜像之上有一层自己的可写层，运行中对文件的增删改都记在这一层；删除容器，这一层也一起删除。新容器从同一个镜像重新开始，镜像本身从来没有被改过，所以又是默认首页。想留下改动有两种做法：一是绑定挂载，把本机的一个目录（例如 ~/lab/docker/site）挂到容器里的网站目录，文件实际存放在本机，容器删掉也还在，在本机改文件，容器里立刻看到；二是卷，由 Docker 管理的一块存储，用 docker volume create 创建、-v 卷名:路径 挂进去，它的生存期独立于任何容器。",
+      "sourceIds": [
+        "dk-persisting",
+        "dk-bind-mounts",
+        "dk-volumes"
+      ]
+    },
+    {
+      "id": "check-predict-docker",
+      "kind": "prediction",
+      "title": "预测四条命令的结果",
+      "question": "一个名为 web 的容器正在运行，用的是 -p 8080:80。依次执行：一、curl -s http://127.0.0.1:80/。二、docker run -d --name web nginx:alpine。三、docker run -d -p 8080:80 nginx:alpine。四、执行完前三步后 docker ps -a --format '{{.Image}}\\t{{.State}}' 里会出现几个容器、各是什么状态？",
+      "answer": "一、连接失败（curl 的错误 7）。容器里的 nginx 监听 80，但发布到本机的是 8080；本机的 80 端口上没有程序。二、报错 Conflict：名字 /web 已经被占用，容器没有创建。三、先打印一个新容器的编号，然后报错 port is already allocated：本机 8080 已经发布给了 web。这个新容器已经创建出来，只是没能启动。四、两个：web 是 running，第三步那个是 created。用 docker container prune 或 docker rm 清理掉 created 的那个。",
+      "sourceIds": [
+        "dk-publishing",
+        "dk-run",
+        "dk-ps"
+      ]
+    },
+    {
+      "id": "check-serve-notes",
+      "kind": "practice",
+      "title": "用容器发布一个页面",
+      "question": "在 ~/lab/docker 里建一个 notes 目录，放一个 index.html，内容是你的名字。用 nginx:alpine 起一个名为 notes 的容器，发布到本机的 9090 端口，用绑定挂载只读地挂上这个目录。用 curl 验证，再改一次 index.html 并验证，最后删掉容器。",
+      "answer": "参考步骤：mkdir -p ~/lab/docker/notes；echo '<h1>zhangsan</h1>' > ~/lab/docker/notes/index.html；docker run -d --name notes -p 9090:80 -v ~/lab/docker/notes:/usr/share/nginx/html:ro nginx:alpine；curl -s http://127.0.0.1:9090/ 显示 <h1>zhangsan</h1>；改完文件再 curl，立刻看到新内容，不需要重启容器；docker rm -f notes。自查标准：docker ps 里 notes 的 PORTS 一栏是 0.0.0.0:9090->80/tcp；删掉容器之后 ~/lab/docker/notes/index.html 仍然在。",
+      "sourceIds": [
+        "dk-publishing",
+        "dk-bind-mounts",
+        "dk-run"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "镜像、容器与仓库",
+      "heading": "一、",
+      "minutes": 25,
+      "checkpoint": "docker run hello-world 打印出 Hello from Docker!。"
+    },
+    {
+      "kind": "动手",
+      "title": "容器的一生",
+      "heading": "二、",
+      "minutes": 35,
+      "checkpoint": "curl 127.0.0.1:8080 拿到 nginx 的首页，并能说出这个请求经过了哪里。"
+    },
+    {
+      "kind": "进阶",
+      "title": "数据放在容器外面",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "删掉容器之后，绑定挂载的文件和卷里的数据都还在。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-10-02",
+    "queries": [
+      "Docker docs what is a container image registry",
+      "Docker docs publishing ports persisting container data sharing local files",
+      "Docker docs Linux post-installation docker group root-level privileges",
+      "Docker docs volumes bind mounts",
+      "docker container run ls logs exec reference"
+    ],
+    "notes": "全部命令在一个专门的 Kali 容器（kali-docker）里实际运行：容器里装了 Kali 打包的 docker.io、docker-buildx、docker-compose，并运行着自己的 Docker 守护进程，与学员虚拟机里装好 Docker 之后的情形一致。这个容器以特权模式运行，只用于采集，不影响宿主机上的 Docker。镜像都从 Docker Hub 实际拉取；拉取进度、镜像摘要、容器编号、nginx 日志里的时间和网关地址每次不同，页面已注明，比对时按形状处理。Kali 默认桌面安装不包含 docker.io，已用 apt 的模拟安装核对。安装过程的输出没有上页面。"
+  },
+  "versionInfo": {
+    "targetVersion": "docker.io 28.5.2（Kali kali-rolling 打包版本）",
+    "environment": "kalilinux/kali-rolling 容器（os-release 2026.3），用户 kali（在 docker 组里），交互式 zsh；docker.io 28.5.2、docker-buildx 0.29.1、docker-compose 2.40.3（Kali 打包版本），守护进程在同一个容器里运行。",
+    "verifiedAt": "2026-10-02",
+    "knownDifferences": "nginx:alpine 镜像会随上游更新，首页内容大小、版本号可能变化。Docker 的默认网桥地址一般是 172.17.0.1，采集环境里是 172.18.0.1。拉取镜像需要能访问 Docker Hub；网络受限的环境需要配置镜像加速或代理。从 Docker 官方源安装的 docker-ce 与 Kali 的 docker.io 命令用法相同，版本号不同。"
+  },
+  "sources": [
+    {
+      "id": "dk-container",
+      "kind": "official-doc",
+      "title": "Docker Docs: What is a container?",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-container/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-container",
+        "claim-vm-vs-container"
+      ]
+    },
+    {
+      "id": "dk-image",
+      "kind": "official-doc",
+      "title": "Docker Docs: What is an image?",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-an-image/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-image"
+      ]
+    },
+    {
+      "id": "dk-registry",
+      "kind": "official-doc",
+      "title": "Docker Docs: What is a registry?",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/the-basics/what-is-a-registry/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-registry",
+        "cmd-hello"
+      ]
+    },
+    {
+      "id": "dk-postinstall",
+      "kind": "official-doc",
+      "title": "Docker Docs: Linux post-installation steps for Docker Engine",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/engine/install/linux-postinstall/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-docker-group"
+      ]
+    },
+    {
+      "id": "dk-run",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker container run",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/container/run/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-run-options",
+        "cmd-hello",
+        "cmd-run-nginx"
+      ]
+    },
+    {
+      "id": "dk-ps",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker container ls",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/container/ls/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-run-options"
+      ]
+    },
+    {
+      "id": "dk-publishing",
+      "kind": "official-doc",
+      "title": "Docker Docs: Publishing and exposing ports",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/publishing-ports/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-publish",
+        "cmd-run-nginx"
+      ]
+    },
+    {
+      "id": "dk-logs",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker container logs",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/container/logs/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-logs-exec"
+      ]
+    },
+    {
+      "id": "dk-exec",
+      "kind": "official-doc",
+      "title": "Docker Docs: docker container exec",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/reference/cli/docker/container/exec/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-logs-exec"
+      ]
+    },
+    {
+      "id": "dk-persisting",
+      "kind": "official-doc",
+      "title": "Docker Docs: Persisting container data",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/persisting-container-data/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-ephemeral"
+      ]
+    },
+    {
+      "id": "dk-bind-mounts",
+      "kind": "official-doc",
+      "title": "Docker Docs: Bind mounts",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/engine/storage/bind-mounts/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-bind-vs-volume",
+        "cmd-bind"
+      ]
+    },
+    {
+      "id": "dk-volumes",
+      "kind": "official-doc",
+      "title": "Docker Docs: Volumes",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/engine/storage/volumes/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-volume",
+        "cmd-volume"
+      ]
+    },
+    {
+      "id": "dk-sharing",
+      "kind": "official-doc",
+      "title": "Docker Docs: Sharing local files with containers",
+      "publisher": "Docker Inc.",
+      "url": "https://docs.docker.com/get-started/docker-concepts/running-containers/sharing-local-files/",
+      "publishedAt": "2026-10-02",
+      "accessedAt": "2026-10-02",
+      "dateType": "snapshot",
+      "notes": "持续更新的页面，publishedAt 记录核验快照日期。",
+      "supports": [
+        "claim-bind-vs-volume"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-container",
+      "text": "容器是为应用的每个组件准备的相互隔离的进程，每个容器带着运行所需的一切，不依赖宿主机上预先安装的东西，可以独立管理，删除一个容器不影响其他容器。",
+      "sourceIds": [
+        "dk-container"
+      ]
+    },
+    {
+      "id": "claim-vm-vs-container",
+      "text": "虚拟机是一整套操作系统，有自己的内核、硬件驱动和程序；容器只是一个带着运行所需文件的隔离进程，多个容器共用同一个内核。",
+      "sourceIds": [
+        "dk-container"
+      ]
+    },
+    {
+      "id": "claim-image",
+      "text": "镜像是不可变的，创建之后不能修改，只能做一个新镜像或在它之上添加改动；镜像由层组成，每一层代表一组文件系统的改动。",
+      "sourceIds": [
+        "dk-image"
+      ]
+    },
+    {
+      "id": "claim-registry",
+      "text": "镜像仓库是集中存放和分享容器镜像的地方，可以是公开的也可以是私有的；Docker Hub 是任何人都能用的公开仓库，也是默认的仓库。",
+      "sourceIds": [
+        "dk-registry"
+      ]
+    },
+    {
+      "id": "claim-docker-group",
+      "text": "Docker 守护进程绑定在一个 Unix 套接字上，默认归 root 所有，其他用户只能用 sudo 访问；守护进程创建的套接字允许 docker 组的成员访问。docker 组相当于授予了 root 级别的权限。把用户加进 docker 组之后，要注销重新登录才生效。",
+      "sourceIds": [
+        "dk-postinstall"
+      ]
+    },
+    {
+      "id": "claim-run-options",
+      "text": "docker run 的 -d 让容器在后台运行并打印容器编号，--name 给容器起名字，--rm 让容器退出时自动删除；docker ps 默认只显示运行中的容器，-a 显示全部。",
+      "sourceIds": [
+        "dk-run",
+        "dk-ps"
+      ]
+    },
+    {
+      "id": "claim-publish",
+      "text": "发布端口是在网络隔离上开一个小口子，设置一条转发规则，例如把本机 8080 端口的请求转发到容器的 80 端口；在创建容器时用 docker run 的 -p 主机端口:容器端口 指定。",
+      "sourceIds": [
+        "dk-publishing"
+      ]
+    },
+    {
+      "id": "claim-logs-exec",
+      "text": "docker logs 取回容器到执行那一刻为止的日志；docker exec 在一个运行中的容器里执行一条新命令。",
+      "sourceIds": [
+        "dk-logs",
+        "dk-exec"
+      ]
+    },
+    {
+      "id": "claim-ephemeral",
+      "text": "容器启动时使用镜像提供的文件和配置；每个容器可以创建、修改、删除文件，不影响其他容器；容器被删除时，这些文件改动也一起被删除。卷是一种存储机制，让数据的生存期超出单个容器。",
+      "sourceIds": [
+        "dk-persisting"
+      ]
+    },
+    {
+      "id": "claim-bind-vs-volume",
+      "text": "绑定挂载把宿主机上的一个文件或目录挂进容器；卷则是在 Docker 的存储目录里新建一个目录，由 Docker 创建和维护。绑定挂载适合开发环境里在宿主机和容器之间实时共享文件。",
+      "sourceIds": [
+        "dk-bind-mounts",
+        "dk-sharing"
+      ]
+    },
+    {
+      "id": "claim-volume",
+      "text": "卷是由 Docker 创建和管理的持久数据存储，可以用 docker volume create 显式创建，也可以在创建容器时由 Docker 创建。",
+      "sourceIds": [
+        "dk-volumes"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-hello",
+      "command": "docker run hello-world",
+      "expectedResult": "第一次运行会先拉取镜像，然后打印 Hello from Docker! 和四个步骤的说明。",
+      "sourceIds": [
+        "dk-run",
+        "dk-registry"
+      ]
+    },
+    {
+      "id": "cmd-run-nginx",
+      "command": "docker run -d --name web -p 8080:80 nginx:alpine",
+      "expectedResult": "打印一个 64 位十六进制的容器编号；docker ps 里 web 的 PORTS 是 0.0.0.0:8080->80/tcp。",
+      "sourceIds": [
+        "dk-run",
+        "dk-publishing"
+      ]
+    },
+    {
+      "id": "cmd-bind",
+      "command": "docker run -d --name web -p 8080:80 -v ~/lab/docker/site:/usr/share/nginx/html:ro nginx:alpine",
+      "expectedResult": "curl 127.0.0.1:8080 拿到的是本机 site 目录里的 index.html。",
+      "sourceIds": [
+        "dk-bind-mounts"
+      ]
+    },
+    {
+      "id": "cmd-volume",
+      "command": "docker volume create notes",
+      "expectedResult": "打印 notes；之后挂载这个卷的不同容器看到同一份数据。",
+      "sourceIds": [
+        "dk-volumes"
+      ]
+    }
+  ],
+  "visualNarrative": {
+    "kind": "container-layers",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

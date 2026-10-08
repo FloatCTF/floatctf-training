@@ -1,13 +1,7 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react';
-import { gsap } from 'gsap';
-import {
-  keyboardRangeValue,
-  useInView,
-  useMotionPresentation,
-  useSimulatorStage,
-  type MotionLevel,
-  type SimulatorStage,
-} from './motion-utils';
+import { useId, useMemo, useRef, useState } from 'react';
+import { useSimulator, type MotionLevel } from './motion-utils';
+import { useGsapTween } from './motion-gsap';
+import { RangeControl, SimLedger, StageControls } from './simulator-controls';
 
 interface Props {
   motionLevel?: MotionLevel;
@@ -93,17 +87,8 @@ export default function NeuralNetworkSimulator({ motionLevel = 'simulation' }: P
   const chartTitleId = useId();
   const chartDescriptionId = useId();
   const [learningRate, setLearningRate] = useState(0.03);
-  const simRef = useRef<SimulatorStage | null>(null);
-  const visible = useInView(root, () => simRef.current?.stop());
-  const presentation = useMotionPresentation(root, motionLevel, (next) => {
-    if (next === 'static') simRef.current?.stop();
-  });
-  const sim = useSimulatorStage(MAX_STEPS, 760, {
-    interactive: presentation === 'interactive',
-    visible,
-  });
-  simRef.current = sim;
-  const { stage: step, running, advance, reset, toggleRunning } = sim;
+  const sim = useSimulator(root, MAX_STEPS, 760, motionLevel, 'stop');
+  const { stage: step, reset } = sim;
 
   const trajectory = useMemo(
     () => buildTrajectory(learningRate, MAX_STEPS),
@@ -123,22 +108,23 @@ export default function NeuralNetworkSimulator({ motionLevel = 'simulation' }: P
       ? '当前学习率：步子偏大，轨迹会在陡谷两侧来回振荡，但仍能收敛。'
       : '当前学习率：超过稳定上限，损失每步放大，轨迹发散飞出画面。';
 
-  useEffect(() => {
-    if (!root.current || presentation !== 'interactive' || step === 0) return undefined;
-    const context = gsap.context(() => {
-      gsap.fromTo(
-        '[data-signal]',
-        { y: 8, opacity: 0.58 },
-        { y: 0, opacity: 1, duration: 0.32, stagger: 0.07, ease: 'power2.out' },
-      );
-      gsap.fromTo(
-        '.learning-loss-marker',
-        { scale: 0.55 },
-        { scale: 1, duration: 0.34, ease: 'back.out(1.6)', transformOrigin: 'center' },
-      );
-    }, root.current);
-    return () => context.revert();
-  }, [presentation, step]);
+  const signalReplay = sim.presentation === 'interactive' && step > 0;
+  useGsapTween(
+    root,
+    signalReplay,
+    '[data-signal]',
+    { y: 8, opacity: 0.58 },
+    { y: 0, opacity: 1, duration: 0.32, stagger: 0.07, ease: 'power2.out' },
+    [step],
+  );
+  useGsapTween(
+    root,
+    signalReplay,
+    '.learning-loss-marker',
+    { scale: 0.55 },
+    { scale: 1, duration: 0.34, ease: 'back.out(1.6)', transformOrigin: 'center' },
+    [step],
+  );
 
   const pathD = trajectory
     .slice(0, step + 1)
@@ -146,7 +132,7 @@ export default function NeuralNetworkSimulator({ motionLevel = 'simulation' }: P
     .join(' ');
 
   return (
-    <section className="neural-simulator simulator" ref={root} aria-labelledby={titleId}>
+    <section className="neural-simulator simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={sim.presentation}>
       <h3 id={titleId}>梯度下降训练模拟器：两个权重的损失面</h3>
 
       <div className="learning-sim-layout">
@@ -191,64 +177,35 @@ export default function NeuralNetworkSimulator({ motionLevel = 'simulation' }: P
         </figure>
       </div>
 
-      {presentation === 'interactive' && (
-        <div className="simulator-control learning-sim-controls">
-          <label>
-            <span>学习率 η：{learningRate.toFixed(3)}</span>
-            <input
-              type="range"
+      {sim.presentation === 'interactive' && (
+        <StageControls
+          sim={sim}
+          maxStage={MAX_STEPS}
+          stepLabel="单步更新"
+          ariaLabel="模拟器控制"
+          className="simulator-control learning-sim-controls"
+          leading={(
+            <RangeControl
+              label={<>学习率 η：{learningRate.toFixed(3)}</>}
               min={RATE_MIN}
               max={RATE_MAX}
-              step="0.005"
+              step={0.005}
               value={learningRate}
-              onChange={(event) => {
-                setLearningRate(Number(event.currentTarget.value));
-                reset();
-              }}
-              onKeyDown={(event) => {
-                const next = keyboardRangeValue(event.key, learningRate, RATE_MIN, RATE_MAX, 0.005);
-                if (next == null) return;
-                event.preventDefault();
+              onChange={(next) => {
                 setLearningRate(next);
                 reset();
               }}
             />
-          </label>
-          <div className="learning-sim-actions" aria-label="模拟器控制">
-            <button type="button" onClick={advance} disabled={running || step >= MAX_STEPS}>单步更新</button>
-            <button
-              type="button"
-              onClick={toggleRunning}
-              disabled={step >= MAX_STEPS}
-              aria-pressed={running}
-            >
-              {running ? '暂停' : '连续播放'}
-            </button>
-            <button type="button" onClick={reset}>复位</button>
-          </div>
-        </div>
+          )}
+        />
       )}
 
-      <div className="learning-sim-ledger" role="table" aria-label="学习率 0.03 时的固定下降记录">
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          <span role="columnheader">步</span>
-          <span role="columnheader">w₁</span>
-          <span role="columnheader">w₂</span>
-          <span role="columnheader">损失 L</span>
-        </div>
-        {referenceRows.map((row, index) => (
-          <div className="learning-sim-ledger-row" role="row" key={index}>
-            <span role="cell">{index}</span>
-            <span role="cell">{row.w1.toFixed(3)}</span>
-            <span role="cell">{row.w2.toFixed(3)}</span>
-            <span role="cell">{row.loss.toFixed(3)}</span>
-          </div>
-        ))}
-      </div>
-      <p className="static-content-note">
-        固定记录采用 η = 0.03，从起点 (2.8, 0.2) 出发，完整保留在打印、减少动态和无 JavaScript 状态中。
-        {diverged ? ' 当前设置已发散：损失每步放大。' : ''}
-      </p>
+      <SimLedger
+        ariaLabel="学习率 0.03 时的固定下降记录"
+        columns={['步', 'w₁', 'w₂', '损失 L']}
+        rows={referenceRows.map((row, index) => [index, row.w1.toFixed(3), row.w2.toFixed(3), row.loss.toFixed(3)])}
+        note={<>固定记录采用 η = 0.03，从起点 (2.8, 0.2) 出发，完整保留在打印、减少动态和无 JavaScript 状态中。{diverged ? ' 当前设置已发散：损失每步放大。' : ''}</>}
+      />
     </section>
   );
 }

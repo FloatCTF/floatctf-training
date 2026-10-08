@@ -1,0 +1,190 @@
+{
+ "source": [
+  "a = [1, 2]",
+  "b = a",
+  "b.append(3)",
+  "c = a.copy()",
+  "c.append(4)",
+  "print(a, b, c)"
+ ],
+ "steps": [
+  {
+   "line": 1,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2]"
+    }
+   },
+   "stdout": "",
+   "note": "方括号造出一个列表对象，里面有两个元素。名字 a 指向它。"
+  },
+  {
+   "line": 2,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2]"
+    }
+   },
+   "stdout": "",
+   "note": "和第 5 课一样，赋值不复制对象。b 指向同一个列表，圈号相同。"
+  },
+  {
+   "line": 3,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2, 3]"
+    }
+   },
+   "stdout": "",
+   "note": "append 直接改动这个列表对象本身，没有产生新列表。a 和 b 指向的是同一个对象，所以两个名字看到的内容都变成了三个元素。"
+  },
+  {
+   "line": 4,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      },
+      {
+       "name": "c",
+       "ref": 2
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2, 3]"
+    },
+    "2": {
+     "type": "list",
+     "repr": "[1, 2, 3]"
+    }
+   },
+   "stdout": "",
+   "note": "copy() 造出一个内容相同的新列表。c 指向新对象，圈号和 a、b 不同。"
+  },
+  {
+   "line": 5,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      },
+      {
+       "name": "c",
+       "ref": 2
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2, 3]"
+    },
+    "2": {
+     "type": "list",
+     "repr": "[1, 2, 3, 4]"
+    }
+   },
+   "stdout": "",
+   "note": "这次改动的是 c 指向的那个列表，a 和 b 的列表不受影响。"
+  },
+  {
+   "line": 6,
+   "frames": [
+    {
+     "name": "全局",
+     "names": [
+      {
+       "name": "a",
+       "ref": 1
+      },
+      {
+       "name": "b",
+       "ref": 1
+      },
+      {
+       "name": "c",
+       "ref": 2
+      }
+     ]
+    }
+   ],
+   "objects": {
+    "1": {
+     "type": "list",
+     "repr": "[1, 2, 3]"
+    },
+    "2": {
+     "type": "list",
+     "repr": "[1, 2, 3, 4]"
+    }
+   },
+   "stdout": "[1, 2, 3] [1, 2, 3] [1, 2, 3, 4]\n",
+   "note": "打印三个名字各自指向的列表：a 和 b 一样，c 多一个元素。"
+  }
+ ],
+ "error": null,
+ "file": "public/labs/python-collections/alias.py"
+}

@@ -1,0 +1,316 @@
+---
+title: SQL 基础：用 SQLite 学查询
+description: 认识数据库的表、行、列，用 sqlite3 练熟 SELECT、WHERE、ORDER BY、INSERT、UPDATE、DELETE、GROUP BY、JOIN 和 UNION，并在 Python 里用占位符查询
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/sql-basics.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '三个问题各写一条 SQL，结果与答案里的一致。' },
+  { title: '建一张自己的表', detail: '在 shop.db 里建一张 tools 表，三列：id（INTEGER PRIMARY KEY）、name（TEXT NOT NULL）、used（INTEGER NOT NULL）。插入你这学期用过的五个命令和大致用过的次数，再查出用得最多的三个。' },
+  { title: '先 SELECT，再 DELETE', detail: '先写 SELECT * FROM tools WHERE used < 3; 看会选中哪些行，确认无误后把 SELECT * 换成 DELETE 执行，再用 COUNT(*) 检查剩下几行。' },
+  { title: '改 find_user.py', detail: '让它改为按城市查：输入一个城市，打印这个城市所有用户的名字，每行一个。提示：把 fetchone() 换成 fetchall()，再用 for 循环。输入 Chengdu 应当打印 alice 和 carol。' },
+];
+
+<LessonHero
+  series="FOUNDATIONS"
+  unit="DATA / LESSON 18"
+  kicker="Tables, Queries, Joins"
+  lines={[
+    { text: "SQL 基础" },
+    { text: "用 SQLite 学查询", accent: true },
+  ]}
+  summary="前面几课里，网站的数据都是写死在代码里的。真实的网站把用户、商品、订单存在数据库里，程序每次要用，就用一种专门的语言去问。这一课学会用这种语言提问。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：登录的时候，网站在查什么
+
+你在登录框里输入用户名和密码，点提交。第 14 课的练习站是拿一个写在代码里的字典来核对的。真实的网站有几万、几百万个用户，不可能写在代码里。
+
+它们的做法是把用户存在**数据库**里，登录时向数据库提一个问题：「有没有名字是这个、密码对得上的用户？」数据库答有或没有。
+
+这个问题是用一种叫 **SQL** 的语言写的。网站的几乎每一个功能，查商品、看订单、发评论，背后都是一条或几条 SQL。读得懂 SQL，才看得懂网站在后台做什么。
+
+## 一、表、行、列与 SELECT
+
+### 1. 准备数据库
+
+这一课用 **SQLite**。它不需要启动任何服务器，整个数据库就是一个文件，Kali 已经装好了它的命令行工具 `sqlite3`。（来源：[About SQLite](#source-sqlite-about)）
+
+下载练习数据，它是一个写着 SQL 语句的文本文件：
+
+<CodeFile file="labs/sql-basics/shop.sql" note="前半是建表，后半是往表里放数据。先执行它，回头再读。" />
+
+<TerminalSession
+  title="用这份文件生成数据库"
+  steps={[
+    { cmd: 'mkdir ~/lab/sql' },
+    { cmd: 'cd ~/lab/sql' },
+    { cmd: 'mv ~/Downloads/shop.sql .', note: '浏览器把文件存到了别处的话，换成实际的路径。' },
+    { cmd: 'sqlite3 shop.db < shop.sql', note: '让 sqlite3 打开（不存在就新建）shop.db，并执行 shop.sql 里的全部语句。< 是第 3 课学的输入重定向。' },
+    { cmd: 'ls', out: 'shop.db  shop.sql', note: 'shop.db 就是数据库本身。搞乱了随时可以删掉它，重新执行上一条命令。' },
+  ]}
+/>
+
+### 2. 进去看看
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="sqlite3 shop.db 之后"
+  steps={[
+    { cmd: '.tables', out: 'items     orders     users', note: '以点开头的是 sqlite3 自己的命令，不是 SQL。.tables 列出数据库里有哪些表。' },
+    { cmd: '.schema users', out: 'CREATE TABLE users (\n  id INTEGER PRIMARY KEY,\n  name TEXT NOT NULL,\n  role TEXT NOT NULL,\n  city TEXT\n);', note: '.schema 显示这张表当初是怎样建的：有哪几列，各是什么类型。' },
+    { cmd: 'SELECT * FROM users;', out: '╭────┬───────┬────────┬─────────╮\n│ id │ name  │  role  │  city   │\n╞════╪═══════╪════════╪═════════╡\n│  1 │ alice │ admin  │ Chengdu │\n│  2 │ bob   │ member │ Wuhan   │\n│  3 │ carol │ member │ Chengdu │\n│  4 │ dave  │ member │ NULL    │\n╰────┴───────┴────────┴─────────╯', note: '第一条 SQL：把 users 表的所有行、所有列都给我。SQL 语句以分号结束。' },
+  ]}
+/>
+
+在终端里输入 `sqlite3 shop.db` 进入这个界面，提示符变成 `sqlite>`。退出用 `.quit`。（来源：[Command Line Shell For SQLite](#source-sqlite-cli)）
+
+一个数据库里有若干张**表**。一张表就像一张电子表格：
+
+<DataTable
+  caption="表的三个词"
+  headers={["词", "含义", "在 users 表里"]}
+  rows={[
+    ["列", "每一条记录都有的一项属性，有名字和类型", "id、name、role、city 四列"],
+    ["行", "一条记录", "四行，每行是一个用户"],
+    ["主键", "能唯一确定一行的那一列", "id。每个用户的 id 都不同"],
+  ]}
+  columnRatios={[0.6, 2, 2]}
+/>
+
+`dave` 的 `city` 是 `NULL`，表示「没有值」。它不是空字符串，也不是 0，是一种专门的「不知道」。
+
+### 3. SELECT：挑列、筛行、排序
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="一步一步把问题问细"
+  steps={[
+    { cmd: 'SELECT name, city FROM users;', out: '╭───────┬─────────╮\n│ name  │  city   │\n╞═══════╪═════════╡\n│ alice │ Chengdu │\n│ bob   │ Wuhan   │\n│ carol │ Chengdu │\n│ dave  │ NULL    │\n╰───────┴─────────╯', note: '把 * 换成列名，只要这两列。' },
+    { cmd: "SELECT name FROM users WHERE city = 'Chengdu';", out: '╭───────╮\n│ name  │\n╞═══════╡\n│ alice │\n│ carol │\n╰───────╯', note: 'WHERE 后面是条件，只留下条件成立的行。字符串用单引号括起来。' },
+    { cmd: 'SELECT name, price FROM items WHERE price > 50;', out: '╭──────────┬───────╮\n│   name   │ price │\n╞══════════╪═══════╡\n│ keyboard │   120 │\n│ mouse    │    60 │\n│ t-shirt  │    80 │\n╰──────────┴───────╯', note: '数字不加引号。' },
+    { cmd: "SELECT name, price FROM items WHERE category = 'hardware' AND price < 100;", out: '╭───────────┬───────╮\n│   name    │ price │\n╞═══════════╪═══════╡\n│ mouse     │    60 │\n│ usb-drive │    45 │\n╰───────────┴───────╯', note: '用 AND、OR 组合条件，和 Python 的 and、or 一个意思。' },
+    { cmd: 'SELECT name, price FROM items ORDER BY price DESC LIMIT 3;', out: '╭──────────┬───────╮\n│   name   │ price │\n╞══════════╪═══════╡\n│ keyboard │   120 │\n│ t-shirt  │    80 │\n│ mouse    │    60 │\n╰──────────┴───────╯', note: 'ORDER BY 排序，DESC 表示从大到小。LIMIT 3 只要前三行。' },
+    { cmd: "SELECT name FROM items WHERE name LIKE '%s%';", out: '╭───────────╮\n│   name    │\n╞═══════════╡\n│ mouse     │\n│ usb-drive │\n│ sticker   │\n│ t-shirt   │\n╰───────────╯', note: 'LIKE 做模糊匹配，% 代表任意一串字符。这里找的是名字里含有 s 的。' },
+    { cmd: 'SELECT name FROM users WHERE city IS NULL;', out: '╭──────╮\n│ name │\n╞══════╡\n│ dave │\n╰──────╯', note: '判断是不是 NULL 要用 IS NULL。写成 = NULL 一行也查不到。' },
+  ]}
+/>
+
+一条 SELECT 的各部分有固定的顺序：
+
+<DataTable
+  caption="SELECT 的骨架"
+  headers={["部分", "回答的问题", "例子"]}
+  rows={[
+    ["SELECT 列", "要看哪几列", "SELECT name, price"],
+    ["FROM 表", "从哪张表里查", "FROM items"],
+    ["WHERE 条件", "只要哪些行。可省略", "WHERE price > 50"],
+    ["ORDER BY 列", "按什么排序。可省略", "ORDER BY price DESC"],
+    ["LIMIT 数", "最多要几行。可省略", "LIMIT 3"],
+  ]}
+  columnRatios={[1, 1.6, 1.6]}
+/>
+
+SQL 的关键字不区分大小写，`select` 和 `SELECT` 一样。习惯上把关键字大写，表名和列名小写，读起来容易分辨。（来源：[SELECT](#source-sqlite-select)、[SQL Language Expressions](#source-sqlite-expr)）
+
+## 二、增、改、删与统计
+
+### 1. INSERT、UPDATE、DELETE
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="加一行，改一行，删一行"
+  steps={[
+    { cmd: "INSERT INTO users (name, role, city) VALUES ('erin', 'member', 'Xian');", note: '括号里先列出要填的列，VALUES 后面按同样的顺序给值。没有输出就是成功。' },
+    { cmd: "SELECT * FROM users WHERE name = 'erin';", out: '╭────┬──────┬────────┬──────╮\n│ id │ name │  role  │ city │\n╞════╪══════╪════════╪══════╡\n│  5 │ erin │ member │ Xian │\n╰────┴──────┴────────┴──────╯', note: '没有给 id，数据库自动填了下一个编号 5。' },
+    { cmd: "UPDATE users SET city = 'Beijing' WHERE name = 'dave';", note: '把符合条件的行的 city 改掉。' },
+    { cmd: 'SELECT name, city FROM users;', out: '╭───────┬─────────╮\n│ name  │  city   │\n╞═══════╪═════════╡\n│ alice │ Chengdu │\n│ bob   │ Wuhan   │\n│ carol │ Chengdu │\n│ dave  │ Beijing │\n│ erin  │ Xian    │\n╰───────┴─────────╯' },
+    { cmd: "DELETE FROM users WHERE name = 'erin';", note: '删除符合条件的行。' },
+    { cmd: 'SELECT COUNT(*) FROM users;', out: '╭──────────╮\n│ COUNT(*) │\n╞══════════╡\n│        4 │\n╰──────────╯', note: 'COUNT(*) 数出有几行。又回到四个用户。' },
+  ]}
+/>
+
+<Callout variant="danger" title="UPDATE 和 DELETE 一定要带 WHERE">
+`UPDATE users SET city = 'Beijing';` 没有 WHERE，会把**每一行**的城市都改掉。`DELETE FROM users;` 会删光整张表。这两条都是合法的语句，数据库不会问你「确定吗」。动手之前先把同样的 WHERE 写成 SELECT 执行一遍，看清会选中哪些行。
+</Callout>
+
+（来源：[INSERT](#source-sqlite-insert)、[UPDATE](#source-sqlite-update)、[DELETE](#source-sqlite-delete)）
+
+### 2. 自己建一张表
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="建表，用完删掉"
+  steps={[
+    { cmd: 'CREATE TABLE notes (id INTEGER PRIMARY KEY, body TEXT NOT NULL);', note: '表名、每一列的名字和类型。INTEGER 是整数，TEXT 是文字。NOT NULL 表示这一列必须有值。' },
+    { cmd: "INSERT INTO notes (body) VALUES ('first note');" },
+    { cmd: "INSERT INTO notes (body) VALUES ('it''s done');", note: '字符串本身含有单引号时，连写两个单引号表示一个。' },
+    { cmd: 'SELECT * FROM notes;', out: "╭────┬────────────╮\n│ id │    body    │\n╞════╪════════════╡\n│  1 │ first note │\n│  2 │ it's done  │\n╰────┴────────────╯" },
+    { cmd: 'DROP TABLE notes;', note: '整张表连同里面的数据一起删除。' },
+    { cmd: '.tables', out: 'items     orders     users' },
+  ]}
+/>
+
+单引号在 SQL 里是字符串的边界。数据里的单引号如果不写成两个，数据库就会以为字符串在那里结束了，后面的内容被当成 SQL 来读。这一点下学期会成为主角。（来源：[CREATE TABLE](#source-sqlite-createtable)、[SQL Language Expressions](#source-sqlite-expr)）
+
+### 3. 统计
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="数一数，分组数"
+  steps={[
+    { cmd: 'SELECT COUNT(*) FROM items;', out: '╭──────────╮\n│ COUNT(*) │\n╞══════════╡\n│        6 │\n╰──────────╯' },
+    { cmd: 'SELECT category, COUNT(*), MAX(price) FROM items GROUP BY category;', out: '╭──────────┬──────────┬────────────╮\n│ category │ COUNT(*) │ MAX(price) │\n╞══════════╪══════════╪════════════╡\n│ book     │        1 │         35 │\n│ hardware │        3 │        120 │\n│ merch    │        2 │         80 │\n╰──────────┴──────────┴────────────╯', note: 'GROUP BY 把 category 相同的行归成一组，COUNT 和 MAX 对每一组分别算。' },
+  ]}
+/>
+
+`GROUP BY` 加 `COUNT(*)` 做的事，和第 3 课的 `sort | uniq -c`、第 8 课用字典计数是同一件：把相同的归到一起，数每组有几个。
+
+## 三、多表查询，以及从 Python 里查
+
+### 1. JOIN：把编号换成名字
+
+`orders` 表记录了谁买了什么，但它里面只有编号：
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="订单表里只有数字"
+  steps={[
+    { cmd: 'SELECT * FROM orders;', out: '╭────┬─────────┬─────────┬──────────╮\n│ id │ user_id │ item_id │ quantity │\n╞════╪═════════╪═════════╪══════════╡\n│  1 │       1 │       1 │        1 │\n│  2 │       2 │       4 │       10 │\n│  3 │       2 │       2 │        1 │\n│  4 │       3 │       6 │        2 │\n│  5 │       3 │       4 │        3 │\n╰────┴─────────┴─────────┴──────────╯', note: 'user_id 是 users 表里的 id，item_id 是 items 表里的 id。' },
+    { cmd: 'SELECT users.name, items.name, orders.quantity FROM orders JOIN users ON orders.user_id = users.id JOIN items ON orders.item_id = items.id;', out: '╭───────┬──────────┬──────────╮\n│ name  │   name   │ quantity │\n╞═══════╪══════════╪══════════╡\n│ alice │ keyboard │        1 │\n│ bob   │ sticker  │       10 │\n│ bob   │ mouse    │        1 │\n│ carol │ handbook │        2 │\n│ carol │ sticker  │        3 │\n╰───────┴──────────┴──────────╯', note: '这一条比较长，要在一行里敲完。JOIN … ON … 的意思是：把另一张表里编号对得上的那一行接到旁边。' },
+    { cmd: 'SELECT users.name, SUM(items.price * orders.quantity) AS total FROM orders JOIN users ON orders.user_id = users.id JOIN items ON orders.item_id = items.id GROUP BY users.name ORDER BY total DESC;', out: '╭───────┬───────╮\n│ name  │ total │\n╞═══════╪═══════╡\n│ alice │   120 │\n│ bob   │   110 │\n│ carol │    85 │\n╰───────┴───────╯', note: '接起来之后照样可以分组统计：每个人一共花了多少。AS total 给这一列起个名字。' },
+  ]}
+/>
+
+为什么不把名字直接写进订单表？因为同一份信息只该存一处。`bob` 改名时只需要改 `users` 表里的一行，所有订单查出来的名字自然跟着变。多张表之间用编号互相指向，查的时候用 JOIN 接起来，这是数据库的基本用法。
+
+两张表都有 `name` 列，所以要写成 `users.name`、`items.name` 来区分。
+
+### 2. UNION：把两个查询的结果摞起来
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="上下拼接"
+  steps={[
+    { cmd: 'SELECT name, role FROM users UNION SELECT name, category FROM items;', out: '╭───────────┬──────────╮\n│   name    │   role   │\n╞═══════════╪══════════╡\n│ alice     │ admin    │\n│ bob       │ member   │\n│ carol     │ member   │\n│ dave      │ member   │\n│ handbook  │ book     │\n│ keyboard  │ hardware │\n│ mouse     │ hardware │\n│ sticker   │ merch    │\n│ t-shirt   │ merch    │\n│ usb-drive │ hardware │\n╰───────────┴──────────╯', note: '前四行来自 users，后六行来自 items。列名用的是第一个查询的。' },
+    { cmd: 'SELECT name, role FROM users UNION SELECT name FROM items;', out: 'Parse error near line 2: SELECTs to the left and right of UNION do not have the same number of result columns', note: '两边的列数必须相同。这里左边两列，右边一列，所以报错。' },
+  ]}
+/>
+
+JOIN 是左右拼：给每一行补上别的表里的列。UNION 是上下拼：把另一个查询的行接在下面。（来源：[SELECT](#source-sqlite-select)）
+
+### 3. 让 Python 去查
+
+回到引导问题。网站的程序就是这样向数据库提问的。先用 `.quit` 退出 sqlite3，回到普通的终端。
+
+<CodeFile file="labs/sql-basics/find_user.py" mark="5" note="保存为 ~/lab/sql/find_user.py。注意第 5 行的问号。" />
+
+<TerminalSession
+  title="程序替你写 SQL"
+  steps={[
+    { cmd: "sqlite3 shop.db 'SELECT COUNT(*) FROM users;'", out: '╭──────────╮\n│ COUNT(*) │\n╞══════════╡\n│        4 │\n╰──────────╯', note: '顺带一提：在 shell 里也可以不进交互界面，直接问一句。' },
+    { cmd: 'python3 find_user.py', setup: 'cp ~/Downloads/find_user.py .', stdin: ['alice'], out: 'name: alice\nalice is admin', note: '输入 alice 回车。' },
+    { cmd: 'python3 find_user.py', stdin: ['nobody'], out: 'name: nobody\nno such user' },
+    { cmd: 'python3 find_user.py', stdin: ["o'brien"], out: "name: o'brien\nno such user", note: '输入里带着一个单引号。程序没有出错，只是老老实实地去找叫 o\'brien 的人。' },
+  ]}
+/>
+
+第 5 行的 SQL 里，本该写名字的地方是一个问号，名字放在后面的括号里另外交给数据库。这个问号叫**占位符**。数据库会把交来的值整个当作数据，里面有引号也好、有 SQL 关键字也好，都不会被当成语句的一部分。
+
+<Callout variant="warning" title="不要自己把输入拼进 SQL">
+另一种写法是用字符串拼接：`"… WHERE name = '" + name + "'"`。它在输入正常的名字时结果一样，但用户输入的内容会直接成为 SQL 语句的一部分，输入一个单引号就足以让语句变样。凡是把别人给的值放进 SQL，一律用占位符。
+</Callout>
+
+（来源：[sqlite3](#source-py-sqlite3)）
+
+## 常见报错与排错
+
+<TerminalSession
+  environment="SQLITE 交互界面 · shop.db"
+  prompt="sqlite>"
+  title="四种最常见的写错"
+  steps={[
+    { cmd: 'SELECT * FROM user;', out: 'Parse error near line 1: no such table: user', note: '表名写错了，表叫 users。用 .tables 核对。' },
+    { cmd: 'SELECT nmae FROM users;', out: 'Parse error near line 2: no such column: nmae\n  SELECT nmae FROM users;\n         ^--- error here', note: '列名拼错。它用箭头指出了位置。' },
+    { cmd: 'SELEC * FROM users;', out: 'Parse error near line 3: near "SELEC": syntax error\n  SELEC * FROM users;\n  ^--- error here', note: '关键字拼错。' },
+    { cmd: 'SELECT * FROM users WHERE name = alice;', out: 'Parse error near line 4: no such column: alice\n  SELECT * FROM users WHERE name = alice;\n                     error here ---^', note: '字符串忘了加引号。不加引号的 alice 被当成了列名。' },
+  ]}
+/>
+
+<DataTable
+  caption="本课最容易遇到的情况"
+  headers={["现象", "原因", "处理"]}
+  rows={[
+    ["回车之后提示符变成 ...>，没有结果", "语句没有以分号结束，sqlite3 在等你继续写", "补一个分号再回车"],
+    ["no such table", "表名写错，或者打开的不是 shop.db（不在 ~/lab/sql 目录）", ".tables 看有哪些表；退出后用 pwd 确认目录"],
+    ["no such column: alice", "字符串没有加单引号", "写成 'alice'"],
+    ["查询不报错，但一行也没有", "条件没有匹配的行：大小写不对，或者用了 = NULL", "先去掉 WHERE 看全部数据，再逐个加条件"],
+    ["UPDATE 之后所有行都变了", "漏了 WHERE", "删掉 shop.db，用 sqlite3 shop.db < shop.sql 重新生成"],
+    ["结果是用竖线隔开的一行行，不是表格", "sqlite3 版本较旧，默认的显示方式不同", "在 sqlite> 里执行 .mode box"],
+    ["Parse error … do not have the same number of result columns", "UNION 两边的列数不一样", "让两个 SELECT 选出相同数目的列"],
+  ]}
+  columnRatios={[1.7, 1.7, 1.7]}
+/>
+
+局限：SQLite 很适合学习和小型应用，但它是一个文件，同一时刻只适合一个程序写入。网站常用的 MySQL、PostgreSQL 是独立运行的数据库服务器，程序通过网络连接它们。这一课的 SQL 语句在它们上面基本通用，区别主要在数据类型和各自特有的函数上。
+
+<CheatSheet
+  title="本课速查"
+  items={[
+    { term: 'sqlite3 文件.db', description: '打开数据库。.tables 看表，.schema 表名 看结构，.quit 退出。' },
+    { term: 'SELECT 列 FROM 表 WHERE 条件;', description: '查。* 表示所有列。' },
+    { term: 'ORDER BY 列 DESC / LIMIT n', description: '排序（DESC 从大到小）/ 只要前 n 行。' },
+    { term: "LIKE '%s%' / IS NULL", description: '模糊匹配 / 判断是否没有值。' },
+    { term: 'INSERT INTO 表 (列…) VALUES (值…);', description: '加一行。' },
+    { term: 'UPDATE 表 SET 列 = 值 WHERE 条件;', description: '改。漏了 WHERE 会改掉所有行。' },
+    { term: 'DELETE FROM 表 WHERE 条件;', description: '删。漏了 WHERE 会删光。' },
+    { term: 'COUNT(*) / SUM(列) / MAX(列) … GROUP BY 列', description: '统计，可以按某一列分组。' },
+    { term: 'A JOIN B ON A.x = B.y', description: '把两张表里编号对得上的行左右接起来。' },
+    { term: 'SELECT … UNION SELECT …', description: '把两个查询的结果上下接起来，列数必须相同。' },
+    { term: 'con.execute("… WHERE name = ?", (name,))', description: 'Python 里用占位符传值。' },
+  ]}
+/>
+
+<KeyTakeaway>
+数据库把数据存在表里，一行是一条记录，一列是一项属性。SQL 用 SELECT 查、INSERT 加、UPDATE 改、DELETE 删，WHERE 决定作用于哪些行，改和删时绝不能漏。多张表用编号互相指向，JOIN 把它们左右接起来，UNION 把两个查询上下接起来。程序向数据库提问时，别人给的值要用占位符传进去，不能拼进 SQL 字符串。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+预计用时 50 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
+
+<SourceList sources={manifest.sources} />

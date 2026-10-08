@@ -33,10 +33,9 @@ const droppedHidden = 1;
 const trainWires = wires.map((w) => (w.to[0] === hidX && w.to[1] === hiddenYs[droppedHidden] ? { ...w, cut: true } : w));
 const trainHidden = hiddenNodes.map((n, i) => (i === droppedHidden ? { ...n, dropped: true, active: false } : n));
 const trainOutWires = trainWires.map((w) => (w.from[0] === hidX && w.from[1] === hiddenYs[droppedHidden] ? { ...w, cut: true } : w));
+import LessonDiagram from './lesson-diagram.astro';
 ---
-<section class="lesson-diagram network-diagram not-content" aria-label="全连接网络与 Dropout 对照">
-  <p class="lesson-diagram__eyebrow">NETWORK / 4 → 3 → 2</p>
-  <h3 class="lesson-diagram__title">一个全连接网络长什么样</h3>
+<LessonDiagram eyebrow="NETWORK / 4 → 3 → 2" title="一个全连接网络长什么样" ariaLabel="全连接网络与 Dropout 对照" class="network-diagram" note="每条连线都是一个权重参数：粗线影响大，细线影响小。节点颜色深浅示意激活强弱。按正文 §三 的数法，这个网络共有 (4×3 + 3) + (3×2 + 2) = 23 个参数。">
   <svg viewBox="0 0 420 260" role="img" aria-label="全连接网络：4 个输入节点连向 3 个隐藏节点再连向 2 个输出节点，每条连线都带权重，粗细示意权重大小，节点颜色深浅示意激活强度。">
     <title>全连接网络示意图</title>
     {wires.map((w) => (
@@ -52,7 +51,7 @@ const trainOutWires = trainWires.map((w) => (w.from[0] === hidX && w.from[1] ===
     <text x={hidX} y="252" text-anchor="middle" class="diagram-lane-label">隐藏层（3 个神经元）</text>
     <text x={outX} y="252" text-anchor="middle" class="diagram-lane-label">输出层（2 类）</text>
   </svg>
-  <p class="lesson-diagram__note">每条连线都是一个权重参数：粗线影响大，细线影响小。节点颜色深浅示意激活强弱。按正文 §三 的数法，这个网络共有 (4×3 + 3) + (3×2 + 2) = 23 个参数。</p>
+
 
   <div class="network-diagram__row">
     <figure>
@@ -82,4 +81,4 @@ const trainOutWires = trainWires.map((w) => (w.from[0] === hidX && w.from[1] ===
       <figcaption>常见的 inverted dropout 在训练时把保留激活除以保留概率；推理时全部神经元启用并直接传值。训练与推理模式若配错，同一模型会给出不同结果。</figcaption>
     </figure>
   </div>
-</section>
+</LessonDiagram>
