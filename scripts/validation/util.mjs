@@ -137,4 +137,3 @@ export function pageCandidates(pagePath) {
 export function resolvePage(pagePath) {
   return pageCandidates(pagePath).find(existsSync);
 }
-
