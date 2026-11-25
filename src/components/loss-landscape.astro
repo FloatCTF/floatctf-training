@@ -1,44 +1,49 @@
 ---
 // 两个权重的损失等高线：静态示意梯度下降在「看不见全貌」时怎么走
-const CENTER = { x: 320, y: 168 };
-const RINGS = [1, 2, 3, 4, 5].map((k) => ({
-  rx: k * 58,
-  ry: k * 36,
+const CENTER = { x: 318, y: 170 };
+const RINGS = [1, 2, 3, 4].map((k) => ({
+  rx: k * 60,
+  ry: k * 33,
 }));
-// 起点 P、走一小步后的 P′，均取在右上方「山坡」上
-const P = { x: 442, y: 100 };
-const P2 = { x: 408, y: 122 };
+// 起点 P、第一步 P2、下一步方向终点 P3
+const P = { x: 468, y: 92 };
+const P2 = { x: 410, y: 122 };
+const P3 = { x: 362, y: 147 };
 ---
 
 <section class="loss-landscape not-content" aria-label="两个权重的损失等高线示意">
   <figure class="loss-landscape__figure">
-    <svg viewBox="0 0 640 330" role="img" aria-label="损失等高线图：椭圆等高线一圈圈降到中心最低点，一颗球从坡上沿梯度反方向迈了一小步">
+    <svg viewBox="0 0 640 340" role="img" aria-label="损失等高线图：四圈椭圆降向中心谷底，圆点从右上方山坡沿梯度反方向迈出一步，再重新判断下一步坡向">
       <title>损失等高线与梯度下降的一步</title>
       <defs>
-        <marker id="ls-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
-          <path d="M0,0 L8,4.5 L0,9 Z" style="fill: var(--training-heading)" />
+        <marker id="ls-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" style="fill: var(--training-heading)" />
+        </marker>
+        <marker id="ls-arrow-muted" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5.5" markerHeight="5.5" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" style="fill: var(--training-muted)" />
         </marker>
       </defs>
-      <line class="ls-axis" x1="40" y1="300" x2="610" y2="300" />
-      <line class="ls-axis" x1="40" y1="300" x2="40" y2="26" />
-      <text class="ls-axis-label" x="596" y="322" text-anchor="end">权重 w₁</text>
-      <text class="ls-axis-label" x="14" y="26">权重 w₂</text>
+      <line class="ls-axis" x1="56" y1="308" x2="612" y2="308" />
+      <line class="ls-axis" x1="56" y1="308" x2="56" y2="28" />
+      <text class="ls-axis-label" x="610" y="330" text-anchor="end">权重 w₁ →</text>
+      <text class="ls-axis-label" x="66" y="26">↑ 权重 w₂</text>
       {RINGS.map((r) => (
         <ellipse class="ls-contour" cx={CENTER.x} cy={CENTER.y} rx={r.rx} ry={r.ry} />
       ))}
-      <circle class="ls-min" cx={CENTER.x} cy={CENTER.y} r="7" />
-      <text class="ls-min-label" x={CENTER.x + 14} y={CENTER.y - 12}>损失最低点</text>
-      <line class="ls-gradient" x1={P.x} y1={P.y} x2={P2.x} y2={P2.y} />
-      <circle class="ls-ball" cx={P.x} cy={P.y} r="8" />
-      <text class="ls-step-label" x={P.x + 12} y={P.y - 10}>起点：当前参数</text>
-      <circle class="ls-ball ls-ball--next" cx={P2.x} cy={P2.y} r="8" />
-      <text class="ls-step-label" x={P2.x + 12} y={P2.y + 20}>迈一步（步长 = 学习率 η）</text>
-      <line class="ls-gradient ls-gradient--next" x1={P2.x} y1={P2.y} x2={CENTER.x + 30} y2={CENTER.y - 18} />
-      <text class="ls-dir-label" x="338" y="108">下一步：再摸一次坡向</text>
+      <text class="ls-dir-label" x={CENTER.x - 168} y={CENTER.y - 96}>外圈损失高（山坡）</text>
+      <circle class="ls-min" cx={CENTER.x} cy={CENTER.y} r="6.5" />
+      <text class="ls-min-label" x={CENTER.x - 10} y={CENTER.y + 26} text-anchor="middle">谷底：损失最低</text>
+      <line class="ls-gradient" x1={P.x - 7} y1={P.y + 3.6} x2={P2.x + 9} y2={P2.y - 4.7} />
+      <line class="ls-gradient ls-gradient--next" x1={P2.x - 7} y1={P2.y + 3.6} x2={P3.x} y2={P3.y} marker-end="url(#ls-arrow-muted)" />
+      <circle class="ls-ball" cx={P.x} cy={P.y} r="7" />
+      <text class="ls-step-label" x={P.x + 12} y={P.y - 6}>① 起点：随机参数</text>
+      <circle class="ls-ball ls-ball--next" cx={P2.x} cy={P2.y} r="7" />
+      <text class="ls-step-label" x={P2.x + 16} y={P2.y + 22}>② 迈一步 Δw = −η∇L</text>
+      <text class="ls-dir-label" x={P3.x - 12} y={P3.y - 24} text-anchor="end">③ 下一步再摸坡向</text>
     </svg>
-    <figcaption>同一条椭圆上的损失相同；越靠中心越低。算法看不见这张图，只摸得到脚下的坡向（梯度的反方向），摸一步走一步。</figcaption>
+    <figcaption>同一圈椭圆代表损失相等，越靠中间海拔越低。程序看不到整张地图，只能原地测一下脚下哪边下坡最陡，迈一步再重测。</figcaption>
   </figure>
   <p class="lesson-diagram__note loss-landscape__note">
-    一个权重时损失是一条抛物线，两个权重就是这张等高线图，百万个权重是百万维空间里的「山地」。走法不变：沿梯度反方向、按学习率迈步——下文的模拟器就在这样一张图上走给你看。
+    1 个权重是一条山谷曲线，2 个权重是这张等高线地图，大模型里的上亿权重只是更高维的山地——走法完全一样：沿梯度的反方向，按学习率迈步。
   </p>
 </section>

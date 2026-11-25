@@ -1,4 +1,4 @@
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, type CSSProperties } from 'react';
 import {
   useMotionPresentation,
   type MotionLevel,
@@ -50,31 +50,31 @@ const POSITION_HEAD = localHead();
 const HEADS = [
   {
     id: 'semantic',
-    label: '语义头',
-    note: '按内容匹配：Query 找语义相关的 Key，「它」回看「服务器」，「加载」回看「配置文件」。',
+    label: '语义头（按意思找）',
+    note: '这个头专门跨距离找意思相关的词：「它」把大头权重给了「服务器」，「加载」把大头给了「配置文件」。',
     weights: SEMANTIC_HEAD,
   },
   {
     id: 'position',
-    label: '位置头',
-    note: '按位置相邻匹配：每个词主要盯着前一个词和自己。真实模型中存在这类局部位置模式的头（教学示意）。',
+    label: '位置头（盯紧前一个词）',
+    note: '从第 3 个词起主要盯紧前一个词（58%），兼顾自己（27%）和再前一个词（15%），帮模型看清词序与局部搭配。',
     weights: POSITION_HEAD,
   },
 ] as const;
 
 const FOCUS_REASONS: Record<string, string> = {
-  '它': '「它」的 Query 与「服务器」的 Key 匹配分数最高，注意力的主要权重落在指代对象上，「配置文件」获得次要权重。',
-  '读取': '动词「读取」重点注意主语「服务器」和它自己，动作发起者被加权。',
-  '加载': '「加载」只能回看当前位置及此前 token；「配置文件」权重最高，「需要」获得次高权重，右侧未来位置均被遮罩。',
-  '端口': '「端口」对前一个词「加载」分配最高权重，并保留一部分给自己；右侧的「设置」仍属于未来位置，当前不可见。',
+  '它': '「它」在问“我指代谁？”——算完匹配分，55% 落在「服务器」，22% 落在「配置文件」，后面还没出现的词全被斜纹遮住。',
+  '读取': '动词「读取」重点回看主语「服务器」（72%），知道是谁在发动作。',
+  '加载': '「加载」只能看自己及前面的词：它把最高权重（30%）分给「配置文件」，右边的「端口」「设置」此时还看不到。',
+  '端口': '「端口」重点关联前面的动词「加载」（42%）；右侧的「设置」属于未来位置，被遮罩挡住。',
 };
 
-const GENERIC_REASON = '选中一行（一个 Query），看它把注意力分给哪些位置。右上方向的格子被因果遮罩屏蔽。';
+const GENERIC_REASON = '点任意一个词，看它把注意力分给了前面哪些词。右上角斜纹格是未来位置，写当前词时看不到。';
 
 const N = TOKENS.length;
 const CELL = 30;
-const GRID_X = 92;
-const GRID_Y = 66;
+const GRID_X = 96;
+const GRID_Y = 104;
 
 export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
@@ -100,7 +100,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
     interactive,
     `[data-at-row='${focus}'] [data-at-cell]`,
     { opacity: 0.35 },
-    { opacity: 1, duration: 0.26, stagger: 0.03, ease: 'power2.out' },
+    { opacity: 1, duration: 0.24, stagger: 0.025, ease: 'power2.out' },
     [focus, headId],
   );
 
@@ -113,10 +113,10 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
     >
       <header className="attention-explorer__header">
         <div>
-          <p>SELF-ATTENTION / QKᵀ 热力矩阵</p>
-          <h3 id={titleId}>注意力矩阵探针</h3>
+          <p>SELF-ATTENTION / QKᵀ 注意力热力图</p>
+          <h3 id={titleId}>点一个词，看它在「回头看谁」</h3>
         </div>
-        <p>同一句话、同一个因果遮罩，两个不同的注意力头给出两幅不同的权重图。行是 Query（发问的词），列是 Key（被看的词）。数据为教学示意，真实权重由训练得到。</p>
+        <p>行是正在发问的词（Query），列是被查阅的词（Key），格子越红说明越在意。切一下上面的两个头，同一句话立刻走出两种不同的关注方式。</p>
       </header>
 
       {interactive ? (
@@ -149,18 +149,20 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
           </div>
         </>
       ) : (
-        <p className="attention-explorer__static-note">静态模式展示语义头、「它」一行的权重分布（交互态可选择任意行并切换注意力头）。</p>
+        <p className="attention-explorer__static-note">静态模式展示语义头、「它」这一行的权重分布（交互态可选任意词并切换注意力头）。</p>
       )}
 
       <figure className="at-matrix__figure">
-        <svg viewBox="0 0 470 452" role="img" aria-label={`${N}×${N} 因果注意力热力矩阵，行是 Query，列是 Key，右上三角被因果遮罩屏蔽`}>
-          <defs><pattern id={maskId} width="6" height="6" patternUnits="userSpaceOnUse">
-            <rect width="6" height="6" fill="var(--training-surface-bg)" />
-            <path d="M-1 1L1-1M0 6L6 0M5 7L7 5" stroke="var(--training-muted)" strokeWidth="1" />
-          </pattern></defs>
+        <svg viewBox="0 0 476 476" role="img" aria-label={`${N}×${N} 因果注意力热力矩阵，行是 Query，列是 Key，右上三角被因果遮罩屏蔽`}>
+          <defs>
+            <pattern id={maskId} width="6" height="6" patternUnits="userSpaceOnUse">
+              <rect width="6" height="6" fill="var(--training-surface-bg)" />
+              <path d="M-1 1L1-1M0 6L6 0M5 7L7 5" stroke="var(--training-muted)" strokeWidth="1" />
+            </pattern>
+          </defs>
           <title>QKᵀ 注意力热力矩阵</title>
-          <text className="at-axis-label" x={GRID_X + (N * CELL) / 2} y="20" textAnchor="middle">Key（被看的位置）→</text>
-          <text className="at-axis-label" x="16" y={GRID_Y + (N * CELL) / 2} textAnchor="middle" transform={`rotate(-90 16 ${GRID_Y + (N * CELL) / 2})`}>Query（发问的位置）→</text>
+          <text className="at-axis-label" x={GRID_X + (N * CELL) / 2} y="20" textAnchor="middle">Key（被看的词）→</text>
+          <text className="at-axis-label" x="18" y={GRID_Y + (N * CELL) / 2} textAnchor="middle" transform={`rotate(-90 18 ${GRID_Y + (N * CELL) / 2})`}>Query（发问的词）→</text>
           {TOKENS.map((token, col) => (
             <text
               key={`col-${token}`}
@@ -168,7 +170,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
               x={GRID_X + col * CELL + CELL / 2}
               y={GRID_Y - 10}
               textAnchor="start"
-              transform={`rotate(-52 ${GRID_X + col * CELL + CELL / 2} ${GRID_Y - 10})`}
+              transform={`rotate(-55 ${GRID_X + col * CELL + CELL / 2} ${GRID_Y - 10})`}
             >
               {token}
             </text>
@@ -199,7 +201,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
                       height={CELL - 2}
                       rx="3"
                     >
-                      <title>{`${TOKENS[row]} 看不到 ${TOKENS[col]}（因果遮罩）`}</title>
+                      <title>{`${TOKENS[row]} 看不到 ${TOKENS[col]}（未来位置被遮罩）`}</title>
                     </rect>
                   );
                 }
@@ -214,7 +216,7 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
                     width={CELL - 2}
                     height={CELL - 2}
                     rx="3"
-                    style={{ '--at-weight': weight.toFixed(3) } as React.CSSProperties}
+                    style={{ '--at-weight': weight.toFixed(3) } as CSSProperties}
                   >
                     <title>{`${TOKENS[row]} → ${TOKENS[col]}：${Math.round(weight * 100)}%`}</title>
                   </rect>
@@ -237,14 +239,13 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
           )}
         </svg>
         <figcaption>
-          颜色越深权重越高；选中行内标出百分比。右上三角的斜纹格子是因果遮罩：写第 t 个词时看不到后面的词。
-          第 1 行（第一个词）只能看自己，权重 100% 落在自己身上。
-          <span className="chart-scroll-hint">横向滑动查看完整矩阵；选中行的全部百分比与屏蔽状态列在图下。</span>
+          颜色越深权重越高；选中行内直接标出百分比，右上角斜纹格是被遮罩挡住的未来词（教学示意数据）。
+          <span className="chart-scroll-hint">横向滑动查看完整矩阵；选中行的全部读数列在图下。</span>
         </figcaption>
       </figure>
 
       <p className="attention-explorer__reason" aria-live="polite">
-        <strong>焦点「{TOKENS[focus]}」（{head.label}）：</strong>{reason}
+        <strong>当前词「{TOKENS[focus]}」（{head.label}）：</strong>{reason}
       </p>
 
       <div className="attention-explorer__sentence">
@@ -274,9 +275,9 @@ export default function AttentionExplorer({ motionLevel = 'explanatory' }: Props
             <article key={label}>
               <strong>焦点「{label}」</strong>
               <ul>
-                {TOKENS.map((t, i) => i <= rowIndex && weights[i] >= 0.1 ? (
+                {TOKENS.map((t, i) => (i <= rowIndex && weights[i] >= 0.1 ? (
                   <li key={t}><b>{t}</b>：{Math.round(weights[i] * 100)}%</li>
-                ) : null)}
+                ) : null))}
               </ul>
             </article>
           );

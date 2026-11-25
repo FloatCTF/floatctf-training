@@ -660,8 +660,14 @@
 
   .retrieval-sandbox__controls,
   .retrieval-sandbox__layout,
-  .distillation-flow {
+  .distillation-flow,
+  .pi-sandbox__layout {
     grid-template-columns: 1fr;
+  }
+
+  .pi-sandbox__trace {
+    border-block-start: var(--training-rule-light);
+    border-inline-start: 0;
   }
 
   .retrieval-results {

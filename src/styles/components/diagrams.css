@@ -454,7 +454,8 @@
   font-weight: 700;
 }
 
-.diagram-box--end .diagram-box-label {
+.diagram-box--end .diagram-box-label,
+.diagram-box-label--end {
   fill: var(--training-surface-bg);
 }
 
@@ -509,20 +510,17 @@
   transition: inline-size 220ms ease;
 }
 
-.budget-segment::after {
-  content: attr(data-label);
-  inset-inline-start: 0.4rem;
-  position: absolute;
-  top: -1.7rem;
-  white-space: nowrap;
+.budget-segment--free,
+.budget-swatch--free {
+  background: repeating-linear-gradient(45deg, transparent 0 0.25rem, color-mix(in srgb, var(--training-border) 60%, transparent) 0.25rem 0.5rem);
 }
 
 .budget-legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 1.1rem;
+  gap: 0.45rem 1.1rem;
   list-style: none;
-  margin: 2rem 0 0;
+  margin: 0.9rem 0 0;
   padding: 0;
 }
 
@@ -997,9 +995,86 @@
 }
 
 .af-wire--neg {
-  opacity: 0.85;
-  stroke: var(--training-link);
+  opacity: 0.88;
+  stroke: var(--training-class-zero);
   stroke-width: var(--wire-width, 1.6);
+}
+
+.af-wire--focus {
+  stroke: var(--training-accent);
+  stroke-width: 2.4;
+}
+
+.af-wire--dim {
+  opacity: 0.14;
+}
+
+.af-hub {
+  fill: var(--training-heading);
+}
+
+.af-mask-cell {
+  fill: color-mix(in srgb, var(--training-accent) 26%, transparent);
+}
+
+.af-mask-hint {
+  fill: var(--training-accent);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.af-det-card {
+  fill: color-mix(in srgb, var(--training-surface-bg) 80%, transparent);
+  stroke: transparent;
+  stroke-width: 1.5;
+  transition: fill 180ms ease, stroke 180ms ease;
+}
+
+.af-detector:hover .af-det-card {
+  stroke: var(--training-border);
+}
+
+.af-det-card--selected {
+  fill: color-mix(in srgb, var(--training-accent) 10%, var(--training-surface-bg));
+  stroke: var(--training-accent);
+}
+
+.activation-flow__controls {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.activation-flow__det-picker {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding: 0.2rem 1.4rem 0.2rem;
+}
+
+.activation-flow__det-label {
+  color: var(--training-muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.af-det-chip {
+  background: transparent;
+  border: 1px solid var(--training-border);
+  border-radius: 999px;
+  color: var(--training-heading);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 600;
+  min-block-size: 2rem;
+  padding: 0.18rem 0.7rem;
+}
+
+.af-det-chip--active {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
 }
 
 .af-unit {
@@ -1144,14 +1219,36 @@
 }
 
 .ms-wire--neg {
-  opacity: 0.9;
-  stroke: var(--training-link);
+  opacity: 0.92;
+  stroke: var(--training-class-zero);
+}
+
+.ms-pill {
+  fill: var(--training-surface-bg);
+  stroke-width: 1.4;
+}
+
+.ms-pill--pos {
+  stroke: var(--training-accent);
+}
+
+.ms-pill--neg {
+  stroke: var(--training-class-zero);
 }
 
 .ms-weight {
   fill: var(--training-heading);
-  font-size: 15px;
+  font-family: var(--training-font-code);
+  font-size: 12.5px;
   font-weight: 700;
+}
+
+.ms-weight--pos {
+  fill: var(--training-accent);
+}
+
+.ms-weight--neg {
+  fill: var(--training-class-zero);
 }
 
 .ms-node {
@@ -1446,7 +1543,7 @@
 }
 
 .neuron-wire--inhibit {
-  stroke: var(--training-link);
+  stroke: var(--training-class-zero);
 }
 
 .neuron-wire-label {
@@ -1537,6 +1634,129 @@
   font-size: 0.82rem;
   line-height: 1.6;
   margin: 0;
+}
+
+.neuron-playground__formula {
+  background: color-mix(in srgb, var(--training-heading) 6%, transparent);
+  border-inline-start: 0.2rem solid var(--training-accent);
+  font-size: 0.82rem;
+  margin: 0.85rem 1.4rem 0;
+  padding: 0.55rem 0.85rem;
+}
+
+.neuron-playground__formula code {
+  background: none;
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-weight: 700;
+  padding: 0;
+}
+
+.xor-verdict.neuron-playground__verdict {
+  margin: 0.65rem 1.4rem 0;
+}
+
+/* ConvSlidingWindow 放大格与数字徽章 */
+.cw-badge {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-accent);
+  stroke-width: 1.8;
+}
+
+.cw-badge-text {
+  fill: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.cw-kernel-zero {
+  fill: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 13px;
+}
+
+.cw-patch-bg {
+  fill: color-mix(in srgb, var(--training-border) 12%, transparent);
+  stroke: var(--training-border);
+  stroke-width: 1;
+}
+
+.cw-patch-cell {
+  fill: color-mix(in srgb, var(--training-heading) calc(var(--ink, 0) * 100%), transparent);
+  stroke: color-mix(in srgb, var(--training-border) 45%, transparent);
+  stroke-width: 0.8;
+}
+
+.cw-patch-cell--mid {
+  stroke: var(--training-accent);
+  stroke-width: 1.3;
+}
+
+/* RNN 分隔线 */
+.ru-divider {
+  stroke: var(--training-border);
+  stroke-dasharray: 4 4;
+  stroke-width: 1.4;
+}
+
+.ru-unfold-badge {
+  fill: var(--training-accent);
+  font-size: 12.5px;
+  font-weight: 800;
+}
+
+/* L6 AI 攻击面总览图 */
+.ai-attack-surface svg {
+  max-inline-size: 44rem;
+}
+
+.as-zone {
+  fill: color-mix(in srgb, var(--training-page-bg) 70%, var(--training-surface-bg));
+  stroke: var(--training-border);
+  stroke-width: 1.4;
+}
+
+.as-zone--train {
+  stroke-dasharray: 5 4;
+}
+
+.as-zone-title {
+  fill: var(--training-heading);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.as-zone-sub {
+  fill: var(--training-muted);
+  font-size: 11.5px;
+}
+
+.as-card {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-border);
+  stroke-width: 1.6;
+}
+
+.as-card--danger { stroke: var(--training-danger-text); }
+.as-card--warn { stroke: var(--training-class-one); }
+.as-card--info { stroke: var(--training-class-zero); }
+
+.as-card-title {
+  fill: var(--training-heading);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.as-card-meta {
+  fill: var(--training-muted);
+  font-size: 11.5px;
+}
+
+.as-mid-label {
+  fill: var(--training-accent);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .xor-explorer__note {

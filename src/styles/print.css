@@ -61,6 +61,8 @@
   .lora-decomposition,
   .distillation-comparison,
   .request-journey-map,
+  .ai-attack-surface,
+  .pi-sandbox,
   .skill-loading__steps,
   .skill-loading__step,
   .choice-ladder__item,
@@ -291,7 +293,11 @@
     color: var(--training-code-text) !important;
   }
 
-  .simulator-control {
+  .simulator-control,
+  .bp-presets,
+  .learning-sim-presets,
+  .af-detectors,
+  .pi-sandbox__controls {
     display: none !important;
   }
 

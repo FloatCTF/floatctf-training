@@ -1,29 +1,37 @@
 ---
 const STEPS = [
-  { id: '01', label: '网关接入', layer: '运行与成本', kind: 'ops' },
-  { id: '02', label: '输入护栏', layer: '质量与安全', kind: 'quality' },
-  { id: '03', label: '组装上下文', layer: '知识与记忆', kind: 'knowledge' },
-  { id: '04', label: '模型推理', layer: '能力接入', kind: 'access' },
-  { id: '05', label: '工具执行', layer: '执行编排', kind: 'orchestration' },
-  { id: '06', label: '输出护栏', layer: '质量与安全', kind: 'quality' },
-  { id: '07', label: '记录轨迹', layer: '运行与成本', kind: 'ops' },
-  { id: '08', label: '回流评测', layer: '质量与安全', kind: 'quality' },
+  { id: '01', label: '网关接入', layer: '运行与成本', detail: '鉴权、限流、按难度选模型', kind: 'ops' },
+  { id: '02', label: '输入护栏', layer: '质量与安全', detail: '挡住注入攻击和敏感信息', kind: 'quality' },
+  { id: '03', label: '组装上下文', layer: '知识与记忆', detail: '查知识库、读历史摘要、对齐缓存前缀', kind: 'knowledge' },
+  { id: '04', label: '模型推理', layer: '能力接入', detail: '给出回答或提出工具调用意图', kind: 'access' },
+  { id: '05', label: '工具执行', layer: '执行编排', detail: '代码校验权限并查订单/调接口', kind: 'orchestration' },
+  { id: '06', label: '输出护栏', layer: '质量与安全', detail: '核对格式、事实边界与脱敏', kind: 'quality' },
+  { id: '07', label: '记录轨迹', layer: '运行与成本', detail: '记下每步耗时、token 和花费', kind: 'ops' },
+  { id: '08', label: '回流评测', layer: '质量与安全', detail: '线上错题收进回归测试集', kind: 'quality' },
 ];
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="REQUEST JOURNEY / 五层同场" title="请求在线上走八步，失败样本在线下回流" ariaLabel="一次 AI 请求的五层全链路" class="request-journey-map" note="在线路径保持确定的八步清单；模型定制位于离线回路，吸收失败证据后通过评测重新发布。">
+<LessonDiagram
+  eyebrow="REQUEST JOURNEY / 六层串联"
+  title="一次客服提问怎么穿过全部六层"
+  ariaLabel="一次 AI 请求的六层全链路"
+  class="request-journey-map"
+  note="上面 8 步覆盖 5 个在线工程层（其中工具调用按需触发，错题回流仅针对线上异常与失败案例）；另一条离线层（第 4 层「模型定制」）在后台消化第 8 步攒下的错题，过评测门禁后再发新版本。"
+>
   <div class="request-journey-map__body">
     <ol>
       {STEPS.map((step) => (
         <li class={`request-journey-step request-journey-step--${step.kind}`}>
-          <span>{step.id}</span><strong>{step.label}</strong><small>{step.layer}</small>
+          <span>{step.id}</span>
+          <strong>{step.label}</strong>
+          <p>{step.detail}</p>
+          <small>{step.layer}</small>
         </li>
       ))}
     </ol>
     <div class="request-offline-loop">
-      <span>离线模型定制</span>
-      <p>第 08 步积累的失败案例进入 Prompt、检索、微调或蒸馏改进，再经过评测门禁回到线上。</p>
+      <span>离线层 · 模型定制</span>
+      <p>第 08 步攒下的线上错题会进入离线回路：先改 Prompt 和检索，还压不住再做微调或蒸馏，全部过完评测门禁再回到线上。</p>
     </div>
   </div>
-
 </LessonDiagram>

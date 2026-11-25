@@ -1,35 +1,34 @@
 ---
 const segments = [
   { pct: 8, label: '权限与安全规则', color: 'var(--training-accent)' },
-  { pct: 6, label: '目标与验收条件', color: 'color-mix(in srgb, var(--training-accent) 65%, var(--training-heading))' },
+  { pct: 6, label: '目标与验收条件', color: 'var(--training-class-one)' },
   { pct: 24, label: '历史与计划', color: 'var(--training-heading)' },
-  { pct: 31, label: '检索文档', color: 'var(--training-link)' },
-  { pct: 12, label: '工具定义', color: 'color-mix(in srgb, var(--training-link) 55%, var(--training-accent))' },
+  { pct: 31, label: '检索文档', color: 'var(--training-class-zero)' },
+  { pct: 12, label: '工具定义', color: 'var(--training-safe)' },
   { pct: 17, label: '工具结果', color: 'var(--training-muted)' },
   { pct: 2, label: '剩余', color: 'transparent' },
 ];
-let offset = 0;
-const bars = segments.map((s) => {
-  const bar = { ...s, offset };
-  offset += s.pct;
-  return bar;
-});
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="CONTEXT BUDGET / 一轮调用的窗口" title="一次模型调用的上下文都装了什么" ariaLabel="上下文预算构成" note="示意比例：检索文档与历史往往占据大部分窗口，安全规则只占很小但必须保留的一角。Context Engineering 管的就是这一条的取舍。">
+<LessonDiagram eyebrow="CONTEXT BUDGET / 一轮调用的窗口" title="一次模型调用的上下文都装了什么" ariaLabel="上下文预算构成" note="示意比例：检索文档和历史对话往往吃掉大半空间，安全规则只占很小却不能被挤掉的一角。">
   <div class="budget-track" role="img" aria-label={`上下文构成示意：${segments.filter((s) => s.label !== '剩余').map((s) => `${s.label} ${s.pct}%`).join('，')}，剩余 ${segments[segments.length - 1].pct}%。`}>
-    {bars.map((b) => (
+    {segments.map((b) => (
       <span
-        class="budget-segment"
-        style={`inline-size: ${b.pct}%; inset-inline-start: ${b.offset}%; ${b.color === 'transparent' ? 'background: repeating-linear-gradient(45deg, transparent 0 0.3rem, color-mix(in srgb, var(--training-border) 60%, transparent) 0.3rem 0.6rem);' : `--segment-color: ${b.color};`}`}
-        data-label={b.label !== '剩余' ? `${b.label} ${b.pct}%` : `剩余 ${b.pct}%`}
+        class:list={['budget-segment', b.color === 'transparent' && 'budget-segment--free']}
+        style={`inline-size: ${b.pct}%; ${b.color === 'transparent' ? '' : `--segment-color: ${b.color};`}`}
+        title={`${b.label} ${b.pct}%`}
       ></span>
     ))}
   </div>
   <ul class="budget-legend">
-    {segments.filter((s) => s.label !== '剩余').map((s) => (
-      <li><span class="budget-swatch" style={`--segment-color: ${s.color};`}></span>{s.label}（{s.pct}%）</li>
+    {segments.map((s) => (
+      <li>
+        <span
+          class:list={['budget-swatch', s.color === 'transparent' && 'budget-swatch--free']}
+          style={s.color === 'transparent' ? undefined : `--segment-color: ${s.color};`}
+        ></span>
+        {s.label}（{s.pct}%）
+      </li>
     ))}
   </ul>
-
 </LessonDiagram>

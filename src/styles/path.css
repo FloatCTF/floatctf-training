@@ -225,6 +225,16 @@ a.path-lesson-title::after {
   white-space: nowrap;
 }
 
+.path-entry-list {
+  display: grid;
+  gap: 0.75rem;
+  margin-block: 1.45rem 1.2rem;
+}
+
+.path-entry-list > a.path-entry {
+  margin-block: 0;
+}
+
 /* 首页入口：与分类卡片同一套材质，横跨整行 */
 a.path-entry {
   align-items: center;

@@ -27,8 +27,16 @@
       "machine-learning-foundations"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "train-xor-mlp",
+      "path": "public/labs/neural-network-foundations/train_xor.py",
+      "command": "python3 public/labs/neural-network-foundations/train_xor.py",
+      "expectedResult": "3000 轮反向传播将 XOR 的 MSE 从 0.25074 降至 0.00017，隐藏层把 (0,1) 与 (1,0) 映射到相近坐标 (0.02, 0.92)，输出预测接近 0/1/1/0。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -86,7 +94,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "PyTorch autograd optimization batch epoch gradient",
       "D2L MLP CNN RNN Transformer numerical stability",

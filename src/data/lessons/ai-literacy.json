@@ -28,8 +28,16 @@
       "理解向量、概率与函数的基本含义"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "sample-next-token",
+      "path": "public/labs/ai-literacy/sample_next_token.py",
+      "command": "python3 public/labs/ai-literacy/sample_next_token.py",
+      "expectedResult": "输出 T=0.3/1.0/2.0 的 softmax 概率与 top-p=0.80 保留池、交叉熵 0.545 与困惑度 1.72，并展示 T=0.3 全中「测试」与 T=2.0 抽中低概率词的对比。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -87,7 +95,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "Stanford CS336 language modeling from scratch assignments",
       "Hugging Face LLM Course tokenizers transformers",

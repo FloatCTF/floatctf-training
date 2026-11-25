@@ -31,8 +31,16 @@
       "会阅读简单公式和数据表；不需要微积分基础，梯度与推导在课内现场建立"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "fit-house-gd",
+      "path": "public/labs/machine-learning-foundations/fit_house.py",
+      "command": "python3 public/labs/machine-learning-foundations/fit_house.py",
+      "expectedResult": "lr=0.10 时 40 步将 MSE 从 95756.50 降至 19.02（价格 ≈ 3.81 × 面积 + 9.8）；lr=1.15 时第 5 步 MSE 突破百万、第 14 步超过 1e8 触发发散停止。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -90,7 +98,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "Google Machine Learning Crash Course linear logistic regression loss gradient data normalization generalization",
       "Stanford CS229 empirical risk minimization bias variance error analysis",

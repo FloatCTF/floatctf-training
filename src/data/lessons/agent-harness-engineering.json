@@ -30,8 +30,16 @@
       "了解自动化测试的基本概念"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "mini-agent-loop",
+      "path": "public/labs/agent-harness-engineering/mini_agent_loop.py",
+      "command": "python3 public/labs/agent-harness-engineering/mini_agent_loop.py",
+      "expectedResult": "第 1 步因缺少 BUG-19 引用被外部校验器打回，第 2 步依据反馈补全后 PASS，随后高危 publish_brief 被人工审批网关拦截（BLOCKED）。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -89,7 +97,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "Anthropic prompt engineering success criteria evaluations",
       "Model Context Protocol architecture resources prompts tools safety",

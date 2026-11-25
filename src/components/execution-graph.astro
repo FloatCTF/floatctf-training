@@ -1,64 +1,89 @@
 ---
 interface Node { x: number; y: number; w: number; h: number; label: string; kind?: 'start' | 'proc' | 'join' | 'human' | 'end' }
 const nodes: Node[] = [
-  { x: 270, y: 16, w: 140, h: 40, label: '确认版本范围', kind: 'start' },
-  { x: 170, y: 100, w: 120, h: 40, label: '读取 commits' },
-  { x: 390, y: 100, w: 120, h: 40, label: '读取 blockers' },
-  { x: 270, y: 184, w: 140, h: 40, label: '生成草稿', kind: 'join' },
-  { x: 120, y: 268, w: 110, h: 40, label: '安全审查' },
-  { x: 285, y: 268, w: 110, h: 40, label: '证据审查' },
-  { x: 450, y: 268, w: 110, h: 40, label: '格式审查' },
-  { x: 270, y: 352, w: 140, h: 40, label: '汇总', kind: 'join' },
-  { x: 270, y: 436, w: 140, h: 40, label: '人工确认', kind: 'human' },
-  { x: 300, y: 520, w: 80, h: 36, label: 'END', kind: 'end' },
+  { x: 300, y: 18, w: 148, h: 40, label: '1. 确认版本范围', kind: 'start' },
+  { x: 196, y: 100, w: 132, h: 40, label: '读代码提交' },
+  { x: 420, y: 100, w: 132, h: 40, label: '读阻断 Issue' },
+  { x: 300, y: 184, w: 148, h: 40, label: '2. 生成简报草稿', kind: 'join' },
+  { x: 152, y: 268, w: 116, h: 40, label: '安全审查' },
+  { x: 316, y: 268, w: 116, h: 40, label: '证据审查' },
+  { x: 480, y: 268, w: 116, h: 40, label: '格式审查' },
+  { x: 300, y: 356, w: 148, h: 40, label: '3. 汇总审查结果', kind: 'join' },
+  { x: 300, y: 448, w: 148, h: 40, label: '4. 人工点确认', kind: 'human' },
+  { x: 326, y: 530, w: 96, h: 38, label: '结束', kind: 'end' },
 ];
 const node = (label: string) => nodes.find((n) => n.label === label)!;
 const c = (n: Node) => ({ cx: n.x + n.w / 2, cy: n.y + n.h / 2 });
 const edge = (from: string, to: string) => {
-  const a = node(from); const b = node(to);
-  const ca = c(a); const cb = c(b);
-  if (Math.abs(ca.cx - cb.cx) < 2 || ca.cy < cb.cy) {
-    return { x1: ca.cx, y1: a.y + a.h, x2: cb.cx, y2: b.y };
-  }
-  return { x1: ca.cx, y1: a.y, x2: cb.cx, y2: b.y + b.h };
+  const a = node(from);
+  const b = node(to);
+  const ca = c(a);
+  const cb = c(b);
+  return { x1: ca.cx, y1: a.y + a.h, x2: cb.cx, y2: b.y - 2 };
 };
 const solidEdges: [string, string][] = [
-  ['确认版本范围', '读取 commits'],
-  ['确认版本范围', '读取 blockers'],
-  ['读取 commits', '生成草稿'],
-  ['读取 blockers', '生成草稿'],
-  ['生成草稿', '安全审查'],
-  ['生成草稿', '证据审查'],
-  ['生成草稿', '格式审查'],
-  ['安全审查', '汇总'],
-  ['证据审查', '汇总'],
-  ['格式审查', '汇总'],
-  ['汇总', '人工确认'],
-  ['人工确认', 'END'],
+  ['1. 确认版本范围', '读代码提交'],
+  ['1. 确认版本范围', '读阻断 Issue'],
+  ['读代码提交', '2. 生成简报草稿'],
+  ['读阻断 Issue', '2. 生成简报草稿'],
+  ['2. 生成简报草稿', '安全审查'],
+  ['2. 生成简报草稿', '证据审查'],
+  ['2. 生成简报草稿', '格式审查'],
+  ['安全审查', '3. 汇总审查结果'],
+  ['证据审查', '3. 汇总审查结果'],
+  ['格式审查', '3. 汇总审查结果'],
+  ['3. 汇总审查结果', '4. 人工点确认'],
+  ['4. 人工点确认', '结束'],
 ];
 const edgeCoords = solidEdges.map(([from, to]) => edge(from, to));
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="EXECUTION GRAPH / 节点与边" title="一张图同时容纳并行、汇合与回边" ariaLabel="发布简报执行图" note="读取与审查是并行节点，汇合点等待全部完成；虚线回边表示审查失败后带反馈重新生成草稿，发布动作保留给人工节点。">
-  <svg viewBox="0 0 680 580" role="img" aria-label="执行图：确认版本范围后并行读取提交与阻断项，生成草稿后并行进行安全、证据、格式三路审查，汇总通过后人工确认结束；审查失败带反馈回到生成草稿。">
+<LessonDiagram
+  eyebrow="EXECUTION GRAPH / 节点与边"
+  title="一张执行图怎么同时装下并行、返工和人工把关"
+  ariaLabel="发布简报执行图"
+  note="左右并排的是并行节点，汇总点等三路都跑完再做决定：没通过就顺着左侧红虚线带报错回炉重写，通过才交给人工点确认。"
+>
+  <svg viewBox="0 0 660 584" role="img" aria-label="执行图：确认版本范围后并行读取提交与阻断单，生成草稿后并行执行安全、证据、格式三路审查，汇总通过后人工确认并结束；若审查不通过，沿左侧红色虚线回边返回生成草稿">
     <title>发布简报执行图</title>
     <defs>
-      <marker id="exec-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" class="diagram-arrow-head" />
+      <marker id="exec-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 1 L 9 5 L 0 9 z" class="diagram-arrow-head" />
+      </marker>
+      <marker id="exec-fail-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 1 L 9 5 L 0 9 z" style="fill: var(--training-danger)" />
       </marker>
     </defs>
-    <text x="512" y="462" class="diagram-lane-label">PASS</text>
-    <path d="M 270 372 C 170 372, 150 300, 220 250, 260 228, 290 226, 320 224" class="diagram-arrow diagram-arrow--fail" marker-end="url(#exec-arrow)" fill="none" />
-    <text x="96" y="300" class="diagram-lane-label diagram-lane-label--fail">FAIL 带反馈</text>
+
+    {/* 左侧宽裕通道走 FAIL 回边，完全绕开「安全审查」盒子与左侧说明文字 */}
+    <path
+      d="M 300 376 L 118 376 C 98 376, 98 204, 118 204 L 296 204"
+      class="diagram-arrow diagram-arrow--fail"
+      marker-end="url(#exec-fail-arrow)"
+      fill="none"
+    />
+    <text x="48" y="284" text-anchor="middle" class="diagram-lane-label diagram-lane-label--fail">没通过</text>
+    <text x="48" y="304" text-anchor="middle" class="diagram-lane-label diagram-lane-label--fail">带报错重写</text>
+
+    {/* PASS 标在汇总 → 人工确认的箭头正旁边 */}
+    <text x="392" y="426" class="diagram-lane-label" style="fill: var(--training-safe); font-weight: 700;">全部通过 ✓</text>
+
     {edgeCoords.map((e) => (
       <line x1={e.x1} y1={e.y1} x2={e.x2} y2={e.y2} class="diagram-arrow" marker-end="url(#exec-arrow)" />
     ))}
+
     {nodes.map((n) => (
       <g>
         <rect x={n.x} y={n.y} width={n.w} height={n.h} rx="10" class={`diagram-box diagram-box--${n.kind ?? 'proc'}`} />
-        <text x={n.x + n.w / 2} y={n.y + n.h / 2 + 5} text-anchor="middle" class="diagram-box-label">{n.label}</text>
+        <text
+          x={n.x + n.w / 2}
+          y={n.y + n.h / 2 + 5}
+          text-anchor="middle"
+          class:list={['diagram-box-label', n.kind === 'end' && 'diagram-box-label--end']}
+        >
+          {n.label}
+        </text>
       </g>
     ))}
   </svg>
-
 </LessonDiagram>

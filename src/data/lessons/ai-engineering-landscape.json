@@ -30,8 +30,16 @@
       "sql-basics"
     ],
     "safetyScope": "not-applicable",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "mini-rag-and-cache",
+      "path": "public/labs/ai-engineering-landscape/mini_rag.py",
+      "command": "python3 public/labs/ai-engineering-landscape/mini_rag.py",
+      "expectedResult": "对比 top-2（100% 有效）与 top-5（40% 有效）的检索噪声稀释，并算出 4096 token 前缀（满足最低缓存门槛）在有效期内连调 100 次开缓存节省 88.8%。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -57,8 +65,8 @@
       "id": "check-3",
       "kind": "practice",
       "title": "选择 top-k",
-      "question": "在检索沙盒固定同一个 query，分别设置较小和较大的 top-k，记录入选片段、相关性及上下文长度，说明选择依据。",
-      "answer": "合格记录包含两种 k 的候选列表与变化。优先保留能支持问题的材料，检查新增片段是否增加证据覆盖，并记录噪声和输入长度的代价。该沙盒使用示意向量，实际任务需使用固定评测集复核。",
+      "question": "在检索沙盒固定同一个 query，分别设置较小和较大的 top-k（如 2 和 4），记录入选片段、各自余弦相似度与片段数量，说明选择依据。",
+      "answer": "合格记录包含两种 k 的候选列表、相似度与片段数变化。优先保留高相关、能支持问题的材料，检查新增片段是否增加证据覆盖，并权衡低相关或负相关噪声片段增多的代价。该沙盒使用示意向量，实际任务需使用固定评测集复核。",
       "sourceIds": [
         "rag-paper"
       ]
@@ -89,7 +97,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "Lewis retrieval-augmented generation knowledge-intensive NLP 2005.11401",
       "Contextual AI introducing RAG 2.0 end-to-end optimization",

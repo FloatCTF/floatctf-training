@@ -1,4 +1,4 @@
-import { useId, useRef } from 'react';
+import { useId, useRef, type CSSProperties } from 'react';
 import { useSimulator, type MotionLevel } from './motion-utils';
 import { useGsapTween } from './motion-gsap';
 import { SimLedger, StageControls } from './simulator-controls';
@@ -7,187 +7,202 @@ interface Props {
   motionLevel?: MotionLevel;
 }
 
-// 分段与颜色和静态 ContextBudget 图完全同源；该静态图是本演示第 3 步（满载）的快照
+const COLORS = {
+  policy: 'var(--training-accent)',
+  goal: 'var(--training-class-one)',
+  history: 'var(--training-heading)',
+  retrieval: 'var(--training-class-zero)',
+  tools: 'var(--training-safe)',
+  toolResults: 'var(--training-muted)',
+} as const;
+
 const FIXED = [
-  { label: '权限与安全规则', pct: 8, color: 'var(--training-accent)' },
-  { label: '目标与验收条件', pct: 6, color: 'color-mix(in srgb, var(--training-accent) 65%, var(--training-heading))' },
-  { label: '工具定义', pct: 12, color: 'color-mix(in srgb, var(--training-link) 55%, var(--training-accent))' },
+  { key: 'policy', label: '权限与安全规则', pct: 8, color: COLORS.policy },
+  { key: 'goal', label: '任务目标与输出格式', pct: 6, color: COLORS.goal },
+  { key: 'tools', label: '工具说明', pct: 12, color: COLORS.tools },
 ] as const;
 
 interface Stage {
   key: string;
   label: string;
-  phase: 'SELECT' | 'ACT' | 'COMPRESS' | 'POSITION';
   history: number;
   retrieval: number;
   toolResults: number;
-  note: string;
+  note: (remaining: number) => string;
 }
 
 const STAGES: Stage[] = [
   {
     key: 'init',
-    label: '0 · 首轮组装',
-    phase: 'SELECT',
+    label: '第 1 步 · 首轮起步',
     history: 0,
     retrieval: 0,
     toolResults: 0,
-    note: '首轮只装三块固定内容：权限与安全规则 8%、目标与验收条件 6%、工具定义 12%。剩余 74% 都是可支配空间。',
+    note: (rem) => `刚起步时，窗口里只装三块必带内容：安全规则 8%、任务目标 6%、工具说明 12%。还空着 ${rem}% 的位置。`,
   },
   {
     key: 'select',
-    label: '1 · Select：检索相关文档',
-    phase: 'SELECT',
+    label: '第 2 步 · 按需检索（Select）',
     history: 0,
     retrieval: 31,
     toolResults: 0,
-    note: 'Select 操作取回本版本相关的提交说明、Issue 与规范片段，检索块占去 31%。剩余降到 43%——只取需要的，不搬整个仓库。',
+    note: (rem) => `只拉回和本次发版相关的提交记录与规范片段，占掉 31%。空间还剩 ${rem}%——绝不把整个代码仓库一股脑塞进来。`,
   },
   {
     key: 'act',
-    label: '2 · Act：工具结果涌入',
-    phase: 'ACT',
+    label: '第 3 步 · 工具返回结果',
     history: 4,
     retrieval: 31,
     toolResults: 17,
-    note: '读取提交、查询阻断 Issue 的工具结果占去 17%，历史与计划开始增长（4%）。剩余 26%，还够再走一轮。',
+    note: (rem) => `调用接口查完提交和阻断单，返回的 JSON 结果吃掉 17%，加上 4% 对话记录，还剩 ${rem}%。`,
   },
   {
     key: 'full',
-    label: '3 · 第二轮：窗口满载',
-    phase: 'ACT',
+    label: '第 4 步 · 多轮之后窗口爆满',
     history: 24,
     retrieval: 31,
     toolResults: 17,
-    note: '第二轮循环把历史与计划膨胀到 24%，窗口只剩 2%——这正是上文那张静态预算图的快照时刻。下一步的工具结果已经装不进来。',
+    note: (rem) => `多跑几轮，历史对话涨到 24%，整条窗口被塞到 ${100 - rem}%，只剩 ${rem}%——下一条工具返回已经放不下了。`,
   },
   {
     key: 'compress',
-    label: '4 · Compress：腾出空间',
-    phase: 'COMPRESS',
+    label: '第 5 步 · 压缩腾空间（Compress）',
     history: 10,
     retrieval: 24,
     toolResults: 9,
-    note: '装不下就压缩：历史压成决策记录（24%→10%），工具结果去重截断（17%→9%），检索只保留被引用的片段（31%→24%）。剩余回到 31%，代价是细节被丢弃。',
+    note: (rem) => `把冗长历史缩成要点（24%→10%），工具原始日志去重（17%→9%），没用到的检索片段删掉（31%→24%），空余重新回到 ${rem}%。代价是丢掉一些细枝末节。`,
   },
   {
     key: 'position',
-    label: '5 · 位置：放对地方',
-    phase: 'POSITION',
+    label: '第 6 步 · 排对位置（防中段遗忘）',
     history: 10,
     retrieval: 24,
     toolResults: 9,
-    note: '腾出空间只是容量问题，还有位置问题：关键证据要放在窗口的开头和结尾——中部的信息最容易被忽略（Lost in the Middle）。',
+    note: () => '装得下不等于模型会用：长上下文里，放在开头和结尾的信息最容易被抓到，埋在正中间的最容易被漏掉。所以关键规则放最前，最新证据和要求放最后。',
   },
 ];
 
 const MAX_STAGE = STAGES.length - 1;
-
-// 静态账本：关键三步的构成记录
 const LEDGER_STAGES = [STAGES[0], STAGES[3], STAGES[4]];
 
 function remainingOf(stage: Stage) {
   return 100 - FIXED.reduce((s, f) => s + f.pct, 0) - stage.history - stage.retrieval - stage.toolResults;
 }
 
-function Segment({
-  label,
-  pct,
-  color,
-}: {
-  label: string;
-  pct: number;
-  color: string;
-}) {
+function Segment({ label, pct, color }: { label: string; pct: number; color: string }) {
   if (pct <= 0) return null;
   return (
     <span
       className="cwe-segment"
-      data-label={`${label} ${pct}%`}
-      style={{ inlineSize: `${pct}%`, '--segment-color': color } as React.CSSProperties}
-    />
+      title={`${label} ${pct}%`}
+      style={{ inlineSize: `${pct}%`, '--segment-color': color } as CSSProperties}
+    >
+      {pct >= 9 && <span className="cwe-segment__text">{pct}%</span>}
+    </span>
   );
 }
 
 export default function ContextWindowEvolution({ motionLevel = 'explanatory' }: Props) {
   const root = useRef<HTMLElement>(null);
   const titleId = useId();
-  const sim = useSimulator(root, MAX_STAGE, 1100, motionLevel, 'stop');
+  const sim = useSimulator(root, MAX_STAGE, 1200, motionLevel, 'stop');
   const { stage } = sim;
 
   const settled = sim.presentation !== 'interactive';
-  const current = settled ? STAGES[MAX_STAGE - 1] : STAGES[stage];
+  const current = settled ? STAGES[MAX_STAGE] : STAGES[stage];
   const showCurve = settled || stage >= MAX_STAGE;
 
   useGsapTween(
     root,
-    showCurve,
+    showCurve && !settled,
     '[data-cwe-curve]',
     { opacity: 0, y: 8 },
-    { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' },
-    [showCurve],
+    { opacity: 1, y: 0, duration: 0.36, ease: 'power2.out' },
+    [showCurve, settled],
   );
 
   const remaining = remainingOf(current);
+  const legendItems = [
+    { label: '权限与安全规则', pct: FIXED[0].pct, color: COLORS.policy },
+    { label: '任务目标', pct: FIXED[1].pct, color: COLORS.goal },
+    { label: '历史与计划', pct: current.history, color: COLORS.history },
+    { label: '检索文档', pct: current.retrieval, color: COLORS.retrieval },
+    { label: '工具说明', pct: FIXED[2].pct, color: COLORS.tools },
+    { label: '工具结果', pct: current.toolResults, color: COLORS.toolResults },
+    { label: '空余空间', pct: remaining, color: 'free' },
+  ];
 
   return (
     <section className="cwe-simulator simulator not-content" ref={root} aria-labelledby={titleId} data-presentation={sim.presentation}>
-      <h3 id={titleId}>上下文窗口演化实验：跟着发布简报 Agent 走六步</h3>
+      <h3 id={titleId}>上下文窗口 6 步演化：从空荡荡到塞满，再到压缩重排</h3>
       <p className="bp-intro">
-        同一条窗口，六步走完一轮真实的 Context Engineering：组装、检索、行动、满载、压缩、放对位置。
-        颜色与上图静态预算一致——那张图就是第 3 步「满载」时刻的快照。
+        这条进度条代表模型这一轮能读的全部 token 容量（100%）。点「单步」跟着发布简报助手走 6 步，看每一块内容怎样把窗口吃满，又怎样腾出空间。
       </p>
 
-      <div className="cwe-track" role="img" aria-label={`当前窗口构成：权限 8%、目标 6%、工具定义 12%、历史与计划 ${current.history}%、检索文档 ${current.retrieval}%、工具结果 ${current.toolResults}%，剩余 ${remaining}%`}>
-        <Segment label="权限与安全规则" pct={FIXED[0].pct} color={FIXED[0].color} />
-        <Segment label="目标与验收条件" pct={FIXED[1].pct} color={FIXED[1].color} />
-        <Segment label="历史与计划" pct={current.history} color="var(--training-heading)" />
-        <Segment label="检索文档" pct={current.retrieval} color="var(--training-link)" />
-        <Segment label="工具定义" pct={FIXED[2].pct} color={FIXED[2].color} />
-        <Segment label="工具结果" pct={current.toolResults} color="var(--training-muted)" />
+      <div className="cwe-track" role="img" aria-label={`当前窗口构成：权限 8%、目标 6%、历史 ${current.history}%、检索 ${current.retrieval}%、工具说明 12%、工具结果 ${current.toolResults}%，空余 ${remaining}%`}>
+        <Segment label="权限与安全规则" pct={FIXED[0].pct} color={COLORS.policy} />
+        <Segment label="任务目标" pct={FIXED[1].pct} color={COLORS.goal} />
+        <Segment label="历史与计划" pct={current.history} color={COLORS.history} />
+        <Segment label="检索文档" pct={current.retrieval} color={COLORS.retrieval} />
+        <Segment label="工具说明" pct={FIXED[2].pct} color={COLORS.tools} />
+        <Segment label="工具结果" pct={current.toolResults} color={COLORS.toolResults} />
         <span
           className="cwe-segment cwe-segment--free"
-          data-label={`剩余 ${remaining}%`}
+          title={`空余空间 ${remaining}%`}
           style={{ inlineSize: `${remaining}%` }}
-        />
+        >
+          {remaining >= 10 && <span className="cwe-segment__text cwe-segment__text--free">剩 {remaining}%</span>}
+        </span>
       </div>
 
+      <ul className="cwe-legend" aria-label="当前窗口各项占比">
+        {legendItems.map((item) => (
+          <li key={item.label} className={item.pct === 0 ? 'cwe-legend__item is-zero' : 'cwe-legend__item'}>
+            <span
+              className={item.color === 'free' ? 'budget-swatch budget-swatch--free' : 'budget-swatch'}
+              style={item.color === 'free' ? undefined : { '--segment-color': item.color } as CSSProperties}
+            />
+            <span>{item.label} <b>{item.pct}%</b></span>
+          </li>
+        ))}
+      </ul>
+
       <figure className="cwe-curve" data-cwe-curve hidden={!showCurve}>
-        <svg viewBox="0 0 640 110" role="img" aria-label="位置利用率曲线：窗口开头和结尾的利用率高，中部明显下沉">
+        <svg viewBox="0 0 640 116" role="img" aria-label="位置利用率曲线：窗口开头和结尾的利用率高，中部明显下沉">
           <title>Lost in the Middle 位置示意</title>
-          <line className="cwe-curve__axis" x1="20" y1="88" x2="620" y2="88" />
+          <line className="cwe-curve__axis" x1="24" y1="90" x2="616" y2="90" />
           <path
             className="cwe-curve__path"
-            d="M 20 34 C 90 30, 130 26, 180 34 C 260 48, 300 74, 320 76 C 340 74, 380 48, 460 34 C 510 26, 550 30, 620 34"
+            d="M 24 34 C 95 28, 138 28, 188 38 C 258 54, 298 78, 320 80 C 342 78, 382 54, 452 38 C 502 28, 545 28, 616 34"
           />
-          <text className="cwe-curve__label" x="30" y="20">开头：利用率高</text>
-          <text className="cwe-curve__label" x="320" y="102" textAnchor="middle">中部：最容易被忽略</text>
-          <text className="cwe-curve__label" x="610" y="20" textAnchor="end">结尾：利用率高</text>
+          <text className="cwe-curve__label" x="28" y="20">开头：最容易被注意到</text>
+          <text className="cwe-curve__label" x="320" y="108" textAnchor="middle">正中间：长上下文里最容易被漏看（Lost in the Middle）</text>
+          <text className="cwe-curve__label" x="612" y="20" textAnchor="end">结尾：最容易被注意到</text>
         </svg>
-        <figcaption>位置利用率示意（依据 Lost in the Middle 的实验现象，教学曲线）。关键证据放两端，长中段留给背景材料。</figcaption>
+        <figcaption>所以把硬规则放在开头，把最关键的证据与任务要求放在结尾，把次要背景资料留在中间。</figcaption>
       </figure>
 
       <p className="bp-stage-note" aria-live="polite">
-        <strong>{settled ? '压缩后状态（静态呈现）' : current.label}</strong>
-        <span>{settled ? STAGES[MAX_STAGE - 1].note : current.note}</span>
+        <strong>{settled ? '第 6 步 · 压缩与重排（静态总览）' : current.label}</strong>
+        <span>{current.note(remaining)}</span>
       </p>
 
       {!settled && (
-        <StageControls sim={sim} maxStage={MAX_STAGE} ariaLabel="窗口演化控制" showDots />
+        <StageControls sim={sim} maxStage={MAX_STAGE} ariaLabel="窗口演化控制" showDots dotStart={1} />
       )}
 
       <SimLedger
         className="cwe-ledger"
         ariaLabel="关键三步的窗口构成记录"
-        columns={['时刻', '历史与计划', '检索文档', '工具结果', '剩余']}
+        columns={['阶段', '历史与计划', '检索文档', '工具结果', '空余']}
         rows={LEDGER_STAGES.map((s) => [
-          s.label.replace(/^\d+ · /, ''),
+          s.label.replace(/^第 \d+ 步 · /, ''),
           `${s.history}%`,
           `${s.retrieval}%`,
           `${s.toolResults}%`,
           `${remainingOf(s)}%`,
         ])}
-        note="权限 8%、目标 6%、工具定义 12% 三块固定不变；百分比与静态预算图同源，完整保留在打印、减少动态和无 JavaScript 状态中。"
+        note="安全规则 8%、任务目标 6%、工具说明 12% 三块固定占比不变；总和恒为 100%。"
       />
     </section>
   );

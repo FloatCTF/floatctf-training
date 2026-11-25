@@ -1,47 +1,70 @@
 ---
-// MCP 架构图：替换原 ASCII 树。Host 统一管理与安全，每个 Server 一条 JSON-RPC 连接
+// MCP 架构图：Host 统一管对话与权限，经左侧总线连接各独立 Client，再通过双向 JSON-RPC 对接外部 Server
 const SERVERS = [
-  { client: 'MCP Client A', server: 'Git Server', note: '读取提交' },
-  { client: 'MCP Client B', server: 'Issue Server', note: '查询阻断项' },
-  { client: 'MCP Client C', server: '文档 Server', note: '版本说明模板' },
+  { client: 'MCP Client A', server: 'Git Server', note: '读代码提交' },
+  { client: 'MCP Client B', server: 'Issue Server', note: '查阻断单' },
+  { client: 'MCP Client C', server: '文档 Server', note: '读发版模板' },
 ];
-const HOST_Y = 66;
-const CLIENT_X = 150;
-const SERVER_X = 470;
-const ROW_GAP = 76;
+const HOST_Y = 58;
+const SPINE_X = 64;
+const CLIENT_X = 114;
+const CLIENT_W = 148;
+const SERVER_X = 446;
+const SERVER_W = 166;
+const ROW_GAP = 78;
+const LAST_Y = HOST_Y + 96 + (SERVERS.length - 1) * ROW_GAP + 22;
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="MCP / 能力交换的标准协议" title="Host 管理一切，Server 提供能力" ariaLabel="MCP 架构示意" class="mcp-architecture" headered note="一个 Host 管理用户体验与安全策略，为每个 MCP Server 建立独立 Client 连接；能力发现与调用都是 JSON-RPC 消息。 协议不替 Host 决定「谁可以调用什么」——授权、审批和审计仍在 Host 与目标系统。" noteClass="mcp-architecture__note">
+<LessonDiagram
+  eyebrow="MCP / 统一的插头标准"
+  title="Host 管对话和权限，每个 Server 只管提供能力"
+  ariaLabel="MCP 架构示意"
+  class="mcp-architecture"
+  headered
+  note="把 MCP 想成 USB-C 接口：模型应用（Host）不必为每个工具手写一套对接代码，而是为每个外部服务开一个 Client，按统一的 JSON-RPC 格式收发请求。权限审批仍在 Host 与目标系统手里。"
+  noteClass="mcp-architecture__note"
+>
   <div class="mcp-architecture__body">
-    <svg viewBox="0 0 660 370" role="img" aria-label="用户在上方连接 Host；Host 内负责对话、权限、上下文与用户确认，并向三个 MCP Client 各建立一条 JSON-RPC 连接，分别对接 Git、Issue 与文档三个 Server">
+    <svg viewBox="0 0 650 378" role="img" aria-label="用户连接顶部的 Host；Host 左侧引出总线分叉到三个独立 MCP Client，每个 Client 通过双向 JSON-RPC 箭头分别对接 Git、Issue 与文档三个 Server">
       <title>MCP 架构</title>
+      <defs>
+        <marker id="mcp-down-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" class="diagram-arrow-head" />
+        </marker>
+        <marker id="mcp-rpc-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" style="fill: var(--training-class-zero)" />
+        </marker>
+      </defs>
 
-      <text class="diagram-label" x="330" y="20" text-anchor="middle">用户</text>
-      <line class="diagram-arrow" x1="330" y1="28" x2="330" y2={HOST_Y - 2} />
+      <text class="diagram-label" x="325" y="20" text-anchor="middle">用户</text>
+      <line class="diagram-arrow" x1="325" y1="26" x2="325" y2={HOST_Y - 3} marker-end="url(#mcp-down-arrow)" />
 
-      <rect class="ma-host" x="70" y={HOST_Y} width="520" height="54" rx="8" />
-      <text class="ma-host__title" x="330" y={HOST_Y + 23} text-anchor="middle">Host（模型应用）</text>
-      <text class="ma-host__note" x="330" y={HOST_Y + 42} text-anchor="middle">对话 · 权限 · 上下文 · 用户确认</text>
+      <rect class="ma-host" x="44" y={HOST_Y} width="568" height="56" rx="8" />
+      <text class="ma-host__title" x="328" y={HOST_Y + 24} text-anchor="middle">Host（你的 AI 应用 / IDE / 聊天客户端）</text>
+      <text class="ma-host__note" x="328" y={HOST_Y + 44} text-anchor="middle">负责：拼上下文 · 调模型 · 权限审批 · 弹窗让用户确认</text>
+
+      {/* 左侧主干总线，完全避开 Client 边框 */}
+      <line class="ma-link ma-link--down" x1={SPINE_X} y1={HOST_Y + 56} x2={SPINE_X} y2={LAST_Y} />
 
       {SERVERS.map((s, i) => {
-        const y = HOST_Y + 92 + i * ROW_GAP;
+        const y = HOST_Y + 96 + i * ROW_GAP;
+        const midY = y + 22;
         return (
           <g>
-            <line class="diagram-arrow ma-link ma-link--down" x1={CLIENT_X + 60} y1={HOST_Y + 54} x2={CLIENT_X + 60} y2={y - 2} />
-            <rect class="ma-client" x={CLIENT_X - 60} y={y} width="120" height="40" rx="6" />
-            <text class="ma-box__label" x={CLIENT_X} y={y + 25} text-anchor="middle">{s.client}</text>
+            <line class="ma-link ma-link--down" x1={SPINE_X} y1={midY} x2={CLIENT_X - 4} y2={midY} marker-end="url(#mcp-down-arrow)" />
+            <rect class="ma-client" x={CLIENT_X} y={y} width={CLIENT_W} height="44" rx="6" />
+            <text class="ma-box__label" x={CLIENT_X + CLIENT_W / 2} y={y + 27} text-anchor="middle">{s.client}</text>
 
-            <line class="ma-rpc ma-rpc--right" x1={CLIENT_X + 62} y1={y + 12} x2={SERVER_X - 62} y2={y + 12} />
-            <line class="ma-rpc ma-rpc--left" x1={SERVER_X - 62} y1={y + 28} x2={CLIENT_X + 62} y2={y + 28} />
-            <text class="ma-rpc-label" x={(CLIENT_X + SERVER_X) / 2} y={y + 7} text-anchor="middle">JSON-RPC</text>
+            <line class="ma-rpc" x1={CLIENT_X + CLIENT_W + 6} y1={y + 15} x2={SERVER_X - 6} y2={y + 15} marker-end="url(#mcp-rpc-arrow)" />
+            <line class="ma-rpc ma-rpc--back" x1={SERVER_X - 6} y1={y + 31} x2={CLIENT_X + CLIENT_W + 6} y2={y + 31} marker-end="url(#mcp-rpc-arrow)" />
+            <text class="ma-rpc-label" x={(CLIENT_X + CLIENT_W + SERVER_X) / 2} y={y + 9} text-anchor="middle">JSON-RPC 请求 / 返回</text>
 
-            <rect class="ma-server" x={SERVER_X - 60} y={y} width="120" height="40" rx="6" />
-            <text class="ma-box__label" x={SERVER_X} y={y + 17} text-anchor="middle">{s.server}</text>
-            <text class="ma-box__note" x={SERVER_X} y={y + 32} text-anchor="middle">{s.note}</text>
+            <rect class="ma-server" x={SERVER_X} y={y} width={SERVER_W} height="44" rx="6" />
+            <text class="ma-box__label" x={SERVER_X + SERVER_W / 2} y={y + 19} text-anchor="middle">{s.server}</text>
+            <text class="ma-box__note" x={SERVER_X + SERVER_W / 2} y={y + 35} text-anchor="middle">{s.note}</text>
           </g>
         );
       })}
     </svg>
   </div>
-
 </LessonDiagram>

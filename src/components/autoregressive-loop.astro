@@ -1,41 +1,50 @@
 ---
-// 自回归生成循环：为什么模型的回答一个 token 一个 token 往外蹦
+// 自回归生成循环：对称居中的四步顺时针闭环 + 具体句子示例
+const W = 186;
+const H = 62;
 const steps = [
-  { x: 110, y: 60, label: '当前上下文', sub: '已生成的全部 token' },
-  { x: 110, y: 210, label: '模型前向计算', sub: '一次 Transformer 前向' },
-  { x: 340, y: 210, label: '下一 token 分布', sub: 'softmax 概率' },
-  { x: 340, y: 60, label: '选出 1 个 token', sub: '按分布采样' },
-];
-const W = 168;
-const H = 54;
-const arrows: [number, number, number, number][] = [
-  [110, 60 + H / 2 + 4, 110, 210 - H / 2 - 4],
-  [110 + W / 2 + 4, 210, 340 - W / 2 - 4, 210],
-  [340, 210 - H / 2 - 4, 340, 60 + H / 2 + 4],
+  { x: 155, y: 84, label: '1. 当前上下文', sub: '「漏洞修复后应运行」' },
+  { x: 465, y: 84, label: '2. 模型前向算分', sub: 'Transformer 算一遍' },
+  { x: 465, y: 214, label: '3. 给出概率分布', sub: '测试 58% · 构建 21%…' },
+  { x: 155, y: 214, label: '4. 选出 1 个 token', sub: '抽中「测试」' },
 ];
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="AUTOREGRESSIVE LOOP / 一次一个" title="为什么回答是一个字一个字蹦出来的" ariaLabel="自回归生成循环" note="生成 100 个 token 就是 100 圈循环，这是长回答更慢、推理成本按 token 计费的原因。">
-  <svg viewBox="0 0 560 290" role="img" aria-label="自回归循环：当前上下文送入模型，得到下一 token 的概率分布，采样选出一个 token，拼回上下文再进入下一轮，循环直到结束。">
+<LessonDiagram
+  eyebrow="AUTOREGRESSIVE LOOP / 一次吐一个"
+  title="为什么大模型的回答是一个字一个字蹦出来的？"
+  ariaLabel="自回归生成循环"
+  note="生成 100 个 token 就要把这四步转上 100 圈。这就是回答越长等得越久、API 也按 token 计费的根本原因（实际工程会用 KV cache 缓存前面算过的部分来提速）。"
+>
+  <svg viewBox="0 0 620 296" role="img" aria-label="自回归四步闭环：当前上下文送入模型前向算分，得到下一 token 概率分布，采样选出「测试」，再拼回上下文进入下一轮">
     <title>自回归生成循环</title>
     <defs>
-      <marker id="loop-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-        <path d="M 0 0 L 10 5 L 0 10 z" class="diagram-arrow-head" />
+      <marker id="loop-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 1 L 9 5 L 0 9 z" class="diagram-arrow-head" />
+      </marker>
+      <marker id="loop-return-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 1 L 9 5 L 0 9 z" style="fill: var(--training-accent)" />
       </marker>
     </defs>
+
+    {/* 1 → 2 */}
+    <line x1={155 + W / 2 + 4} y1={84} x2={465 - W / 2 - 4} y2={84} class="diagram-arrow" marker-end="url(#loop-arrow)" />
+    {/* 2 → 3 */}
+    <line x1={465} y1={84 + H / 2 + 4} x2={465} y2={214 - H / 2 - 4} class="diagram-arrow" marker-end="url(#loop-arrow)" />
+    {/* 3 → 4 */}
+    <line x1={465 - W / 2 - 4} y1={214} x2={155 + W / 2 + 4} y2={214} class="diagram-arrow" marker-end="url(#loop-arrow)" />
+    {/* 4 → 1（拼回上下文，闭环） */}
+    <line x1={155} y1={214 - H / 2 - 4} x2={155} y2={84 + H / 2 + 4} class="diagram-arrow diagram-arrow--loop" marker-end="url(#loop-return-arrow)" />
+
+    <text x="168" y="154" class="diagram-lane-label" style="fill: var(--training-accent); font-weight: 700;">拼回末尾，开始下一轮</text>
+    <text x="310" y="278" text-anchor="middle" class="diagram-lane-label">每多吐 1 个 token，整圈流程就再转一遍，直到生成结束符</text>
+
     {steps.map((s) => (
       <g>
         <rect x={s.x - W / 2} y={s.y - H / 2} width={W} height={H} rx="10" class="diagram-box diagram-box--proc" />
-        <text x={s.x} y={s.y - 4} text-anchor="middle" class="diagram-box-label">{s.label}</text>
-        <text x={s.x} y={s.y + 16} text-anchor="middle" class="diagram-box-sub">{s.sub}</text>
+        <text x={s.x} y={s.y - 5} text-anchor="middle" class="diagram-box-label">{s.label}</text>
+        <text x={s.x} y={s.y + 17} text-anchor="middle" class="diagram-box-sub">{s.sub}</text>
       </g>
     ))}
-    {arrows.map(([x1, y1, x2, y2]) => (
-      <line x1={x1} y1={y1} x2={x2} y2={y2} class="diagram-arrow" marker-end="url(#loop-arrow)" />
-    ))}
-    <path d="M 424, 60 C 510 18, 88 18, 194 60" class="diagram-arrow diagram-arrow--loop" marker-end="url(#loop-arrow)" fill="none" />
-    <text x="309" y="22" text-anchor="middle" class="diagram-lane-label">选出的 token 拼回上下文</text>
-    <text x="196" y="248" class="diagram-lane-label">每个新 token 都要完整走一圈前向计算</text>
   </svg>
-
 </LessonDiagram>

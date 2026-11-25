@@ -9,6 +9,8 @@ interface StageControlsProps {
   stepLabel?: string;
   ariaLabel: string;
   showDots?: boolean;
+  /** 进度圆点起始编号（默认 0；设为 1 可显示 1..N）。 */
+  dotStart?: number;
   className?: string;
 }
 
@@ -20,6 +22,7 @@ export function StageControls({
   stepLabel = '单步',
   ariaLabel,
   showDots = false,
+  dotStart = 0,
   className = 'simulator-control bp-controls',
 }: StageControlsProps) {
   return (
@@ -36,7 +39,7 @@ export function StageControls({
         <p className="bp-progress" aria-hidden="true">
           {Array.from({ length: maxStage + 1 }, (_, index) => (
             <span key={index} className={index <= sim.stage ? 'bp-progress__dot bp-progress__dot--on' : 'bp-progress__dot'}>
-              {index}
+              {index + dotStart}
             </span>
           ))}
         </p>
@@ -89,22 +92,42 @@ interface SimLedgerProps {
   ariaLabel: string;
   className?: string;
   note?: ReactNode;
+  /** 若提供标题，则把账本包进可折叠的 <details>（静态/打印态默认展开）。 */
+  collapsibleTitle?: string;
+  defaultOpen?: boolean;
 }
 
 /** 静态推导账本：role=table 的行列表，可选随附的 static-content-note 说明。 */
-export function SimLedger({ columns, rows, ariaLabel, className, note }: SimLedgerProps) {
+export function SimLedger({
+  columns,
+  rows,
+  ariaLabel,
+  className,
+  note,
+  collapsibleTitle,
+  defaultOpen = false,
+}: SimLedgerProps) {
+  const table = (
+    <div className={className ? `learning-sim-ledger ${className}` : 'learning-sim-ledger'} style={{ '--ledger-extra-columns': columns.length - 1 } as CSSProperties} role="table" aria-label={ariaLabel}>
+      <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
+        {columns.map((column) => <span role="columnheader" key={column}>{column}</span>)}
+      </div>
+      {rows.map((row, index) => (
+        <div className="learning-sim-ledger-row" role="row" key={index}>
+          {row.map((cell, cellIndex) => <span role="cell" key={cellIndex}>{cell}</span>)}
+        </div>
+      ))}
+    </div>
+  );
+
   return (
     <>
-      <div className={className ? `learning-sim-ledger ${className}` : 'learning-sim-ledger'} style={{ '--ledger-extra-columns': columns.length - 1 } as CSSProperties} role="table" aria-label={ariaLabel}>
-        <div className="learning-sim-ledger-row learning-sim-ledger-head" role="row">
-          {columns.map((column) => <span role="columnheader" key={column}>{column}</span>)}
-        </div>
-        {rows.map((row, index) => (
-          <div className="learning-sim-ledger-row" role="row" key={index}>
-            {row.map((cell, cellIndex) => <span role="cell" key={cellIndex}>{cell}</span>)}
-          </div>
-        ))}
-      </div>
+      {collapsibleTitle && !defaultOpen ? (
+        <details className="demo-notes demo-ledger-toggle">
+          <summary>{collapsibleTitle}</summary>
+          {table}
+        </details>
+      ) : table}
       {note && <details className="demo-notes"><summary>演示说明</summary><p className="static-content-note">{note}</p></details>}
     </>
   );

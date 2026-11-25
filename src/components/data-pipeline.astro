@@ -1,45 +1,73 @@
 ---
 // 数据流水线总览：五个环节 + 一条被禁止的泄漏路径
 const STAGES = [
-  { n: '①', title: '采集与标注', note: '覆盖目标人群、设备、时间与环境' },
-  { n: '②', title: '清洗与校验', note: '缺失、异常、重复与标签错误' },
-  { n: '③', title: '特征表示', note: '编码、缩放、嵌入；只在训练侧 fit' },
-  { n: '④', title: '切分', note: '训练 / 验证 / 测试；时间与分组约束' },
-  { n: '⑤', title: '评估与监控', note: '独立测试；上线后盯漂移' },
+  { n: '1', title: '收集与打标', note: '找齐带答案的例子' },
+  { n: '2', title: '清洗去脏', note: '处理缺失、重复和错标' },
+  { n: '3', title: '切分数据', note: '拆出训练 / 验证 / 测试集' },
+  { n: '4', title: '拟合预处理', note: '缩放、编码；只在训练集学规则' },
+  { n: '5', title: '独立考试', note: '用没见过的题检验上线效果' },
 ];
-const NODE_W = 104;
+const NODE_W = 110;
 const GAP = 22;
-const START_X = 20;
-const Y = 70;
+const START_X = 16;
+const Y = 34;
+const MID_Y = Y + 25;
+// 泄漏曲线从节点 5 底部绕回节点 4（拟合预处理）底部，避开 y=94..136 的说明文字
+const LEAK_START_X = START_X + 4 * (NODE_W + GAP) + NODE_W / 2;
+const LEAK_END_X = START_X + 3 * (NODE_W + GAP) + NODE_W / 2;
 import LessonDiagram from './lesson-diagram.astro';
 ---
-<LessonDiagram eyebrow="DATA PIPELINE / 环节与红线" title="数据从现实到评估的一条流水线" ariaLabel="数据流水线与泄漏路径总览" class="data-pipeline" headered note="本节的各项说明分别挂在这条流水线的不同环节上：样本与特征在 ①③，特征处理与状态保存在 ③， 学习范式由 ① 的答案来源决定，任务类型在末端决定目标函数。红线提醒：任何让 ⑤④ 的信息流回 ③① 的捷径都是泄漏。" noteClass="data-pipeline__note">
+<LessonDiagram
+  eyebrow="DATA PIPELINE / 环节与红线"
+  title="数据怎么一步步走进模型"
+  ariaLabel="数据流水线与泄漏路径总览"
+  class="data-pipeline"
+  headered
+  note="记住一条铁律：先切分（第 3 步），再只在训练集上算均值、词表和缩放规则（第 4 步）。测试集一旦倒流进前面任何一步，离线分数就会虚高。"
+  noteClass="data-pipeline__note"
+>
   <div class="data-pipeline__body">
-    <svg viewBox="0 0 660 200" role="img" aria-label="五个环节依次连接：采集与标注、清洗与校验、特征表示、切分、评估与监控；一条红色虚线从评估绕回特征表示，标注为泄漏路径，被禁止">
+    <svg viewBox="0 0 676 238" role="img" aria-label="五个环节依次连接：收集与打标、清洗去脏、切分数据、拟合预处理、独立考试；一条红色虚线在说明文字下方从独立考试绕回拟合预处理，标注为数据泄漏禁止路径">
       <title>数据流水线与泄漏路径</title>
+      <defs>
+        <marker id="dp-flow-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" class="diagram-arrow-head" />
+        </marker>
+        <marker id="dp-leak-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+          <path d="M 0 1 L 9 5 L 0 9 z" class="dp-leak--head" />
+        </marker>
+      </defs>
       {STAGES.map((s, i) => {
         const x = START_X + i * (NODE_W + GAP);
         return (
           <g>
-            <rect class="dp-node" x={x} y={Y} width={NODE_W} height="46" rx="7" />
-            <text class="dp-node__n" x={x + 10} y={Y + 19}>{s.n}</text>
-            <text class="dp-node__title" x={x + NODE_W / 2 + 4} y={Y + 29} text-anchor="middle">{s.title}</text>
-            <foreignObject x={x - 4} y={Y + 56} width={NODE_W + 8} height="46">
+            <rect class="dp-node" x={x} y={Y} width={NODE_W} height="50" rx="8" />
+            <text class="dp-node__n" x={x + 12} y={Y + 21}>{s.n}</text>
+            <text class="dp-node__title" x={x + NODE_W / 2 + 5} y={Y + 31} text-anchor="middle">{s.title}</text>
+            <foreignObject x={x - 3} y={Y + 60} width={NODE_W + 6} height="48">
               <div class="dp-node__note">{s.note}</div>
             </foreignObject>
             {i < STAGES.length - 1 && (
-              <line class="diagram-arrow dp-arrow" x1={x + NODE_W} y1={Y + 23} x2={x + NODE_W + GAP} y2={Y + 23} />
+              <line
+                class="diagram-arrow"
+                x1={x + NODE_W + 2}
+                y1={MID_Y}
+                x2={x + NODE_W + GAP - 3}
+                y2={MID_Y}
+                marker-end="url(#dp-flow-arrow)"
+              />
             )}
           </g>
         );
       })}
       <path
         class="dp-leak"
-        d={`M ${START_X + 4 * (NODE_W + GAP) + NODE_W / 2} ${Y + 50} C ${START_X + 4 * (NODE_W + GAP) + NODE_W / 2} 168, ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} 168, ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} ${Y + 50}`}
+        d={`M ${LEAK_START_X} 148 C ${LEAK_START_X} 198, ${LEAK_END_X} 198, ${LEAK_END_X} 152`}
+        marker-end="url(#dp-leak-arrow)"
       />
-      <path class="dp-leak dp-leak--head" d={`M ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2 - 7} ${Y + 58} L ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2} ${Y + 48} L ${START_X + 2 * (NODE_W + GAP) + NODE_W / 2 + 7} ${Y + 58} Z`} />
-      <text class="dp-leak-label" x={START_X + 3 * (NODE_W + GAP) + NODE_W / 2} y="180" text-anchor="middle">泄漏：测试侧信息绕回训练侧 → 分数虚高（禁止）</text>
+      <text class="dp-leak-label" x="656" y="220" text-anchor="end">
+        禁止红线：测试集信息绕回训练侧 = 考试泄题（数据泄漏）
+      </text>
     </svg>
   </div>
-
 </LessonDiagram>

@@ -15,11 +15,11 @@
       "exercise"
     ],
     "motionLevel": "simulation",
-    "visualStory": "间接提示注入的攻防数据流是主线：不可信内容经检索进入上下文、模型执行注入指令、分层防御收窄影响；四类经典 ML 攻击与 OWASP 十项风险用对照表静态锚定",
+    "visualStory": "先用两阶段五攻击全景图锚定训练期与推理期攻击面，再用交互式「间接提示注入演练台」现场切换未设防与分层防御（文档+发信、Markdown 外泄双场景），配合代码对照、本地 Python 沙盒与 OWASP 映射表收束",
     "learningObjectives": [
       "区分直接与间接提示注入的攻击面，并说明指令与数据混合是共同根因",
       "复述两个真实 LLM 应用安全事件的时间线、根因与整改",
-      "解释对抗样本、数据投毒、成员推断与模型提取的攻击前提、受害对象与 attacker 收益",
+      "解释对抗样本、数据投毒、成员推断与模型提取的攻击前提、受害对象与攻击者收益",
       "把 OWASP LLM 十项风险映射到前五课与本课出现的机制",
       "在 CTF 场景中沿四步框架分析 AI 题目"
     ],
@@ -30,8 +30,16 @@
       "python-network-scripting"
     ],
     "safetyScope": "authorized-lab",
-    "verifiedAt": "2026-08-28"
+    "verifiedAt": "2026-11-25"
   },
+  "runnableExamples": [
+    {
+      "id": "guardrail-demo",
+      "path": "public/labs/ai-security-essentials/guardrail_demo.py",
+      "command": "python3 public/labs/ai-security-essentials/guardrail_demo.py",
+      "expectedResult": "未设防分支模拟放行 send_email 并泄漏示例密钥；分层防御分支由工具白名单拦截非法发信并在出口将密钥替换为 [REDACTED]。"
+    }
+  ],
   "exercises": [
     {
       "id": "check-1",
@@ -56,9 +64,9 @@
     {
       "id": "check-3",
       "kind": "practice",
-      "title": "检查防御分支",
-      "question": "把页面上的提示注入流程从第 4 步拨到第 5 步，并对照下面的两段代码。记录不可信内容从哪一步进入、工具动作在哪一步被拦住，以及最终输出差在哪里。",
-      "answer": "合格记录应标出第 2 步或第 3 步的检索入口、第 5 步的分层防御，以及代码对照里的工具白名单和出口过滤。页面没有单独的防御开关，步骤滑块和两段代码就是要看的状态。",
+      "title": "对比攻防分支",
+      "question": "在页面上的「间接提示注入演练台」分别切换场景 A 与场景 B，再在「未设防（裸拼）」与「开启分层防御」之间切换，记录恶意指令从哪一步混入、又在哪一层代码检查处被拦住。",
+      "answer": "场景 A 中恶意指令藏在外部报价网页里，未设防时模型被诱骗调用 send_email 外泄密钥，开启分层防御后先做 <untrusted_doc> 数据隔离，再由应用层只读工具白名单拒绝发信、出口过滤器脱敏兜底；场景 B 中恶意指令诱导输出外部 Markdown 图片，分层防御在渲染出口层拦截未知域名外链，阻断浏览器自动发 GET 请求外带信息。",
       "sourceIds": [
         "owasp-llm-top10"
       ]
@@ -89,7 +97,7 @@
   ],
   "researchStatus": {
     "status": "complete",
-    "verifiedAt": "2026-08-28",
+    "verifiedAt": "2026-11-25",
     "queries": [
       "OWASP Top 10 for LLM Applications 2025 entries",
       "Greshake indirect prompt injection compromised LLM-integrated applications",
@@ -355,9 +363,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "prompt-injection-flow",
+    "kind": "prompt-injection-sandbox",
     "primaryAnimations": 1,
-    "supportingInteractions": 1,
+    "supportingInteractions": 0,
     "scrollReveals": 0
   }
 }

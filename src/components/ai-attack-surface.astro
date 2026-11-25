@@ -1,0 +1,65 @@
+---
+// AI 攻击面总览图：按「什么时候动手（训练期 vs 推理期）」与「冲着什么来」把五类核心攻击一次摆清
+import LessonDiagram from './lesson-diagram.astro';
+---
+<LessonDiagram
+  eyebrow="ATTACK SURFACE / 一图分清五类 AI 攻击"
+  title="攻击者什么时候动手？冲着哪块资产来？"
+  ariaLabel="AI 系统五类攻击面全景图"
+  class="ai-attack-surface"
+  headered
+  note="别把「训练期/推理期」和「打输入/打权重」混成一对非此即彼的标签：数据投毒发生在训练前，改的是权重；提示注入、对抗样本、成员推断和模型提取全都在模型上线后的推理接口动手，但冲着的目标各不相同。"
+>
+  <svg viewBox="0 0 680 330" role="img" aria-label="两阶段五类 AI 攻击图：左侧训练阶段包含数据投毒与后门；右侧推理阶段分为冲着应用行为的提示注入、冲着预测判断的对抗样本、冲着训练隐私的成员推断和冲着模型产权的模型提取">
+    <title>AI 系统五类攻击面地图</title>
+    <defs>
+      <marker id="as-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M 0 1 L 9 5 L 0 9 z" class="diagram-arrow-head" />
+      </marker>
+    </defs>
+
+    {/* 左侧：训练期 */}
+    <rect class="as-zone as-zone--train" x="16" y="20" width="214" height="292" rx="10" />
+    <text class="as-zone-title" x="34" y="48">训练期（改数据与权重）</text>
+    <text class="as-zone-sub" x="34" y="68">权重还没定型，动手改训练料</text>
+
+    <rect class="as-card as-card--danger" x="32" y="96" width="182" height="104" rx="8" />
+    <text class="as-card-title" x="46" y="122">数据投毒 / 后门</text>
+    <text class="as-card-meta" x="46" y="143">入口：污染训练集或标注</text>
+    <text class="as-card-meta" x="46" y="163">目标：模型权重</text>
+    <text class="as-card-meta" x="46" y="183">后果：遇特定触发词就错判</text>
+
+    {/* 中间流向箭头 */}
+    <line class="diagram-arrow" x1="234" y1="166" x2="266" y2="166" marker-end="url(#as-arrow)" />
+    <text class="as-mid-label" x="250" y="152" text-anchor="middle">上线</text>
+
+    {/* 右侧：推理期 */}
+    <rect class="as-zone as-zone--infer" x="272" y="20" width="392" height="292" rx="10" />
+    <text class="as-zone-title" x="290" y="48">推理期（权重已锁死，全靠发输入/查接口）</text>
+    <text class="as-zone-sub" x="290" y="68">不用碰服务器，就能朝四个方向下手</text>
+
+    <rect class="as-card as-card--danger" x="288" y="90" width="174" height="96" rx="8" />
+    <text class="as-card-title" x="302" y="114">提示注入（LLM）</text>
+    <text class="as-card-meta" x="302" y="135">目标：应用行为与工具权限</text>
+    <text class="as-card-meta" x="302" y="155">手法：把指令伪装进输入</text>
+    <text class="as-card-meta" x="302" y="175">后果：套提示、滥用工具</text>
+
+    <rect class="as-card as-card--warn" x="476" y="90" width="174" height="96" rx="8" />
+    <text class="as-card-title" x="490" y="114">对抗样本</text>
+    <text class="as-card-meta" x="490" y="135">目标：模型分类判断</text>
+    <text class="as-card-meta" x="490" y="155">手法：像素加人眼难察扰动</text>
+    <text class="as-card-meta" x="490" y="175">后果：高置信认错（绕过检测）</text>
+
+    <rect class="as-card as-card--info" x="288" y="200" width="174" height="96" rx="8" />
+    <text class="as-card-title" x="302" y="224">成员推断</text>
+    <text class="as-card-meta" x="302" y="245">目标：训练集里的个人隐私</text>
+    <text class="as-card-meta" x="302" y="265">手法：看预测置信度差异</text>
+    <text class="as-card-meta" x="302" y="285">后果：猜出某人是否在训练集</text>
+
+    <rect class="as-card as-card--info" x="476" y="200" width="174" height="96" rx="8" />
+    <text class="as-card-title" x="490" y="224">模型提取</text>
+    <text class="as-card-meta" x="490" y="245">目标：模型知识产权</text>
+    <text class="as-card-meta" x="490" y="265">手法：批量刷预测 API</text>
+    <text class="as-card-meta" x="490" y="285">后果：低成本复刻高仿替身</text>
+  </svg>
+</LessonDiagram>

@@ -3,8 +3,11 @@ import { findPath, nextLesson, pathLessons } from '../data/paths';
 import { withBase } from '../lib/base-url';
 import { Icon } from '@astrojs/starlight/components';
 
-interface Props { pathId: string }
-const { pathId } = Astro.props;
+interface Props {
+  pathId: string;
+  kicker?: string;
+}
+const { pathId, kicker = '零基础从这里开始' } = Astro.props;
 const path = findPath(pathId);
 if (!path) throw new Error(`Unknown learning path: ${pathId}`);
 const lessons = pathLessons(path);
@@ -13,7 +16,7 @@ const next = nextLesson(path);
 ---
 <a class="path-entry" href={withBase(path.pagePath)}>
   <span class="path-entry-heading">
-    <span class="path-entry-kicker">零基础从这里开始</span>
+    <span class="path-entry-kicker">{kicker}</span>
     <span class="path-entry-title">{path.title}</span>
   </span>
   <span class="path-entry-facts">

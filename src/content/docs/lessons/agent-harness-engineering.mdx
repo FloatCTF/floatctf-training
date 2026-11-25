@@ -11,12 +11,14 @@ import Callout from '../../../components/callout.astro';
 import CodeCompare from '../../../components/code-compare.astro';
 import DataTable from '../../../components/data-table.astro';
 import KeyTakeaway from '../../../components/key-takeaway.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import CodeFile from '../../../components/code-file.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
 import SourceList from '../../../components/source-list.astro';
 import LessonExercises from '../../../components/lesson-exercises.astro';
 import LessonPacing from '../../../components/lesson-pacing.astro';
 import StepList from '../../../components/step-list.astro';
 import AgentTraceReplay from '../../../components/agent-trace-replay';
-import ContextBudget from '../../../components/context-budget.astro';
 import ContextWindowEvolution from '../../../components/context-window-evolution';
 import McpArchitecture from '../../../components/mcp-architecture.astro';
 import SkillLoading from '../../../components/skill-loading.astro';
@@ -25,13 +27,13 @@ import ExecutionGraph from '../../../components/execution-graph.astro';
 import manifest from '../../../data/lessons/agent-harness-engineering.json';
 
 export const engineeringLayers = [
-  { title: 'Prompt Engineering', detail: '把当前任务、边界、依据和输出要求表达成可检查的指令。' },
-  { title: 'MCP', detail: '用标准协议让模型应用发现并调用外部数据与工具。' },
-  { title: 'Skills', detail: '把重复使用的知识、步骤、模板和脚本组织成按需加载的流程资产。' },
-  { title: 'Context Engineering', detail: '在每次调用前选择、排序、压缩和隔离本轮真正需要的信息。' },
-  { title: 'Harness Engineering', detail: '设计模型周围的工具、权限、状态、验证、可观测性和执行环境。' },
-  { title: 'Loop Engineering', detail: '让行动接受外部反馈，能够重试、换路、恢复，并按明确条件停止。' },
-  { title: 'Graph Engineering', detail: '把多个节点、循环、路由、汇合和人工检查点编排为可执行拓扑。' },
+  { title: '1. Prompt（任务规格）', detail: '把目标、边界、证据来源和输出格式写清楚，让模型和验收脚本都看懂。' },
+  { title: '2. MCP（能力接口）', detail: '用标准协议接上代码库、工单、数据库等外部数据与工具。' },
+  { title: '3. Skills（流程资产）', detail: '把反复用到的办事步骤、模板和校验脚本打包成按需加载的目录。' },
+  { title: '4. Context（信息编译）', detail: '每轮调用前挑选、排序、压缩、隔离进窗口的真正有效信息。' },
+  { title: '5. Harness（运行控制层）', detail: '包在模型外面的权限网关、状态记录、预算上限、外部校验和日志。' },
+  { title: '6. Loop（有界反馈循环）', detail: '干完一步看真实外部反馈，错了能重试换路，撞预算就果断停机。' },
+  { title: '7. Graph（执行拓扑图）', detail: '把多节点分支、并行、汇合、循环和人工审批画成可执行的工作图。' },
 ];
 
 export const weakPrompt = `分析这些用户评论，给我一个总结。`;
@@ -45,10 +47,121 @@ export const specifiedPrompt = `任务：从评论中提取影响购买决策的
 - unknowns: 当前评论无法判断的事项
 
 规则：
-- evidence 必须来自评论内容
-- 不把单个用户意见概括成普遍结论`;
+- evidence 必须摘自原评论
+- 不要把单个用户的抱怨总结成普遍结论`;
 
-export const mcpTool = `{
+export const agentLoopSteps = [
+  { title: '组装状态与上下文', detail: '拉取目标、当前计划、最新证据、剩余预算和权限范围。' },
+  { title: '提出并执行行动', detail: '模型给出工具调用意图，控制器先鉴权校验再代为执行。' },
+  { title: '拿到外部观察', detail: '把工具返回、单测报错、文件 diff 或人工批复带回下一轮。' },
+  { title: '独立验证进展', detail: '用外部测试或评分器判定过不过关，不轻信模型嘴上说「搞定了」。' },
+  { title: '收敛或停机保存', detail: '通过验收、预算耗尽、反复无进展或遇到高危操作时，写清原因停下。' },
+];
+
+<LessonHero
+  series="AI ENGINEERING"
+  unit="AGENT / UNIT 04"
+  kicker="Prompt, MCP, Skills, Context, Harness, Loops, Graphs"
+  lines={[
+    { text: "AI Agent 工程方法" },
+    { text: "从 Prompt 到执行图", accent: true },
+  ]}
+  summary="写好一段提示词只是起点。只要想让模型查实时数据、改代码、跑测试还不乱闯祸，你就得在它外面一层层搭起工具协议、流程资产、上下文管理、权限校验和受控循环。"
+/>
+
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：为什么一段好 Prompt 最后会长成一套系统
+
+拿一个真实的研发杂活贯穿整节课：**发版前，让 AI 自动读一遍本周代码提交和未关闭的阻断 Bug，写一份带编号出处的发布简报，发现高危问题时标出来，但「点击发布」必须留给人批准。**
+
+你会发现，光靠在对话框里写一段漂亮 Prompt 远远不够：模型看不到你刚推上去的新代码，得接数据源；聊天聊长了会把关键 Bug 挤出注意力，得管上下文；模型可能漏写风险却信誓旦旦说「可以发版」，得靠代码写死外部检查；碰到发布按钮绝不能让它自己点，得在外面加权限闸门。
+
+于是工程对象一层层往外长出来，一共七层：
+
+<StepList title="七层并存：从写指令到画执行图" steps={engineeringLayers} />
+
+先破一个常见误解：**这七层不是「新版本淘汰旧版本」的替代关系，而是同时跑在同一个系统里的七种零件。** 哪怕搭了最复杂的执行图，图里每个节点依然要写清晰的 Prompt，依然受同一个 Harness 管权限和预算。
+
+## 一、Prompt Engineering：先把需求写成能验收的规格
+
+### 1. 少喊口号，多写边界和契约
+
+很多新手写 Prompt 喜欢堆情绪词（「你是世界顶级专家，请务必认真仔细」），效果微乎其微。模型读不懂你心里的潜台词，它只吃你喂进去的文字。Anthropic 官方指南把顺序说得很明白：**先定成功标准和测试用例，再去调 Prompt；碰到模型能力、延迟或成本问题，该换模型换模型，别指望靠改词句变魔术**（来源：[Prompt engineering overview](#source-anthropic-prompt-overview)）。
+
+对比下面两段指令，一眼就能看出差距：
+
+<CodeCompare
+  language="text"
+  tone="neutral"
+  vulnerableBadge="模糊要求"
+  secureBadge="可检查规格"
+  vulnerable={weakPrompt}
+  secure={specifiedPrompt}
+  vulnerableTitle="靠猜的 Prompt"
+  secureTitle="写死依据、格式与边界的规格"
+/>
+
+好的 Prompt 像一份接口文档，通常挑任务最需要的几项写清楚：
+
+<DataTable
+  caption="写 Prompt 时最值得落笔的七个要素"
+  headers={["要素", "写清什么", "发布简报例子", "不写会出什么岔子"]}
+  rows={[
+    ["任务", "到底要产出什么", "总结 v2.4 版本变化与风险", "模型自由发挥跑题"],
+    ["范围边界", "只看哪些材料", "仅限本周合并的提交", "把上个月的旧改动混进来"],
+    ["依据规则", "信息不够怎么办", "没证据就填 unknown", "模型强行脑补发布日期"],
+    ["禁止动作", "哪些副作用不准做", "只写草稿，不改 Issue、不发布", "分析任务偷偷变成写操作"],
+    ["输出契约", "固定成什么结构", "分「已完成 / 风险 / 待决策」", "下游脚本解析不了"],
+    ["验收标准", "怎么才算及格", "每条风险必须带 PR 或 Issue 编号", "只能靠肉眼凭感觉评"],
+    ["边界示例", "给一两个典型样例", "展示 unknown 的正确填法", "抽象规矩被模型误解"],
+  ]}
+/>
+
+### 2. 改 Prompt 别靠盲猜，按失败用例做回归
+
+调 Prompt 最怕「改好 A 例子、弄坏 B 例子」。靠谱的做法和修 Bug 一样：**攒一组代表性样例 → 跑基线 → 给失败归类 → 每次只改一个变量 → 全量回归**。
+
+<DataTable
+  caption="用回归表判断问题到底该不该靠 Prompt 修"
+  headers={["测试样例", "基线表现", "改完 Prompt 后", "结论"]}
+  rows={[
+    ["普通版本提交", "格式正确", "格式正确", "没改坏"],
+    ["缺少里程碑信息", "瞎编发布日", "乖乖标 unknown", "指令问题，Prompt 修对了"],
+    ["历史超长记录", "漏掉关键阻断项", "依然漏掉", "上下文太挤，得靠检索和压缩"],
+    ["仓库刚推新提交", "还在说昨天的旧代码", "依然说旧代码", "缺实时数据源，得接工具/MCP"],
+  ]}
+/>
+
+最后两行划出了 Prompt 的边界：**缺实时数据、缺上下文裁剪、缺强制权限校验的问题，别在提示词里死磕，直接进下一层用代码解决。**
+
+## 二、MCP：给外部工具装上统一插座
+
+以前每接一个新模型应用，查 GitHub、读数据库、发消息都得重写一遍胶水代码。**MCP（Model Context Protocol）**干的事就像 USB-C 接口：定义一套开放协议，让 **Host**（你的 AI 应用）通过 **Client** 连上各种 **MCP Server**，用标准的 JSON-RPC 消息自动发现并调用外部能力（来源：[MCP architecture overview](#source-mcp-architecture)）。
+
+<McpArchitecture />
+
+一个 MCP Server 主要对外暴露三种原语：
+
+<DataTable
+  caption="MCP Server 的三类核心原语"
+  headers={["原语", "干什么用", "发布简报里的例子", "拿回来什么"]}
+  rows={[
+    ["Resources", "只读的上下文资料", "发版规范文档、简报模板", "文本或文件资源内容"],
+    ["Prompts", "可复用的参数化提示模板", "「生成发布简报」快捷入口", "拼好的消息模板"],
+    ["Tools", "模型可以请求执行的函数", "查询合并提交、拉取阻断 Issue", "结构化 JSON 或报错"],
+  ]}
+/>
+
+设计工具时，**工具名称、描述和 JSON Schema 本身就是给模型看的 API 文档**。下面把一个宽泛查询收窄成只查 `release-blocker`，参数越明确，模型乱传参的概率越低：
+
+```json
+{
   "name": "list_release_issues",
   "description": "读取指定仓库中尚未关闭的发布阻断项",
   "inputSchema": {
@@ -60,426 +173,192 @@ export const mcpTool = `{
     "required": ["repository", "label"],
     "additionalProperties": false
   }
-}`;
+}
+```
 
-export const skillExample = `---
+<Callout variant="warning" title="接上 MCP 不等于自动安全">
+MCP 规范明确提醒：Tools 可能读取敏感数据甚至执行任意代码，不可信 Server 返回的工具描述本身也可能是恶意诱导（来源：[MCP Tools specification](#source-mcp-tools-spec)）。协议只负责「怎么连、怎么叫」，至于「当前用户有没有权读这个库」「高危工具要不要弹人工确认」，依然必须由 Host 和 Harness 的代码强控。
+</Callout>
+
+## 三、Skills：把团队老手的办事流程打包复用
+
+光有工具还不够：哪怕给了你「查提交」「查 Issue」「发通知」三个按钮，新人还是不知道先按哪个、遇到冲突怎么裁决。**Agent Skill** 就是把一套反复要做的流程，连同参考文档、模板和确定性脚本，打包成一个以 `SKILL.md` 为入口的可移植目录（来源：[Agent Skills Specification](#source-agent-skills-spec)）：
+
+```text
+release-brief/
+├── SKILL.md                 ← 入口说明：什么时候用、按哪几步走
+├── references/
+│   └── release-policy.md    ← 长规范按需读，平时不塞进窗口
+├── assets/
+│   └── brief-template.md    ← 输出模板
+└── scripts/
+    └── normalize-version.js ← 确定性逻辑交给脚本，别让模型口算
+```
+
+Skill 的妙处在于**渐进式加载**：启动时只把几十个 token 的名称和简介放进窗口；真碰上对口任务，才读 `SKILL.md` 正文；走到具体步骤需要查大规范或跑脚本时，再按需加载，极省上下文预算：
+
+<SkillLoading />
+
+一份清爽的流程型 `SKILL.md` 长这样：
+
+```md
+---
 name: release-brief
-description: 根据提交、Issue 和里程碑生成发布简报。要求进展总结或发布风险时使用。
+description: 根据提交、Issue 和里程碑生成发布简报。需要进展总结或发布风险排查时使用。
 ---
 
 1. 读取本次版本的已合并提交。
 2. 获取仍未关闭的 release-blocker Issue。
-3. 将结果分为“已完成”“风险”“待决策”。
-4. 每项风险附对应来源；缺少证据时不推测。
-5. 输出前检查版本范围、重复项和未解决阻断项。`;
-
-export const agentLoopSteps = [
-  { title: '组装状态与上下文', detail: '读取目标、当前计划、最近证据、预算、权限和未解决问题。' },
-  { title: '选择并执行行动', detail: '模型提出工具与参数，控制器完成解析、鉴权、调用和结果校验。' },
-  { title: '获得外部观察', detail: '工具返回、测试、数据库状态、文件差异或人工判断形成新证据。' },
-  { title: '验证进展', detail: '用独立于模型自述的成功条件判断继续、重试、换路或完成。' },
-  { title: '停止或保存状态', detail: '成功、预算耗尽、无进展、权限阻断和人工接管都有明确终止原因。' },
-];
-
-<LessonHero
-  series="AI ENGINEERING"
-  unit="AGENT / UNIT 04"
-  kicker="Prompt, MCP, Skills, Context, Harness, Loops, Graphs"
-  lines={[
-    { text: "AI Agent 工程方法" },
-    { text: "从 Prompt 到执行图", accent: true },
-  ]}
-  summary="这条路线描述工程关注点怎样从一段指令扩展到能力连接、流程复用、上下文管理、执行控制、反馈循环和多节点编排。七层会同时存在，不构成相互替代的技术年代。"
-/>
-
-<div class="lesson-start-grid">
-  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
-  <Prerequisites items={manifest.lessonPlan.prerequisites} />
-</div>
-
-<LessonPacing segments={manifest.segments} />
-
-## 引导问题：为什么一段好 Prompt 最后会长成一个系统
-
-设想一项发布前工作：读取代码提交与 Issue，生成带来源的发布简报，识别阻断项，并把发布动作保留给人工批准。
-
-单次 Prompt 可以规定简报格式。仓库最新状态需要数据接口，范围控制、失败处理、进度保存和发布授权需要额外的运行机制。工程对象会逐层扩展：
-
-<StepList title="从指令到执行拓扑" steps={engineeringLayers} />
-
-七层各自产生一种可检查的工程产物：Prompt 形成任务规格，MCP 暴露能力接口，Skill 固化流程资产，Context 编译本轮输入，Harness 提供受约束的执行环境，Loop 保存反馈与恢复路径，Graph 把节点关系画成可执行拓扑。实时数据由 MCP 接入，外部认证由 Host、Server 和目标系统执行，权限与副作用由 Harness 控制，最终结果由外部验证器确认。
-
-七层会同时存在。一个生产系统保留清晰 Prompt；图中的每个 Agent 节点也可以运行自己的 Loop，并由同一个 Harness 提供工具和权限。
-
-## 一、Prompt Engineering：把任务变成可检查的规格
-
-### 1. Prompt 的作用是减少任务歧义
-
-Prompt Engineering 研究怎样编写和组织模型指令，使输出更符合目标。模型不会直接接收人的意图，只会接收序列化后的输入。有效 Prompt 需要把隐含要求变成模型能够据此行动、评测器能够据此检查的规格。
-
-Anthropic 的 Prompt 工程文档把明确成功标准和经验测试放在优化之前，并把模型选择、延迟与成本等问题交给相应的工程手段。（来源：[Prompt engineering overview](#source-anthropic-prompt-overview)）
-
-<CodeCompare
-  language="text"
-  tone="neutral"
-  vulnerableBadge="VAGUE"
-  secureBadge="SPECIFIED"
-  vulnerable={weakPrompt}
-  secure={specifiedPrompt}
-  vulnerableTitle="模糊要求"
-  secureTitle="可检查规格"
-/>
-
-改进版的有效信息来自任务、依据、输出契约、缺失信息处理和证据边界。泛化的角色口号很少提供这些约束。
-
-### 2. Prompt 由哪些部分组成
-
-<DataTable
-  caption="按任务选择 Prompt 要素"
-  headers={["要素", "回答的问题", "发布简报示例", "缺失后的风险"]}
-  rows={[
-    ["任务", "要完成什么", "总结本次版本变化", "模型自行猜测目标"],
-    ["输入边界", "处理哪些材料", "只看指定版本范围", "混入旧提交或无关 Issue"],
-    ["依据", "允许使用什么证据", "提交、Issue、里程碑", "补写未经核实的内容"],
-    ["约束", "哪些行为被禁止", "不发布、不修改 Issue", "把分析任务变成有副作用操作"],
-    ["输出契约", "结果怎样组织", "进展、风险、待决策", "结果难以解析和比较"],
-    ["成功标准", "怎样算正确", "每项风险都有来源", "只能凭阅读感受判断"],
-    ["示例", "边界案例长什么样", "unknown 的标准写法", "抽象规则被误解"],
-  ]}
-/>
-
-示例属于 **in-context learning**：模型在推理时根据给定示例识别任务模式，参数不会因此更新。示例应覆盖典型边界，并保持标签和格式一致。错误、重复或偏置示例同样会影响结果。
-
-### 3. Prompt Engineering 是评测驱动的迭代
-
-可靠流程依据已经观察到的失败定向修改：
-
-```text
-建立代表性样例与成功标准
-  → 运行基线 Prompt
-  → 把失败归类为缺失、冲突、格式、事实或上下文问题
-  → 一次修改一个可解释变量
-  → 在原样例与保留样例上回归
-  → 记录 Prompt、模型、参数和结果版本
+3. 将结果分为「已完成」「风险」「待决策」。
+4. 每项风险附对应来源编号；缺少证据时写 unknown，不推测。
+5. 输出前检查版本范围、重复项和未解决阻断项。
 ```
 
-<DataTable
-  caption="Prompt 回归记录"
-  headers={["样例", "基线", "修改后", "判断"]}
-  rows={[
-    ["正常输入", "格式正确", "格式正确", "保持通过"],
-    ["缺少里程碑", "编造发布日期", "标记 unknown", "Prompt 修复有效"],
-    ["含冲突要求", "输出结构漂移", "按优先级保留契约", "Prompt 修复有效"],
-    ["输入超长", "遗漏关键 Issue", "仍然遗漏", "需要检索与上下文策略"],
-    ["仓库状态变化", "仍使用旧内容", "仍使用旧内容", "需要外部数据连接"],
-  ]}
-/>
+一句话分清 **MCP 和 Skill**（来源：[OpenAI Skills](#source-openai-skills)）：**MCP 管「手脚怎么连上外部系统、怎么鉴权」；Skill 管「拿到工具后按什么步骤干活、缺材料怎么兜底、交什么格式」**。两者可以单独用，也可以搭档用。
 
-最后两项说明 Prompt 的边界：缺少实时信息需要连接数据源；输入持续增长需要上下文管理；需要强制格式、权限或恢复时还要依靠模型之外的代码。
+## 四、Context Engineering：每一轮只喂最值钱的信息
 
-## 二、MCP：把外部能力接入模型应用
+### 1. 窗口是动态变脏的，不是一次性写死的
 
-### 1. MCP 标准化能力交换，不替模型决定流程
+模型每次推理实际看到的全部 token 统称 **Context（上下文）**——系统规则、对话历史、工具定义、检索片段、工具返回的大段日志全挤在同一个有限窗口里（来源：[Effective context engineering for AI agents](#source-anthropic-context-engineering)）。
 
-Model Context Protocol（MCP）是连接模型应用与外部数据源、工具的开放协议。一个 Host 管理用户体验和安全策略，并为每个 MCP Server 建立 Client 连接；数据层使用 JSON-RPC 消息完成能力发现和调用。（来源：[MCP architecture overview](#source-mcp-architecture)）
-
-<McpArchitecture />
-
-<DataTable
-  caption="MCP Server 的三类核心原语"
-  headers={["原语", "提供什么", "发布简报中的例子", "调用结果"]}
-  rows={[
-    ["Resources", "可读取的上下文数据", "版本说明模板、仓库规范", "内容或资源引用"],
-    ["Prompts", "参数化提示模板", "生成发布简报入口", "由用户选择的消息模板"],
-    ["Tools", "模型可请求执行的函数", "读取提交、查询阻断 Issue", "结构化结果或错误"],
-  ]}
-/>
-
-Tools 只是 MCP 的一部分。协议还定义连接生命周期、能力协商、通知、日志，以及客户端可选提供的三项反向能力：sampling（客户端代替服务器向模型发起补全）、roots（客户端告知服务器允许访问的目录边界）和 elicitation（服务器在执行中向用户征求输入）。
-
-### 2. 工具描述本身就是接口设计
-
-下面的工具把宽泛命令收窄为一个可校验的查询：
-
-```json
-{mcpTool}
-```
-
-模型根据名称、描述和 schema 选择工具并生成参数；Host 与 Server 负责校验、执行和返回结果。准确描述用途、参数、返回值和副作用，能够减少错误选工具和无效参数。
-
-### 3. 标准协议仍需独立的信任与授权机制
-
-MCP 规范要求实现保留用户控制，并把不可信 Server 提供的工具注解视为不可信信息。Tools 可能触发任意数据访问或代码执行，Host 仍需完成认证、授权、审批和审计。（来源：[MCP Tools specification](#source-mcp-tools-spec)）
-
-<Callout variant="warning" title="MCP 的安全边界">
-协议统一能力发现与调用格式，不会替应用判断“这个用户是否可以读取该仓库”“这个工具是否可以发布”“返回内容是否夹带恶意指令”。这些判断属于 Host、Server、目标系统和后续 Harness 的共同责任。
-</Callout>
-
-## 三、Skills：把反复使用的做法变成流程资产
-
-### 1. Skill 不只是保存的一段 Prompt
-
-Agent Skill 是以 `SKILL.md` 为入口的目录，可以包含说明、参考资料、模板、资产和脚本。Agent Skills 规范定义了可移植的核心格式，并建议按任务需要逐步加载内容。（来源：[Agent Skills Specification](#source-agent-skills-spec)）
-
-```text
-release-brief/
-├── SKILL.md
-├── references/
-│   └── release-policy.md
-├── assets/
-│   └── brief-template.md
-└── scripts/
-    └── normalize-version.js
-```
-
-Skill 的加载是渐进式的，块面积就是上下文成本：
-
-<SkillLoading />
-
-下面是一份可直接阅读的流程型 Skill：
-
-```md
-{skillExample}
-```
-
-描述需要同时说明“做什么”和“什么时候使用”。正文应包含完整输入、步骤、输出和异常处理；大资料拆到按需文件；可确定的计算和转换交给脚本。
-
-### 2. MCP 解决连接，Skill 解决使用方法
-
-<DataTable
-  caption="MCP 与 Skills 的职责边界"
-  headers={["问题", "MCP", "Skill"]}
-  rows={[
-    ["核心对象", "外部能力的协议接口", "可复用的知识与流程目录"],
-    ["主要产物", "工具、资源、提示模板及调用结果", "步骤、决策点、模板、参考资料和脚本"],
-    ["实时数据", "可以通过 Server 获取", "通常借助已有工具读取"],
-    ["认证与授权", "由 Host、Server 和目标系统实现", "可以写使用规则，但不能代替强制权限"],
-    ["跨服务编排", "不定义业务调用顺序", "可以协调多个 MCP Server 和本地工具"],
-    ["是否必须组合", "可以单独使用", "也可以完全不依赖 MCP"],
-  ]}
-/>
-
-OpenAI 的 Skills 文档也将二者分开：MCP Server 负责实时信息、认证、授权和受控操作；Skill 负责工具调用顺序、决策点、缺失结果处理与输出要求。（来源：[OpenAI Skills](#source-openai-skills)）
-
-MCP 的 `Prompts` 原语也不同于 Skill。前者是 Server 通过协议暴露的参数化消息模板；后者是宿主发现和加载的流程目录，可以协调多个服务并携带参考文件与脚本。
-
-## 四、Context Engineering：为每一轮编译正确的信息环境
-
-### 1. Context 不只是用户输入
-
-Context 是模型本次推理实际接收的 token 集合。它可以包含系统指令、用户请求、历史消息、示例、检索资料、文件、记忆、工具定义、工具结果和输出契约。Prompt 是 Context 的一部分；temperature、最大输出长度等调用配置位于上下文 token 之外。
-
-Anthropic 将 Context Engineering 定义为策划和维护推理时完整信息集合的策略，并把它与主要关注指令写法的 Prompt Engineering 区分开。（来源：[Effective context engineering for AI agents](#source-anthropic-context-engineering)）
-
-一次编译后的 Context 有三组内容。权限规则、当前目标和验收条件属于高信任固定区；相关文件、Skill 与工具定义按当前步骤选择；历史、工具结果和长期记忆持续变化，需要压缩、校验、去重并保留来源。应用在每次模型调用前重新编译这组内容，长期记忆留在外部存储，相关时再选择并注入。
-
-<ContextBudget />
-
-上面这条是某一轮的静态剖面。把「哪一轮」也画进去，才看得到 Context Engineering 真正的管理对象。演示的标签从 0 数到 5，和下面的名字一一对应：0 首轮组装，1 检索，2 工具结果涌入，3 窗口满载，4 压缩，5 把关键证据放到两端。
+在多步任务里，窗口不是静态的，而是随着工具一轮轮调用迅速变满、变脏。点下面 6 个阶段，亲眼看看一个正常任务怎么在第 4 步被冗长日志撑爆、又怎么靠压缩和重排救回来：
 
 <ContextWindowEvolution client:visible motionLevel="explanatory" />
 
-标签 3「窗口满载」就是上面静态图的快照时刻；标签 4 的压缩对应下一小节的 Compress 操作；标签 5 的位置问题对应本节第 3 小节。这里的 3、4、5 是演示上印的标签，不是「六步里的第 3 个」。
+### 2. 上下文管理的四个动作与位置坑
 
-### 2. 上下文管理有四种基本操作
-
-LangChain 将常见策略归纳为 Write、Select、Compress、Isolate。这套实用分类适合用来检查上下文管线。（来源：[Context Engineering for Agents](#source-langchain-context-engineering)）
+LangChain 把实战里的上下文手法收成四个动词，非常好记（来源：[Context Engineering for Agents](#source-langchain-context-engineering)）：
 
 <DataTable
-  caption="上下文管理的四种操作"
-  headers={["操作", "做什么", "发布简报示例", "主要代价"]}
+  caption="上下文工程的四个基本动作"
+  headers={["动作", "怎么操作", "发布简报里怎么做", "要注意什么"]}
   rows={[
-    ["Write", "把计划、状态和事实写到窗口之外", "记录版本范围与已确认阻断项", "需要维护一致性和来源"],
-    ["Select", "只取回当前步骤需要的内容", "只读取本版本提交和开放阻断项", "可能漏召回关键证据"],
-    ["Compress", "清理、截断或总结冗长历史", "把重复工具输出合成证据表", "摘要会丢失细节"],
-    ["Isolate", "把高输出子任务放进独立上下文", "分别检查安全、文档和兼容性", "需要清晰交接契约"],
+    ["Write（外写）", "把计划和确认过的事实存到窗口外面", "把已核实的阻断项写进外部状态表", "外部状态要跟最新版本同步"],
+    ["Select（精选）", "每轮只捞这一步真正用得着的片段", "只拉本周提交和开放的阻断 Issue", "检索太苛刻可能漏掉关键条目"],
+    ["Compress（压缩）", "把几千行原始工具输出提炼成短摘要", "把 40 条 commit 合成结构化证据表", "压缩太狠会丢编号和细节"],
+    ["Isolate（隔离）", "把吐大量中间内容的子活分给独立窗口", "安全、文档、兼容性各自开子代理查", "子代理只交回精简结论，别把过程垃圾全带回来"],
   ]}
 />
 
-### 3. 窗口容量与稳定利用是两个指标
+同时别忘了上一课讲的 **Lost in the Middle** 现象（来源：[Lost in the Middle](#source-lost-in-the-middle)）：信息塞进大窗口里，藏在正中间常比放在开头或结尾更容易被漏看。并且所有外部拉进来的网页、日志、Issue 都属于**不可信数据**，必须标清来源隔离存放，不能和系统指令混为一谈。
 
-`Lost in the Middle` 在多文档问答和键值检索实验中观察到，相关信息位于长上下文中间时，模型表现常低于信息位于开头或末尾的情况。这个结果说明位置和干扰会影响利用率，不能扩展成所有模型都遵循的固定定律。（来源：[Lost in the Middle](#source-lost-in-the-middle)）
+## 五、Harness Engineering：把模型关进靠谱的工作间
 
-```text
-容量问题：这段内容能否进入窗口？
-检索问题：系统是否找到了正确内容？
-编排问题：内容是否出现在合适位置并保留来源？
-利用问题：模型能否在当前任务中正确使用它？
-```
-
-增加窗口只能缓解第一项。可靠系统还要评估检索召回、片段排序、工具选择和最终回答。
-
-### 4. 外部内容必须保留信任边界
-
-网页、邮件、Issue、日志、检索文档和工具返回都可能包含指令式文本。系统需要标记来源和权限级别，把第三方内容作为数据处理；高风险工具调用仍经过参数验证、最小权限和人工确认。仅在 Prompt 中写“忽略恶意指令”不能构成完整防护。
-
-Context Engineering 决定这一轮让模型看见什么。接下来的 Harness Engineering 决定由谁收集这些内容、工具怎样执行、权限如何判断、结果怎样验证，以及失败后怎样恢复。
-
-## 五、Harness Engineering：设计模型周围的工作系统
-
-### 1. Harness 是边界尚未统一的工作定义
-
-本课把 **Agent Harness** 定义为模型周围的工程控制层：它组装上下文、暴露工具、执行动作、保存状态、约束权限、验证结果并记录轨迹。不同团队会把持久化、运行时、记忆和编排划入 Harness、Runtime 或 Framework 的不同位置。
-
-LangChain 对 Agent framework、runtime 和 harness 的讨论明确承认这些术语没有清晰统一的边界。本课使用工作定义帮助分析系统，不声称它是唯一分类。（来源：[Agent Frameworks, Runtimes, and Harnesses](#source-langchain-harness-boundaries)）
+哪怕给顶尖厨师配齐食材和菜单，如果厨房没火候表、没验菜标准、煤气灶还没安全阀，照样会翻车。包在模型外面的那整套工程底座——负责拼上下文、管工具、存状态、卡权限、跑外部检查、设预算和录日志——在行业里常被称为 **Agent Harness**（注：业界对 framework、runtime、harness 的叫法仍有重叠，这里把它当作便于拆解系统的工作定义，来源：[LangChain Harness Boundaries](#source-langchain-harness-boundaries)）。
 
 <DataTable
-  caption="Agent Harness 的七个控制面"
-  headers={["控制面", "负责什么", "可观察信号", "典型失败"]}
+  caption="一个靠谱 Harness 要管住的七件事"
+  headers={["控制面", "具体干什么", "盯什么指标/产物", "没管好会怎样"]}
   rows={[
-    ["上下文", "组装任务、证据与规则", "进入每轮的来源和 token", "遗漏关键证据或混入噪声"],
-    ["工具", "描述、校验和分发行动", "调用参数、返回码、输出大小", "工具重叠、参数无效"],
-    ["状态", "记录阶段、尝试和产物", "checkpoint 与状态版本", "重复步骤、恢复错误"],
-    ["权限", "允许、拒绝和审批", "主体、目标、作用域与决定", "越权写入或授权混淆"],
-    ["验证", "检查过程和最终环境状态", "grader（给输出打分的评分器，可以是测试脚本、规则或模型）、测试、业务状态", "把模型自述当完成证据"],
-    ["预算", "限制时间、token、费用和轮数", "消耗量与剩余额度", "无限重试或成本失控"],
-    ["可观测性", "记录模型、工具、路由和结果", "trace、耗时、错误与停止原因", "失败无法复现"],
+    ["上下文", "每轮重新编译规则、证据与历史", "各块 token 占比与来源", "噪声淹没核心要求"],
+    ["工具", "校验参数、执行调用、截断超大返回", "参数合法性、退出码、返回长度", "参数错乱或一条日志撑爆窗口"],
+    ["状态", "保存进度检查点（checkpoint）", "当前阶段、版本号、已完成列表", "中途报错重来，重复发通知"],
+    ["权限", "允许、拒绝与高危动作人工审批", "操作主体、目标范围、审批记录", "分析任务越权改线上数据"],
+    ["验证", "跑测试脚本、规则检查或评分器", "单测通过率、引用完整性", "模型嘴上说「搞定了」实际全是错"],
+    ["预算", "卡死最大步数、时长和费用上限", "已走步数、token 消耗、耗时", "死循环重试一夜烧光额度"],
+    ["可观测性", "全量记录每轮输入、工具调用与停机原因", "完整 trace、耗时与 stop reason", "线上翻车完全复现不了"],
   ]}
 />
 
-### 2. 仓库和运行环境也属于 Harness
+OpenAI 的 Harness Engineering 工程实践也分享了一条非常实在的经验（来源：[OpenAI Harness Engineering](#source-openai-harness-engineering)）：**别把所有规矩全塞进一个几千行的超大说明文档里**，而是留一份简短的入口地图，把规范拆成仓库里可版本化维护的文档，并尽量把「口头叮嘱」升级成 **lint、类型检查和 CI 自动测试**——代码自动拦住的坑，远比在 Prompt 里重复叮嘱十遍稳得多。
 
-OpenAI 的 Harness Engineering 实践把团队工作重点放在环境、意图、反馈循环和机械约束上。其团队发现，巨大的单文件说明会挤占上下文、快速过期并且难以验证，于是改用短入口文件作为地图，把架构、计划、产品规则和质量标准放进结构化、可版本控制的仓库文档，并用 lint 与 CI 维护约束。（来源：[Harness engineering](#source-openai-harness-engineering)）
+## 六、Loop Engineering：让模型看真实反馈、撞预算就停
 
-把这套实践压成五组「脆弱做法 → Harness 做法 → 验证方式」的对照：
+### 1. 有界反馈循环怎么跑
 
-- **项目知识**：一份不断变长的总说明，改成短地图链接到分层事实源，用链接、所有权和新鲜度检查验证。
-- **架构边界**：在 Prompt 中反复提醒，改成依赖规则、类型和结构测试，由 lint 与 CI 阻断违规。
-- **运行反馈**：只看模型最终回答，改成把日志、指标、截图和测试暴露给 Agent，环境结果可查询。
-- **长任务状态**：依赖聊天历史，改成执行计划、进度与决策日志，可从版本化状态恢复。
-- **经验沉淀**：每次人工纠正同一问题，改成把稳定规则升级为文档、测试或检查器，由回归任务持续复测。
+早期的 ReAct 论文把「思考 → 调工具 → 看外部观察 → 修正下一步」串成了一个经典循环（来源：[ReAct](#source-react-paper)）：
 
-Harness 以最小有效组件为目标。模型能力、任务和风险变化后，旧脚手架可能变成额外延迟、成本或错误来源；每个组件都需要通过评测证明仍然有价值。
+<StepList title="可收敛的 Agent 内环" steps={agentLoopSteps} />
 
-## 六、Loop Engineering：让行动接受反馈并收敛
+把视角拉高一点，LangChain 把工程里的反馈循环分成了四类（属于近期实践框架，方便定位问题发生在哪，来源：[The Art of Loop Engineering](#source-langchain-loop-engineering)）：**Agent Loop**（单次任务里边做边看工具返回）、**Verification Loop**（跑完测试不通过就打回去修）、**Event-driven Loop**（由定时任务或 Webhook 触发执行）、**Hill-climbing Loop**（利用生产轨迹和失败模式，经人工确认与回归评测后持续改进 Prompt、工具或 Harness 配置）。
 
-### 1. Agent Loop 的机制成熟，Loop Engineering 的名称仍新
+不管哪层循环，控制器里必须写死**停机和恢复规则**：瞬时网络超时走有界退避 **Retry**；方案验证失败把报错证据喂回去 **Replan**；等人工审批先落盘 **Resume**；出了副作用要能 **Rollback**；撞上步数/成本上限果断 **失败停止** 并汇报现场证据，绝不让 Agent 无限空转。
 
-ReAct 将推理轨迹、行动和环境观察交错组织，使新观察能够修正后续计划并处理例外。（来源：[ReAct](#source-react-paper)）现代工具型 Agent 通常采用相近内环：
+### 2. 别信模型自述，把「轨迹」和「结果」分开验
 
-<StepList title="可验证的 Agent 内环" steps={agentLoopSteps} />
+Anthropic 在 Agent 评测文章里强调了一点：**过程轨迹（Trace）和最终环境状态（Outcome）必须分开检查**（来源：[Demystifying evals for AI agents](#source-anthropic-agent-evals)）。模型完全可能在文字里写着「所有检查已通过」，但磁盘上的文件根本没改对。
 
-工具执行、测试结果和外部状态属于可见轨迹，不需要暴露或依赖模型的私有思维链。
-
-### 2. 反馈系统至少包含四类 Loop
-
-LangChain 在 2026 年提出 Agent、Verification、Event-driven 和 Hill-climbing 四类 Loop。这是一个近期厂商框架，适合用来观察反馈发生在哪一层，不应当作公认标准。（来源：[The Art of Loop Engineering](#source-langchain-loop-engineering)）
-
-<DataTable
-  caption="四类反馈循环"
-  headers={["循环", "输入与反馈", "改变什么", "必须设置的边界"]}
-  rows={[
-    ["Agent Loop", "行动后的工具观察", "当前步骤和工具选择", "最大轮数、无进展检测"],
-    ["Verification Loop", "测试、grader 或人工意见", "当前产物", "独立成功标准、重试上限"],
-    ["Event-driven Loop", "定时器、Webhook 或业务事件", "何时启动一次运行", "去重、幂等、并发控制"],
-    ["Improvement Loop", "生产 trace 与失败集", "Prompt、Skill、工具或 Harness", "保留集评测、人工发布门"],
-  ]}
-/>
-
-最后一类不能解释成系统可以不经审查地自我修改。更稳妥的路径是：从生产 trace 聚类失败，人确认问题并生成针对性 eval，候选修改通过保留集和回归测试后再发布。
-
-### 3. 停止、恢复和预算必须写进控制器
-
-<DataTable
-  caption="Loop 的控制状态"
-  headers={["状态", "触发信号", "处置", "保留的证据"]}
-  rows={[
-    ["成功", "外部成功谓词（可独立客观检查的完成条件）成立", "输出结果和来源", "grader、最终环境状态"],
-    ["Retry", "瞬时工具错误", "有界退避后重试", "请求、错误码、次数"],
-    ["Replan", "当前方案验证失败", "带新证据更换路径", "失败差异与新假设"],
-    ["Resume", "等待输入或进程中断", "从 checkpoint 继续", "状态版本和待办"],
-    ["Rollback", "副作用造成不一致", "恢复到安全状态", "变更日志和回滚结果"],
-    ["Escalate", "高风险、含糊或无进展", "交给人工判断", "已完成工作、阻断原因"],
-    ["失败停止", "预算耗尽或不可恢复错误", "保存诊断并停止", "stop reason 与消耗"],
-  ]}
-/>
-
-### 4. Trace 和 Outcome 需要分开评测
-
-Anthropic 的 Agent 评测方法区分执行轨迹与环境最终状态。模型可以在文本里说“发布简报已经生成且没有阻断项”，真正的 Outcome 需要检查文件是否存在、引用是否有效、阻断 Issue 是否仍开放。生成具有随机性，同一任务还需要多次 trial 观察成功率与波动。（来源：[Demystifying evals for AI agents](#source-anthropic-agent-evals)）
+点下面的回放器走一遍发布简报的真实轨迹：第 1 次尝试漏了阻断项，外部校验器报错并把证据回灌，第 2 次补齐后才过关，且最终的 `published=false` 牢牢守住了「分析完成但不越权自动发布」的红线：
 
 <AgentTraceReplay client:visible motionLevel="explanatory" />
 
-回放里的失败证据直接进入第二次尝试，OUTCOME 面板的 `published=false` 则记录了“完成分析”与“自动发布”之间的权限边界。
+### 3. 动手跑一遍：50 行纯 Python 写一个最小可验证 Agent Loop
 
-## 七、Graph Engineering：把循环和节点编排成可执行拓扑
+不用申请任何 API Key，直接跑下面这份零依赖脚本，亲手看一眼「生成草稿 → 外部确定性校验器打回 → 带报错重做 → 通过校验 → 被人工审批网关拦在发布门外」的完整控制流：
 
-### 1. 先说明术语成熟度
+<CodeFile
+  file="labs/agent-harness-engineering/mini_agent_loop.py"
+  mark="10-29,37-49"
+  note="不需 API 密钥即可运行，演示外部校验器如何基于事实表定位缺项、驱动草稿修复并拦截未审批发布。"
+/>
 
-“Graph Engineering”在 2026 年 7 月中旬因一则“是否已经从 loops 转向 graphs”的 X 讨论而集中传播。（来源：[原帖与讨论存档](#source-graph-origin-archive)）截至本课核验日期，主流官方文档通常使用 state graph、graph-based workflow、directed graph execution 或 multi-agent orchestration；“Graph Engineering”仍是正在形成的行业说法。
-
-<Callout variant="info" title="本课采用的工作定义">
-Graph Engineering 是把 Agent 系统的执行拓扑做成可执行、可检查、可版本化的工程对象。它明确节点职责、边与路由条件、状态和数据契约、并行与汇合、循环与停止、权限、恢复、追踪和评测。这个名称是新的，底层的图调度、状态机和多 Agent 编排并不新。
-</Callout>
-
-本课的 Graph Engineering 专指执行和协作拓扑；知识图谱、GraphRAG、图神经网络和 Graph of Thoughts 各有独立研究对象。
-
-### 2. 图由状态、节点和边组成
-
-LangGraph 的 Graph API 使用三个核心部分描述工作流：State 保存共享状态，Nodes 执行模型调用或普通函数，Edges 决定固定或条件路由。（来源：[LangGraph Graph API](#source-langgraph-graph-api)）
-
-<DataTable
-  caption="执行图的工程对象"
-  headers={["对象", "需要定义什么", "发布简报示例", "常见故障"]}
-  rows={[
-    ["State", "schema、所有权、版本与 reducer", "提交、阻断项、草稿、评审结果", "并发覆盖或陈旧状态"],
-    ["Node", "职责、输入、输出、工具和预算", "收集提交、生成草稿、安全审查", "一个节点承担过多任务"],
-    ["Edge", "固定、条件或动态路由", "有阻断项则进入风险审查", "条件含糊或遗漏路径"],
-    ["Fan-out", "哪些节点可以并行", "安全、兼容性、文档分别审查", "伪并行和重复工作"],
-    ["Join", "等待条件与合并规则", "全部评审完成后汇总", "部分结果丢失或永久等待"],
-    ["Checkpoint", "何时保存与怎样恢复", "草稿后、发布审批前", "恢复后重复副作用"],
-    ["Authority", "谁可读取、修改、批准和否决", "发布节点必须人工批准", "节点权限随意继承"],
+<TerminalSession
+  title="本地运行：最小可验证 Agent Loop"
+  environment="PYTHON 终端"
+  steps={[
+    {
+      cmd: "python3 mini_agent_loop.py",
+      out: `[step 1/3] 草稿: 本周发布简报：PR#42（修复支付超时重试）；PR#45（新增缓存命中指标）。
+[step 1/3] 外部校验: FAIL (缺少引用 BUG-19) -> 反馈回灌
+[step 2/3] 草稿: 本周发布简报：PR#42（修复支付超时重试）；PR#45（新增缓存命中指标）；BUG-19（灰度环境数据库连接池偶发占满）。
+[step 2/3] 外部校验: PASS
+[gate] 调用 publish_brief -> BLOCKED: 发布动作需要人工审批（approval=False）`,
+      note: "草稿起草函数依据外部 verify_brief() 返回的缺项列表补全 BUG-19；即使草稿通过校验，高危 publish_brief 依然被代码网关拦下等待人工审批。"
+    }
   ]}
 />
 
-### 3. 一个图可以同时包含并行、循环和人工节点
+## 七、Graph Engineering：何时才需要把流程画成执行图
+
+当任务不再是单线循环，而是出现「先并行查安全、文档、兼容性三条线，全部汇合后再写草稿，校验不过打回重写，过了还得等人工审批」时，就需要把执行结构显式画成一张**执行图**（注：「Graph Engineering」是 2026 年夏季在社区集中流行的说法，主流框架各自叫 state graph、graph-based workflow 等，但底层的状态机与有向图编排都很成熟，来源：[原帖与讨论存档](#source-graph-origin-archive)、[LangGraph Graph API](#source-langgraph-graph-api)）。
 
 <ExecutionGraph />
 
-图的节点可以混合多种角色：读取和格式校验可以是确定性函数，生成和定性评审可以是模型节点，人工确认可以是权限节点，失败边形成 Loop。图可以容纳 Loop，Loop 为节点内部和跨节点执行提供反馈。
-
-### 4. 多个框架实现同类结构，各自语义不同
+一张可执行的工作图只由三个基本概念撑起来：**State**（所有节点共享的版本化状态）、**Nodes**（可以是普通确定性代码、单次模型调用、一个完整 Agent Loop，也可以是人工审批卡点）、**Edges**（固定连线或按校验结果分叉的条件边）。
 
 <DataTable
-  caption="官方框架中的图式编排"
-  headers={["实现", "官方用语", "核心结构", "适用边界"]}
+  caption="主流框架的图编排思路对照"
+  headers={["框架 / 系统", "官方叫法", "核心结构", "适合什么场景"]}
   rows={[
-    ["LangGraph", "State graph", "State、Nodes、Edges、checkpoint", "长时间、状态化、需要恢复和显式控制"],
-    ["Google ADK", "Graph-based workflows", "Agent、工具、函数或人工步骤组成节点", "确定、结构化、可审计路径"],
-    ["Microsoft AutoGen", "GraphFlow", "DiGraph、条件边、并行、汇合和循环", "需要严格顺序或复杂分支；当前仍为实验特性"],
-    ["Anthropic Research", "Orchestrator-worker", "Lead Agent 动态创建并行 Subagents 后汇总", "可并行、信息量超过单一上下文的研究任务"],
+    ["LangGraph", "State graph", "State + Nodes + Edges + Checkpoint", "长流程、强状态、需要断点恢复与显式路由"],
+    ["Google ADK", "Graph-based workflows", "Agent、工具、函数和人工节点组成显式边", "路径确定、要求高可审计性的业务流"],
+    ["Microsoft AutoGen", "GraphFlow", "有向图、并行汇合、条件分支与有界循环", "复杂多角色协作（文档标注为实验特性）"],
+    ["Anthropic Research", "Orchestrator-worker", "主 Agent 动态派发并行子 Agent，独立搜索后汇总", "信息量极大、适合拆分隔离上下文的研究任务"],
   ]}
 />
 
-Google ADK 把图中的节点扩展到 Agent、工具、函数和人工步骤；AutoGen GraphFlow 支持顺序、并行、条件和带安全退出的循环，并建议简单协作优先使用更简单的 Team。（来源：[ADK graph-based workflows](#source-google-adk-graphs)、[AutoGen GraphFlow](#source-autogen-graphflow)）
+（来源：[ADK graph-based workflows](#source-google-adk-graphs)、[AutoGen GraphFlow](#source-autogen-graphflow)、[How we built our multi-agent research system](#source-anthropic-multi-agent)）
 
-Anthropic 的多 Agent Research 系统采用动态 orchestrator-worker：Lead Agent 规划并创建并行 Subagents，各子任务在独立上下文中搜索，Lead Agent 汇总后决定是否继续。这种结构属于运行时生成的工作图；预先固定的 DAG（Directed Acyclic Graph，有向无环图，节点与边在运行前确定且不带环）则在运行前确定主要节点与边。（来源：[How we built our multi-agent research system](#source-anthropic-multi-agent)）
+其中多 Agent（Subagent）最实在的工程价值其实是**上下文隔离**：让每个子代理在自己干净的窗口里翻资料、查日志，最后只把精炼结论交回主代理，防止中间过程垃圾撑爆主窗口。
 
-Subagent 的工程价值在于**上下文隔离**：每个子任务在自己的窗口里读文档、试查询，只把结论回传 Lead Agent，避免中间噪音挤占主上下文——这正是第三节 Context 层 Isolate 操作的落地形态。代价是交接契约必须显式：子代理拿到什么输入、允许用哪些工具、回传什么格式，都需要在创建时写清，否则隔离反而制造信息断层。
-
-### 5. 只有关系复杂到值得显式管理时才使用图
+但千万记住 Anthropic 给所有开发者的忠告：**能用简单办法解决，绝不上复杂编排**（来源：[Building effective agents](#source-anthropic-effective-agents)）。沿着下面的复杂度阶梯逐级往上走，只有当前一层明确扛不住时再加一层：
 
 <ChoiceLadder />
 
-Anthropic 区分了预定义代码路径的 Workflow 与由模型动态选择过程的 Agent，并建议从能够满足任务的最简单方案开始。（来源：[Building effective agents](#source-anthropic-effective-agents)）多 Agent 还会增加 token、状态一致性、错误传播和评测成本。图负责让这些关系显式；模型质量、工具契约和外部验证共同决定系统可靠性。
-
 ## 常见误区与工程边界
 
-- **Prompt 是任务规格：** 先定义成功标准，再针对真实失败修改指令。
-- **MCP 是能力连接协议：** Host、Server 和目标系统执行授权。
-- **Skill 是流程资产：** Skill 组织做法，MCP 或内置工具提供能力。
-- **Context 是每轮编译的模型输入：** 选择、排序、压缩和信任标记共同决定有效上下文。
-- **Harness 是边界可调整的运行控制层：** 课程定义用于分析，具体归属随系统架构变化。
-- **Loop 是有界反馈循环：** 每轮获得新证据，并受预算、停止与恢复规则约束。
-- **Graph 是通用执行拓扑：** 普通函数、工具、人工检查和一个完整 Loop 都可以成为节点。
-- **Graph 可以包含 Loop：** Loop 负责节点内部和跨运行的反馈。
-- **复杂度需要证据：** 新增节点、Agent 或框架之前，先证明它改善成功率、恢复性、成本或可审计性。
+- **别把模型自述当完成证据**：成功条件必须写成外部确定性检查（测试、Schema 校验、数据库状态），不看模型嘴上怎么说。
+- **别把多 Agent 当银弹**：每多加一个节点和子代理，都会成倍增加 token 费用、状态同步难度和排障复杂度；没有评测数据证明收益就别加。
+- **别忘了最小权限和硬预算**：无论图画得多漂亮，最大步数、超时时间和写操作审批门必须写在模型外面的代码里。
 
-本课的七个工程对象解决一次任务怎样可控执行。下一课《AI 工程全景》把 Prompt、Context、Harness、Loop、Graph 放进执行编排层，把 MCP 放到能力接入层，Skills 不进入那张六层表。其余五层在下一课展开。
+这一课我们把「一个任务怎么可控地跑完」拆透了。接下来把镜头再拉远，进入第五课《AI 工程全景：从一次调用到生产系统》：看看线上生产系统除了编排之外，还要怎么配 RAG 检索、分层记忆、微调蒸馏、评测护栏、可观测性和成本网关。
 
 <KeyTakeaway>
-AI 工程从 Prompt 向外扩展，形成一组可以分别设计和验证的对象：指令、连接、流程、上下文、执行环境、反馈和拓扑。可靠系统用外部证据判断结果，用权限和预算限制副作用，并在关系复杂到值得管理时引入图式编排。
+Agent 工程不是玄学，而是把一次聊天一步步变成可控软件：用 **Prompt** 写清规格，用 **MCP** 接外部工具，用 **Skills** 复用流程，用 **Context** 精选每轮输入，用 **Harness** 管住权限、预算和外部校验，用 **Loop** 吸收真实反馈并有界收敛，只在分支并行真的复杂到管不过来时才上 **Graph**。
 </KeyTakeaway>
+
+<CheatSheet
+  title="本课速查卡"
+  items={[
+    { term: "七层工程对象", description: "Prompt（规格）→ MCP（能力接口）→ Skills（流程目录）→ Context（本轮输入）→ Harness（控制底座）→ Loop（反馈收敛）→ Graph（多节点拓扑）。" },
+    { term: "MCP vs Skills", description: "MCP 标准化工具连接与资源发现；Skills 打包办事步骤、模板和脚本并按需渐进加载。" },
+    { term: "上下文四动作", description: "Write（外写状态）、Select（精选召回）、Compress（压缩摘要）、Isolate（子任务隔离窗口）。" },
+    { term: "Harness 底线", description: "权限白名单、最大步数/费用预算、断点恢复、完整 trace、独立外部校验器。" },
+    { term: "Trace vs Outcome", description: "轨迹看过程合不合理，结果看真实环境状态对不对；单次跑通不算数，需多次 trial 统计。" },
+    { term: "复杂度阶梯", description: "单次 Prompt → 固定代码流程（Workflow）→ 单 Agent Loop → 多节点执行图，能简不繁。" },
+  ]}
+/>
 
 ## 学习验收
 

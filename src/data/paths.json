@@ -87,6 +87,33 @@
           ]
         }
       ]
+    },
+    {
+      "id": "ai",
+      "title": "AI 与机器学习专项路线",
+      "summary": "6 课串通从梯度下降、神经网络、大模型原理到 Agent 工程、生产系统全景与 AI 攻防，每课配交互实验台和零依赖 Python 实操。",
+      "pagePath": "/paths/ai/",
+      "sessionMinutes": 90,
+      "stages": [
+        {
+          "name": "原理打底",
+          "goal": "搞懂损失、梯度、反向传播、自注意力与采样，不再把模型当黑盒。",
+          "topics": [
+            "machine-learning-foundations",
+            "neural-network-foundations",
+            "ai-literacy"
+          ]
+        },
+        {
+          "name": "工程与安全",
+          "goal": "搭起可控 Agent 与生产级 AI 架构，识别并堵住提示注入与经典模型攻击面。",
+          "topics": [
+            "agent-harness-engineering",
+            "ai-engineering-landscape",
+            "ai-security-essentials"
+          ]
+        }
+      ]
     }
   ]
 }

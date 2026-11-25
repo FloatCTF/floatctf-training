@@ -70,7 +70,7 @@
   padding: 0.75rem 1rem;
 }
 
-.network-flow { flex-wrap: wrap; align-items: center;
+.network-flow { flex-wrap: wrap; align-items: stretch;
   background: var(--training-surface-bg);
   display: grid;
   gap: 0;
@@ -79,14 +79,20 @@
   padding: 1.5rem;
 }
 
+.network-flow--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
 .network-node {
   background: transparent;
   border: 0;
   border-block-start: 0.17rem solid var(--training-accent);
   border-radius: 0;
   color: var(--training-heading);
-  min-height: 6rem;
-  padding: 1.8rem 0.8rem 0.8rem;
+  margin: 0;
+  min-height: 5.2rem;
+  padding: 1.7rem 0.75rem 0.75rem;
   position: relative;
 }
 
@@ -186,6 +192,55 @@
   fill: transparent;
   stroke: var(--training-class-one);
   stroke-width: 3;
+}
+
+.fit-tick-label {
+  fill: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 12px;
+}
+
+.fit-point-tag {
+  fill: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+.learning-sim-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-block-start: 0.35rem;
+}
+
+.learning-sim-presets button {
+  background: var(--training-surface-bg);
+  border: 0.0625rem solid color-mix(in srgb, var(--training-heading) 34%, transparent);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  cursor: pointer;
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  font-weight: 600;
+  min-block-size: 2.25rem;
+  padding: 0.3rem 0.75rem;
+}
+
+.learning-sim-presets button[aria-pressed='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
+  font-weight: 700;
+}
+
+.learning-step-dot {
+  fill: color-mix(in srgb, var(--training-accent) 55%, var(--training-page-bg));
+}
+
+.learning-next-arrow {
+  stroke: var(--training-class-zero);
+  stroke-width: 2.5;
 }
 
 .fit-line--curve {
