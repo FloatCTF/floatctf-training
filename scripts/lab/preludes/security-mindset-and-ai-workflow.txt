@@ -1,0 +1,3 @@
+# 第 44 课：把 mini_notes_app.py 与 triage_commands.sh 放到 ~/lab/triage。
+pkill -f 'mini_notes_app.p[y]'; rm -rf ~/lab/triage; mkdir -p ~/lab/triage; cp ~/lab/python/* ~/lab/triage/; true
+@workdir /home/kali/lab/triage

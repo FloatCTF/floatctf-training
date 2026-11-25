@@ -1,0 +1,195 @@
+---
+title: 文本处理实战：正则表达式、日志筛选与 JSON 解析
+description: 不背冷门语法，只练真实排查天天用的 20%：用 grep -E 写扩展正则定位异常，用 awk 按列统计高频 IP，用 sed 做基础脱敏，再用 jq 精准拆解嵌套 JSON
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import manifest from '../../../data/lessons/regex-and-log-triage.json';
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '用 awk 提取 403 请求的 IP 与请求目标、用 sed -E 对样本 IP 末段做演示脱敏、用 jq 找出耗时超过 30ms 的事件。' },
+  { title: '用 awk 剥离查询串后再统计 API 路径', detail: '注意 access.log 的第 7 列（$7）包含查询参数（如 /api/profile?uid=102）。请先用 sub(/\\?.*/, "", $7) 去掉问号后的查询串，再只筛选以 /api/ 开头的行，按接口路径分组统计调用次数。' },
+  { title: '把第 39 课的 curl 输出直接喂给 jq', detail: '启动第 39 课的 api_server.py，用 curl --noproxy "*" 请求 http://127.0.0.1:9000/api/whoami-proxy | jq "{host, x_real_ip}"，体会命令行里直接裁剪 JSON 字段的效率。' },
+  { title: '记一条正则与脱敏防踩坑笔记', detail: '用两句话写清：为什么在 shell 里写正则应该优先用单引号包起来；为什么把真实日志发给外部之前，不能只遮住 IPv4 末段就以为脱敏完成。' },
+];
+
+<LessonHero
+  series="MODERN WEB BRIDGE"
+  unit="FOUNDATIONS / LESSON 41"
+  kicker="Regex, awk, sed & jq"
+  lines={[
+    { text: "文本处理实战" },
+    { text: "正则、日志筛选与 JSON", accent: true },
+  ]}
+  summary="线上出故障、或者做应急排查与靶场复盘时，你面对的往往是几万行 Nginx 日志和一屏套一屏的 JSON。打开编辑器肉眼翻效率极低；熟练组合 grep -E、awk、sed 和 jq，十秒钟就能把异常 IP、报错接口和关键字段揪出来。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：十万行日志里，怎么在十秒钟内知道谁在扫你的站
+
+网站突然变慢，或者怀疑有人在爆破登录接口、扫描敏感备份文件。日志就在 `/var/log/nginx/access.log` 里，JSON 接口返回就在终端里。
+
+你不需要为了每次排查专门写一个 Python 脚本，也不需要把整本正则语法书背下来。把下面四个工具的分工记清，再记住十个高频正则符号，就能覆盖日常 90% 的文本与日志分析任务：
+
+<DataTable
+  caption="四个命令行文本工具的明确分工"
+  headers={["工具", "最擅长的事", "不要硬用它干的事"]}
+  rows={[
+    ["grep -E", "按扩展正则从大量文本里「筛行」", "按列做数值比较或统计次数"],
+    ["awk", "按空白或分隔符「切列」、按列条件过滤与打印", "硬解析多行嵌套的 JSON 或 HTML"],
+    ["sed -E", "按行做批量「正则替换」、清洗与脱敏", "复杂的跨行状态统计（不如 awk 或 Python）"],
+    ["jq", "解析、过滤、重组、统计「结构化 JSON」", "处理非 JSON 的纯文本日志"],
+  ]}
+  columnRatios={[0.9, 2.3, 2.3]}
+/>
+
+## 一、高频正则元字符与 `grep -E` 日志定位
+
+下载本课的两份固定样本到 `~/lab/logs`（全部 IP 均为文档测试网段 `198.51.100.0/24` 与 `203.0.113.0/24`）：
+
+<CodeFile file="labs/regex-and-log-triage/access.log" note="20 行标准 Combined 格式静态日志样本，包含正常访问与可疑线索（高频 404 探测、连续 401、403 与 500）。注意真实排查里状态码只是调查线索，需结合业务上下文核实。" />
+
+<CodeFile file="labs/regex-and-log-triage/audit-events.json" note="结构化 JSON 审计事件样本，第三节用 jq 筛选与分组。" />
+
+### 先记住这 8 个最常用的扩展正则（ERE）符号
+
+（来源：[GNU grep 手册](#source-gnu-grep)）
+
+<DataTable
+  caption="覆盖 90% 日志场景的扩展正则（grep -E / sed -E）核心符号"
+  headers={["符号", "含义", "日志里的例子"]}
+  rows={[
+    ["^ 和 $", "匹配行首 / 行尾", "^203\\.0\\.113\\. 只匹配以该网段开头的行"],
+    [". 与 \\.", ". 匹配任意单个字符；\\. 才匹配字面点号", "\\.env 匹配 .env，而 .env 会误中 xenv"],
+    ["[0-9]", "字符集：匹配其中任意一个字符", "[45][0-9]{2} 匹配 400–599 的三位数"],
+    ["+ / * / ?", "前一项出现 ≥1 次 / ≥0 次 / 0 或 1 次", "[0-9]+ 匹配一段连续数字"],
+    ["{n,m}", "前一项重复 n 到 m 次", "[0-9]{1,3} 匹配 IP 的一段数字"],
+    ["(a|b|c)", "分组与「或者」分支", "(401|403|500) 同时匹配三类重点状态码"],
+  ]}
+  columnRatios={[1.0, 2.0, 2.5]}
+/>
+
+### 用 `grep -E` 揪出异常状态码和敏感探测
+
+<TerminalSession
+  environment="KALI 终端"
+  title="按状态码与敏感路径关键字筛选 access.log"
+  steps={[
+    { cmd: 'cd ~/lab/logs' },
+    {
+      cmd: `grep -E '" (401|403|500) ' access.log`,
+      out: '203.0.113.77 - - [25/Nov/2026:09:03:01 +0000] "POST /api/login HTTP/1.1" 401 38 "-" "python-requests/2.32.3"\n203.0.113.77 - - [25/Nov/2026:09:03:02 +0000] "POST /api/login HTTP/1.1" 401 38 "-" "python-requests/2.32.3"\n203.0.113.77 - - [25/Nov/2026:09:03:03 +0000] "POST /api/login HTTP/1.1" 401 38 "-" "python-requests/2.32.3"\n203.0.113.77 - - [25/Nov/2026:09:03:04 +0000] "POST /api/login HTTP/1.1" 401 38 "-" "python-requests/2.32.3"\n203.0.113.77 - - [25/Nov/2026:09:03:05 +0000] "POST /api/login HTTP/1.1" 401 38 "-" "python-requests/2.32.3"\n198.51.100.25 - - [25/Nov/2026:09:04:11 +0000] "GET /api/profile?uid=102 HTTP/1.1" 403 96 "http://lab.local/" "Mozilla/5.0"\n198.51.100.25 - - [25/Nov/2026:09:04:15 +0000] "GET /api/profile?uid=103 HTTP/1.1" 403 96 "http://lab.local/" "Mozilla/5.0"\n198.51.100.31 - - [25/Nov/2026:09:05:20 +0000] "POST /api/checkout HTTP/1.1" 500 64 "http://lab.local/" "Mozilla/5.0"',
+      note: '在状态码前后加上双引号和空格（" 401 ），避免误命中响应字节数或时间戳里恰好出现的 401。真实排查里 401/403/500 只是优先调查的线索，不能单靠状态码下结论。',
+    },
+    {
+      cmd: `grep -E '(\\.env|\\.git|\\.sql|wp-login)' access.log`,
+      out: '203.0.113.44 - - [25/Nov/2026:09:02:01 +0000] "GET /.env HTTP/1.1" 404 153 "-" "curl/8.7.1"\n203.0.113.44 - - [25/Nov/2026:09:02:02 +0000] "GET /.git/config HTTP/1.1" 404 153 "-" "curl/8.7.1"\n203.0.113.44 - - [25/Nov/2026:09:02:03 +0000] "GET /backup.sql HTTP/1.1" 404 153 "-" "curl/8.7.1"\n203.0.113.44 - - [25/Nov/2026:09:07:01 +0000] "GET /wp-login.php HTTP/1.1" 404 153 "-" "curl/8.7.1"',
+      note: '203.0.113.44 连续探测 .env、.git/config、backup.sql 与 wp-login.php，是公网服务器常见的自动化扫描线索。',
+    },
+  ]}
+/>
+
+## 二、`awk` 按列聚合与 `sed` 脱敏替换
+
+在请求行不含未转义空格的标准 Combined 日志样本里，按空白切开后的几个列号很稳定：`$1` 是来源 IP，`$6` 是带引号的方法（`"GET`），`$7` 是**完整请求目标（含查询串，例如 `/api/profile?uid=102`）**，`$9` 是 HTTP 状态码，`$10` 是响应字节数。如果按接口路径分组统计，记得先用 `sub(/\?.*/, "", $7)` 剥离问号后的查询参数。
+
+用 `awk` 挑出所有状态码 `>= 400` 的行，再顺着管道交给 `sort | uniq -c | sort -rn` 排序（来源：[GNU Awk 手册](#source-gnu-gawk)）；再演示用 `sed -E` 替换 IP 末段（来源：[GNU sed 手册](#source-gnu-sed)）：
+
+<TerminalSession
+  environment="KALI 终端"
+  title="awk 统计异常来源排行 + sed 演示替换 IP 末段"
+  steps={[
+    {
+      cmd: `awk '$9 >= 400 { print $1, $9 }' access.log | sort | uniq -c | sort -rn`,
+      out: '      5 203.0.113.77 401\n      5 203.0.113.44 404\n      2 198.51.100.25 403\n      1 198.51.100.31 500',
+      note: 'uniq -c 只合并相邻重复行，所以前面必须先 sort，最后再 sort -rn 按次数倒序。一眼就能看出高频 401 与 404 线索。',
+    },
+    {
+      cmd: `head -n 3 access.log | sed -E 's/^([0-9]+\\.[0-9]+\\.[0-9]+)\\.[0-9]+/\\1.xxx/'`,
+      out: '198.51.100.xxx - - [25/Nov/2026:09:00:01 +0000] "GET / HTTP/1.1" 200 1842 "-" "Mozilla/5.0"\n198.51.100.xxx - - [25/Nov/2026:09:00:02 +0000] "GET /assets/app.js HTTP/1.1" 200 14210 "http://lab.local/" "Mozilla/5.0"\n198.51.100.xxx - - [25/Nov/2026:09:01:10 +0000] "POST /api/login HTTP/1.1" 200 268 "http://lab.local/" "Mozilla/5.0"',
+      note: '圆括号把前三段 IP 捕获为 \\1，只替换最后一段。sed 默认只打印到屏幕，不会改动原 access.log。注意：这只是正则替换演示，外发真实生产日志前还必须检查查询串里的 token/手机号、Referer、内网域名与其他敏感字段。',
+    },
+  ]}
+/>
+
+## 三、用 `jq` 精准解析结构化 JSON
+
+现代后端接口、云平台告警与审计系统普遍吐出 JSON。不要用 `grep` 和 `sed` 去硬抠 JSON——哪怕对方多加一个换行或改了字段顺序，正则就会碎掉。交给专门的 JSON 处理器 **`jq`**（来源：[jq 手册](#source-jq-manual)）：
+
+<TerminalSession
+  environment="KALI 终端"
+  title="用 jq 筛选异常事件并按状态码分组计数"
+  steps={[
+    {
+      cmd: `jq -r '.events[] | select(.status >= 400) | "\\(.id)\\t\\(.status)\\t\\(.ip)\\t\\(.path)"' audit-events.json`,
+      out: 'evt-02\t404\t203.0.113.44\t/.env\nevt-03\t404\t203.0.113.44\t/.git/config\nevt-04\t401\t203.0.113.77\t/api/login\nevt-05\t403\t198.51.100.25\t/api/profile?uid=102\nevt-06\t500\t198.51.100.31\t/api/checkout',
+      note: '.events[] 展开数组，select() 按数值筛选，-r 去掉外层 JSON 双引号，直接产出清爽的制表符表格。',
+    },
+    {
+      cmd: `jq '.events | group_by(.status) | map({status: .[0].status, count: length})' audit-events.json`,
+      out: '[\n  {\n    "status": 200,\n    "count": 1\n  },\n  {\n    "status": 401,\n    "count": 1\n  },\n  {\n    "status": 403,\n    "count": 1\n  },\n  {\n    "status": 404,\n    "count": 2\n  },\n  {\n    "status": 500,\n    "count": 1\n  }\n]',
+      note: 'group_by(.status) 按状态码分桶，map(...) 把每一桶压成 {status, count} 摘要对象。',
+    },
+  ]}
+/>
+
+<Callout type="note" title="把 curl 和 jq 接成日常习惯">
+以后调任何 JSON 接口，直接在末尾接一条管道 `| jq .`（美化缩进）或 `| jq -r .access_token`（取单个字段，就像第 39 课登录拿 JWT 那样），比肉眼在压缩成一行的 JSON 里找字段省十倍力气。
+</Callout>
+
+## 常见报错与排错
+
+<DataTable
+  caption="正则、awk、sed 与 jq 最常见的四个坑"
+  headers={["现象或报错", "原因", "修正办法"]}
+  rows={[
+    ["grep '(401|403)' 什么都搜不出来", "没加 -E 时默认用基础正则（BRE），括号和竖线被当作普通字符", "写正则搜索时统一养成用 grep -E 的习惯"],
+    ["在双引号里写 awk \"$9 >= 400\" 结果全乱了", "shell 先把双引号里的 $9 展开成了空的命令行参数", "awk、sed 和 jq 表达式一律优先用单引号 '...' 包裹"],
+    ["按 $7 分组统计时同一接口被拆成好多行", "$7 含有查询串（如 ?uid=102 与 ?uid=103），或自定义日志格式列号与 Combined 不同", "先核对日志格式，再在 awk 里用 sub(/\\?.*/, \"\", $7) 剥离查询串后统计"],
+    ["jq 报错 parse error: Invalid numeric literal", "输入不是合法 JSON（例如 curl 报错页面返回了 HTML 404/502）", "先去掉 | jq 用 curl -i 看真实状态码和响应头"],
+  ]}
+  columnRatios={[1.7, 1.9, 2.2]}
+/>
+
+<CheatSheet
+  title="本课常用命令速查"
+  items={[
+    { term: "grep -E '\" (401|403|500) ' access.log", description: '用扩展正则筛选多种异常状态码线索。' },
+    { term: "awk '$9 >= 400 { print $1, $9 }' access.log | sort | uniq -c | sort -rn", description: '按列筛选错误日志并统计来源与状态码频次。' },
+    { term: "sed -E 's/旧模式/新内容/g' file", description: '按扩展正则批量替换文本（默认不改原文件；外发日志须检查全部敏感字段）。' },
+    { term: "jq -r '.events[] | select(.status >= 400) | .path' file.json", description: '按条件过滤 JSON 数组并输出原始字符串。' },
+    { term: "jq '.events | group_by(.status) | map({status: .[0].status, count: length})'", description: '对 JSON 数组按字段分组汇总计数。' },
+  ]}
+/>
+
+<KeyTakeaway>
+纯文本筛行用 grep -E，列结构聚合用 awk 配 sort/uniq（按接口分组记得剥离 $7 里的查询串），行内替换用 sed -E（真实外发前须全面排查敏感字段），嵌套 JSON 一律交给 jq；在 shell 里写表达式优先用单引号防变量误展开，状态码高发是排查线索而非最终定性。下一课我们下潜一层，看看程序跑在 Linux 操作系统里时的虚拟内存、系统调用与服务配置。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+<StepList title="课后作业" steps={homework} />
+
+<SourceList sources={manifest.sources} />

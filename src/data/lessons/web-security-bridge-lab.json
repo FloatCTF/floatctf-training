@@ -1,0 +1,317 @@
+{
+  "lessonPlan": {
+    "audience": "完成新生基础学期与现代 Web 前哨课的新生，通过一次 90 分钟的纯本地五关白盒体检与跨方向体验，检验综合实操能力并自然过渡到 Web 安全专题",
+    "durationMinutes": 90,
+    "primaryMode": "project",
+    "supportingModes": [
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "用五关清单、四份本地实跑材料与最终验收对照表，把日志分析、JWT 解码、参数边界核对、Python 自动化翻页与 x86-64 ELF 汇编读图串成一次完整的本地闯关体验",
+    "learningObjectives": [
+      "综合运用 awk、sort、uniq 从固定访问日志样本中快速识别 403 越权探测来源 IP 与目标路径",
+      "用 curl 与 jq 获取接口返回的 JWT，解码 Payload 并用演示密钥验证 HS256 算法与签名完整性",
+      "直接向本地订单演示接口发送篡改价格，核对服务端返回的目录价与 mismatch 边界信号",
+      "使用显式绕过外部代理的 Python 标准库脚本自动遍历 3 页固定审计样本，汇总全部 flagged 异常记录",
+      "在 x86-64 环境编译并用 objdump -d -M intel 读懂 20 行 C 校验程序的位移与加法指令，不靠猜测得出正确输入"
+    ],
+    "prerequisites": [
+      "python-network-scripting",
+      "https-tls-and-proxy",
+      "modern-web-architecture",
+      "regex-and-log-triage",
+      "elf-and-assembly-reading",
+      "guestbook-capstone"
+    ],
+    "safetyScope": "localhost",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-bridge-synthesis",
+      "kind": "mechanism",
+      "title": "这五关分别对应下学期安全学习的哪一项底层能力",
+      "question": "复盘本课五关（日志统计、JWT 拆解、订单参数边界、Python 自动翻页、ELF 反汇编读票号），说明每一关分别对应下学期 Web 安全或跨方向分析中的哪一类常见任务？",
+      "answer": "关卡 1 对应应急响应与攻击痕迹排查（从海量日志筛出异常源）；关卡 2 对应现代 API 鉴权审计（识别凭据结构、分清编码与签名）；关卡 3 对应 Web 参数篡改与信任边界测试（确认服务端是否以目录价而非客户端参数为准）；关卡 4 对应自动化脚本编写（用代码代替手工批量翻页提取与验证）；关卡 5 对应跨方向二进制基本素养（拿到简单 ELF 能独立看懂逻辑而不抓瞎）。",
+      "sourceIds": [
+        "owasp-input-validation",
+        "rfc7519",
+        "python-urllib",
+        "binutils-objdump"
+      ]
+    },
+    {
+      "id": "check-predict-five-checkpoints",
+      "kind": "prediction",
+      "title": "核对五关的预期输出信号",
+      "question": "按本课步骤跑完五关后，请说出五个关键结果：一、station_access.log 里触发 403 次数最多的 IP 和路径；二、/api/demo-token 解码出的 checkpoint 字段；三、POST /api/order 传入 item=handbook&price=1 返回的 checkpoint 与 server_price；四、verify_progress.py 遍历固定样本后汇总出的 flagged_count；五、check_ticket 对应的正确整数。",
+      "answer": "一、203.0.113.88 访问 /api/admin/export 共 3 次；二、jwt-ok；三、checkpoint 为 boundary-ok、server_price 为 20；四、flagged_count 为 2（第 2 页 id=3 的 403 与第 3 页 id=5 的价格不匹配）；五、500 * 4 + 17 = 2017（输出 CHECKPOINT: elf-ok）。",
+      "sourceIds": [
+        "gnu-gawk",
+        "rfc7519",
+        "jq-manual",
+        "python-urllib",
+        "binutils-objdump"
+      ]
+    },
+    {
+      "id": "check-run-all-five-stages",
+      "kind": "practice",
+      "title": "独立通关五关并写一份极简复盘笔记",
+      "question": "在 Kali 新建 ~/lab/bridge 目录并放入本课四份材料（另复用第 39 课的 decode_jwt.py），自己依次完成全部五关，并按「发现现象 → 验证命令 → 结论与防护」三行格式，为关卡 1 到关卡 5 各写一条简短复盘记录。",
+      "answer": "全部五关跑通后应同时集齐五项本地验证证据：awk 输出 3 203.0.113.88 /api/admin/export；JWT 验签为 True 且 checkpoint=jwt-ok；POST /api/order 返回 mismatch=true 与 checkpoint=boundary-ok；verify_progress.py 输出 flagged_count=2；./check_ticket 2017 输出 CHECKPOINT: elf-ok。自查标准：每关都能脱离页面独立复现并解释背后原理。",
+      "sourceIds": [
+        "gnu-gawk",
+        "owasp-input-validation",
+        "python-urllib",
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "启动练习靶站并完成关卡 1–2（日志与 JWT）",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "找出 403 高频来源 IP，并解码验签拿到 jwt-ok。"
+    },
+    {
+      "kind": "动手",
+      "title": "完成关卡 3–4（参数边界核对与 Python 自动翻页）",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "拿到 boundary-ok 并用无代理脚本自动汇总 3 页固定审计样本里的 2 条异常。"
+    },
+    {
+      "kind": "进阶",
+      "title": "完成关卡 5（ELF 初探）并衔接到 Web 安全专题",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "对着 expected_ticket 的反汇编算出 2017 拿到 elf-ok，明确下一阶段 Web 安全学习路线。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "GNU gawk manual field filtering",
+      "RFC 7519 JWT structure verification",
+      "OWASP Input Validation Cheat Sheet server-side enforcement",
+      "Python urllib.request ProxyHandler bypass proxy official docs",
+      "jq manual raw extraction",
+      "GNU Binutils objdump -d -M intel"
+    ],
+    "notes": "本课全部四份材料（bridge_station.py、station_access.log、check_ticket.c、verify_progress.py）及五关全部命令均于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（x86_64，Python 3.14.10、gcc 16.2.0、GNU objdump 2.47.50、jq 1.8.2、gawk）完整跑通并验证 verify_progress.py 在 HTTP_PROXY 存在时仍稳定直连 127.0.0.1。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：Python 3.14.10、curl 8.23.0、jq 1.8.2、gawk、gcc 16.2.0、objdump 2.47.50",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），bridge_station.py 仅监听 127.0.0.1:8099",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "编译 check_ticket.c 时如使用 ARM64 架构、不同版本 gcc 或开启 -O2 优化，反汇编指令可能不同；本关以 x86-64 Linux + gcc -Wall -O0 为准。日志里的测试 IP 均来自 RFC 5737 保留网段。"
+  },
+  "sources": [
+    {
+      "id": "gnu-gawk",
+      "kind": "official-doc",
+      "title": "GNU Awk User's Guide",
+      "publisher": "GNU Project",
+      "url": "https://www.gnu.org/software/gawk/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "支持关卡 1 按列筛选 403 访问日志。",
+      "supports": [
+        "cmd-stage1-log"
+      ]
+    },
+    {
+      "id": "rfc7519",
+      "kind": "specification",
+      "title": "RFC 7519: JSON Web Token (JWT)",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc7519",
+      "publishedAt": "2015-05-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "支持关卡 2 JWT 三段拆解与签名校验。",
+      "supports": [
+        "claim-bridge-jwt",
+        "cmd-stage2-jwt"
+      ]
+    },
+    {
+      "id": "owasp-input-validation",
+      "kind": "official-doc",
+      "title": "OWASP Input Validation Cheat Sheet",
+      "publisher": "OWASP",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "支持关卡 3 服务端目录价核对与客户端不可信边界。",
+      "supports": [
+        "claim-bridge-boundary",
+        "cmd-stage3-order"
+      ]
+    },
+    {
+      "id": "python-urllib",
+      "kind": "official-doc",
+      "title": "Python Documentation: urllib.request (ProxyHandler)",
+      "publisher": "Python Software Foundation",
+      "url": "https://docs.python.org/3/library/urllib.request.html#urllib.request.ProxyHandler",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "支持关卡 4 使用 build_opener(ProxyHandler({})) 显式绕过环境代理并自动化遍历分页 JSON API。",
+      "supports": [
+        "claim-bridge-automation",
+        "cmd-stage4-audit"
+      ]
+    },
+    {
+      "id": "jq-manual",
+      "kind": "official-doc",
+      "title": "jq Manual",
+      "publisher": "jq",
+      "url": "https://jqlang.org/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "支持关卡 2 从 JSON 响应直接提取 token 字段。",
+      "supports": [
+        "cmd-stage2-jwt"
+      ]
+    },
+    {
+      "id": "binutils-objdump",
+      "kind": "official-doc",
+      "title": "GNU Binary Utilities: objdump",
+      "publisher": "GNU Project",
+      "url": "https://sourceware.org/binutils/docs/binutils/objdump.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "支持关卡 5 反汇编 expected_ticket 还原计算公式。",
+      "supports": [
+        "claim-bridge-elf",
+        "cmd-stage5-elf"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-bridge-jwt",
+      "text": "JWT 载荷无需密钥即可解码查看，但必须核对 alg 与第三段签名才能确认令牌未经篡改且确实由持密方签发。",
+      "sourceIds": [
+        "rfc7519"
+      ]
+    },
+    {
+      "id": "claim-bridge-boundary",
+      "text": "当客户端上报的 price 与服务端目录价不一致时，安全实现必须以服务端目录价为准并识别异常输入（本关接口返回目录价与 mismatch 信号作为演示）。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    },
+    {
+      "id": "claim-bridge-automation",
+      "text": "通过 Python urllib.request 配合空 ProxyHandler({})，可以在不受外部代理环境变量干扰的前提下稳定遍历本机分页 JSON 接口并汇总异常记录。",
+      "sourceIds": [
+        "python-urllib"
+      ]
+    },
+    {
+      "id": "claim-bridge-elf",
+      "text": "通过 objdump -d -M intel 查看 x86-64 反汇编指令，可以在不阅读 C 源码的情况下还原位移（shl）与加法（add）等校验逻辑。",
+      "sourceIds": [
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-stage1-log",
+      "command": "awk '$9 == 403 { print $1, $7 }' station_access.log | sort | uniq -c",
+      "expectedResult": "输出 3 203.0.113.88 /api/admin/export。",
+      "sourceIds": [
+        "gnu-gawk"
+      ]
+    },
+    {
+      "id": "cmd-stage2-jwt",
+      "command": "TOK=$(curl --noproxy '*' -sS http://127.0.0.1:8099/api/demo-token | jq -r .token) && python3 decode_jwt.py \"$TOK\" 'bridge-lab-demo-key-32-bytes-min'",
+      "expectedResult": "解码得到 checkpoint: jwt-ok，且 SIGNATURE VALID: True。",
+      "sourceIds": [
+        "rfc7519",
+        "jq-manual"
+      ]
+    },
+    {
+      "id": "cmd-stage3-order",
+      "command": "curl --noproxy '*' -sS -d 'item=handbook&price=1' http://127.0.0.1:8099/api/order",
+      "expectedResult": "返回 server_price: 20、mismatch: true 与 checkpoint: boundary-ok。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    },
+    {
+      "id": "cmd-stage4-audit",
+      "command": "python3 verify_progress.py",
+      "expectedResult": "使用无代理 opener 自动遍历 3 页 /api/audit 固定样本并输出 flagged_count: 2 与两条 flagged 记录明细。",
+      "sourceIds": [
+        "python-urllib"
+      ]
+    },
+    {
+      "id": "cmd-stage5-elf",
+      "command": "gcc -Wall -O0 check_ticket.c -o check_ticket && objdump -d -M intel --disassemble=expected_ticket check_ticket && ./check_ticket 2017",
+      "expectedResult": "反汇编显示 shl eax, 0x2 与 add eax, 0x11；输入 500*4+17=2017 输出 CHECKPOINT: elf-ok。",
+      "sourceIds": [
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-station-log",
+      "path": "public/labs/web-security-bridge-lab/station_access.log",
+      "command": "awk '$9 == 403 { print $1, $7 }' public/labs/web-security-bridge-lab/station_access.log | sort | uniq -c",
+      "expectedResult": "输出 3 203.0.113.88 /api/admin/export。"
+    },
+    {
+      "id": "example-bridge-station",
+      "path": "public/labs/web-security-bridge-lab/bridge_station.py",
+      "command": "python3 bridge_station.py",
+      "expectedResult": "在 127.0.0.1:8099 启动综合前哨练习站。"
+    },
+    {
+      "id": "example-verify-progress",
+      "path": "public/labs/web-security-bridge-lab/verify_progress.py",
+      "command": "python3 verify_progress.py",
+      "expectedResult": "自动遍历 3 页 /api/audit 固定样本并输出 flagged_count: 2 与两条异常明细。"
+    },
+    {
+      "id": "example-check-ticket",
+      "path": "public/labs/web-security-bridge-lab/check_ticket.c",
+      "command": "gcc -Wall -O0 public/labs/web-security-bridge-lab/check_ticket.c -o /tmp/check_ticket && /tmp/check_ticket 2017",
+      "expectedResult": "输出 CHECKPOINT: elf-ok。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "static-tables",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

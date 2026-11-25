@@ -1,0 +1,27 @@
+[
+  {
+    "label": "连接本地映射端口",
+    "detail": "本机 curl 访问 http://127.0.0.1:19090/status，以为在和本地服务对话。",
+    "state": "normal"
+  },
+  {
+    "label": "SSH 客户端加密封装",
+    "detail": "本地 ssh -L 进程截获 19090 端口上的字节流，放进已建立的 SSH 加密隧道。",
+    "state": "normal"
+  },
+  {
+    "label": "穿过受控 SSH 通道",
+    "detail": "网络上只暴露一个经密钥认证的 SSH 端口（例如 22 或 2222），内网管理端口无需对公网开放。",
+    "state": "normal"
+  },
+  {
+    "label": "远端 sshd 解包转发",
+    "detail": "远端 sshd 收到隧道数据后，以远端本机身份连向 127.0.0.1:9090。",
+    "state": "danger"
+  },
+  {
+    "label": "内网服务响应回传",
+    "detail": "内网接口把 JSON 响应原路经 SSH 隧道加密送回本地客户端，全程不暴露明文。",
+    "state": "success"
+  }
+]

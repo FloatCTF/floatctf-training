@@ -1,0 +1,6 @@
+# 第 45 课：复用第 39 课的 decode_jwt.py，并把本课四份材料放到 ~/lab/bridge；在后台启动 bridge_station.py。
+@labs modern-web-architecture
+pkill -f 'bridge_station.p[y]'; rm -rf ~/lab/bridge; mkdir -p ~/lab/bridge; cp ~/lab/python/bridge_station.py ~/lab/python/station_access.log ~/lab/python/check_ticket.c ~/lab/python/verify_progress.py ~/lab/python/decode_jwt.py ~/lab/bridge/; true
+@workdir /home/kali/lab/bridge
+@each pkill -f 'bridge_station.p[y]'; true
+@each cd ~/lab/bridge && (setsid python3 bridge_station.py >/dev/null 2>&1 &); sleep 0.5

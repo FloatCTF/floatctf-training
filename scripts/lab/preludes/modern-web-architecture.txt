@@ -1,0 +1,3 @@
+# 第 39 课：清理旧的练习目录、独立 Nginx 实例与后端进程，把四个文件放到 ~/lab/modern-web。
+pkill -f 'api_server.p[y]'; [ -f /tmp/modern-web-nginx/nginx.pid ] && nginx -p /tmp/modern-web-nginx -e error.log -c ~/lab/modern-web/nginx-site.conf -s stop 2>/dev/null; rm -rf ~/lab/modern-web /tmp/modern-web-nginx; mkdir -p ~/lab/modern-web; cp ~/lab/python/* ~/lab/modern-web/; true
+@workdir /home/kali/lab/modern-web

@@ -1,0 +1,267 @@
+{
+  "lessonPlan": {
+    "audience": "已经会基本命令行管道的新生，需要掌握从真实 Web 访问日志与 JSON 审计数据里快速筛选、聚合与脱敏的文本处理能力",
+    "durationMinutes": 90,
+    "primaryMode": "tool",
+    "supportingModes": [
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "static",
+    "visualStory": "用表格拆解 Nginx Combined 日志的字段列号、高频正则元字符与四个工具的职责边界，并直接在终端里把 20 行日志与 JSON 审计记录筛成统计摘要",
+    "learningObjectives": [
+      "熟练使用核心扩展正则（ERE）元字符（^、$、[]、+、?、()、|、转义 .）并区分普通字符串与正则匹配",
+      "用 grep -E 从真实 Nginx 访问日志里精准定位 401/403/500 异常请求和常见敏感文件探测",
+      "用 awk 按空白切列并配合 sort | uniq -c | sort -rn 快速统计异常 IP 与状态码频次",
+      "用 sed -E 对日志中的 IP 或敏感片段执行正则替换与脱敏，说清默认只打印到标准输出而不改原文件",
+      "用 jq 过滤嵌套 JSON 数组、按条件抽取字段并按状态码分组汇总"
+    ],
+    "prerequisites": [
+      "shell-permissions-and-pipes",
+      "modern-web-architecture"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-tool-choice",
+      "kind": "mechanism",
+      "title": "同样是找数据，什么时候该用 grep、awk、sed 还是 jq",
+      "question": "手头有两份文件：一份是按行记录的 Nginx access.log，另一份是嵌套结构的 audit-events.json。请说明：一、为什么不推荐用正则硬抠 JSON 里的字段，而应该用 jq？二、如果要在 access.log 里按「第 9 列状态码 >= 400」汇总每个 IP 的次数，为什么 awk 比纯 grep 更稳妥？",
+      "answer": "一、JSON 允许任意换行、缩进、键顺序变化和字符串内转义引号，用正则硬匹配极易漏判或误切；jq 按 JSON 语法解析成结构化树再查询，不受格式变化影响。二、日志里路径、字节数或时间戳里也可能出现 404/500 这样的数字，纯 grep 容易误中其他位置；awk 按列号 $9 直接判断状态码列并取 $1 作为 IP，定位准确且天然支持数值比较。",
+      "sourceIds": [
+        "gnu-grep",
+        "gnu-gawk",
+        "jq-manual"
+      ]
+    },
+    {
+      "id": "check-predict-regex-pitfall",
+      "kind": "prediction",
+      "title": "预测两条正则与一条 jq 命令的输出",
+      "question": "基于本课材料 access.log 和 audit-events.json：一、grep -E '.env' access.log 和 grep -E '\\.env' access.log 在含义上有什么差别？二、执行 awk '$9 >= 400 { print $1, $9 }' access.log | sort | uniq -c | sort -rn 后排在最前面的两行是什么？三、执行 jq '.events | group_by(.status) | map({status: .[0].status, count: length})' audit-events.json 后，status 为 404 的 count 是几？",
+      "answer": "一、未转义的 . 在正则里匹配任意单个字符，所以 .env 会把 xenv、aenv 也匹配出来；加上反斜杠的 \\.env 才只匹配字面点号加 env。二、排最前的两行是 5 203.0.113.77 401 和 5 203.0.113.44 404（各 5 次，前者是连续登录失败，后者是敏感路径探测）。三、count 为 2（evt-02 的 /.env 与 evt-03 的 /.git/config）。",
+      "sourceIds": [
+        "gnu-grep",
+        "gnu-gawk",
+        "jq-manual"
+      ]
+    },
+    {
+      "id": "check-log-triage-practice",
+      "kind": "practice",
+      "title": "写三条单行排查命令",
+      "question": "使用本课的 access.log 和 audit-events.json 完成三项提取：一、从 access.log 里找出全部 403 请求，只打印「IP 和请求路径」（第 1 列与第 7 列）；二、用 sed -E 把 access.log 中所有 IP 的最后一段替换为 .xxx 并输出到新文件 access-redacted.log（不修改原文件）；三、用 jq 从 audit-events.json 找出 latency_ms 大于 30 的事件，以制表符输出 id、latency_ms 和 path。",
+      "answer": "一、awk '$9 == 403 { print $1, $7 }' access.log，输出两行：198.51.100.25 /api/profile?uid=102 与 198.51.100.25 /api/profile?uid=103。二、sed -E 's/^([0-9]+\\.[0-9]+\\.[0-9]+)\\.[0-9]+/\\1.xxx/' access.log > access-redacted.log。三、jq -r '.events[] | select(.latency_ms > 30) | \"\\(.id)\\t\\(.latency_ms)\\t\\(.path)\"' audit-events.json，输出 evt-04（42ms）与 evt-06（312ms）两行。自查标准：原 access.log 未被改动，三条命令均不报错且行数与预期一致。",
+      "sourceIds": [
+        "gnu-gawk",
+        "gnu-sed",
+        "jq-manual"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "高频正则元字符与 grep -E 日志定位",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "用 grep -E 准确筛出 401/403/500 与敏感路径探测，并注意转义点号。"
+    },
+    {
+      "kind": "动手",
+      "title": "awk 按列聚合与 sed 脱敏替换",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "跑通 awk | sort | uniq -c | sort -rn 排行榜和 sed IP 脱敏。"
+    },
+    {
+      "kind": "进阶",
+      "title": "用 jq 精准解析结构化 JSON",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "用 jq 完成条件筛选、TSV 输出与 group_by 分组统计。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "GNU grep manual Extended Regular Expressions ERE official URL",
+      "GNU gawk manual field splitting official URL",
+      "GNU sed manual -E substitute official URL",
+      "jq manual select group_by raw output official URL"
+    ],
+    "notes": "本课两个样本文件（access.log、audit-events.json）及全部 grep -E、awk、sed -E、jq 命令均于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（GNU grep、gawk、GNU sed、jq 1.8.2）真实执行并逐行核对，日志 IP 全部使用 RFC 5737 保留的文档测试网段（198.51.100.0/24、203.0.113.0/24）。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：GNU grep、GNU awk (gawk)、GNU sed、jq 1.8.2",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），用户 kali，标准终端实跑核验",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "macOS 默认自带 BSD sed，若用 -i 原地修改需要写成 sed -i ''，而 Linux/Kali 的 GNU sed 直接用 sed -i；本课统一输出到标准输出或重定向新文件，两边写法完全一致。uniq -c 的前导空格数量随实现略有差异。"
+  },
+  "sources": [
+    {
+      "id": "gnu-grep",
+      "kind": "official-doc",
+      "title": "GNU grep Manual (Regular Expressions & -E)",
+      "publisher": "GNU Project",
+      "url": "https://www.gnu.org/software/grep/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方手册，定义扩展正则表达式（ERE）与 -E 选项行为。",
+      "supports": [
+        "claim-grep-ere",
+        "cmd-grep-logs"
+      ]
+    },
+    {
+      "id": "gnu-gawk",
+      "kind": "official-doc",
+      "title": "GNU Awk User's Guide",
+      "publisher": "GNU Project",
+      "url": "https://www.gnu.org/software/gawk/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方手册，定义记录按空白切列（$1..$N）与模式-动作规则。",
+      "supports": [
+        "claim-awk-fields",
+        "cmd-awk-top"
+      ]
+    },
+    {
+      "id": "gnu-sed",
+      "kind": "official-doc",
+      "title": "GNU sed Manual",
+      "publisher": "GNU Project",
+      "url": "https://www.gnu.org/software/sed/manual/sed.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方手册，定义流编辑器 s/// 替换、-E 扩展正则与默认不覆写原文件行为。",
+      "supports": [
+        "claim-sed-stream",
+        "cmd-sed-redact"
+      ]
+    },
+    {
+      "id": "jq-manual",
+      "kind": "official-doc",
+      "title": "jq Manual",
+      "publisher": "jq",
+      "url": "https://jqlang.org/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方手册，定义过滤器管道、select()、group_by() 与 -r 原始字符串输出。",
+      "supports": [
+        "claim-jq-structured",
+        "cmd-jq-filter",
+        "cmd-jq-group"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-grep-ere",
+      "text": "grep -E 启用扩展正则表达式（ERE），直接支持 | 分支、() 分组、+ 一次或多次与 ? 零次或一次；普通点号 . 匹配任意单字符，匹配字面点号必须转义为 \\.。",
+      "sourceIds": [
+        "gnu-grep"
+      ]
+    },
+    {
+      "id": "claim-awk-fields",
+      "text": "awk 逐行读入文本并默认按连续空白切分成 $1、$2… 字段，适合对标准 Combined 日志这类列结构稳定的文本做条件过滤与列提取（注意 $7 含查询串，按接口分组需先剥离），再交由 sort | uniq -c 统计频次。",
+      "sourceIds": [
+        "gnu-gawk"
+      ]
+    },
+    {
+      "id": "claim-sed-stream",
+      "text": "sed 是面向行的流编辑器，s/旧/新/ 配合 -E 和分组反向引用 \\1 可做批量替换演示；默认只输出到标准输出不改原文件，外发真实日志前仍需检查查询串、令牌、Referer 等其余敏感字段。",
+      "sourceIds": [
+        "gnu-sed"
+      ]
+    },
+    {
+      "id": "claim-jq-structured",
+      "text": "处理 JSON 响应和结构化审计事件应使用 jq 而非正则表达式：jq 按语法树解析 JSON，通过管道组合数组展开（.[]）、条件筛选（select）与分组（group_by）稳定提取结果。",
+      "sourceIds": [
+        "jq-manual"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-grep-logs",
+      "command": "grep -E '\" (401|403|500) ' access.log && grep -E '(\\.env|\\.git|\\.sql|wp-login)' access.log",
+      "expectedResult": "分别精准命中的 8 条异常状态日志（5 条 401、2 条 403、1 条 500）和 4 条敏感路径探测日志。",
+      "sourceIds": [
+        "gnu-grep"
+      ]
+    },
+    {
+      "id": "cmd-awk-top",
+      "command": "awk '$9 >= 400 { print $1, $9 }' access.log | sort | uniq -c | sort -rn",
+      "expectedResult": "按次数从高到低输出：203.0.113.77 的 401（5 次）、203.0.113.44 的 404（5 次）、198.51.100.25 的 403（2 次）、198.51.100.31 的 500（1 次）。",
+      "sourceIds": [
+        "gnu-gawk"
+      ]
+    },
+    {
+      "id": "cmd-sed-redact",
+      "command": "head -n 3 access.log | sed -E 's/^([0-9]+\\.[0-9]+\\.[0-9]+)\\.[0-9]+/\\1.xxx/'",
+      "expectedResult": "把每行开头的 IPv4 地址末段脱敏为 .xxx，其余字段原样保留。",
+      "sourceIds": [
+        "gnu-sed"
+      ]
+    },
+    {
+      "id": "cmd-jq-filter",
+      "command": "jq -r '.events[] | select(.status >= 400) | \"\\(.id)\\t\\(.status)\\t\\(.ip)\\t\\(.path)\"' audit-events.json",
+      "expectedResult": "以无引号制表符格式输出 5 条异常事件（evt-02 到 evt-06）。",
+      "sourceIds": [
+        "jq-manual"
+      ]
+    },
+    {
+      "id": "cmd-jq-group",
+      "command": "jq '.events | group_by(.status) | map({status: .[0].status, count: length})' audit-events.json",
+      "expectedResult": "输出按状态码汇总的 JSON 数组：200(1)、401(1)、403(1)、404(2)、500(1)。",
+      "sourceIds": [
+        "jq-manual"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-access-log",
+      "path": "public/labs/regex-and-log-triage/access.log",
+      "command": "awk '$9 >= 400 { print $1, $9 }' public/labs/regex-and-log-triage/access.log | sort | uniq -c | sort -rn",
+      "expectedResult": "输出四个异常来源 IP 与状态码的频次排行。"
+    },
+    {
+      "id": "example-audit-json",
+      "path": "public/labs/regex-and-log-triage/audit-events.json",
+      "command": "jq '.events | group_by(.status) | map({status: .[0].status, count: length})' public/labs/regex-and-log-triage/audit-events.json",
+      "expectedResult": "按 HTTP 状态码统计事件条数。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "static-tables",
+    "primaryAnimations": 0,
+    "supportingInteractions": 0,
+    "scrollReveals": 0
+  }
+}

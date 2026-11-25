@@ -7,6 +7,8 @@ dist/
 !public/labs/shell-permissions-and-pipes/access.log
 !public/labs/python-files-and-exceptions/access.log
 !public/labs/c-files-and-projects/access.log
+!public/labs/regex-and-log-triage/access.log
+!public/labs/web-security-bridge-lab/station_access.log
 .env
 .env.*
 !.env.example

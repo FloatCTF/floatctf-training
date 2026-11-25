@@ -1,0 +1,254 @@
+{
+  "lessonPlan": {
+    "audience": "已经学过 C 函数栈帧与 Linux 运行时基础的新生，目标是能看懂 ELF 文件结构与最基础的 x86-64 汇编，为偶尔接触逆向/二进制题目打底而不深陷冷门指令",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "code",
+      "tool",
+      "lab"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "用五步流程图串联磁盘上的 ELF 文件如何被内核映射进内存、加载 libc 并由 CPU 按 System V AMD64 约定传参执行，再直接对照 C 源码和 objdump 产出的真实 Intel 语法反汇编",
+    "learningObjectives": [
+      "用 file 与 readelf -h/-S 识别 64 位小端序 ELF 可执行文件，说出 .text、.rodata、.data、.bss 和 .plt 各自存放什么",
+      "用 strings 在可执行文件里快速检索明文提示字符串，并理解它为什么只能找静态字符而不能替代逻辑阅读",
+      "记住 x86-64 Linux（System V AMD64 ABI）前几个参数寄存器（rdi/rsi/rdx）与返回值寄存器（rax/eax）以及 rip/rsp/rbp 的职责",
+      "使用 objdump -d -M intel 反汇编一个极简 C 程序，读懂 mov、add、cmp、jne、call、ret 指令并从机器指令推算出校验目标值"
+    ],
+    "prerequisites": [
+      "c-functions-and-stack",
+      "linux-runtime-and-services"
+    ],
+    "safetyScope": "not-applicable",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-abi-registers",
+      "kind": "mechanism",
+      "title": "在 x86-64 Linux 反汇编里，怎么一眼认出传给函数的两个整数",
+      "question": "在 check_pin 的反汇编里出现三条连续指令：mov esi, 0xe2；mov edi, 0x578；call compute_code。请结合 System V AMD64 调用约定说明：传给 compute_code 的第一个和第二个参数分别是什么（换算成十进制）？函数返回后的结果放在哪个寄存器里？",
+      "answer": "按照 System V AMD64 调用约定，前两个整型参数依次通过 rdi（低 32 位为 edi）和 rsi（低 32 位为 esi）传入，整型返回值放在 rax（低 32 位为 eax）。因此第一个参数是 0x578 = 5×256 + 7×16 + 8 = 1400，第二个参数是 0xe2 = 14×16 + 2 = 226；compute_code 返回后结果存在 eax 里。",
+      "sourceIds": [
+        "sysv-amd64-abi",
+        "binutils-objdump"
+      ]
+    },
+    {
+      "id": "check-predict-disasm-math",
+      "kind": "prediction",
+      "title": "不看 C 源码，直接从反汇编算出校验结果",
+      "question": "假设你在 objdump -d -M intel 里看到一段函数的核心指令是：mov eax, DWORD PTR [rbp-0x4]（刚把第一个参数 edi 存进去）；shl eax, 0x2；add eax, 0x11；ret。如果调用方把 edi 设为 500，函数返回的 eax 是多少（十进制）？为什么编译器用 shl 0x2 而不是乘法指令？",
+      "answer": "shl eax, 0x2 表示把 eax 二进制左移 2 位，等价于乘以 4；0x11 是十进制 17。因此返回值是 500 × 4 + 17 = 2017。编译器把乘以 2 的幂次自动优化成位移指令，因为位移在硬件上更简单高效。",
+      "sourceIds": [
+        "binutils-objdump",
+        "sysv-amd64-abi"
+      ]
+    },
+    {
+      "id": "check-elf-read-practice",
+      "kind": "practice",
+      "title": "对 check_pin 走完静态侦察四连招",
+      "question": "下载并编译本课的 check_pin.c（gcc -Wall -O0 check_pin.c -o check_pin），按顺序执行：一、file check_pin 和 readelf -h check_pin；二、strings check_pin | grep -E 'PIN|Usage:'；三、objdump -d -M intel --disassemble=compute_code check_pin 与 --disassemble=check_pin，指出哪三条指令实现了 a * 3，并用算出的数字验证 ./check_pin。",
+      "answer": "一、file 显示 ELF 64-bit LSB pie executable, x86-64, dynamically linked；readelf -h 显示 ELF64、little endian、X86-64。二、strings 找到 Usage、PIN OK 与 PIN DENIED 三句只读字符串（存放在 .rodata）。三、compute_code 里 mov eax, edx / add eax, eax（变成 2a）/ add edx, eax（变成 3a）三条指令实现了 a * 3；算得 1400 * 3 + 226 = 4426，运行 ./check_pin 4426 输出 PIN OK: welcome to the lab。自查标准：不改代码即可从反汇编还原 4426 并看到退出码 0。",
+      "sourceIds": [
+        "linux-elf-5",
+        "binutils-readelf",
+        "binutils-strings",
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "拆开 ELF：file、readelf 与 strings",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "用 readelf -S 和 strings 把机器码（.text）与只读提示语（.rodata）对上号。"
+    },
+    {
+      "kind": "动手",
+      "title": "x86-64 寄存器与调用约定最小集",
+      "heading": "二、",
+      "minutes": 25,
+      "checkpoint": "记住 rdi/rsi/rdx 传参、rax 返回与 rip/rsp/rbp 三个控制寄存器的角色。"
+    },
+    {
+      "kind": "进阶",
+      "title": "用 objdump 逐行读懂一段真实反汇编",
+      "heading": "三、",
+      "minutes": 35,
+      "checkpoint": "对着 compute_code 与 check_pin 的 Intel 汇编，手工还原出正确输入 4426。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "Linux man-pages elf(5) official URL",
+      "GNU Binutils readelf objdump strings official docs",
+      "System V Application Binary Interface AMD64 calling convention registers rdi rsi rdx"
+    ],
+    "notes": "本课 check_pin.c 编译与 file、readelf -h/-S、strings、objdump -d -M intel 全部输出均于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（x86_64，gcc 16.2.0、GNU Binutils 2.47.50）真实运行并逐字核对；System V AMD64 寄存器约定依据官方 psABI 文档核验。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：gcc 16.2.0、GNU Binutils 2.47.50（readelf / objdump / strings）、file",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），用户 kali",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "不同版本 gcc 在 -O0 下的指令选择、局部栈槽偏移（如 rbp-0x4）和节地址可能略有差异；若运行在 ARM64 虚拟机上，架构与寄存器名会变为 AArch64（x0/x1 传参），本课以最常见的 x86-64 Linux 为准。"
+  },
+  "sources": [
+    {
+      "id": "linux-elf-5",
+      "kind": "official-doc",
+      "title": "Linux man-pages: elf(5)",
+      "publisher": "Linux man-pages project",
+      "url": "https://www.man7.org/linux/man-pages/man5/elf.5.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "定义 ELF 文件头、程序头、节头及 .text/.rodata/.data/.bss/.plt 语义。",
+      "supports": [
+        "claim-elf-sections"
+      ]
+    },
+    {
+      "id": "binutils-readelf",
+      "kind": "official-doc",
+      "title": "GNU Binary Utilities: readelf",
+      "publisher": "GNU Project",
+      "url": "https://sourceware.org/binutils/docs/binutils/readelf.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方文档，定义 -h（ELF 头）与 -S（节头表）选项。",
+      "supports": [
+        "cmd-readelf"
+      ]
+    },
+    {
+      "id": "binutils-strings",
+      "kind": "official-doc",
+      "title": "GNU Binary Utilities: strings",
+      "publisher": "GNU Project",
+      "url": "https://sourceware.org/binutils/docs/binutils/strings.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方文档，说明从二进制文件中提取可打印字符序列的行为。",
+      "supports": [
+        "claim-strings-scope",
+        "cmd-strings"
+      ]
+    },
+    {
+      "id": "binutils-objdump",
+      "kind": "official-doc",
+      "title": "GNU Binary Utilities: objdump",
+      "publisher": "GNU Project",
+      "url": "https://sourceware.org/binutils/docs/binutils/objdump.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方文档，定义 -d（反汇编）、-M intel（Intel 语法）与 --disassemble=<符号>。",
+      "supports": [
+        "claim-objdump-intel",
+        "cmd-objdump"
+      ]
+    },
+    {
+      "id": "sysv-amd64-abi",
+      "kind": "specification",
+      "title": "System V Application Binary Interface: AMD64 Architecture Processor Supplement",
+      "publisher": "x86-64 ABI Working Group",
+      "url": "https://www.uclibc.org/docs/psABI-x86_64.pdf",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "规范文档，定义 x86-64 Linux 下前六个整型/指针参数依次使用 rdi、rsi、rdx、rcx、r8、r9，返回值使用 rax。",
+      "supports": [
+        "claim-sysv-abi"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-elf-sections",
+      "text": "Linux 上的可执行文件遵循 ELF 格式，用不同节区分用途：.text 存机器码，.rodata 存只读常量与字符串，.data 存已初始化全局变量，.bss 预留未初始化全局变量，.plt/.got.plt 辅助动态链接调用。",
+      "sourceIds": [
+        "linux-elf-5"
+      ]
+    },
+    {
+      "id": "claim-strings-scope",
+      "text": "strings 只是线性扫描二进制里的连续可打印字节，能帮你快速定位提示语和报错文案，但看不到运行时计算出的数值与分支逻辑。",
+      "sourceIds": [
+        "binutils-strings"
+      ]
+    },
+    {
+      "id": "claim-sysv-abi",
+      "text": "在 64 位 Linux（System V AMD64 ABI）下，函数调用的前六个整型/指针参数依次放入 rdi、rsi、rdx、rcx、r8、r9 寄存器，整型返回值放在 rax（32 位为 eax）。",
+      "sourceIds": [
+        "sysv-amd64-abi"
+      ]
+    },
+    {
+      "id": "claim-objdump-intel",
+      "text": "objdump -d -M intel 以 Intel 语法（目标操作数在左、源操作数在右）反汇编机器码，结合 --disassemble=<函数名> 可以只看关心的单个函数。",
+      "sourceIds": [
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-readelf",
+      "command": "file check_pin && readelf -h check_pin | grep -E 'Class:|Data:|Type:|Machine:|Entry point' && readelf -S check_pin | grep -E '\\.(text|rodata|data|bss|plt) '",
+      "expectedResult": "确认为 ELF64 小端序 x86-64 PIE 可执行文件，并列出 .plt、.text、.rodata、.got.plt、.data、.bss 六个核心节。",
+      "sourceIds": [
+        "binutils-readelf"
+      ]
+    },
+    {
+      "id": "cmd-strings",
+      "command": "strings check_pin | grep -E 'PIN|Usage:'",
+      "expectedResult": "提取出 Usage: ./check_pin <number>、PIN OK: welcome to the lab 与 PIN DENIED 三行只读字符串。",
+      "sourceIds": [
+        "binutils-strings"
+      ]
+    },
+    {
+      "id": "cmd-objdump",
+      "command": "objdump -d -M intel --disassemble=compute_code check_pin && objdump -d -M intel --disassemble=check_pin check_pin",
+      "expectedResult": "分别展示 compute_code（把 edi 乘 3 加 esi 返回 eax）与 check_pin（传参 0x578 和 0xe2，将返回值与用户输入 cmp/jne 比较）的完整汇编。",
+      "sourceIds": [
+        "binutils-objdump"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-check-pin",
+      "path": "public/labs/elf-and-assembly-reading/check_pin.c",
+      "command": "gcc -Wall -O0 public/labs/elf-and-assembly-reading/check_pin.c -o /tmp/check_pin && /tmp/check_pin 4426",
+      "expectedResult": "输出 PIN OK: welcome to the lab 并返回退出码 0。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "flow-simulator",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}
