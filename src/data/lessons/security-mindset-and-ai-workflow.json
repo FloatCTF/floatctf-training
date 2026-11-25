@@ -1,0 +1,237 @@
+{
+  "lessonPlan": {
+    "audience": "刚打完计算机基础、准备进入 Web 安全与真实开源项目协作的新生，需要建立信任边界思维、法律与授权红线以及 AI 时代的高效读码和验证方法",
+    "durationMinutes": 90,
+    "primaryMode": "concept",
+    "supportingModes": [
+      "tool",
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "用五步闭环流程图呈现「看入口 → 标外部输入 → 找信任边界 → 用 AI 提速解释 → 用终端实证结论」的现代读码工作流，并在陌生小项目上实际跑通三组摸底命令",
+    "learningObjectives": [
+      "用「信任边界」视角把浏览器、网络、反代、后端、数据库与 AI 上下文串成一张统一的安全模型",
+      "准确说出《网络安全法》禁止的危害网络安全行为，并在学习与实践中严守「仅测试本地环境、公开靶场或明确授权范围」的纪律",
+      "接手一个陌生小项目时，用 find 和 grep -rnE 在几分钟内定位启动入口、环境变量、权限判断与外部输入点",
+      "在日常学习与读码中正确使用 AI：提供精确上下文、绝不粘贴真实密钥与 .env，并把 AI 输出视为待终端验证的假设"
+    ],
+    "prerequisites": [
+      "git-branches-and-collaboration",
+      "java-web-project-reading",
+      "modern-web-architecture"
+    ],
+    "safetyScope": "authorized-lab",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-trust-boundaries",
+      "kind": "mechanism",
+      "title": "找出一个陌生接口的信任边界与敏感操作",
+      "question": "在 mini_notes_app.py 的 /api/notes 接口里，外部请求可以传入查询参数 ?all=1 和请求头 X-Admin-Token。请说明：如果启动程序时管理员忘了设置环境变量 NOTES_ADMIN_TOKEN（导致它为空字符串），而代码把判断错写成 if token != ADMIN_TOKEN:（漏掉了 not ADMIN_TOKEN），会发生什么？这说明了什么设计原则？",
+      "answer": "漏掉 not ADMIN_TOKEN 检查后，当环境变量未配置导致 ADMIN_TOKEN 为空字符串时，不传 X-Admin-Token 请求头的访客其 token 也是空字符串，空串等于空串会直接绕过管理员校验、拿到所有私有笔记。这体现了安全设计里的「默认拒绝（Fail-Closed）」原则：缺少关键配置或鉴权失败时必须默认拒绝访问，而不是放行。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    },
+    {
+      "id": "check-predict-ai-risks",
+      "kind": "prediction",
+      "title": "判断三种使用 AI 时的典型风险",
+      "question": "判断下面三种做法各自存在什么问题，并给出正确做法：一、为了省事，把整个项目的 .env（含数据库密码和 JWT 密钥）直接复制进外部在线 AI 聊天窗口让它帮查报错；二、AI 回答「这个开源框架的某参数默认做了过滤，绝对安全」，于是跳过查看源码直接写进审计报告；三、用 AI 生成了一段自动化扫描脚本，直接对着学校教务网跑一遍看看有没有洞。",
+      "answer": "一、属于敏感信息外泄：密钥与真实生产配置不应发往外部模型服务，提问前应把密钥替换成占位符，只贴脱敏后的配置结构与报错片段。二、属于过度依赖与未核验幻觉：模型会受训练时效和上下文缺失影响而编造版本行为，任何安全结论必须回源码与实跑验证。三、违反课程授权纪律且存在干扰系统正常功能、非法侵入网络等法律风险；所有验证都必须严格限定在本机环境、公开 CTF 靶场或明确授权的测试范围内。",
+      "sourceIds": [
+        "owasp-llm-top10",
+        "prc-cybersecurity-law"
+      ]
+    },
+    {
+      "id": "check-triage-workflow",
+      "kind": "practice",
+      "title": "用三组摸底命令在 10 分钟内读透 mini_notes_app.py",
+      "question": "下载本课的 mini_notes_app.py 与 triage_commands.sh 到 ~/lab/triage：一、先不通读全文，直接运行 sh triage_commands.sh，从输出里列出全部环境变量名、权限判断行号与路由路径；二、带 NOTES_ADMIN_TOKEN='lab-admin-99' 启动服务，分别用 curl --noproxy '*' 测 GET /api/notes、不带头的 GET /api/notes?all=1 和带 X-Admin-Token 头的 GET /api/notes?all=1，核对三条返回结果。",
+      "answer": "一、环境变量有两个（第 9、10 行）：NOTES_MAX_TITLE 与 NOTES_ADMIN_TOKEN；管理员权限判断在第 43 行；路由有两个路径三个动作：GET /health、GET /api/notes（带可选参数 all=1 与请求头 X-Admin-Token）和 POST /api/notes（校验 JSON 与 title）。二、三条 curl 分别返回：只含 1 条公开笔记的 JSON、403 Forbidden（admin token required for private notes）、含 2 条笔记（公开加私有）的 JSON。自查标准：你能按输出行号区分环境变量读取（9、10 行）与权限校验（43 行）。",
+      "sourceIds": [
+        "gnu-grep",
+        "owasp-input-validation"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "安全思维与合法合规红线",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能用「信任边界」解释前面学过的多个坑，并准确区分法律禁止行为与课程授权纪律。"
+    },
+    {
+      "kind": "动手",
+      "title": "30 分钟摸清一个陌生代码库",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "跑通 triage_commands.sh，在通读源码前先定位全部配置、权限判断、路由与输入点。"
+    },
+    {
+      "kind": "进阶",
+      "title": "AI 时代的工程读码与防幻觉规则",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "记住使用 AI 辅助读码与排错的三条底线：脱敏提问、追问数据流、终端实证。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "OWASP Input Validation Cheat Sheet trust boundary",
+      "OWASP Top 10 for LLM Applications official URL",
+      "中华人民共和国网络安全法 2025 修订 网信办 官方文本",
+      "GNU grep manual -rnE official URL"
+    ],
+    "notes": "本课 mini_notes_app.py、triage_commands.sh 以及全部 curl 验证命令均于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（Python 3.14.10、GNU grep、curl 8.23.0）真实执行核对，正文输出与代码高亮行号已与最新脚本逐行对齐；合规段落严格区分法条原文禁令与本课程授权规范。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：GNU grep、find、Python 3.14.10、curl 8.23.0",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），用户 kali",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "本课的 grep -rnE 与 find 命令在 Linux 与 macOS 通用；大型仓库扫描时建议再配合 ripgrep（rg）以自动忽略 .git 与 node_modules。"
+  },
+  "sources": [
+    {
+      "id": "prc-cybersecurity-law",
+      "kind": "official-doc",
+      "title": "中华人民共和国网络安全法（国家互联网信息办公室公开文本）",
+      "publisher": "国家互联网信息办公室",
+      "url": "https://www.cac.gov.cn/2025-12/29/c_1768735112911946.htm",
+      "publishedAt": "2025-12-29",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "修订公布文本明确禁止非法侵入他人网络、干扰他人网络正常功能、窃取网络数据等危害网络安全活动，以及提供专门用于此类活动的程序、工具或技术支持。",
+      "supports": [
+        "claim-legal-boundary"
+      ]
+    },
+    {
+      "id": "owasp-input-validation",
+      "kind": "official-doc",
+      "title": "OWASP Input Validation Cheat Sheet",
+      "publisher": "OWASP",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明信任边界、外部输入不可信与服务端独立校验原则。",
+      "supports": [
+        "claim-trust-boundary",
+        "cmd-notes-verify"
+      ]
+    },
+    {
+      "id": "owasp-llm-top10",
+      "kind": "official-doc",
+      "title": "OWASP Top 10 for Large Language Model Applications",
+      "publisher": "OWASP GenAI Security Project",
+      "url": "https://genai.owasp.org/llm-top-10/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "覆盖提示注入、敏感信息泄露与过度依赖/幻觉（Misinformation）等 AI 应用核心风险。",
+      "supports": [
+        "claim-ai-workflow-risks"
+      ]
+    },
+    {
+      "id": "gnu-grep",
+      "kind": "official-doc",
+      "title": "GNU grep Manual (-r, -n, -E, --include)",
+      "publisher": "GNU Project",
+      "url": "https://www.gnu.org/software/grep/manual/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方手册，定义递归搜索、显示行号、扩展正则与按文件后缀筛选。",
+      "supports": [
+        "claim-deterministic-triage",
+        "cmd-triage-recon"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-trust-boundary",
+      "text": "大多数安全漏洞的本质不是某个神秘命令，而是数据跨越信任边界时，接收方误把外部可控输入当成了可信指令、合法身份或有效权限。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    },
+    {
+      "id": "claim-legal-boundary",
+      "text": "《中华人民共和国网络安全法》明确禁止非法侵入他人网络、干扰他人网络正常功能、窃取网络数据等危害网络安全活动，以及提供专门用于此类活动的程序、工具或技术支持；本课程据此要求一切安全实验严格限定在本机环境、公开靶场或明确授权的测试范围内。",
+      "sourceIds": [
+        "prc-cybersecurity-law"
+      ]
+    },
+    {
+      "id": "claim-deterministic-triage",
+      "text": "接手陌生代码库时，先用 find 与 grep -rnE 定位启动入口、环境变量、权限判断、路由分发与外部输入点，再顺着单条请求的数据流精读，比从头到尾盲读文件高效得多。",
+      "sourceIds": [
+        "gnu-grep"
+      ]
+    },
+    {
+      "id": "claim-ai-workflow-risks",
+      "text": "在研发与安全学习中借助 AI 必须防范三类风险：向外部对话粘贴真实密钥导致敏感信息泄露、轻信模型幻觉而不回源码实证、以及忽略不受信任文本对模型上下文的提示注入影响。",
+      "sourceIds": [
+        "owasp-llm-top10"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-triage-recon",
+      "command": "sh triage_commands.sh",
+      "expectedResult": "依次列出项目目录结构（排除隐藏路径）、环境变量读取（第 9、10 行）与管理员令牌权限判断（第 43 行），以及全部 HTTP 路由、请求头与 JSON 解析入口。",
+      "sourceIds": [
+        "gnu-grep"
+      ]
+    },
+    {
+      "id": "cmd-notes-verify",
+      "command": "curl --noproxy '*' -sS http://127.0.0.1:9100/api/notes && curl --noproxy '*' -sS -i 'http://127.0.0.1:9100/api/notes?all=1' && curl --noproxy '*' -sS -H 'X-Admin-Token: lab-admin-99' 'http://127.0.0.1:9100/api/notes?all=1'",
+      "expectedResult": "公开接口只返回 1 条记录；未带令牌请求 all=1 返回 403 Forbidden；带正确 X-Admin-Token 返回全部 2 条记录。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-mini-notes",
+      "path": "public/labs/security-mindset-and-ai-workflow/mini_notes_app.py",
+      "command": "NOTES_ADMIN_TOKEN='lab-admin-99' python3 mini_notes_app.py",
+      "expectedResult": "在 127.0.0.1:9100 启动陌生项目读码练习站。"
+    },
+    {
+      "id": "example-triage-sh",
+      "path": "public/labs/security-mindset-and-ai-workflow/triage_commands.sh",
+      "command": "sh triage_commands.sh",
+      "expectedResult": "打印项目文件结构、环境变量读取与令牌校验行、路由与外部输入入口行。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "flow-simulator",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

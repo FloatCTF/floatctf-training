@@ -1,0 +1,4 @@
+# 第 40 课：本课抓包段落复用第 38 课的 shop_server.py、https_server.py 与本地 CA 证书。
+@labs https-tls-and-proxy
+pkill -f 'internal_status.p[y]'; pkill -f 'shop_server.p[y]'; pkill -f 'https_server.p[y]'; pkill -f '19090:127.0.0.1:9090'; [ -f /tmp/ssh-lab/sshd.pid ] && kill "$(cat /tmp/ssh-lab/sshd.pid)" 2>/dev/null; rm -rf ~/lab/ssh ~/lab/https /tmp/ssh-lab /tmp/lab-cap.pcap; mkdir -p ~/lab/ssh ~/lab/https; cp ~/lab/python/internal_status.py ~/lab/python/ssh_config.example ~/lab/ssh/; cp ~/lab/python/make_certs.sh ~/lab/python/https_server.py ~/lab/python/shop_server.py ~/lab/https/; (cd ~/lab/https && sh make_certs.sh >/dev/null); true
+@workdir /home/kali/lab/ssh

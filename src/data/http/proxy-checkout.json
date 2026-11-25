@@ -1,0 +1,119 @@
+{
+ "scenario": "scripts/lab/http-scenarios/proxy-checkout.json",
+ "request": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "POST",
+     "label": "方法",
+     "note": "提交结账数据使用 POST 方法。"
+    },
+    {
+     "text": "/checkout",
+     "label": "目标",
+     "note": "请求目标是结账接口 /checkout。"
+    },
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "沿用 HTTP/1.1 格式。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Host",
+   "value": "127.0.0.1:8080",
+   "note": "目标主机与本地监听端口。"
+  },
+  {
+   "kind": "header",
+   "name": "User-Agent",
+   "value": "curl/8.23.0",
+   "note": "发出这次请求的客户端标识。"
+  },
+  {
+   "kind": "header",
+   "name": "Accept",
+   "value": "*/*",
+   "note": "客户端可接受任意响应类型。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "29",
+   "note": "请求正文的字节长度，代理改写正文后必须同步重算它。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "application/x-www-form-urlencoded",
+   "note": "表单键值对编码格式。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行分隔请求头与请求正文。"
+  },
+  {
+   "kind": "body",
+   "text": "item=club-badge&qty=1&price=1",
+   "note": "表单里的 readonly 和前端脚本挡不住代理或 curl：正文里的 price 已经被改成 1。"
+  }
+ ],
+ "response": [
+  {
+   "kind": "start",
+   "tokens": [
+    {
+     "text": "HTTP/1.1",
+     "label": "版本",
+     "note": "服务器以 HTTP/1.1 应答。"
+    },
+    {
+     "text": "200",
+     "label": "状态码",
+     "note": "200 表示请求处理完成。"
+    },
+    {
+     "text": "OK",
+     "label": "原因短语",
+     "note": "状态码 200 的原因短语。"
+    }
+   ]
+  },
+  {
+   "kind": "header",
+   "name": "Server",
+   "value": "BaseHTTP/0.6 Python/3.14.10",
+   "note": "Python 标准库内置服务器的标识。"
+  },
+  {
+   "kind": "header",
+   "name": "Date",
+   "value": "Wed, 25 Nov 2026 09:43:57 GMT",
+   "note": "服务器生成响应时的 UTC 时间。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Type",
+   "value": "application/json; charset=utf-8",
+   "note": "响应正文为 UTF-8 编码的 JSON。"
+  },
+  {
+   "kind": "header",
+   "name": "Content-Length",
+   "value": "137",
+   "note": "响应正文的字节数。"
+  },
+  {
+   "kind": "blank",
+   "note": "空行分隔响应头与响应正文。"
+  },
+  {
+   "kind": "body",
+   "text": "{\n  \"item\": \"club-badge\",\n  \"qty\": 1,\n  \"client_sent_price\": 1,\n  \"server_catalog_price\": 35,\n  \"tampered\": true,\n  \"final_charge\": 35\n}",
+   "note": "服务器记录了客户端上报的 price=1，并标出 tampered=true，但最终扣款按服务端自己的目录价 35 计算。"
+  }
+ ]
+}

@@ -85,6 +85,20 @@
             "java-web-project-reading",
             "guestbook-capstone"
           ]
+        },
+        {
+          "name": "现代 Web 实战与安全前哨",
+          "goal": "补齐学校实践常缺的加密、抓包、现代 Web 架构、SSH/日志、Linux 运行时、ELF 读图与安全思维，无缝衔接 Web 安全。",
+          "topics": [
+            "https-tls-and-proxy",
+            "modern-web-architecture",
+            "ssh-and-packet-capture",
+            "regex-and-log-triage",
+            "linux-runtime-and-services",
+            "elf-and-assembly-reading",
+            "security-mindset-and-ai-workflow",
+            "web-security-bridge-lab"
+          ]
         }
       ]
     },

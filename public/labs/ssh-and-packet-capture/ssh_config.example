@@ -1,0 +1,8 @@
+# 保存到 ~/.ssh/config（权限设为 600）
+Host local-lab
+    HostName 127.0.0.1
+    Port 2222
+    User kali
+    IdentityFile ~/.ssh/id_ed25519_lab
+    IdentitiesOnly yes
+    LocalForward 127.0.0.1:19090 127.0.0.1:9090

@@ -1,0 +1,3 @@
+# 第 41 课：把访问日志与 JSON 审计样本放到 ~/lab/logs。
+rm -rf ~/lab/logs; mkdir -p ~/lab/logs; cp ~/lab/python/* ~/lab/logs/; true
+@workdir /home/kali/lab/logs

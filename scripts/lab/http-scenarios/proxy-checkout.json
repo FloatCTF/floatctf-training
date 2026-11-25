@@ -1,0 +1,37 @@
+{
+  "server": "public/labs/https-tls-and-proxy/shop_server.py",
+  "address": ["127.0.0.1", 8080],
+  "request": {
+    "method": "POST",
+    "target": "/checkout",
+    "headers": [
+      ["Host", "127.0.0.1:8080"],
+      ["User-Agent", "curl/8.23.0"],
+      ["Accept", "*/*"],
+      ["Content-Length", "29"],
+      ["Content-Type", "application/x-www-form-urlencoded"]
+    ],
+    "body": "item=club-badge&qty=1&price=1"
+  },
+  "notes": {
+    "method": "提交结账数据使用 POST 方法。",
+    "target": "请求目标是结账接口 /checkout。",
+    "version": "沿用 HTTP/1.1 格式。",
+    ">Host": "目标主机与本地监听端口。",
+    ">User-Agent": "发出这次请求的客户端标识。",
+    ">Accept": "客户端可接受任意响应类型。",
+    ">Content-Length": "请求正文的字节长度，代理改写正文后必须同步重算它。",
+    ">Content-Type": "表单键值对编码格式。",
+    "blank": "空行分隔请求头与请求正文。",
+    "body": "表单里的 readonly 和前端脚本挡不住代理或 curl：正文里的 price 已经被改成 1。",
+    "<version": "服务器以 HTTP/1.1 应答。",
+    "status": "200 表示请求处理完成。",
+    "reason": "状态码 200 的原因短语。",
+    "<Server": "Python 标准库内置服务器的标识。",
+    "<Date": "服务器生成响应时的 UTC 时间。",
+    "<Content-Type": "响应正文为 UTF-8 编码的 JSON。",
+    "<Content-Length": "响应正文的字节数。",
+    "<blank": "空行分隔响应头与响应正文。",
+    "<body": "服务器记录了客户端上报的 price=1，并标出 tampered=true，但最终扣款按服务端自己的目录价 35 计算。"
+  }
+}

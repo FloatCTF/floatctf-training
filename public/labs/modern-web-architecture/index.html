@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<meta charset="utf-8">
+<title>现代前后端分离最小页</title>
+<h1>前后端分离最小页（Nginx + JSON API）</h1>
+<p>页面本身是纯静态 HTML，登录与拉取资料都通过 fetch 调 /api/* 接口完成。</p>
+<button id="btn-login">以 alice 登录并拉取资料</button>
+<pre id="out">点击按钮后这里会显示接口返回的 JSON。</pre>
+<script>
+  document.getElementById('btn-login').addEventListener('click', async () => {
+    const out = document.getElementById('out');
+    const loginResp = await fetch('/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'alice', password: 'demo-alice' }),
+    });
+    const loginData = await loginResp.json();
+    const profileResp = await fetch(`/api/profile?uid=${loginData.uid}`, {
+      headers: { Authorization: `Bearer ${loginData.access_token}` },
+    });
+    out.textContent = JSON.stringify(await profileResp.json(), null, 2);
+  });
+</script>
+</html>

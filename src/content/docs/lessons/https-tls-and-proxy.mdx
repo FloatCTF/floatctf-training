@@ -1,0 +1,404 @@
+---
+title: HTTPS、密码学常识与代理抓包
+description: 用同一段文本分清编码、哈希、加密与签名；亲手建一个本地 CA 和 HTTPS 站点看懂 TLS 握手与证书链；再运行本地代理验证前端校验为何不可信，拆解 Burp 与 mitmproxy 解密 HTTPS 的两段加密机制
+pageType: lesson
+template: splash
+---
+import LearningObjectives from '../../../components/learning-objectives.astro';
+import Prerequisites from '../../../components/prerequisites.astro';
+import LessonHero from '../../../components/lesson-hero.astro';
+import LessonPacing from '../../../components/lesson-pacing.astro';
+import LessonExercises from '../../../components/lesson-exercises.astro';
+import Callout from '../../../components/callout.astro';
+import DataTable from '../../../components/data-table.astro';
+import StepList from '../../../components/step-list.astro';
+import CheatSheet from '../../../components/cheat-sheet.astro';
+import KeyTakeaway from '../../../components/key-takeaway.astro';
+import SourceList from '../../../components/source-list.astro';
+import TerminalSession from '../../../components/terminal-session.astro';
+import CodeFile from '../../../components/code-file.astro';
+import HttpExchange from '../../../components/http-exchange';
+import FlowSimulator from '../../../components/flow-simulator';
+import proxyCheckout from '../../../data/http/proxy-checkout.json';
+import proxyChain from '../../../data/flows/https-proxy-chain.json';
+import manifest from '../../../data/lessons/https-tls-and-proxy.json';
+
+export const devtoolsSteps = [
+  { title: '看清是谁发出的请求', detail: '打开 F12 → Network（网络）面板，切到 Fetch/XHR 过滤现代网站的接口调用，点开 Initiator（发起程序）就能直接定位触发该请求的 JS 行号。' },
+  { title: '在授权实验环境里重放并改包', detail: '仅限本地练习站或明确授权目标：Firefox 网络面板右键请求选 Edit and Resend（编辑并重发），可改动头部和正文观察服务端反应；Chrome 可右键 Copy as cURL 粘回终端对照验证。严禁对未授权外部网站改包重放。' },
+  { title: '检查 Cookie 的三道保护开关', detail: '切到 Storage / Application → Cookies，逐列核对 HttpOnly、Secure、SameSite 是否勾选，而不是只看 Cookie 名字。' },
+  { title: '在 Sources 里给压缩脚本下断点', detail: '点开 Sources / Debugger 里的 .js 文件，点左下角 {} 格式化压缩代码，再在 fetch 或表单提交处理函数上打断点，直接观察变量在发送前的值。' },
+];
+
+export const homework = [
+  { title: '完成验收第 3 题', detail: '复现「去掉 SAN 导致证书主机名不匹配」的报错，再用不带 --replace 的代理观察一次手动修改参数的结账请求。' },
+  { title: '给真实网站做一次只读体检', detail: '在终端对一个公开网站运行 curl -I https://example.com，或打开你常用网站的浏览器开发者工具，查看它协商的 TLS 版本以及 Set-Cookie 是否设置了 HttpOnly、Secure、SameSite。只读观察，不做任何改包或压力测试。' },
+  { title: '验证 HTTPS 保护不到的地方', detail: '把 shop_server.py 的价格校验删掉一行做本地对照思考：即使把结账站从 HTTP 换成 HTTPS，只要服务端直接按 client_price 扣款，经过用户自己信任的本地代理改包后结果会怎样？写下三句话结论。' },
+  { title: '为下一课做准备', detail: '翻看浏览器里一个你常用的现代网站（如学校教务、GitHub 或博客），观察页面跳转时浏览器是重新加载整页 HTML，还是只发返回 JSON 的 API 请求，顺便看请求头里有没有 Authorization: Bearer ...。' },
+];
+
+<LessonHero
+  series="MODERN WEB BRIDGE"
+  unit="FOUNDATIONS / LESSON 38"
+  kicker="Crypto, TLS & Interception Proxy"
+  lines={[
+    { text: "HTTPS、密码学常识" },
+    { text: "与代理抓包", accent: true },
+  ]}
+  summary="学校课程常把网络停在明文 HTTP，把密码学写成数学公式，却很少演示真实世界里网站如何加密、证书如何校验、调试工具又凭什么能把 HTTPS 看穿。这一课用三组本地可复现实验，把这几块拼成一张完整的地图。"
+/>
+<div class="lesson-start-grid">
+  <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
+  <Prerequisites items={manifest.lessonPlan.prerequisites} />
+</div>
+
+<LessonPacing segments={manifest.segments} />
+
+## 引导问题：既然开了 HTTPS，调试工具凭什么还能看到你的请求
+
+在第 14 课里，你用明文 HTTP 和本地练习站对话，整份请求就像明信片一样暴露在网络里。到了真实网站，地址栏前面几乎都有一把锁（`https://`），大家常说「HTTPS 是加密的，中间人看不见」。
+
+可真开始做现代 Web 调试或安全学习时，你会立刻撞上一个看似矛盾的现象：打开 Burp Suite 或 mitmproxy 之后，浏览器访问 `https://` 网站，代理界面里照样一行行显示着明文请求头、JSON 正文和 Cookie。
+
+是 HTTPS 失效了吗？不是。弄懂这件事，要先分清几类最容易混淆的数据变换，再亲手搭一套本地证书链和一个最小代理。
+
+## 一、先分清几件总被混为一谈的事
+
+初学者看文档和报错时，最常把「编码、哈希、对称加密、公钥密钥交换、数字签名」统统混叫成「加密」，比如把 Base64 当加密、把 SHA-256 当作「可以解密的密文」，或者把数字签名算法直接当成加密算法。它们的目标完全不同：
+
+<DataTable
+  caption="编码、哈希、对称加密、非对称密钥交换与数字签名对照"
+  headers={["类别", "代表工具 / 算法", "需要密钥吗", "能还原原文吗", "解决什么问题"]}
+  rows={[
+    ["编码（Encoding）", "Base64、URL 编码、Hex", "不需要", "任何人都能还原", "换一种字符表示方便传输，不提供任何保密性"],
+    ["哈希 / 摘要（Hash）", "SHA-256（校验）、Argon2（存密码）", "不需要", "单向不可逆", "校验数据是否被改动；密码加盐散列后用于比对"],
+    ["对称加密（Symmetric）", "AES-256-GCM（认证加密）、AES-CBC", "需要同一把密钥", "有密钥才能还原", "保护机密性（AEAD 模式如 GCM 同时校验完整性）"],
+    ["非对称加密 / 密钥协商", "RSA-OAEP、X25519（ECDH）、ML-KEM", "一对公钥与私钥", "私钥解开 / 双方协商出对称密钥", "在不安全网络里安全传递或协商后续通信用的对称密钥"],
+    ["数字签名（Signature）", "Ed25519、ECDSA、RSA-PSS", "一对公钥与私钥", "签名不隐藏原文", "私钥签字、公钥验签：证明「是谁发的且没被改过」"],
+  ]}
+  columnRatios={[1.2, 1.5, 1.0, 1.2, 2.1]}
+/>
+
+（来源：[RFC 4648](#source-rfc4648)、[FIPS 180-4](#source-nist-fips-180-4)、[openssl-enc](#source-openssl-enc)、[openssl-pkeyutl](#source-openssl-pkeyutl)、[RFC 8446](#source-rfc8446)）
+
+### 同一段文本，走完四条路
+
+把同一串订单数据 `order=badge&price=35` 放进终端，逐一观察编码、哈希、对称加密和数字签名的输出与失败表现：
+
+<TerminalSession
+  environment="KALI 终端"
+  title="1. 编码（Base64）：不用密钥，谁都能解开"
+  steps={[
+    {
+      cmd: "printf 'order=badge&price=35' | base64",
+      out: 'b3JkZXI9YmFkZ2UmcHJpY2U9MzU=',
+      note: 'Base64 只是查表换写法。你在网页、Cookie 或 JWT 里看到带 = 号的字符串，不要误以为它被加密了。',
+    },
+    {
+      cmd: "printf 'b3JkZXI9YmFkZ2UmcHJpY2U9MzU=' | base64 -d; echo",
+      out: 'order=badge&price=35',
+      note: '没有任何口令就能原样还原。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端"
+  title="2. 哈希（SHA-256）：改一个字符，结果面目全非"
+  steps={[
+    {
+      cmd: "printf 'order=badge&price=35' | openssl dgst -sha256",
+      out: 'SHA2-256(stdin)= 599c5fe1c6a757586470f55e94a6eab8bb5d469bfc7aa6cced6c862c27b7c842',
+      note: '不管原文多长，SHA-256 永远产出 64 个十六进制字符（256 位）。',
+    },
+    {
+      cmd: "printf 'order=badge&price=36' | openssl dgst -sha256",
+      out: 'SHA2-256(stdin)= 3c089aa7919b3e64e132e76bc1c63b6b6e703f4125f0fbf9099bf1fbc43b3cc7',
+      note: '只把 35 改成 36，整个 64 位摘要完全变了。哈希没有「解密」函数，网上所谓的「解密网站」只是提前算好常见弱口令的对照表来查表。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端"
+  title="3. 对称加密（AES-256-CBC 演示）：同一把口令加解密"
+  steps={[
+    {
+      cmd: "printf 'order=badge&price=35' | openssl enc -aes-256-cbc -pbkdf2 -pass pass:lab-secret -base64 > cipher.txt && cat cipher.txt",
+      out: 'U2FsdGVkX1/6Kr0JaGy+t4sZ62Z9Iva3jYnnpKh68u5zN6ZmpDxXYmrK8HvVezL5',
+      note: '默认随机加盐，所以你每次跑出的密文都会与这一行不同。-base64 只是把二进制密文转成可打印文字方便保存。',
+    },
+    {
+      cmd: "openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:lab-secret -base64 -in cipher.txt; echo",
+      out: 'order=badge&price=35',
+      note: '给对口令，原文完整回来。',
+    },
+    {
+      cmd: "openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:wrong-key -base64 -in cipher.txt -out wrong.txt",
+      out: 'bad decrypt\n003DB756F87F0000:error:1C800064:Provider routines:ossl_cipher_unpadblock:bad decrypt:…',
+      note: '注意原理细节：这里报 bad decrypt 是因为错误口令解出的末尾 PKCS#7 填充字节不合法，并不是 CBC 自带完整性校验（极少数情况下错口令甚至可能碰巧通过填充检查而吐出乱码）。生产加密应使用带认证的 AEAD 模式（如 TLS 1.3 里的 AES-GCM / ChaCha20-Poly1305）。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端"
+  title="4. 数字签名（Ed25519）：私钥签字，公钥验真"
+  steps={[
+    {
+      cmd: "printf 'order=badge&price=35' > msg.txt && openssl genpkey -algorithm ED25519 -out sign.key && openssl pkey -in sign.key -pubout -out sign.pub",
+      note: '生成一对密钥：sign.key 是私钥（只留在签发方手里），sign.pub 是公钥（可以公开给所有人）。',
+    },
+    {
+      cmd: "openssl pkeyutl -sign -inkey sign.key -rawin -in msg.txt -out msg.sig && openssl pkeyutl -verify -pubin -inkey sign.pub -rawin -in msg.txt -sigfile msg.sig",
+      out: 'Signature Verified Successfully',
+      note: '任何人拿到 msg.txt、msg.sig 和公钥 sign.pub，都能验证这份文件确实由私钥持有者签发且未改动。',
+    },
+    {
+      cmd: "printf 'order=badge&price=1' > tampered.txt && openssl pkeyutl -verify -pubin -inkey sign.pub -rawin -in tampered.txt -sigfile msg.sig",
+      out: 'Signature Verification Failure\n003DB756F87F0000:error:030000EA:digital envelope routines:EVP_DigestVerify:provider signature failure:…',
+      note: '正文哪怕改掉两位数字，拿原来的签名去验立刻失败。这就是证书与软件校验防篡改的核心原理。',
+    },
+  ]}
+/>
+
+<Callout type="note" title="一条极实用的排错直觉">
+看到一串看不懂的字符串，先问自己四个问题：能直接还原吗（编码）？长度固定且只用于比对吗（哈希）？需要密钥才能解开吗（加密）？明文可见但附带校验尾段吗（签名，例如后面的 JWT 和证书）？
+</Callout>
+
+## 二、HTTPS 与证书链：亲手搭一个本地 CA
+
+**HTTPS** 就是「在 HTTP 下面垫了一层 **TLS**（Transport Layer Security）」。按 [RFC 8446](#source-rfc8446)，TLS 1.3 在客户端与服务器之间建立一条加密、防篡改且经过身份认证的通信信道。
+
+这里有一个学校很少讲透的关键点：**光加密不够，还得知道你在跟谁加密**。如果路上有人冒充目标服务器和你交换密钥，你俩之间虽然也在加密说话，但对方拿到了你的全部明文。
+
+为了证明「对方真的是 `127.0.0.1` 或 `example.com`」，互联网采用 **PKI 证书链与 CA（Certificate Authority，证书颁发机构）** 体系（来源：[RFC 5280](#source-rfc5280)、[RFC 9525](#source-rfc9525)）：
+1. 操作系统和浏览器出厂时内置了一批受信任的**根 CA 证书**（里面有根 CA 公钥）。
+2. 真实互联网通常采用**三级证书链**：根 CA 给**中间 CA** 签发证书，再由中间 CA 用私钥给网站签发 **X.509 站点证书**（避免根 CA 私钥频繁在线使用）。本课为简化实验，省略中间 CA，直接用自建的本地根 CA 给站点签发证书。
+3. 客户端连上网站时，沿证书链逐级验签直到受信任的根 CA，检查有效期与用途，并按 [RFC 9525](#source-rfc9525) 核对证书里的 **SAN（Subject Alternative Name）** 是否匹配当前访问的域名或 IP。
+
+### 1. 建一个迷你 CA，签发本地站点证书
+
+下载本课的前两个实验文件放进新目录 `~/lab/https`：
+
+<CodeFile file="labs/https-tls-and-proxy/make_certs.sh" mark="7-11,20-26" note="高亮处分别生成本地 CA 根证书、写入 SAN 扩展并用 CA 给站点证书签字。" />
+
+<CodeFile file="labs/https-tls-and-proxy/https_server.py" mark="30-33,70-73" note="只监听 127.0.0.1:8443；高亮处是 Cookie 的三个安全属性与 TLS 1.2+ 封装。" />
+
+在终端里生成证书并查看签出的站点证书详情：
+
+<TerminalSession
+  environment="KALI 终端"
+  title="生成迷你 CA 与站点证书，并核对 SAN 字段"
+  steps={[
+    { cmd: 'mkdir -p ~/lab/https && cd ~/lab/https' },
+    {
+      cmd: 'sh make_certs.sh',
+      out: 'Created ca.key, ca.crt, site.key, site.crt',
+      note: 'ca.crt 是你自建的「本地根证书」，site.crt 是由它直接签发给本机站点的叶子证书。',
+    },
+    {
+      cmd: 'openssl x509 -in site.crt -noout -subject -issuer -dates -ext subjectAltName',
+      out: 'subject=CN=localhost\nissuer=CN=Training Local CA\nnotBefore=Nov 25 06:44:31 2026 GMT\nnotAfter=Dec 25 06:44:31 2026 GMT\nX509v3 Subject Alternative Name: \n    IP Address:127.0.0.1, DNS:localhost',
+      note: '有效期随你运行时间变化。注意 issuer 是 Training Local CA，且 SAN 明确写着 IP:127.0.0.1 与 DNS:localhost——现代客户端要求核对 SAN，不再只看 CN。',
+    },
+  ]}
+/>
+
+（来源：[openssl-req](#source-openssl-req)、[RFC 5280](#source-rfc5280)、[RFC 9525](#source-rfc9525)）
+
+### 2. 亲眼看一次「证书被拒」和一次「TLS 1.3 握手通过」
+
+在终端 A 启动本地 HTTPS 练习站，在终端 B 分别用不信任 CA 和传入 `--cacert ca.crt` 两种方式请求（直连本地地址时顺手加 `--noproxy '*'`，避免宿主机环境变量里的外部代理干扰回环请求）：
+
+<TerminalSession
+  environment="KALI 终端 A"
+  title="启动本地 HTTPS 练习站"
+  steps={[
+    { cmd: 'cd ~/lab/https' },
+    {
+      cmd: 'python3 https_server.py',
+      out: 'Local HTTPS demo on https://127.0.0.1:8443/  (Ctrl+C to stop)\n…（每收到一个请求会打印一行 [HTTPS] 日志）',
+      note: '只绑定本机回环地址 127.0.0.1，局域网里的其他机器无法连入。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端 B"
+  title="对比：不认 CA 时立刻拦截 vs 信任 ca.crt 后握手成功"
+  steps={[
+    {
+      cmd: "curl --noproxy '*' -sS https://127.0.0.1:8443/",
+      out: 'curl: (60) SSL certificate OpenSSL verify result: unable to get local issuer certificate (20)\nMore details here: https://curl.se/docs/sslcerts.html\n…',
+      note: 'curl 拿着系统默认信任库去验 site.crt，根本不认识 Training Local CA，于是直接报 60 退出——它绝不会默默忽略身份校验。',
+    },
+    {
+      cmd: "curl --noproxy '*' -i --cacert ca.crt -c cookies.txt https://127.0.0.1:8443/",
+      out: 'HTTP/1.1 200 OK\nServer: BaseHTTP/0.6 Python/3.14.10\nDate: Wed, 25 Nov 2026 07:07:58 GMT\nContent-Type: application/json; charset=utf-8\nSet-Cookie: sid=demo-session-01; Path=/; HttpOnly; Secure; SameSite=Lax\nContent-Length: 111\n\n{\n  "message": "HTTPS handshake succeeded",\n  "tls_version": "TLSv1.3",\n  "cipher": "TLS_AES_256_GCM_SHA384"\n}',
+      note: '--cacert ca.crt 只对这一次 curl 临时信任你自己的 CA，并不会改动系统或浏览器信任库。Date 与 Python 版本号随机器而异。',
+    },
+    {
+      cmd: "curl --noproxy '*' -v --cacert ca.crt -b cookies.txt https://127.0.0.1:8443/whoami",
+      out: '*   Trying 127.0.0.1:8443...\n* Connected to 127.0.0.1 (127.0.0.1) port 8443\n…（TLS 握手过程）\n* SSL connection using TLSv1.3 / TLS_AES_256_GCM_SHA384 / X25519MLKEM768 / RSASSA-PSS\n> GET /whoami HTTP/1.1\n> Host: 127.0.0.1:8443\n> User-Agent: curl/8.23.0\n> Cookie: sid=demo-session-01\n…\n< HTTP/1.1 200 OK\n…\n{\n  "tls_version": "TLSv1.3",\n  "cipher": "TLS_AES_256_GCM_SHA384",\n  "user_agent": "curl/8.23.0",\n  "cookie": "sid=demo-session-01"\n}',
+      note: '先完成非对称验签与密钥协商，再用协商出的认证对称套件（AES-256-GCM）加密后续整条 HTTP 对话。',
+    },
+    {
+      cmd: 'cat cookies.txt',
+      out: '# Netscape HTTP Cookie File\n…\n#HttpOnly_127.0.0.1\tFALSE\t/\tTRUE\t0\tsid\tdemo-session-01',
+      note: '前面带 #HttpOnly_、第四列为 TRUE（表示 Secure），说明客户端已经按响应头记住了 Cookie 的约束。',
+    },
+  ]}
+/>
+
+（来源：[curl man page](#source-curl-manpage)、[RFC 8446](#source-rfc8446)、[RFC 6265](#source-rfc6265)）
+
+### 3. Cookie 的三道安全属性与 HTTPS 的真实边界
+
+刚才那条 `Set-Cookie` 里藏着现代 Web 几乎必考的三个属性（来源：[RFC 6265](#source-rfc6265)、[MDN Set-Cookie](#source-mdn-set-cookie)）：
+
+<DataTable
+  caption="Set-Cookie 三个常见保护属性"
+  headers={["属性", "约束了谁", "没加会多出什么风险"]}
+  rows={[
+    ["Secure", "浏览器发送通道", "只允许在 HTTPS 请求里携带；漏写时若误访明文 HTTP，会话编号会被同网段嗅探"],
+    ["HttpOnly", "页面里的 JavaScript", "禁止通过 document.cookie 读取；配合后续 XSS 防御，降低脚本直接偷走会话 Cookie 的面"],
+    ["SameSite=Lax / Strict", "跨站发起的请求", "控制从别的网站跳转或发请求时是否自动带上 Cookie，是现代缓解跨站请求伪造（CSRF）的基线开关"],
+  ]}
+  columnRatios={[1.2, 1.3, 3.0]}
+/>
+
+同样要记清 **HTTPS 的边界**：它保护的是「客户端与服务器之间的网络传输链路」（防 Wi-Fi 窃听、运营商插广告、半路改包）；它**不能**防止服务端代码写错（比如 SQL 注入、越权、直接信前端价格），也**不能**防止用户自己电脑上已经安装的受信任根证书或代理去查看流量。
+
+## 三、代理抓包与「前端不可信」
+
+现在把视角转回真实 Web 开发和安全审计中最常用的手段：**HTTP 代理（Proxy）**。
+
+很多人以为「把输入框设成 `readonly`」或者「用 JavaScript 检查价格不能小于 35」就安全了。其实网页和脚本都运行在**用户自己的电脑里**——只要在浏览器和服务器之间插一个本地代理，或者干脆用 `curl` 直接发包，前端限制连触发的机会都没有（来源：[OWASP Input Validation Cheat Sheet](#source-owasp-input-validation)）。
+
+### 1. 准备本地结账站与最小代理
+
+把后两个实验文件也放进 `~/lab/https`：
+
+<CodeFile file="labs/https-tls-and-proxy/shop_server.py" mark="22,26-31,91-102" note="第 22、26–31 行展示了典型的前端 readonly 与 JS 拦截；第 91–102 行展示了服务端正确做法：始终以服务端 CATALOG 计价，并检查 Content-Type 与请求长度。" />
+
+<CodeFile file="labs/https-tls-and-proxy/mini_proxy.py" mark="10,41-46,84-98" note="第 10 行硬编码仅允许转发到本机 127.0.0.1（并将 localhost 固定映射到 127.0.0.1）；第 41–46 行演示明文改写；第 84–98 行演示 HTTPS 的 CONNECT 透传隧道。" />
+
+<Callout type="warning" title="实验边界：只拦截你自己的本地流量">
+`mini_proxy.py` 硬编码只允许转发到 `127.0.0.1`（`localhost` 也固定映射到 `127.0.0.1`）。之后使用 Burp Suite、mitmproxy 或浏览器代理时，同样只对自己的本地环境、CTF 靶场或取得明确授权的系统执行拦截和改包。
+</Callout>
+
+### 2. 亲手穿过代理：明文被改写，服务端兜底
+
+另开一个终端启动 `shop_server.py`（8080 端口），再开一个终端启动 `mini_proxy.py`（8888 端口，开启 `--replace price=35 price=1`）：
+
+<TerminalSession
+  environment="KALI 终端 C（代理日志）"
+  replay="skip"
+  title="启动本地代理，把发往 8080 的 price=35 改写成 price=1"
+  steps={[
+    {
+      cmd: 'python3 mini_proxy.py --replace price=35 price=1',
+      out: 'Local proxy on http://127.0.0.1:8888 (rewrite price=35 -> price=1; Ctrl+C to stop)\n[PROXY] >>> POST http://127.0.0.1:8080/checkout\n[PROXY] original body: item=club-badge&qty=1&price=35\n[PROXY] rewritten body: item=club-badge&qty=1&price=1\n[PROXY] <<< 200 OK (137 bytes)',
+      note: '上面四行日志是在下面终端 B 执行代理请求后实时打印出来的。',
+    },
+  ]}
+/>
+
+<TerminalSession
+  environment="KALI 终端 B"
+  title="对比：直连结账站 vs 经过本地代理"
+  steps={[
+    {
+      cmd: "curl --noproxy '*' -sS -d 'item=club-badge&qty=1&price=35' http://127.0.0.1:8080/checkout",
+      out: '{\n  "item": "club-badge",\n  "qty": 1,\n  "client_sent_price": 35,\n  "server_catalog_price": 35,\n  "tampered": false,\n  "final_charge": 35\n}',
+      note: "--noproxy '*' 显式绕过环境变量里的外部代理，直接连本机 8080，价格原样到达。",
+    },
+    {
+      cmd: "curl --noproxy '' -sS -x http://127.0.0.1:8888 -d 'item=club-badge&qty=1&price=35' http://127.0.0.1:8080/checkout",
+      out: '{\n  "item": "club-badge",\n  "qty": 1,\n  "client_sent_price": 1,\n  "server_catalog_price": 35,\n  "tampered": true,\n  "final_charge": 35\n}',
+      note: "-x 指定本地实验代理，--noproxy '' 清空宿主机可能设置的 NO_PROXY=127.0.0.1，防止 curl 自动绕开代理。到达服务端时正文已变成 price=1，但服务端查 CATALOG 仍算出 final_charge: 35。",
+    },
+  ]}
+/>
+
+下面按代理改写后的正文（`price=1`）构造等价请求，在 Kali 2026.3 环境实发给 `shop_server.py` 并把整组报文拆开（由 `scripts/lab/http-trace.py` 录制），点任意一部分看它在信任边界里的角色：
+
+<HttpExchange
+  client:visible
+  trace={proxyCheckout}
+  title="按代理改写结果实发的 POST /checkout 报文"
+  intro="该样本按改写后的正文（price=1）直接发往 shop_server.py 录制（Kali 2026.3：curl/8.23.0、Python/3.14.10）。重点点开 Content-Length、请求正文和响应正文。"
+/>
+
+### 3. 回到开篇问题：代理遇到 HTTPS 时发生了什么
+
+现在让 `curl` 通过同一个 `mini_proxy.py` 访问前面的本地 HTTPS 站点 `https://127.0.0.1:8443/whoami`（同样加 `--noproxy ''` 确保确实穿过 8888 代理）：
+
+<TerminalSession
+  environment="KALI 终端 B"
+  title="HTTPS 经过普通代理：代理只看到 CONNECT 隧道"
+  steps={[
+    {
+      cmd: "curl --noproxy '' -sS -x http://127.0.0.1:8888 --cacert ca.crt https://127.0.0.1:8443/whoami",
+      out: '{\n  "tls_version": "TLSv1.3",\n  "cipher": "TLS_AES_256_GCM_SHA384",\n  "user_agent": "curl/8.23.0",\n  "cookie": "(none)"\n}',
+      note: '请求照样成功，但回到代理终端看日志，只会多出一行：[PROXY] CONNECT tunnel -> 127.0.0.1:8443 (passthrough tunnel, TLS payload not decrypted)。',
+    },
+  ]}
+/>
+
+这就是 [RFC 9110 §9.3.6](#source-rfc9110) 规定的 `CONNECT` 隧道：普通透传代理只帮客户端把字节原样转发给 `127.0.0.1:8443`，看不到加密后的 HTTP 请求头与正文。
+
+那 **Burp Suite** 和 **mitmproxy** 这类调试代理凭什么能看到 HTTPS 明文？核心机制与第二节「让客户端信任自建 CA」同源，但在浏览器场景里需要**主动把代理生成的 CA 根证书导入测试浏览器的信任库**（前面我们只是对单次 `curl` 用了 `--cacert ca.crt`，并没有改动浏览器信任库）（来源：[How mitmproxy works](#source-mitmproxy-how)、[PortSwigger CA Docs](#source-portswigger-ca)）。拖动下方步骤条看清整条链：
+
+<FlowSimulator client:visible title="调试代理怎样解开 HTTPS：两段 TLS 与本地 CA" steps={proxyChain} motionLevel="explanatory" />
+
+正因为如此，记住一条铁律：**永远不要在日常主机上安装来路不明的根证书**；哪怕是本地调试用的 Burp / mitmproxy 根证书，也最好只装在练习虚拟机（或单独的测试浏览器配置文件）里，用完及时关闭代理。
+
+### 4. 不装代理时，先把浏览器 DevTools 用透
+
+日常读陌生网站、定位接口报错，80% 的时候不需要开外部代理，浏览器自带的开发者工具就够把页面变透明（注意：对外部网站只做只读观察，**编辑重发/改包动作仅用于你自己的本地练习站或明确授权目标**）：
+
+<StepList title="现代 Web 调试的四个高频动作" steps={devtoolsSteps} />
+
+## 常见报错与边界
+
+<DataTable
+  caption="做 HTTPS 与代理实验时最容易撞上的五个坑"
+  headers={["现象或报错", "真正原因", "正确处理方式"]}
+  rows={[
+    ["curl: (60) unable to get local issuer certificate", "目标站点的证书链未链接到系统信任库里的根 CA", "测试本地自建站时传入 --cacert ca.crt；线上环境应补全中间证书链，不要习惯性写 curl -k 关掉校验"],
+    ["传入 --cacert 后仍报主机名不匹配", "站点证书缺少 SAN（Subject Alternative Name），或 SAN 里没写 127.0.0.1", "签发证书时把访问用的 IP 和域名全部写进 subjectAltName，不要只填 CN"],
+    ["加了 -x http://127.0.0.1:8888 却没经过代理", "终端环境变量里设置了 NO_PROXY=127.0.0.1 / localhost，curl 自动绕开了代理", "指定本地实验代理时加 --noproxy '' 清空绕过列表；直连本地测试时用 --noproxy '*'"],
+    ["用代理改完 POST 正文后服务器卡住或报错", "正文长度变了，但请求头里的 Content-Length 还留着旧字节数", "像 mini_proxy.py 那样同步重算 Content-Length（Burp / mitmproxy 默认会自动更新）"],
+    ["以为加了 HTTPS 或前端 readonly 就防住了改包", "混淆了「链路加密」与「客户端可信」", "HTTPS 只防网络链路窃听；前端发来的一切参数在服务端眼里都视为不可信输入"],
+  ]}
+  columnRatios={[1.6, 1.8, 2.4]}
+/>
+
+<CheatSheet
+  title="本课常用命令速查"
+  items={[
+    { term: "printf 'text' | base64  /  base64 -d", description: 'Base64 编码与解码（无密钥，不保密）。' },
+    { term: "printf 'text' | openssl dgst -sha256", description: '计算 256 位 SHA-256 摘要（单向不可逆）。' },
+    { term: 'openssl enc -aes-256-cbc -pbkdf2 -pass pass:KEY -base64', description: '用对称口令加密内容（教学演示；生产推荐 AEAD 模式如 AES-GCM）。' },
+    { term: 'openssl pkeyutl -sign / -verify', description: '用私钥给文件签字、用公钥验证来源与完整性。' },
+    { term: 'openssl x509 -in site.crt -noout -subject -issuer -ext subjectAltName', description: '查看证书签发者、主体与 SAN 扩展。' },
+    { term: "curl --noproxy '*' -v --cacert ca.crt https://127.0.0.1:8443/", description: '绕过外部代理、临时信任本地 CA 证书并观察 TLS 握手全过程。' },
+    { term: "curl --noproxy '' -x http://127.0.0.1:8888 http://127.0.0.1:8080/checkout", description: '清空 NO_PROXY 并把请求交给本地实验代理转发，便于观察与排错。' },
+  ]}
+/>
+
+<KeyTakeaway>
+编码不保密、哈希不可逆、对称加密靠共享密钥、非对称用于密钥协商或加密、数字签名验真伪。HTTPS 靠证书链（根 CA → 中间 CA → 站点证书 + SAN）与 TLS 保护传输链路，但保护不了客户端本身——一旦请求离开浏览器，任何前端限制都可被代理或 curl 改写，所有关键校验和业务计算都必须留在服务端。下一课我们把单机练习站升级成真实的前后端分离、API、JWT 与 Nginx 反向代理架构。
+</KeyTakeaway>
+
+## 学习验收
+
+<LessonExercises exercises={manifest.exercises} />
+
+## 课后作业
+
+<StepList title="课后作业" steps={homework} />
+
+<SourceList sources={manifest.sources} />

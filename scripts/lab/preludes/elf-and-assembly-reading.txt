@@ -1,0 +1,3 @@
+# 第 43 课：把 check_pin.c 放到 ~/lab/elf。
+rm -rf ~/lab/elf; mkdir -p ~/lab/elf; cp ~/lab/python/* ~/lab/elf/; true
+@workdir /home/kali/lab/elf

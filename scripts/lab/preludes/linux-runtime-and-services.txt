@@ -1,0 +1,3 @@
+# 第 42 课：把 mem_layout.c 与 sample.service 放到 ~/lab/runtime。
+rm -rf ~/lab/runtime; mkdir -p ~/lab/runtime; cp ~/lab/python/* ~/lab/runtime/; true
+@workdir /home/kali/lab/runtime

@@ -3,189 +3,189 @@
   "reviewedAt": "2026-11-25",
   "reviewer": "Antigravity + Codex (gpt-6.2-astra)",
   "mode": "polish-existing-courses",
-  "summary": "对 AI 与机器学习 6 课完成全面教学重构、可视化组件修复、6 个零依赖纯 Python 实验落地与 /paths/ai/ 路线建设，并经独立 Codex（gpt-6.2-astra / high）只读盲审修复全部 Blocker 与建议项后通过 npm run verify 与本机 Chromium 复测；基础学期 37 课与 Web 安全 5 课未改动，沿用原批次 qa/foundations-batch-1.md 至 batch-7.md 与 qa/user-review-fixes.md 证据。详见 qa/ai-ml-polish.md。",
+  "summary": "在保留基础学期 1–37 课及新生路线第 8 阶段「现代 Web 实战与安全前哨」8 门新课（第 38–45 课，详见 qa/modern-web-bridge-1.md）的基础上，完成 AI 与机器学习 6 课全面教学重构、18 个可视化组件修复与第 6 课交互攻防演练台建设、6 个零依赖纯 Python 实操实验与 /paths/ai/ 专项路线落地，并经独立 Codex（gpt-6.2-astra / high）只读盲审收口全部必须修与建议项。全站 56 门专题通过 npm run verify。AI 六课详细证据见 qa/ai-ml-polish.md，前 37 课见 qa/foundations-batch-1.md 至 batch-7.md。",
   "items": [
     {
       "id": "mode-topic-fit",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "AI 6 课延续机制/概念/对照/案例主辅模式，并全部补齐零依赖 Python 代码清单与终端实跑；未改动的 37 门基础课沿用 qa/foundations-batch-1.md 至 batch-7.md 记录。"
+      "note": "AI 6 课延续机制/概念/对照/案例主辅模式并全部补齐零依赖 Python 代码清单与终端实跑；第 38–45 课见 qa/modern-web-bridge-1.md，前 37 课见 qa/foundations-batch-1.md 至 batch-7.md。"
     },
     {
       "id": "sequence-objectives",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "6 课各 90 分钟三段，分段标题与用时总和通过门禁；新上线 /paths/ai/ 按「原理打底（1–3 课）→ 工程与安全（4–6 课）」组织且满足先修序。"
+      "note": "AI 6 课各 90 分钟三段并通过先修校验，上线 /paths/ai/（原理打底 → 工程与安全）；新生路线 8 个阶段 45 课顺序见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "analogy-value",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "保留并收敛贴合机制的直观类比（如蒙眼下山、图书馆 Q/K/V、操作系统分页、USB-C 插座），去除泛化夸张修辞，所有类比均紧接公式、图示或代码落地。"
+      "note": "AI 6 课保留并收敛贴合机制的直观类比（蒙眼下山、图书馆 Q/K/V、操作系统分页、USB-C 插座），紧接公式、图示或代码落地；第 38–45 课见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "term-definition",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "参数/超参数、logit/softmax/交叉熵、反向传播/优化器、Q/K/V/因果遮罩、RLHF/DPO、MCP/Skill/Harness/Hill-climbing Loop、RAG/HNSW/LoRA/蒸馏、提示注入/FGSM/成员推断等术语首次出现即界定并配速查卡。"
+      "note": "AI 6 课核心术语首次出现即界定并配速查卡；第 38–45 课术语与速查卡见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "source-traceability",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "6 课去重共 100 处正文来源锚点 #source-* 全部命中各自 manifest.sources 与静态产物，且按独立盲审复核校正了 3Blue1Brown、LangChain Loop、MCP 传输、HNSW、Anthropic 缓存门槛与 OWASP LLM07 边界。"
+      "note": "AI 6 课去重共 100 处正文来源锚点 #source-* 全部命中 manifest.sources 与静态产物，并按 Codex 盲审校准多处论文/规范边界；第 38–45 课来源核验见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "code-verification",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "新增 6 个零依赖 Python 脚本在本机 Python 3.15.2 全部实跑退出 0，stdout 与页面 TerminalSession 逐字一致，CodeFile mark 行号均经核对；第 4 课 MCP JSON Schema 与 SKILL.md 围栏示例已修正确实渲染。"
+      "note": "AI 6 课新增 6 个零依赖 Python 脚本在本机 Python 3.15.2 实跑退出 0 且 stdout 与 TerminalSession 逐字一致，第 4 课 MCP/Skill 围栏示例已修正真实渲染；第 38–45 课 21 份实验材料在 Kali 2026.3 实跑记录见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "security-scope",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "第 6 课保留 SecurityDisclaimer 与 authorized-lab 范围；guardrail_demo.py 仅导入标准库 re 做本地字符串模拟，无网络请求、无真实密钥、无外部目标攻击载荷。"
+      "note": "第 6 课保留 SecurityDisclaimer 与 authorized-lab 范围，guardrail_demo.py 仅用标准库 re 做本地无害模拟；第 38–45 课仅限 loopback 靶场见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "interaction-purpose",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "第 1–5 课升级现有交互实验台（预设学习率、实时算式、感受野高亮、双样例 ReLU 闸门、上下文演化、等比余弦检索），第 6 课替换泛用流程条为双场景攻防对比 PromptInjectionSandbox。"
+      "note": "AI 1–5 课升级现有交互实验台，第 6 课新增双场景攻防对比 PromptInjectionSandbox 与 AiAttackSurface；第 38–45 课 5 处流程图与 HttpExchange 见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "motion-purpose",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "所有交互动效服务于梯度轨迹、梯度回传、窗口容量与攻防状态变化；各课 primaryAnimations<=1、supportingInteractions<=3、scrollReveals=0，全部通过门禁预算。"
+      "note": "AI 6 课交互动效均服务于机制理解且全部符合 primaryAnimations<=1、supportingInteractions<=3、scrollReveals=0 预算；第 38–45 课见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "fallback-completeness",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "LinearFitPlayground 静态态直接派生最佳线/3 阶状态，BackpropPlayground 静态/打印态自动展开完整链式求导表，PromptInjectionSandbox 静态态同时呈现场景 A/B 攻防对照。"
+      "note": "AI 6 课的 LinearFitPlayground、BackpropPlayground 与 PromptInjectionSandbox 静态/打印态均完整展开关键状态与双场景对照；第 38–45 课静态降级未单独实测（见 qa/modern-web-bridge-1.md）。"
     },
     {
       "id": "keyboard-access",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "滑杆复用带方向键步进的 RangeControl，预设与场景切换均使用原生 button + aria-pressed；未在读屏器中做人工全流程听测（已记入未覆盖范围）。"
+      "note": "AI 6 课滑杆复用带方向键步进的 RangeControl，交互按钮使用原生 button + aria-pressed；全站读屏器与第 38–45 课完整 Tab 走查未执行。"
     },
     {
       "id": "mobile-overflow",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "本机 Chromium 390×844 实测首页、/paths/ai/ 与 AI 6 课全部页面 scrollWidth=390（0 横向溢出，0 console 报错）。"
+      "note": "本机 Chromium 390×844 实测首页、/paths/ai/ 与 AI 6 课横向溢出 0px（console 0 错）；第 38–45 课同分辨率 0px 溢出记录见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "print-completeness",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "Chromium @media print 模拟下，BackpropPlayground 推导表自动展开、PromptInjectionSandbox 输出双场景对照、交互控制条按 print.css 隐藏；真实纸张分页未实测。"
+      "note": "AI 6 课在 Chromium @media print 模拟下推导表自动展开、双场景完整呈现；真实纸张分页与第 38–45 课打印模拟未单独执行。"
     },
     {
       "id": "page-structure",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "6 课统一包含 LessonHero、学习目标与前置知识、LessonPacing、交互/图示、代码实验、KeyTakeaway、CheatSheet、LessonExercises 与 SourceList；/paths/ai/ 显示 6/6 已上线。"
+      "note": "全站 56 课与两条学习路线（新生路线 8 阶段 45 课 + AI 路线 2 阶段 6 课）合并后通过门禁与静态构建。"
     },
     {
       "id": "visual-consistency",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "遵循 components.css 级联顺序与双主题语义 token，修复正负权重同红、预设按钮白底浅字、图例零值低对比度、黑底黑字 END 与满激活圆圈底色过深问题。"
+      "note": "遵循 components.css 级联顺序与双主题语义 token，修复正负权重同红、预设按钮低对比度、图例零值对比度、黑底黑字 END、满激活圆圈底色过深与卡片错位问题。"
     },
     {
       "id": "deployment-integrity",
       "level": "must",
       "status": "not-run",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "本地 npm run verify（含 Pagefind 索引与 61 页构建）通过；生产 nginx 与 CSP 响应头验收本轮未执行。"
+      "note": "合并后本地 npm run verify（含全站 Pagefind 索引与静态构建）通过；生产 nginx 与 CSP 响应头验收未执行。"
     },
     {
       "id": "layout-self-audit",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "完成桌面浅色/深色与手机端构建产物截图抽查与 SVG 碰撞/裁切脚本校验，并针对盲审指出的 DataPipeline 顺序、RetrievalSandbox 等比坐标与 Backprop 终态逐一复验。"
+      "note": "完成 AI 6 课桌面浅/深色与手机端截图核查及盲审定点复验；第 38–45 课与入口页 DOM/截图复核见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "demo-on-page",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "6 课实验均先以 CodeFile 展示 public/labs 下完整源码（与下载链接同源），再以 TerminalSession 给出实跑命令、精确输出与解释。"
+      "note": "AI 6 课均通过 CodeFile 展示同源脚本并用 TerminalSession 呈现精确输出；第 38–45 课 21 份材料展示见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "claim-semantic-fit",
       "level": "must",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "结合 Codex 独立盲审复核了单步困惑度、过拟合 2/3 阶范围、HNSW 近似权衡、提示缓存门槛、Stateless MCP 适用前提、OWASP LLM07 与梯度等高线数学方程。"
+      "note": "AI 6 课经 Codex 独立盲审复核数学与来源边界并收口；第 38–45 课盲审修订见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "opening-question",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "6 课均以具体工程或生活场景破题（垃圾邮件规则、手写数字 3、接龙预测下一个词、发布简报 Agent、生产六层名词地图、AI 攻击面两根轴）。"
+      "note": "AI 6 课均以具体工程或生活场景破题；第 38–45 课见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "diagram-value",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "修正并增强数据流水线、损失等高线、手算矩阵、卷积放大格、RNN 展开、自回归循环、词向量空间、MCP 架构、执行图、RAG 两线、LoRA、请求旅程与 AI 攻击面图。"
+      "note": "修正并增强 AI 6 课全部 18+ 图示与交互组件，第 6 课补齐两阶段攻击面图；第 38–45 课流程图与 HttpExchange 见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "authentic-example",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "贯穿示例均贴近真实研发任务（房价拟合、XOR 神经网络、发版简报 Agent、接口超时 RAG 与缓存账本、报价网页与 Markdown 提示注入攻防）。"
+      "note": "AI 6 课贯穿真实工程例子与本地可跑脚本；第 38–45 课真实工具工作流见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "review-card",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "全部 6 课均配备 1 张 KeyTakeaway 结论卡与 1 张 6 条目 CheatSheet 速查卡。"
+      "note": "AI 6 课与第 38–45 课均各自配备 1 张 KeyTakeaway 结论卡与 1 张 CheatSheet 速查卡。"
     },
     {
       "id": "motion-rhythm",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "连续播放步进节拍平缓可控，支持单步、暂停、复位与预设直达，并在 prefers-reduced-motion 与打印态自动收敛为静态总览。"
+      "note": "AI 6 课交互步进可控且支持 prefers-reduced-motion 与打印态静态收敛；第 38–45 课无自动播放动画。"
     },
     {
       "id": "visual-focus",
       "level": "should",
       "status": "pass",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "每课保持单一主交互与清晰视觉焦点；移除第 4 课冗余静态上下文条与第 5 课重复步骤清单，降低页面视觉噪声。"
+      "note": "AI 6 课保持单一主交互并移除冗余静态条与重复步骤清单；第 38–45 课见 qa/modern-web-bridge-1.md。"
     },
     {
       "id": "reference-coverage",
       "level": "should",
       "status": "not-applicable",
       "evidenceFile": "qa/ai-ml-polish.md",
-      "note": "本轮属于既有课程优化重构，未引入用户外部讲义，沿用并核对原课程权威论文、协议规范与官方文档来源。"
+      "note": "本轮属于既有 AI 课程重构与合并既有第 8 阶段内容，未引入外部用户讲义。"
     }
   ]
 }

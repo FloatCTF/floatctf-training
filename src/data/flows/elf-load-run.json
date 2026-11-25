@@ -1,0 +1,27 @@
+[
+  {
+    "label": "磁盘上的 ELF 文件",
+    "detail": "编译链接产出 ELF：文件头声明架构与入口地址，.text 存机器码，.rodata 存只读字符串。",
+    "state": "normal"
+  },
+  {
+    "label": "execve 映射进虚拟内存",
+    "detail": "shell 调用 execve 时，Linux 内核按程序头表把代码段映射为只读可执行（r-xp），数据段映射为读写（rw-p）。",
+    "state": "normal"
+  },
+  {
+    "label": "动态链接器加载共享库",
+    "detail": "ld-linux 解析依赖的 libc.so.6，把 puts、atoi 等库函数地址接入进程空间。",
+    "state": "normal"
+  },
+  {
+    "label": "CPU 按 %rip 取指执行",
+    "detail": "指令指针 %rip 沿机器码前进，函数调用按 System V AMD64 约定把前两个参数放进 %edi、%esi，返回值放回 %eax。",
+    "state": "danger"
+  },
+  {
+    "label": "比较跳转并退出",
+    "detail": "cmp 与 je/jne 按比较结果决定走向「PIN OK」还是「PIN DENIED」，最终把退出码交回内核。",
+    "state": "success"
+  }
+]

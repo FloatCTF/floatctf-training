@@ -1,0 +1,375 @@
+{
+  "lessonPlan": {
+    "audience": "已经掌握 HTTP、PHP 表单会话、Docker 与 HTTPS 基础的新生，准备看懂真实生产环境里的前后端分离、API、JWT 与反向代理架构",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "tool",
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "用五步流程图串联现代前后端分离请求如何穿过 Nginx 反向代理、CORS 预检、三段 JWS 形态 JWT 验签与服务端对象级授权，最终以 JSON 返回页面",
+    "learningObjectives": [
+      "说明前后端分离架构与传统服务端渲染页面的核心区别，并说出 Nginx 反向代理在其中的职责",
+      "用独立配置和独立 PID 启动仅监听 127.0.0.1 的 Nginx 静态托管与 /api/ 反代实例，解释 proxy_pass 与 Host、X-Real-IP、X-Forwarded-For 的含义",
+      "用 curl 触发并读懂包含 Access-Control-Request-Headers 的 CORS 预检（204 无 Content-Length）响应头，区分同源反代与跨源预检",
+      "拆解三段 JWS 形态的 HS256 JWT，说明 Header/Payload 只是 Base64URL 编码而非加密，以及 alg 与 >=256 位密钥校验的重要性",
+      "区分认证（401 + WWW-Authenticate）与授权（403），解释对象级越权（IDOR/BOLA）的成因与服务端兜底方法"
+    ],
+    "prerequisites": [
+      "https-tls-and-proxy",
+      "docker-compose-labs",
+      "php-forms-and-sessions"
+    ],
+    "safetyScope": "localhost",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-authn-vs-authz",
+      "kind": "mechanism",
+      "title": "401 和 403 差在哪，为什么带了真 Token 还是会越权",
+      "question": "Alice 登录拿到了服务端签发的真实 JWT（uid=101），然后把请求 URL 改成 GET /api/profile?uid=102。如果后端只校验了 JWT 签名有效，却直接按查询参数 uid=102 查库返回，会发生什么？在本课示例里，正确的服务端应该返回哪个状态码，与未带 Token 时的 401 有何区别？",
+      "answer": "只验签名只完成了「认证（Authentication）」，证明来访者确实是登录过的 Alice，但没有做「授权（Authorization）」，结果 Alice 读走了 Bob（uid=102）的私有数据——这就是典型的失效访问控制 / 对象级越权（IDOR）。本课示例把 Token 里的 claims['uid'] 与目标记录归属比对，不匹配时返回 403 Forbidden（已认证但无权限）；而缺少或无效凭据时返回 401 Unauthorized 并按 RFC 9110 携带 WWW-Authenticate: Bearer 头。",
+      "sourceIds": [
+        "owasp-a01-bac",
+        "owasp-authn-cs",
+        "rfc7519",
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "check-predict-jwt-and-cors",
+      "kind": "prediction",
+      "title": "预测三条现代 Web 调试命令的结果",
+      "question": "基于本课实验环境（独立 Nginx 监听 127.0.0.1:8088，API 监听 127.0.0.1:9000，密钥为 kali-lab-hs256-secret-key-2026-demo），预测下列操作的结果：一、用 python3 decode_jwt.py \"$TOKEN\"（不传密钥）能不能读出 sub 和 uid？二、把 Token 中间那段 Payload 解码改成 uid=102 再重新 Base64URL 拼回原签名，发给 /api/profile?uid=102 会返回什么状态码？三、在终端用 curl --noproxy '*' -H 'Origin: http://evil.local' http://127.0.0.1:9000/api/whoami-proxy，curl 会不会报错拒绝输出正文？",
+      "answer": "一、能直接读出 HEADER 与 PAYLOAD 中的 sub、uid、role、exp，因为三段 JWS 形态 JWT 的前两段只是 Base64URL 编码而不是加密。二、返回 401 Unauthorized（invalid signature，带 WWW-Authenticate: Bearer），因为修改 Payload 后重新计算的 HMAC-SHA256 摘要与第三段原签名不再一致。三、curl 不会拦截，仍会打印 200 和 JSON 正文——响应里只是少了 Access-Control-Allow-Origin 头；CORS 是浏览器执行的安全策略，不是服务端防 curl 调用的防火墙。",
+      "sourceIds": [
+        "rfc7519",
+        "mdn-cors",
+        "curl-manpage"
+      ]
+    },
+    {
+      "id": "check-nginx-and-jwt-lab",
+      "kind": "practice",
+      "title": "跑通独立 Nginx 反代与越权边界实验",
+      "question": "在 Kali 里按本课步骤用 /tmp/modern-web-nginx 启动独立 Nginx（8088）和 api_server.py（9000）：一、先不带 Token 请求 /api/profile 观察 401 与 WWW-Authenticate 头，再用 alice 登录拿到 Token 分别请求 /api/profile?uid=101 和 /api/profile?uid=102；二、用 curl --noproxy '*' -H 'X-Forwarded-For: 198.51.100.99' http://127.0.0.1:8088/api/whoami-proxy 观察反代头拼接结果；三、实验结束后定向停止独立 Nginx。",
+      "answer": "一、无 Token 返回 401 Unauthorized 与 WWW-Authenticate: Bearer realm=\"modern-web-lab\"；uid=101 返回 200 OK 和 Alice 的记录；uid=102 返回 403 Forbidden 与 authenticated as alice (uid=101), cannot read uid=102。二、经过 Nginx 的 $proxy_add_x_forwarded_for 后，后端会收到 198.51.100.99, 127.0.0.1：最前面那段是客户端自己填的假 IP，只有最后一跳可信反代追加的地址才可信。三、用 nginx -p /tmp/modern-web-nginx -e error.log -c \"$HOME/lab/modern-web/nginx-site.conf\" -s stop 定向停服。自查标准：复现 401/200/403 差异，且未改动系统 /etc/nginx。",
+      "sourceIds": [
+        "nginx-proxy-pass",
+        "mdn-xff",
+        "owasp-a01-bac"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "从单机页面到前后端分离与 Nginx 反代",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "用独立配置启动 Nginx 8088，分别拿到静态首页（200）和反代后的 /api/whoami-proxy JSON。"
+    },
+    {
+      "kind": "动手",
+      "title": "CORS 预检与 JWT 拆解实操",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "发一次完整 CORS 预检（204 无 Content-Length），并用 decode_jwt.py 在无密钥时读出 Payload、有密钥时核对 alg 与签名。"
+    },
+    {
+      "kind": "进阶",
+      "title": "认证 ≠ 授权与真实上线配置边界",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "复现未认证 401、读自己 200 与越权 403 拦截，并用独立 PID 清理实验 Nginx。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "RFC 7519 JSON Web Token JWT exp validation RFC 7518 HS256 minimum key size",
+      "RFC 9110 section 8.6 204 No Content Content-Length 401 WWW-Authenticate",
+      "WHATWG Fetch Standard CORS preflight fetch Access-Control-Request-Headers",
+      "MDN X-Forwarded-For and CORS Documentation",
+      "Nginx Module ngx_http_proxy_module proxy_pass directive",
+      "OWASP Top 10 A01 2021 Broken Access Control & Authentication Cheat Sheet"
+    ],
+    "notes": "本课四个实验文件（api_server.py、decode_jwt.py、nginx-site.conf、index.html）及全部命令均已于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（nginx/1.30.4、curl 8.23.0、Python 3.14.10、jq 1.8.2）以普通用户 kali 通过独立 -p /tmp/modern-web-nginx 实例真实执行核对，验证 204 无 Content-Length、401 带 WWW-Authenticate: Bearer、HS256 >=32 字节密钥校验与定向停服。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：nginx 1.30.4、curl 8.23.0、Python 3.14.10、jq 1.8.2",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），独立 Nginx 实例运行于 /tmp/modern-web-nginx（127.0.0.1:8088），后端 API 监听 127.0.0.1:9000",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "JWT 里的 exp 时间戳与签名随运行时刻和密钥变化；Nginx 版本号与 Date 响应头随环境变化；生产系统级配置常位于 /etc/nginx/sites-enabled/ 或 /etc/nginx/conf.d/，本课用独立 -p/-c 避免污染主机配置。"
+  },
+  "sources": [
+    {
+      "id": "nginx-proxy-pass",
+      "kind": "official-doc",
+      "title": "Nginx Documentation: ngx_http_proxy_module (proxy_pass & proxy_set_header)",
+      "publisher": "NGINX",
+      "url": "https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方文档持续更新，记录核验快照日期。",
+      "supports": [
+        "claim-nginx-reverse-proxy",
+        "cmd-nginx-verify"
+      ]
+    },
+    {
+      "id": "mdn-xff",
+      "kind": "official-doc",
+      "title": "MDN: X-Forwarded-For HTTP Header",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明代理链路中客户端 IP 列表的追加顺序与伪造风险。",
+      "supports": [
+        "claim-xff-trust"
+      ]
+    },
+    {
+      "id": "mdn-cors",
+      "kind": "official-doc",
+      "title": "MDN: Cross-Origin Resource Sharing (CORS)",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明浏览器同源限制、需要预检的跨源请求与 Access-Control-Allow-* 响应头。",
+      "supports": [
+        "claim-cors-browser",
+        "cmd-cors-preflight"
+      ]
+    },
+    {
+      "id": "fetch-cors",
+      "kind": "specification",
+      "title": "WHATWG Fetch Living Standard: CORS-preflight fetch",
+      "publisher": "WHATWG",
+      "url": "https://fetch.spec.whatwg.org/#cors-preflight-fetch",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "规范预检请求携带 Access-Control-Request-Method/Headers，且预检与实际响应都须满足 CORS 检查。",
+      "supports": [
+        "claim-cors-browser",
+        "cmd-cors-preflight"
+      ]
+    },
+    {
+      "id": "rfc9110",
+      "kind": "specification",
+      "title": "RFC 9110: HTTP Semantics (§8.6 Content-Length, §15.3.5 204, §15.5.2 401)",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "规定 204 No Content 不得携带 Content-Length，且 401 响应必须携带 WWW-Authenticate 质询头。",
+      "supports": [
+        "claim-authn-vs-authz",
+        "cmd-cors-preflight",
+        "cmd-profile-authz"
+      ]
+    },
+    {
+      "id": "rfc7519",
+      "kind": "specification",
+      "title": "RFC 7519: JSON Web Token (JWT)",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc7519",
+      "publishedAt": "2015-05-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "RFC 标注发布月份 2015-05，日期记为当月 1 日；§4.1.4 规定当前时间必须严格早于 exp。",
+      "supports": [
+        "claim-jwt-structure",
+        "cmd-decode-jwt"
+      ]
+    },
+    {
+      "id": "rfc7518",
+      "kind": "specification",
+      "title": "RFC 7518: JSON Web Algorithms (JWA) (§3.2 HMAC with SHA-2)",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc7518",
+      "publishedAt": "2015-05-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "§3.2 要求 HS256 密钥长度不少于哈希输出长度（256 位 / 32 字节）。",
+      "supports": [
+        "claim-jwt-structure",
+        "claim-env-secret"
+      ]
+    },
+    {
+      "id": "owasp-a01-bac",
+      "kind": "official-doc",
+      "title": "OWASP Top 10 (2021): A01 Broken Access Control",
+      "publisher": "OWASP",
+      "url": "https://owasp.org/Top10/A01_2021-Broken_Access_Control/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明失效访问控制与按对象 ID 越权读取数据的根因及服务端防护。",
+      "supports": [
+        "claim-authn-vs-authz",
+        "cmd-profile-authz"
+      ]
+    },
+    {
+      "id": "owasp-authn-cs",
+      "kind": "official-doc",
+      "title": "OWASP Authentication Cheat Sheet",
+      "publisher": "OWASP",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Authentication_Cheat_Sheet.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明认证凭据管理、密钥隔离与会话保护原则。",
+      "supports": [
+        "claim-env-secret"
+      ]
+    },
+    {
+      "id": "curl-manpage",
+      "kind": "official-doc",
+      "title": "curl man page (-X, -H, -d, -i, --noproxy)",
+      "publisher": "curl",
+      "url": "https://curl.se/docs/manpage.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "官方文档持续更新，记录核验快照日期。",
+      "supports": [
+        "cmd-cors-preflight",
+        "cmd-profile-authz"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-nginx-reverse-proxy",
+      "text": "Nginx 反向代理作为统一入口同时承担静态资源返回与后端请求转发；proxy_pass 是否带末尾路径会直接影响转发给上游的 URI，并通常通过 proxy_set_header 透传 Host 与客户端地址信息。",
+      "sourceIds": [
+        "nginx-proxy-pass"
+      ]
+    },
+    {
+      "id": "claim-xff-trust",
+      "text": "X-Forwarded-For 由客户端与沿途代理依次拼接，最左侧的条目可由请求发起方任意伪造，服务端只有在明确信任边界与代理跳数时才能提取真实来源 IP。",
+      "sourceIds": [
+        "mdn-xff"
+      ]
+    },
+    {
+      "id": "claim-cors-browser",
+      "text": "CORS（跨源资源共享）由浏览器在跨源访问时执行：对需要预检的请求先发 OPTIONS 核对来源、方法与请求头，并同样校验实际响应头；它只约束浏览器脚本，不阻挡 curl 直接调接口，且同源 Nginx 反代路径通常无需预检。",
+      "sourceIds": [
+        "mdn-cors",
+        "fetch-cors"
+      ]
+    },
+    {
+      "id": "claim-jwt-structure",
+      "text": "常见的三段 JWS 形态 JWT 由 Base64URL 编码的 Header、Payload 与签名/MAC 组成；前两段不提供保密性，服务端校验必须严格限制 alg、使用不少于 256 位的密钥并确保当前时间严格早于 exp。",
+      "sourceIds": [
+        "rfc7519",
+        "rfc7518"
+      ]
+    },
+    {
+      "id": "claim-authn-vs-authz",
+      "text": "认证确认请求者身份（未通过返回 401 并携带 WWW-Authenticate 头），授权确认该身份是否有权操作目标对象（本例返回 403）；缺少对象级所有权检查会导致修改参数（如 uid）即可越权读写他人数据。",
+      "sourceIds": [
+        "owasp-a01-bac",
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-env-secret",
+      "text": "JWT 签名密钥与数据库口令应通过环境变量或受限凭据注入（HS256 密钥至少 32 字节且由密码学安全随机数生成），生产应使用受维护 JWT 库，绝不硬编码提交进 Git 或暴露 .env/.git 到公网。",
+      "sourceIds": [
+        "owasp-authn-cs",
+        "rfc7518"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-nginx-verify",
+      "command": "nginx -p /tmp/modern-web-nginx -e error.log -c \"$HOME/lab/modern-web/nginx-site.conf\" -t && curl --noproxy '*' -sS -i http://127.0.0.1:8088/ | head -n 6 && curl --noproxy '*' -sS http://127.0.0.1:8088/api/whoami-proxy",
+      "expectedResult": "独立 Nginx 配置校验通过，根路径返回静态 index.html（200 OK），/api/whoami-proxy 经反向代理返回包含 host、x_real_ip 与 x_forwarded_for 的 JSON。",
+      "sourceIds": [
+        "nginx-proxy-pass"
+      ]
+    },
+    {
+      "id": "cmd-cors-preflight",
+      "command": "curl --noproxy '*' -sS -i -X OPTIONS -H 'Origin: http://127.0.0.1:8088' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' http://127.0.0.1:9000/api/login",
+      "expectedResult": "返回 HTTP/1.1 204 No Content（不含 Content-Length 头），携带 Access-Control-Allow-Origin、Access-Control-Allow-Headers 与 Access-Control-Allow-Methods。",
+      "sourceIds": [
+        "mdn-cors",
+        "fetch-cors",
+        "rfc9110",
+        "curl-manpage"
+      ]
+    },
+    {
+      "id": "cmd-decode-jwt",
+      "command": "python3 decode_jwt.py \"$TOKEN\" 'kali-lab-hs256-secret-key-2026-demo' && python3 decode_jwt.py \"$TOKEN\" 'wrong-secret'",
+      "expectedResult": "两次都能解码输出 HEADER 与 PAYLOAD 中的 sub/uid/role/exp；alg 为 HS256 且密钥匹配时 SIGNATURE VALID 为 True，否则为 False。",
+      "sourceIds": [
+        "rfc7519"
+      ]
+    },
+    {
+      "id": "cmd-profile-authz",
+      "command": "curl --noproxy '*' -sS -i 'http://127.0.0.1:8088/api/profile' && curl --noproxy '*' -sS -i -H \"Authorization: Bearer $TOKEN\" 'http://127.0.0.1:8088/api/profile?uid=101' && curl --noproxy '*' -sS -i -H \"Authorization: Bearer $TOKEN\" 'http://127.0.0.1:8088/api/profile?uid=102'",
+      "expectedResult": "无 Token 返回 401（含 WWW-Authenticate: Bearer）；uid=101 返回 200 OK 与 Alice 的记录；uid=102 返回 403 Forbidden。",
+      "sourceIds": [
+        "owasp-a01-bac",
+        "rfc9110",
+        "curl-manpage"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-modern-api",
+      "path": "public/labs/modern-web-architecture/api_server.py",
+      "command": "APP_JWT_SECRET='kali-lab-hs256-secret-key-2026-demo' python3 api_server.py",
+      "expectedResult": "在 127.0.0.1:9000 启动最小 JSON API，支持 HS256 JWT 登录、401/403 边界检查与合规 204 CORS 预检。"
+    },
+    {
+      "id": "example-decode-jwt",
+      "path": "public/labs/modern-web-architecture/decode_jwt.py",
+      "command": "python3 decode_jwt.py <JWT> [SECRET]",
+      "expectedResult": "打印解码后的 JWT Header 与 Payload，并在传入密钥时核对 alg 为 HS256 后校验签名。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "flow-simulator",
+    "primaryAnimations": 0,
+    "supportingInteractions": 1,
+    "scrollReveals": 0
+  }
+}

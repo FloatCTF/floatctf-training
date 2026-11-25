@@ -332,6 +332,55 @@
       "order": 7
     },
     {
+      "id": "ssh-and-packet-capture",
+      "slug": "ssh-and-packet-capture",
+      "categoryId": "engineering-tools",
+      "series": "现代运维与协作",
+      "title": "远程运维与流量观测：SSH 密钥、隧道与 tcpdump 抓包",
+      "summary": "用 Ed25519 密钥与 ssh -L 安全访问内网服务，再用 tcpdump 与 Wireshark 亲眼对比明文 HTTP 与加密 HTTPS 流量。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/ssh-and-packet-capture/",
+      "prerequisites": [
+        "network-basics",
+        "https-tls-and-proxy"
+      ],
+      "order": 8
+    },
+    {
+      "id": "regex-and-log-triage",
+      "slug": "regex-and-log-triage",
+      "categoryId": "engineering-tools",
+      "series": "现代运维与协作",
+      "title": "文本处理实战：正则表达式、日志筛选与 JSON 解析",
+      "summary": "组合 grep -E、awk、sed 与 jq，从真实 Nginx 访问日志和结构化 JSON 里十秒定位异常来源与报错接口。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/regex-and-log-triage/",
+      "prerequisites": [
+        "shell-permissions-and-pipes",
+        "modern-web-architecture"
+      ],
+      "order": 9
+    },
+    {
+      "id": "security-mindset-and-ai-workflow",
+      "slug": "security-mindset-and-ai-workflow",
+      "categoryId": "engineering-tools",
+      "series": "现代运维与协作",
+      "title": "安全思维、合规边界与 AI 时代读码工作流",
+      "summary": "建立信任边界思维与合法授权红线，掌握结合命令行与 AI 快速摸清陌生项目并实证防幻觉的工作流。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/security-mindset-and-ai-workflow/",
+      "prerequisites": [
+        "git-branches-and-collaboration",
+        "java-web-project-reading",
+        "modern-web-architecture"
+      ],
+      "order": 10
+    },
+    {
       "id": "data-representation",
       "slug": "data-representation",
       "categoryId": "cs-foundations",
@@ -420,6 +469,72 @@
         "shell-files-and-paths"
       ],
       "order": 6
+    },
+    {
+      "id": "https-tls-and-proxy",
+      "slug": "https-tls-and-proxy",
+      "categoryId": "cs-foundations",
+      "series": "现代 Web 与安全前哨",
+      "title": "HTTPS、密码学常识与代理抓包",
+      "summary": "分清编码、哈希、加密与签名；亲手建本地 CA 跑通 HTTPS，再通过本地代理验证前端校验为何不可信。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/https-tls-and-proxy/",
+      "prerequisites": [
+        "data-representation",
+        "http-basics",
+        "javascript-in-the-browser"
+      ],
+      "order": 7
+    },
+    {
+      "id": "modern-web-architecture",
+      "slug": "modern-web-architecture",
+      "categoryId": "cs-foundations",
+      "series": "现代 Web 与安全前哨",
+      "title": "现代 Web 架构：前后端分离、API、JWT 与 Nginx 反代",
+      "summary": "用 Nginx 反代与 JSON API 搭出真实前后端分离架构，弄清 CORS、X-Forwarded-For、JWT 拆解与认证授权边界。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/modern-web-architecture/",
+      "prerequisites": [
+        "https-tls-and-proxy",
+        "docker-compose-labs",
+        "php-forms-and-sessions"
+      ],
+      "order": 8
+    },
+    {
+      "id": "linux-runtime-and-services",
+      "slug": "linux-runtime-and-services",
+      "categoryId": "cs-foundations",
+      "series": "操作系统与二进制",
+      "title": "Linux 运行时：虚拟内存、系统调用与环境变量",
+      "summary": "用 /proc/self/maps、ldd 与 strace 透视进程虚拟内存与系统调用，理解环境变量与最小权限服务单元。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/linux-runtime-and-services/",
+      "prerequisites": [
+        "shell-permissions-and-pipes",
+        "c-structs-and-heap"
+      ],
+      "order": 9
+    },
+    {
+      "id": "elf-and-assembly-reading",
+      "slug": "elf-and-assembly-reading",
+      "categoryId": "cs-foundations",
+      "series": "操作系统与二进制",
+      "title": "程序怎样在 CPU 上跑：ELF 结构与 x86-64 汇编读图",
+      "summary": "用 file、readelf、strings 与 objdump 拆开真实 Linux ELF，看懂 System V AMD64 寄存器约定与基础汇编逻辑。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/elf-and-assembly-reading/",
+      "prerequisites": [
+        "c-functions-and-stack",
+        "linux-runtime-and-services"
+      ],
+      "order": 10
     },
     {
       "id": "python-variables-and-types",
@@ -785,6 +900,24 @@
         "git-branches-and-collaboration",
         "php-pdo-database",
         "docker-compose-labs"
+      ],
+      "order": 1
+    },
+    {
+      "id": "web-security-bridge-lab",
+      "slug": "web-security-bridge-lab",
+      "categoryId": "ctf-practice",
+      "title": "综合前哨实战：白盒体检与跨方向体验",
+      "summary": "把日志筛选、JWT 验签、前端边界验证、Python 自动化翻页与一道极简 ELF 反汇编串成五关纯本地通关实战。",
+      "difficulty": "beginner",
+      "status": "completed",
+      "pagePath": "/lessons/web-security-bridge-lab/",
+      "prerequisites": [
+        "https-tls-and-proxy",
+        "modern-web-architecture",
+        "regex-and-log-triage",
+        "elf-and-assembly-reading",
+        "guestbook-capstone"
       ],
       "order": 1
     }

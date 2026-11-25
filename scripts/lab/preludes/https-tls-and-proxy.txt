@@ -1,0 +1,3 @@
+# 第 38 课：清理旧的练习目录和进程，把本课四个文件放到 ~/lab/https。
+pkill -f 'https_server.p[y]'; pkill -f 'shop_server.p[y]'; pkill -f 'mini_proxy.p[y]'; rm -rf ~/lab/https; mkdir -p ~/lab/https; cp ~/lab/python/* ~/lab/https/; true
+@workdir /home/kali/lab/https

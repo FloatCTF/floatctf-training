@@ -1,0 +1,500 @@
+{
+  "lessonPlan": {
+    "audience": "已经学过 HTTP 基础、命令行与浏览器脚本的新生，准备从传统单机练习过渡到现代 Web 工程排错与 Web 安全",
+    "durationMinutes": 90,
+    "primaryMode": "mechanism",
+    "supportingModes": [
+      "tool",
+      "lab",
+      "troubleshooting"
+    ],
+    "evidenceProfiles": [
+      "versioned-tool",
+      "stable-technical"
+    ],
+    "assessments": [
+      "exercise",
+      "lab-check"
+    ],
+    "motionLevel": "explanatory",
+    "visualStory": "先用一份按代理改写结果实发录制的 POST /checkout 报文说明前端限制为何无法充当安全边界，再用五步流程拆解本地调试代理如何借助本地 CA 把一条 HTTPS 连接拆成前后两段 TLS",
+    "learningObjectives": [
+      "用同一段输入区分编码、哈希、对称加密、非对称密钥协商与数字签名，说出各自解决什么问题以及能否还原",
+      "使用 openssl 生成本地迷你 CA 与带 SAN 扩展的站点证书，并解释 curl 为何拒绝未受信任的证书链",
+      "在本地 HTTPS 练习站里观察 TLS 1.3 握手与 HttpOnly、Secure、SameSite 三个 Cookie 属性的作用",
+      "运行本地最小 HTTP 代理并转发请求，用可复现结果说明为什么前端校验不是信任边界",
+      "解释 Burp Suite、mitmproxy 等调试代理为何需要把本地 CA 证书导入测试浏览器才能查看 HTTPS 报文，以及普通 CONNECT 隧道为何不能解密内容"
+    ],
+    "prerequisites": [
+      "data-representation",
+      "http-basics",
+      "javascript-in-the-browser"
+    ],
+    "safetyScope": "localhost",
+    "verifiedAt": "2026-11-25"
+  },
+  "exercises": [
+    {
+      "id": "check-four-primitives",
+      "kind": "mechanism",
+      "title": "这四段输出，哪一个能还原出原文",
+      "question": "某网站把用户的会话信息先后做了四种处理：A 用 Base64 编码，B 用 SHA-256 计算摘要，C 用服务端掌握的密钥做 AES-256 加密，D 保留原文并附带服务端私钥生成的 Ed25519 签名。请判断：拿到输出结果但没有任何密钥的第三方，分别能还原出原文吗？能悄悄篡改内容并通过校验吗？",
+      "answer": "A（Base64）不是加密，任何人都能直接解码还原原文，也能任意篡改再重新编码；B（SHA-256）是单向散列函数，不能按算法逆向解密还原，改变任意一字节摘要都会面目全非；C（AES-256）没有密钥时无法还原原文（且若要防篡改应选用 AES-GCM 等 AEAD 模式）；D（明文加签名）的原文直接可见（签名不保密），但第三方没有私钥，篡改原文后无法伪造出能通过公钥验证的新签名。",
+      "sourceIds": [
+        "rfc4648",
+        "nist-fips-180-4",
+        "openssl-enc",
+        "openssl-pkeyutl"
+      ]
+    },
+    {
+      "id": "check-predict-proxy-tls",
+      "kind": "prediction",
+      "title": "预测三种请求的结果",
+      "question": "按本课实验在本地同时启动 https_server.py（127.0.0.1:8443）、shop_server.py（127.0.0.1:8080）与 mini_proxy.py --replace price=35 price=1（127.0.0.1:8888）。请预测下面三条命令的输出与代理终端日志：一、curl --noproxy '*' https://127.0.0.1:8443/（不加 --cacert）；二、curl --noproxy '' -x http://127.0.0.1:8888 -d 'item=club-badge&qty=1&price=35' http://127.0.0.1:8080/checkout；三、curl --noproxy '' -x http://127.0.0.1:8888 --cacert ca.crt https://127.0.0.1:8443/whoami。",
+      "answer": "一、curl 以错误码 60 拒绝连接（unable to get local issuer certificate），因为自建的 Training Local CA 不在系统默认信任库里。二、代理终端打印 original body 含 price=35、rewritten body 含 price=1，结账站返回 JSON 里 client_sent_price 为 1、tampered 为 true，但 final_charge 仍按服务端目录价算出 35。三、curl 成功拿到 TLSv1.3 的 JSON 响应，代理终端只打印一条 CONNECT tunnel -> 127.0.0.1:8443（透传隧道），解不开加密后的 HTTP 请求头与响应正文。",
+      "sourceIds": [
+        "rfc8446",
+        "rfc9110",
+        "curl-manpage",
+        "owasp-input-validation"
+      ]
+    },
+    {
+      "id": "check-local-ca-and-proxy",
+      "kind": "practice",
+      "title": "自己做一次 HTTPS 校验与代理观察",
+      "question": "一、按本课步骤用 make_certs.sh 生成本地证书，修改 san.ext 去掉 IP:127.0.0.1 后重签 site.crt，再用 curl --noproxy '*' --cacert ca.crt https://127.0.0.1:8443/ 测试，记录错误信息并解释原因（随后恢复原版证书）。二、不带 --replace 启动 mini_proxy.py，用 curl --noproxy '' -x http://127.0.0.1:8888 访问 http://127.0.0.1:8080/checkout 并手动把 -d 里的 qty 改成 2、price 改成 1，核对服务端返回的 tampered 与 final_charge。",
+      "answer": "一、去掉 IP:127.0.0.1 后，即使传入 --cacert ca.crt，curl 仍会因为证书里的 Subject Alternative Name 不包含 127.0.0.1 而校验主机名失败（常见为 curl: (60) SSL: no alternative certificate subject name matches target IP address '127.0.0.1'），说明客户端同时核对「证书链是否可信」与「SAN 是否匹配当前访问的主机」。二、代理日志打印完整的 POST 请求与正文，服务端返回 qty 为 2、client_sent_price 为 1、server_catalog_price 为 35、tampered 为 true、final_charge 为 70。自查标准：你能复现两种证书失败的不同报错，并指出最终金额始终由服务端 CATALOG 决定。",
+      "sourceIds": [
+        "rfc5280",
+        "rfc9525",
+        "openssl-req",
+        "curl-manpage",
+        "owasp-input-validation"
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "kind": "必读",
+      "title": "先分清几件总被混为一谈的事",
+      "heading": "一、",
+      "minutes": 30,
+      "checkpoint": "能用同一段文本说出 Base64、SHA-256、对称加密、非对称密钥协商与数字签名的区别。"
+    },
+    {
+      "kind": "动手",
+      "title": "HTTPS 与证书链：亲手搭一个本地 CA",
+      "heading": "二、",
+      "minutes": 30,
+      "checkpoint": "用 --cacert ca.crt 跑通本地 HTTPS，并在 curl -v 里指出 TLS 版本、证书链与 SAN 校验以及 Set-Cookie 属性。"
+    },
+    {
+      "kind": "进阶",
+      "title": "代理抓包与「前端不可信」",
+      "heading": "三、",
+      "minutes": 30,
+      "checkpoint": "通过本地代理拦截并改写结账请求，再对照 CONNECT 隧道说清 Burp/mitmproxy 解密 HTTPS 的两段 TLS 原理。"
+    }
+  ],
+  "researchStatus": {
+    "status": "complete",
+    "verifiedAt": "2026-11-25",
+    "queries": [
+      "RFC 8446 TLS 1.3 publication date IETF rfc-editor.org",
+      "RFC 4648 Base64 RFC 6265 HttpOnly Secure SameSite MDN Set-Cookie official URL",
+      "mitmproxy How mitmproxy works official docs curl --cacert --proxy --noproxy openssl req -x509",
+      "FIPS 180-4 SHA-256 NIST publication date RFC 5280 X.509 RFC 9525 SAN verification",
+      "RFC 9110 CONNECT tunnel proxy section PortSwigger Installing Burp CA certificate",
+      "OWASP Input Validation Cheat Sheet client-side validation trust boundary"
+    ],
+    "notes": "本课全部四个实验材料（make_certs.sh、https_server.py、shop_server.py、mini_proxy.py）与所有 openssl/curl/python3 命令均已于 2026-11-25 在 kalilinux/kali-rolling 2026.3 容器（OpenSSL 3.6.5、curl 8.23.0、Python 3.14.10）真实执行核对（包括在 NO_PROXY=127.0.0.1 环境下验证 --noproxy ''）；src/data/http/proxy-checkout.json 由 scripts/lab/http-trace.py 在同一 Kali 容器里按改写后的正文向 shop_server.py 实发录制。浏览器 DevTools 步骤依据官方文档撰写。"
+  },
+  "versionInfo": {
+    "targetVersion": "Kali kali-rolling 2026.3：OpenSSL 3.6.5、curl 8.23.0、Python 3.14.10",
+    "environment": "kalilinux/kali-rolling 容器（x86_64，2026.3），用户 kali，标准库与系统工具实跑核验",
+    "verifiedAt": "2026-11-25",
+    "knownDifferences": "不同版本 OpenSSL 在 dgst 输出前缀与 TLS 1.3 密钥交换套件（如 X25519MLKEM768 与 X25519）上略有差异；macOS 自带 curl 使用 LibreSSL 时 -v 握手说明措辞不同，但错误码 60、TLSv1.3 协商结果与证书校验语义一致。证书有效期、Date 头与加盐密文每次运行都不同。"
+  },
+  "sources": [
+    {
+      "id": "rfc4648",
+      "kind": "specification",
+      "title": "RFC 4648: The Base16, Base32, and Base64 Data Encodings",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc4648",
+      "publishedAt": "2006-10-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日。",
+      "supports": [
+        "claim-base64-not-encryption"
+      ]
+    },
+    {
+      "id": "nist-fips-180-4",
+      "kind": "specification",
+      "title": "FIPS PUB 180-4: Secure Hash Standard (SHS)",
+      "publisher": "NIST",
+      "url": "https://csrc.nist.gov/pubs/fips/180-4/upd1/final",
+      "publishedAt": "2015-08-04",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "2015 年 8 月修订版，定义 SHA-256 等安全散列算法。",
+      "supports": [
+        "claim-sha256-oneway",
+        "cmd-openssl-dgst"
+      ]
+    },
+    {
+      "id": "rfc8446",
+      "kind": "specification",
+      "title": "RFC 8446: The Transport Layer Security (TLS) Protocol Version 1.3",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc8446",
+      "publishedAt": "2018-08-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日；定义 TLS 1.3 密钥协商、AEAD 记录层加密与认证。",
+      "supports": [
+        "claim-tls-goals"
+      ]
+    },
+    {
+      "id": "rfc5280",
+      "kind": "specification",
+      "title": "RFC 5280: Internet X.509 Public Key Infrastructure Certificate and CRL Profile",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc5280",
+      "publishedAt": "2008-05-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日；定义 X.509 证书链路径校验与扩展字段。",
+      "supports": [
+        "claim-x509-san"
+      ]
+    },
+    {
+      "id": "rfc9525",
+      "kind": "specification",
+      "title": "RFC 9525: Service Identity in TLS",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9525",
+      "publishedAt": "2023-11-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "取代 RFC 6125，规范 TLS 客户端依据 Subject Alternative Name（SAN）核对服务身份。",
+      "supports": [
+        "claim-x509-san"
+      ]
+    },
+    {
+      "id": "rfc9110",
+      "kind": "specification",
+      "title": "RFC 9110: HTTP Semantics (§9.3.6 CONNECT)",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc9110",
+      "publishedAt": "2022-06-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "RFC 只标注到月份，日期记为当月 1 日；§9.3.6 定义了代理的 CONNECT 隧道行为。",
+      "supports": [
+        "claim-connect-tunnel",
+        "cmd-curl-proxy-https"
+      ]
+    },
+    {
+      "id": "rfc6265",
+      "kind": "specification",
+      "title": "RFC 6265: HTTP State Management Mechanism",
+      "publisher": "IETF",
+      "url": "https://www.rfc-editor.org/rfc/rfc6265",
+      "publishedAt": "2011-04-01",
+      "accessedAt": "2026-11-25",
+      "dateType": "publication",
+      "notes": "定义 Cookie 的 Secure 与 HttpOnly 属性语义。",
+      "supports": [
+        "claim-cookie-flags"
+      ]
+    },
+    {
+      "id": "mdn-set-cookie",
+      "kind": "official-doc",
+      "title": "MDN: Set-Cookie HTTP Header",
+      "publisher": "Mozilla",
+      "url": "https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "持续更新页面，记录核验快照日期；覆盖 Secure、HttpOnly 与 SameSite。",
+      "supports": [
+        "claim-cookie-flags"
+      ]
+    },
+    {
+      "id": "openssl-req",
+      "kind": "official-doc",
+      "title": "OpenSSL Documentation: openssl-req",
+      "publisher": "OpenSSL Project",
+      "url": "https://docs.openssl.org/3.6/man1/openssl-req/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "OpenSSL 3.6 官方手册页，记录核验快照日期。",
+      "supports": [
+        "claim-x509-san",
+        "cmd-make-certs"
+      ]
+    },
+    {
+      "id": "openssl-enc",
+      "kind": "official-doc",
+      "title": "OpenSSL Documentation: openssl-enc",
+      "publisher": "OpenSSL Project",
+      "url": "https://docs.openssl.org/3.6/man1/openssl-enc/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "OpenSSL 3.6 官方手册页，说明对称加密与 CBC 填充检查限制（无认证完整性保护）。",
+      "supports": [
+        "claim-symmetric-key",
+        "cmd-openssl-enc"
+      ]
+    },
+    {
+      "id": "openssl-pkeyutl",
+      "kind": "official-doc",
+      "title": "OpenSSL Documentation: openssl-pkeyutl",
+      "publisher": "OpenSSL Project",
+      "url": "https://docs.openssl.org/3.6/man1/openssl-pkeyutl/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "OpenSSL 3.6 官方手册页，记录核验快照日期。",
+      "supports": [
+        "claim-digital-signature",
+        "cmd-openssl-sign"
+      ]
+    },
+    {
+      "id": "curl-manpage",
+      "kind": "official-doc",
+      "title": "curl man page (--cacert, -x/--proxy, --noproxy, -v)",
+      "publisher": "curl",
+      "url": "https://curl.se/docs/manpage.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "持续更新手册页，记录核验快照日期；--noproxy '' 可清空环境 NO_PROXY 防止绕过本地代理。",
+      "supports": [
+        "cmd-curl-cacert",
+        "cmd-curl-proxy-http",
+        "cmd-curl-proxy-https"
+      ]
+    },
+    {
+      "id": "mitmproxy-how",
+      "kind": "official-doc",
+      "title": "mitmproxy Docs: How mitmproxy works",
+      "publisher": "mitmproxy",
+      "url": "https://docs.mitmproxy.org/stable/concepts-howmitmproxyworks/",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明显式 HTTP 代理、HTTPS CONNECT 以及动态签发证书实现两段 TLS 的机制。",
+      "supports": [
+        "claim-interception-proxy-ca"
+      ]
+    },
+    {
+      "id": "portswigger-ca",
+      "kind": "official-doc",
+      "title": "PortSwigger Docs: Installing Burp's CA certificate",
+      "publisher": "PortSwigger",
+      "url": "https://portswigger.net/burp/documentation/desktop/external-browser/certificate-authority",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明测试浏览器为何必须导入代理 CA 证书才能由 Burp Proxy 解密 HTTPS 流量。",
+      "supports": [
+        "claim-interception-proxy-ca"
+      ]
+    },
+    {
+      "id": "owasp-input-validation",
+      "kind": "official-doc",
+      "title": "OWASP Input Validation Cheat Sheet",
+      "publisher": "OWASP",
+      "url": "https://cheatsheetseries.owasp.org/cheatsheets/Input_Validation_Cheat_Sheet.html",
+      "publishedAt": "2026-11-25",
+      "accessedAt": "2026-11-25",
+      "dateType": "snapshot",
+      "notes": "说明客户端校验只服务于体验反馈，服务端必须独立执行校验与业务计算。",
+      "supports": [
+        "claim-client-untrusted"
+      ]
+    }
+  ],
+  "claims": [
+    {
+      "id": "claim-base64-not-encryption",
+      "text": "Base64 只是把任意字节序列映射成可打印 ASCII 字符的编码格式，不包含密钥，不能提供保密性。",
+      "sourceIds": [
+        "rfc4648"
+      ]
+    },
+    {
+      "id": "claim-sha256-oneway",
+      "text": "SHA-256 是定长 256 位的单向密码学散列函数，用于完整性校验与摘要计算；输入改动极小也会产出截然不同的摘要，且不能按算法逆向解回原文。",
+      "sourceIds": [
+        "nist-fips-180-4"
+      ]
+    },
+    {
+      "id": "claim-symmetric-key",
+      "text": "对称加密（如 AES-256）使用同一把密钥或口令派生密钥完成加解密；单纯 CBC 模式不提供完整性认证，错口令通常在填充检查阶段报错，生产应选用 AEAD 模式（如 AES-GCM）。",
+      "sourceIds": [
+        "openssl-enc"
+      ]
+    },
+    {
+      "id": "claim-digital-signature",
+      "text": "数字签名（如 Ed25519、ECDSA）用私钥对消息签字、用对应公钥验签，证明消息来自私钥持有者且未被篡改；它与非对称加密目标不同，本身不隐藏消息明文。",
+      "sourceIds": [
+        "openssl-pkeyutl"
+      ]
+    },
+    {
+      "id": "claim-tls-goals",
+      "text": "TLS 1.3 使用非对称密钥协商与认证加密套件在通信双方之间建立加密、防篡改且经过身份认证的通道，防止链路上的被动窃听与主动中间人篡改。",
+      "sourceIds": [
+        "rfc8446"
+      ]
+    },
+    {
+      "id": "claim-x509-san",
+      "text": "X.509 站点证书通过证书链（通常为根 CA → 中间 CA → 站点证书，本课实验简化为本地根 CA 直签）建立信任，现代客户端按 RFC 9525 核对 Subject Alternative Name（SAN）扩展是否匹配目标域名或 IP。",
+      "sourceIds": [
+        "rfc5280",
+        "rfc9525",
+        "openssl-req"
+      ]
+    },
+    {
+      "id": "claim-cookie-flags",
+      "text": "Set-Cookie 的 Secure 属性限定 Cookie 仅在 HTTPS 加密请求中发送，HttpOnly 禁止网页脚本通过 document.cookie 读取，SameSite 控制跨站请求是否携带该 Cookie。",
+      "sourceIds": [
+        "rfc6265",
+        "mdn-set-cookie"
+      ]
+    },
+    {
+      "id": "claim-connect-tunnel",
+      "text": "访问 HTTPS 时，客户端先向 HTTP 代理发送 CONNECT 建立到目标主机端口的隧道；普通透传代理只搬运字节流，无法解密其中的 HTTP 报文。",
+      "sourceIds": [
+        "rfc9110"
+      ]
+    },
+    {
+      "id": "claim-interception-proxy-ca",
+      "text": "Burp Suite、mitmproxy 等调试代理之所以能解密 HTTPS，是因为用户在测试浏览器中主动导入并信任了代理的本地 CA 证书，代理用该 CA 实时签发站点证书，把连接拆成「客户端↔代理」与「代理↔源站」两段 TLS。",
+      "sourceIds": [
+        "mitmproxy-how",
+        "portswigger-ca"
+      ]
+    },
+    {
+      "id": "claim-client-untrusted",
+      "text": "浏览器里的表单只读属性与前端脚本只服务于正常用户交互，不能充当安全边界；经过代理或命令行发出的请求可改写任意字段，关键校验与计价必须在服务端独立完成。",
+      "sourceIds": [
+        "owasp-input-validation"
+      ]
+    }
+  ],
+  "commands": [
+    {
+      "id": "cmd-openssl-dgst",
+      "command": "printf 'order=badge&price=35' | openssl dgst -sha256",
+      "expectedResult": "输出 64 位十六进制摘要 599c5fe1c6a757586470f55e94a6eab8bb5d469bfc7aa6cced6c862c27b7c842；把 35 改成 36 后摘要整体变化。",
+      "sourceIds": [
+        "nist-fips-180-4"
+      ]
+    },
+    {
+      "id": "cmd-openssl-enc",
+      "command": "printf 'order=badge&price=35' | openssl enc -aes-256-cbc -pbkdf2 -pass pass:lab-secret -base64 > cipher.txt && openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:lab-secret -base64 -in cipher.txt",
+      "expectedResult": "用相同口令解密还原出 order=badge&price=35；换用错误口令解密时通常在填充校验阶段报错 bad decrypt。",
+      "sourceIds": [
+        "openssl-enc"
+      ]
+    },
+    {
+      "id": "cmd-openssl-sign",
+      "command": "openssl pkeyutl -sign -inkey sign.key -rawin -in msg.txt -out msg.sig && openssl pkeyutl -verify -pubin -inkey sign.pub -rawin -in msg.txt -sigfile msg.sig",
+      "expectedResult": "原文验签输出 Signature Verified Successfully；把文件内容改成 price=1 后验签输出 Signature Verification Failure。",
+      "sourceIds": [
+        "openssl-pkeyutl"
+      ]
+    },
+    {
+      "id": "cmd-make-certs",
+      "command": "sh make_certs.sh && openssl x509 -in site.crt -noout -subject -issuer -dates -ext subjectAltName",
+      "expectedResult": "生成 ca.key、ca.crt、site.key、site.crt；site.crt 的 issuer 为 CN=Training Local CA，SAN 包含 IP Address:127.0.0.1, DNS:localhost。",
+      "sourceIds": [
+        "openssl-req"
+      ]
+    },
+    {
+      "id": "cmd-curl-cacert",
+      "command": "curl --noproxy '*' -i --cacert ca.crt -c cookies.txt https://127.0.0.1:8443/",
+      "expectedResult": "不传 --cacert 时报错 curl: (60)；传入 --cacert ca.crt 后返回 HTTP/1.1 200 OK、TLSv1.3 与包含 HttpOnly; Secure; SameSite=Lax 的 Set-Cookie。",
+      "sourceIds": [
+        "curl-manpage"
+      ]
+    },
+    {
+      "id": "cmd-curl-proxy-http",
+      "command": "curl --noproxy '' -sS -x http://127.0.0.1:8888 -d 'item=club-badge&qty=1&price=35' http://127.0.0.1:8080/checkout",
+      "expectedResult": "即使环境设有 NO_PROXY=127.0.0.1 也强制走 8888 代理；经 mini_proxy.py --replace price=35 price=1 转发后，服务端收到 client_sent_price=1、标出 tampered=true，但 final_charge 仍按目录价返回 35。",
+      "sourceIds": [
+        "curl-manpage"
+      ]
+    },
+    {
+      "id": "cmd-curl-proxy-https",
+      "command": "curl --noproxy '' -sS -x http://127.0.0.1:8888 --cacert ca.crt https://127.0.0.1:8443/whoami",
+      "expectedResult": "强制经 8888 代理建立 CONNECT 隧道并返回 TLSv1.3 JSON，代理终端仅记录 passthrough tunnel 日志，解不开加密后的 HTTP 内容。",
+      "sourceIds": [
+        "curl-manpage",
+        "rfc9110"
+      ]
+    }
+  ],
+  "runnableExamples": [
+    {
+      "id": "example-make-certs",
+      "path": "public/labs/https-tls-and-proxy/make_certs.sh",
+      "command": "sh make_certs.sh",
+      "expectedResult": "在当前目录生成本地 CA 与带 SAN 扩展的站点证书 ca.crt、site.crt。"
+    },
+    {
+      "id": "example-https-server",
+      "path": "public/labs/https-tls-and-proxy/https_server.py",
+      "command": "python3 https_server.py",
+      "expectedResult": "在 https://127.0.0.1:8443/ 启动 TLS 1.2+ 本地练习站并下发带安全属性的 Cookie。"
+    },
+    {
+      "id": "example-shop-proxy",
+      "path": "public/labs/https-tls-and-proxy/mini_proxy.py",
+      "command": "python3 mini_proxy.py --replace price=35 price=1",
+      "expectedResult": "在 127.0.0.1:8888 启动仅限本机回环的演示代理，打印并改写发往 127.0.0.1:8080 的明文请求，同时对 HTTPS 只做 CONNECT 透传。"
+    }
+  ],
+  "visualNarrative": {
+    "kind": "flow-and-http-exchange",
+    "primaryAnimations": 0,
+    "supportingInteractions": 2,
+    "scrollReveals": 0
+  }
+}

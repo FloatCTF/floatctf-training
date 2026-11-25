@@ -1,0 +1,21 @@
+# /etc/systemd/system/training-api.service（生产 Linux 服务单元最小样例）
+[Unit]
+Description=Local Training JSON API
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# 为每个业务分配独立非 root 服务账号，避免多个无关服务共用同一身份
+User=training-api
+Group=training-api
+WorkingDirectory=/srv/training-api
+# 普通非敏感配置可放 EnvironmentFile；签名密钥等敏感凭据建议使用 systemd Credentials（LoadCredential）
+EnvironmentFile=/etc/training-api/app.env
+LoadCredential=jwt_secret:/etc/credstore/training-api-jwt.key
+ExecStart=/usr/bin/python3 /srv/training-api/api_server.py
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
