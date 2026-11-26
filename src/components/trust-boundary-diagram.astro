@@ -1,0 +1,65 @@
+---
+import LessonDiagram from './lesson-diagram.astro';
+---
+<LessonDiagram
+  eyebrow="TRUST BOUNDARIES / 三道信任红线与五类检查"
+  title="多数安全洞不是工具不够多，而是数据跨过红线时被当成了可信内容"
+  ariaLabel="数据从浏览器或命令行经 Nginx 反代、后端鉴权到下游执行层时跨过三道信任红线（对应下方五类边界检查）的全景图"
+  class="trust-boundary-diagram"
+  note="三道红线对应下方表格里的五类检查：红线 1 对应客户端输入，红线 2 对应反代来源头与认证/授权归属，红线 3 对应 SQL/HTML/Shell 与 AI 上下文隔离。"
+>
+  <p class="stage8-scroll-hint" aria-hidden="true">窄屏可左右滑动查看完整图示</p>
+  <div class="stage8-svg-scroll" tabindex="0" role="region" aria-label="三道信任红线与五类检查全景图（窄屏可左右滚动查看）">
+    <svg viewBox="0 0 780 248" role="img" aria-label="四个处理节点与三道信任红线：红线 1 客户端输入边界、红线 2 反代头与鉴权归属边界、红线 3 下游执行与 AI 上下文边界，共覆盖五类检查">
+      <defs>
+        <marker id="tb-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" class="diagram-arrow-head" />
+        </marker>
+      </defs>
+
+      {/* 四个节点 */}
+      <rect x="12" y="38" width="154" height="90" rx="6" class="diagram-box diagram-box--start" />
+      <text x="89" y="68" text-anchor="middle" class="diagram-box-label">浏览器 / curl</text>
+      <text x="89" y="91" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">表单 · Header · 参数</text>
+      <text x="89" y="113" text-anchor="middle" class="tls-caption tls-caption--danger">全部由外部可控</text>
+
+      <rect x="210" y="38" width="152" height="90" rx="6" class="diagram-box" />
+      <text x="286" y="68" text-anchor="middle" class="diagram-box-label">Nginx 反代层</text>
+      <text x="286" y="91" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">proxy_pass · XFF</text>
+      <text x="286" y="113" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">第 39 课</text>
+
+      <rect x="406" y="38" width="162" height="90" rx="6" class="diagram-box diagram-box--store" />
+      <text x="487" y="68" text-anchor="middle" class="diagram-box-label">后端路由与鉴权</text>
+      <text x="487" y="91" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">401 凭据无效 · 403 拒访</text>
+      <text x="487" y="113" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">Fail-Closed · 39/44 课</text>
+
+      <rect x="612" y="38" width="156" height="90" rx="6" class="diagram-box diagram-box--human" />
+      <text x="690" y="68" text-anchor="middle" class="diagram-box-label">下游执行层</text>
+      <text x="690" y="91" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">SQL / HTML / Shell / AI</text>
+      <text x="690" y="113" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">下学期 &amp; AI 安全</text>
+
+      {/* 三道红线边界与箭头 */}
+      <line x1="188" y1="20" x2="188" y2="148" class="sys-boundary" />
+      <line x1="166" y1="83" x2="208" y2="83" class="diagram-arrow" marker-end="url(#tb-arrow)" />
+
+      <line x1="384" y1="20" x2="384" y2="148" class="sys-boundary" />
+      <line x1="362" y1="83" x2="404" y2="83" class="diagram-arrow" marker-end="url(#tb-arrow)" />
+
+      <line x1="590" y1="20" x2="590" y2="148" class="sys-boundary" />
+      <line x1="568" y1="83" x2="610" y2="83" class="diagram-arrow" marker-end="url(#tb-arrow)" />
+
+      {/* 底部三张红线映射卡片（映射表内 5 类检查） */}
+      <rect x="12" y="164" width="242" height="68" rx="6" class="tb-card" />
+      <text x="26" y="189" class="tls-caption tls-caption--danger">红线 1 · 客户端输入（检查 1）</text>
+      <text x="26" y="213" class="diagram-box-sub diagram-box-sub--tight">代理改包 / curl 可绕开前端（第 38 课）</text>
+
+      <rect x="269" y="164" width="242" height="68" rx="6" class="tb-card" />
+      <text x="283" y="189" class="tls-caption tls-caption--danger">红线 2 · 反代头与鉴权（检查 2–3）</text>
+      <text x="283" y="213" class="diagram-box-sub diagram-box-sub--tight">核对可信反代头；认证后必查授权</text>
+
+      <rect x="526" y="164" width="242" height="68" rx="6" class="tb-card" />
+      <text x="540" y="189" class="tls-caption tls-caption--danger">红线 3 · 数据与指令（检查 4–5）</text>
+      <text x="540" y="213" class="diagram-box-sub diagram-box-sub--tight">SQL/HTML/Shell 隔离 + AI 外部文档隔离</text>
+    </svg>
+  </div>
+</LessonDiagram>

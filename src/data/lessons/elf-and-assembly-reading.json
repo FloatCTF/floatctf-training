@@ -17,7 +17,7 @@
       "lab-check"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "用五步流程图串联磁盘上的 ELF 文件如何被内核映射进内存、加载 libc 并由 CPU 按 System V AMD64 约定传参执行，再直接对照 C 源码和 objdump 产出的真实 Intel 语法反汇编",
+    "visualStory": "先用五步流程图交代 ELF 从磁盘加载到 CPU 取指的宏观过程，再用 Intel 语法汇编步进器单步追踪 check_pin 与 compute_code 的寄存器、栈槽和 ZF 标志位变化",
     "learningObjectives": [
       "用 file 与 readelf -h/-S 识别 64 位小端序 ELF 可执行文件，说出 .text、.rodata、.data、.bss 和 .plt 各自存放什么",
       "用 strings 在可执行文件里快速检索明文提示字符串，并理解它为什么只能找静态字符而不能替代逻辑阅读",
@@ -85,7 +85,7 @@
     },
     {
       "kind": "进阶",
-      "title": "用 objdump 逐行读懂一段真实反汇编",
+      "title": "用 objdump 逐行读懂真实反汇编",
       "heading": "三、",
       "minutes": 35,
       "checkpoint": "对着 compute_code 与 check_pin 的 Intel 汇编，手工还原出正确输入 4426。"
@@ -246,9 +246,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "flow-simulator",
+    "kind": "flow-and-assembly-trace",
     "primaryAnimations": 0,
-    "supportingInteractions": 1,
+    "supportingInteractions": 2,
     "scrollReveals": 0
   }
 }

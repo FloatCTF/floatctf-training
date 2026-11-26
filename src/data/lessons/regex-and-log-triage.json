@@ -15,8 +15,8 @@
       "exercise",
       "lab-check"
     ],
-    "motionLevel": "static",
-    "visualStory": "用表格拆解 Nginx Combined 日志的字段列号、高频正则元字符与四个工具的职责边界，并直接在终端里把 20 行日志与 JSON 审计记录筛成统计摘要",
+    "motionLevel": "explanatory",
+    "visualStory": "用内嵌真实样本的日志列号解剖台与正则 / jq 实时筛选器，让学员先点击识别 $1/$7/$9 字段并实时观察 grep -E、awk、sed 与 jq 命中结果，再在终端复现",
     "learningObjectives": [
       "熟练使用核心扩展正则（ERE）元字符（^、$、[]、+、?、()、|、转义 .）并区分普通字符串与正则匹配",
       "用 grep -E 从真实 Nginx 访问日志里精准定位 401/403/500 异常请求和常见敏感文件探测",
@@ -79,14 +79,14 @@
     },
     {
       "kind": "动手",
-      "title": "awk 按列聚合与 sed 脱敏替换",
+      "title": "awk 按列聚合与 sed 替换演示",
       "heading": "二、",
       "minutes": 30,
       "checkpoint": "跑通 awk | sort | uniq -c | sort -rn 排行榜和 sed IP 脱敏。"
     },
     {
       "kind": "进阶",
-      "title": "用 jq 精准解析结构化 JSON",
+      "title": "用 jq 解析结构化 JSON",
       "heading": "三、",
       "minutes": 30,
       "checkpoint": "用 jq 完成条件筛选、TSV 输出与 group_by 分组统计。"
@@ -259,9 +259,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "static-tables",
+    "kind": "log-triage-workbench",
     "primaryAnimations": 0,
-    "supportingInteractions": 0,
+    "supportingInteractions": 1,
     "scrollReveals": 0
   }
 }

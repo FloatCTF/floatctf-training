@@ -1,6 +1,6 @@
 ---
 title: 安全思维、合规边界与 AI 时代读码工作流
-description: 在正式进入 Web 安全专题前统一三件事：建立以「信任边界」为核心的安全思维、守住法律底线与课程授权规范，并掌握在 AI 时代 30 分钟摸清陌生项目且不被幻觉带偏的确定性读码流程
+description: 进 Web 安全专题前先对齐三件事：用信任边界看系统、守住法律红线与授权纪律，以及用命令行配 AI 快速读懂陌生代码并回到终端实证
 pageType: lesson
 template: splash
 ---
@@ -18,21 +18,22 @@ import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
 import FlowSimulator from '../../../components/flow-simulator';
+import TrustBoundaryDiagram from '../../../components/trust-boundary-diagram.astro';
 import codeReadingLoop from '../../../data/flows/code-reading-loop.json';
 import manifest from '../../../data/lessons/security-mindset-and-ai-workflow.json';
 
 export const aiRules = [
-  { title: '先给事实和报错，再向 AI 提问', detail: '不要只扔一句「报错了怎么修」。先自己读一遍 Traceback 或状态码，贴出最小复现命令、相关 20 行代码和完整报错，回答质量立刻差一个量级。' },
-  { title: '敏感数据脱敏，绝不粘真密钥', detail: '不把 .env、SSH 私钥、真实 Token、生产日志里的真实用户隐私粘进外部 AI 网页，提问前一律换成占位符。' },
-  { title: '让 AI 解释数据流，而不是替你糊完作业', detail: '用 AI 快速扫盲陌生框架或语法（比如「这段路由装饰器怎么把请求参数绑定到函数里」），但自己必须能复述完整链路；让 AI 直接代写只会让你在下学期读审计源码时寸步难行。' },
-  { title: '所有结论回终端与源码实证', detail: 'AI 经常记混旧版本行为或编造不存在的命令行参数。把它给的答案当待验证假设：亲自核对行号、跑一遍 curl 或单测，跑通了才算事实。' },
+  { title: '先给事实和完整报错，再开口问 AI', detail: '不要只贴一句「报错了怎么修」。先看一遍 Traceback 或状态码，把最小复现命令、相关 20 行代码和完整报错一起提供给模型，回答准确度会明显提高。' },
+  { title: '提问前先脱敏，真密钥绝不往外粘', detail: '.env、SSH 私钥、真实 Token 和生产日志里的用户数据，一律换成占位符再贴进外部 AI 对话框。' },
+  { title: '让 AI 讲清数据流，自己掌握完整链路', detail: '不熟的框架语法可以让 AI 解释（例如请求参数经装饰器如何传给处理函数），但要能自己复述从入口到输出的完整路径，避免不经理解直接粘贴代码。' },
+  { title: 'AI 给的结论都要回源码和终端核实', detail: '模型可能记混旧版本参数或编出不存在的选项。把它的话当待验证的假设：翻到对应文件行号、敲一遍 curl 或单测，跑通了才算事实。' },
 ];
 
 export const homework = [
-  { title: '完成验收第 3 题', detail: '用 triage_commands.sh 在通读源码前定位 mini_notes_app.py 的全部配置与路由，再用 curl 实测三条访问路径。' },
-  { title: '给一个真实开源小项目画一页“入口地图”', detail: '从 GitHub 选一个不超过 20 个文件的开源 Python/PHP/Node 小 Web 项目（或就用本课的 guestbook 留言板），只花 20 分钟用 find 和 grep 整理出：启动方式、配置文件、全部 HTTP 路由、外部输入进来的位置。' },
-  { title: '试一次「反幻觉」练习', detail: '把你最容易混淆的一个网络或安全概念（例如 CORS 和 CSRF 的区别）问一遍 AI，再打开 MDN 或 OWASP 官方文档逐条核对它的回答有没有以偏概全的地方。' },
-  { title: '选读站内 AI 安全专题', detail: '如果你对 AI 自身的攻击面感兴趣，可以顺手看本站点 AI 分类里的《大模型原理》和《AI 安全：从提示注入到对抗样本》，看看「数据与指令混在同一个上下文里」怎样触发另一类信任边界失效。' },
+  { title: '完成验收第 3 题', detail: '不通读源码，先用 triage_commands.sh 找出 mini_notes_app.py 的环境变量、权限判断和路由，再用 curl 实测三条访问路径。' },
+  { title: '给一个开源小项目画一页入口清单', detail: '从 GitHub 找一个 20 个文件以内的开源小 Web 项目（或就用第 37 课的留言板），花 20 分钟用 find 和 grep 记下：启动命令、配置文件、所有 HTTP 路由和外部输入点。' },
+  { title: '做一次「核查 AI 回答」练习', detail: '挑一个你容易混的概念（比如 CORS 和 CSRF 的区别）问 AI，再打开 MDN 或 OWASP 官方文档逐条比对，看看有没有说偏或漏掉前提的地方。' },
+  { title: '选读站内 AI 安全专题', detail: '如果好奇大模型自己的攻击面，可以顺手读本站 AI 分类的《大模型原理》和《AI 安全：从提示注入到对抗样本》，看「数据和指令混进同一上下文」怎么出问题。' },
 ];
 
 <LessonHero
@@ -43,7 +44,7 @@ export const homework = [
     { text: "安全思维、合规边界" },
     { text: "与 AI 时代读码工作流", accent: true },
   ]}
-  summary="学到这里，你已经具备了命令行、网络、抓包、现代 Web 架构和底层运行时的基础拼图。在跨进下学期的 Web 安全专题前，这节课帮你把零散工具拧成一套长期受用的工程思维：安全到底在看什么、哪条法律与授权红线不能碰、以及在 2026 年怎样高效读陌生项目并驾驭 AI。"
+  summary="一条 HTTP 请求从浏览器进入陌生代码库后，依次经过反代、路由、鉴权与下游执行层。这一课把信任边界模型、法律与授权红线，以及用命令行配合 AI 读码并回到终端实证的方法串成完整工作流。"
 />
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
@@ -52,102 +53,104 @@ export const homework = [
 
 <LessonPacing segments={manifest.segments} />
 
-## 引导问题：同样学完基础，为什么有人面对陌生项目能迅速抓到重点
+## 引导问题：拿到一个陌生 Web 项目，怎么从一条请求追到关键源码
 
-学校课程习惯给你一份写好题干的几十行作业；真实世界和下学期的 Web 安全实战刚好相反——丢到你面前的往往是一个几百上千行的陌生项目、一套带反代的容器环境，或者一句语焉不详的报错。
+学校练习通常只给几十行单一文件；真正接手开源仓库或准备做代码审计时，面前往往是几十上百个文件、反代配置和一句含糊的接口报错。
 
-光靠背零散命令很快就会撞墙。真正拉开差距的是三件事：**用「信任边界」看系统、守住法律与授权底线、以及有一套结合命令行与 AI 的确定性读码流程**。
+面对陌生代码库，顺着一条请求从外部进入系统的路径往里追最稳妥：先标出数据跨越了哪些**信任边界**，再明确合法动手范围，最后用确定性搜索命令配合 AI 定位到具体行号并用终端实跑验证。
 
 ## 一、安全思维与合法合规红线
 
-### 1. 安全不是背工具参数，而是找「信任边界」
+### 1. 安全不是背工具参数，而是盯住「信任边界」
 
-把你过去几周亲手踩过的坑排成一张表，你会发现它们其实都在重复同一件事（来源：[OWASP Input Validation Cheat Sheet](#source-owasp-input-validation)）：
+把前面几周的实验收进一张图和一张表：请求沿链路穿过**三道信任红线**，对应下面表格里的**五类常见检查**，根源都是外部数据跨界时被接收方误当成可信内容（来源：[OWASP Input Validation Cheat Sheet](#source-owasp-input-validation)）：
+
+<TrustBoundaryDiagram />
 
 <DataTable
-  caption="不同层面的安全问题，本质都是信任边界被错放"
-  headers={["所在层级", "常见错误假设", "跨越边界时实际发生的事", "对应防线"]}
+  caption="三道红线对应的五类常见安全检查"
+  headers={["检查类别（对应红线）", "常见错误假设", "跨过边界时实际发生了什么", "对应防线"]}
   rows={[
-    ["浏览器 → 服务端", "表单 readonly / JS 校验过了就安全", "请求经代理或 curl 直发即可改写 price（第 38 课）", "关键校验与计价全留在服务端"],
-    ["认证 → 授权", "JWT 验签通过就能按参数查库", "用自己的真 Token 把 uid=101 改成 102（第 39 课）", "每个对象读写前核对所有权（回 403）"],
-    ["数据 → SQL/HTML/Shell", "用户输入只是普通字符串", "拼接进 SQL、HTML 或命令被解析成指令（下学期 Web 安全）", "参数化查询、上下文输出编码、argv 参数数组"],
-    ["反代 → 后端", "X-Forwarded-For 一定代表真实 IP", "客户端在请求里自己填了假 IP 排在最前面（第 39 课）", "只信任受控反代覆写的头并限定跳数"],
-    ["外部文档 → AI 上下文", "模型能分清网页内容和系统指令", "不可信文本里夹带诱导指令（见站内 AI 安全课）", "隔离外部数据、限制工具权限、人工复核高危动作"],
+    ["1. 浏览器 → 服务端（红线 1）", "表单 readonly 或 JS 检查过就安全", "代理或 curl 直发就能把 price 改成 1（第 38 课）", "计价与关键校验全留在服务端"],
+    ["2. 反代 → 后端（红线 2）", "X-Forwarded-For 一定是真实 IP", "客户端在请求头最左边塞假 IP（第 39 课）", "先确认直连对端是受控反代，再信任反代覆写头或按跳数从右取"],
+    ["3. 认证 → 授权（红线 2）", "JWT 验签通过就能按参数查库", "拿着真 Token 把 uid=101 改成 102（第 39 课）", "每次对象访问按所有权、角色或共享策略独立校验权限（回 403）"],
+    ["4. 数据 → SQL/HTML/Shell（红线 3）", "用户输入只是普通文本", "拼进 SQL、HTML 或命令后被当成指令执行（下学期 Web 安全）", "参数化查询、按上下文编码、用 argv 参数数组避免 shell 解释并校验下游选项参数"],
+    ["5. 外部文档 → AI 上下文（红线 3）", "模型能分清网页内容和系统规则", "外部文本里夹带诱导指令（见站内 AI 安全课）", "隔离外部数据、收紧工具白名单、人工复核高危动作"],
   ]}
-  columnRatios={[1.2, 1.5, 1.9, 1.7]}
+  columnRatios={[1.3, 1.4, 1.9, 1.8]}
 />
 
 ### 2. 法律底线与课程授权规范
 
-安全技术本身是中性的，但实施对象与行为边界决定了合规与否。我们把**法律条文本身**和**本课程的实验规范**分开写清，既不歪曲法条，也不放松底线（来源：[《中华人民共和国网络安全法》](#source-prc-cybersecurity-law)）：
+技术本身中性，但测谁、怎么测决定了合不合规。下面把**法律明文规范**和**本课程的实验纪律**分开写清（来源：[《中华人民共和国网络安全法》](#source-prc-cybersecurity-law)）：
 
-- **法律明确禁止的行为**：修订后的《中华人民共和国网络安全法》明确规定，任何个人和组织**不得从事非法侵入他人网络、干扰他人网络正常功能、窃取网络数据等危害网络安全的活动**；也不得提供专门用于从事侵入网络、干扰网络正常功能及防护措施、窃取网络数据等危害网络安全活动的程序、工具，或明知他人从事上述活动而为其提供技术支持等帮助。
-- **本课程的授权与测试范围规范**：为避免初学者在边界不清时干扰真实业务或误触法律红线，本课程统一要求**先取得明确授权并界定测试范围**（商业或校内项目实践中通常保留可追溯的书面/工单确认）。
+- **法律明确规范**：修订后的《中华人民共和国网络安全法》（2025 年 12 月 29 日公布）**第二十九条**规定，任何个人和组织**不得从事非法侵入他人网络、干扰他人网络正常功能、窃取网络数据等危害网络安全的活动**，也不得提供专门用于从事上述活动的程序、工具，或明知他人从事上述活动而为其提供技术支持等帮助；同时**第二十八条**及其他适用规定对向社会发布系统漏洞等网络安全信息设有明确合规要求，不得违反规定擅自公开扩散。
+- **本课程的授权纪律**：为了避免边界不清时干扰正常业务或踩线，本课程统一要求**先取得明确授权并划定测试范围**（商业或校内项目里应留有可追溯的书面或工单确认）。
 
-<Callout type="warning" title="本课程的三条实操底线">
-1. **不对未获明确授权的外部系统做探测与测试**：学校网站、公网业务、他人服务器——不顺手跑目录扫描、不试探越权参数 `uid=`、不做改包重放，避免触发未授权访问、干扰服务正常功能或法律风险。
-2. **只留在三个合规场地练手**：你自己的本地 `127.0.0.1` / Docker 环境、公开 CTF 靶场与合规演练平台、或明确约定资产范围的授权测试项目（如正式 SRC 平台公布的测试范围）。
-3. **不拉取、不传播非授权数据**：遇到意外发现的公开安全隐患，遵循负责任披露通道向官方应急响应中心报告，绝不拉取数据或公开扩散利用方法。
+<Callout variant="warning" title="本课程的三条实操底线">
+1. **不对未获明确授权的外部系统动手**：学校网站、公网业务、他人服务器——不顺手扫目录、不试着改 `uid=` 看别人资料、不改包重放，避免触发未授权访问、干扰服务正常功能或法律风险。
+2. **只留在三个合规场地练习**：自己的本机 `127.0.0.1` / Docker 环境、公开 CTF 靶场与正规演练平台、或明确约定资产范围的授权项目（如正式 SRC 平台公布的测试范围）。
+3. **不拉取、不传播非授权数据**：偶然发现公开隐患时，通过目标方官方安全响应通道及适用主管机关报告，绝不拖库，也不违反规定向社会扩散利用细节。
 </Callout>
 
-## 二、30 分钟摸清一个陌生代码库
+## 二、半小时摸清一个陌生代码库
 
-接手一个没见过的 Web 项目，最慢的读法是从第一个文件第 1 行往下硬啃；最快的读法是走下面这条五步闭环：
+接手陌生项目时，最慢的读法是从第一个文件第 1 行往下硬啃；更稳妥的是走下面这五步：
 
-<FlowSimulator client:visible title="陌生项目读码与 AI 协作五步闭环" steps={codeReadingLoop} motionLevel="explanatory" />
+<FlowSimulator client:visible title="陌生项目读码与 AI 协作五步流程" steps={codeReadingLoop} motionLevel="explanatory" />
 
-拿这份陌生小服务和 12 行三组摸底脚本演练一次：
+用这份陌生小服务和 12 行摸底脚本演练一次：
 
-<CodeFile file="labs/security-mindset-and-ai-workflow/triage_commands.sh" mark="6,9,12" note="第 6、9、12 行三条核心命令先把目录树、配置/密钥点与外部请求入口一次性扫出来。" />
+<CodeFile file="labs/security-mindset-and-ai-workflow/triage_commands.sh" mark="6,9,12" note="第 6、9、12 行三条命令先把目录树、配置/密钥点和请求入口一次性扫出来。" />
 
-<CodeFile file="labs/security-mindset-and-ai-workflow/mini_notes_app.py" mark="9-10,34-47,55-81" note="假装它是你刚 clone 下来的陌生代码：第 9–10 行读取环境变量，第 43 行执行管理员令牌权限判断，第 55–81 行做请求类型、长度与字段校验。" />
+<CodeFile file="labs/security-mindset-and-ai-workflow/mini_notes_app.py" mark="9-10,34-47,55-81" note="假装刚 clone 下来的陌生项目：第 9–10 行读环境变量，第 43 行查管理员令牌，第 55–81 行校验请求类型、长度与字段。" />
 
-在 Kali 里不看正文，先跑摸底脚本再发三条 `curl` 实证（来源：[GNU grep 手册](#source-gnu-grep)）：
+先不逐行读正文，在 Kali 里跑摸底脚本再发三条 `curl` 实证（来源：[GNU grep 手册](#source-gnu-grep)）：
 
 <TerminalSession
   environment="KALI 终端"
-  title="先摸清入口与边界，再发请求验证判断"
+  title="先摸清入口与边界，再发请求核对判断"
   steps={[
     { cmd: 'cd ~/lab/triage' },
     {
       cmd: 'sh triage_commands.sh',
       out: '=== 1. 看文件结构（排除隐藏路径） ===\n.\n./triage_commands.sh\n./mini_notes_app.py\n=== 2. 找环境变量与配置入口 ===\n./mini_notes_app.py:9:MAX_TITLE_LEN = int(os.environ.get("NOTES_MAX_TITLE", "40"))\n./mini_notes_app.py:10:ADMIN_TOKEN = os.environ.get("NOTES_ADMIN_TOKEN", "")\n./mini_notes_app.py:43:                if not ADMIN_TOKEN or token != ADMIN_TOKEN:\n=== 3. 找路由与外部输入入口 ===\n./mini_notes_app.py:6:from urllib.parse import parse_qs, urlsplit\n./mini_notes_app.py:32:    def do_GET(self):\n./mini_notes_app.py:34:        if parsed.path == "/health":\n./mini_notes_app.py:38:        if parsed.path == "/api/notes":\n./mini_notes_app.py:39:            qs = parse_qs(parsed.query)\n./mini_notes_app.py:42:                token = self.headers.get("X-Admin-Token", "")\n./mini_notes_app.py:54:    def do_POST(self):\n./mini_notes_app.py:58:        ctype = self.headers.get("Content-Type", "").split(";")[0].strip().lower()\n./mini_notes_app.py:63:            length = int(self.headers.get("Content-Length", "-1"))\n./mini_notes_app.py:71:            payload = json.loads(self.rfile.read(length).decode("utf-8"))',
-      note: '不到三秒，第 9–10 行的两个环境变量、第 43 行的管理员权限判断（因含 TOKEN 被第 2 组 grep 一并扫出）以及两个路径和全部外部输入读取点全都浮出来了。',
+      note: '几秒钟内，第 9–10 行的两个环境变量、第 43 行的管理员判断（因含 TOKEN 被第 2 组 grep 一并扫出）以及全部路由和输入入口全都标出来了。',
     },
     {
       cmd: `NOTES_ADMIN_TOKEN='lab-admin-99' python3 mini_notes_app.py > notes.log 2>&1 & sleep 0.4 && curl --noproxy '*' -sS http://127.0.0.1:9100/api/notes`,
       out: '{\n  "items": [\n    {\n      "id": 1,\n      "owner": "alice",\n      "title": "First lab note",\n      "public": true\n    }\n  ]\n}',
-      note: '默认只返回 public=true 的公开记录。',
+      note: '默认只给 public=true 的公开记录。',
     },
     {
       cmd: `curl --noproxy '*' -sS -i 'http://127.0.0.1:9100/api/notes?all=1'`,
       out: 'HTTP/1.1 403 Forbidden\nServer: BaseHTTP/0.6 Python/3.14.10\n…\n{\n  "error": "admin token required for private notes"\n}',
-      note: '没有管理员令牌时默认拒绝（Fail-Closed）。',
+      note: '没带管理员令牌默认拒绝（Fail-Closed）。',
     },
     {
       cmd: `curl --noproxy '*' -sS -H 'X-Admin-Token: lab-admin-99' 'http://127.0.0.1:9100/api/notes?all=1'`,
       out: '{\n  "items": [\n    {\n      "id": 1,\n      "owner": "alice",\n      "title": "First lab note",\n      "public": true\n    },\n    {\n      "id": 2,\n      "owner": "bob",\n      "title": "Private checklist",\n      "public": false\n    }\n  ]\n}',
-      note: '测完用 pkill -f "mini_notes_app.p[y]" 停掉后台练习站。',
+      note: '测完用 pkill -f "mini_notes_app.p[y]" 停掉后台服务。',
     },
   ]}
 />
 
-## 三、AI 时代的工程读码与防幻觉规则
+## 三、AI 时代的读码与防幻觉纪律
 
-今天几乎所有人都在用大模型和代码 Agent 学技术、查报错、读项目。把 AI 用成加速器还是变成离开它就不会敲命令的拐杖，分水岭就在于是否守住下面四条工作纪律（来源：[OWASP Top 10 for LLM Applications](#source-owasp-llm-top10)）：
+大模型适合用来解释陌生语法、缩小定位范围，但绝不能替代自己翻源码和在终端验证。守住下面四条规矩，既能借 AI 提速，又能避免被过时参数或幻觉误导（来源：[OWASP Top 10 for LLM Applications](#source-owasp-llm-top10)）：
 
-<StepList title="用 AI 学工程与做读码的四条纪律" steps={aiRules} />
+<StepList title="用 AI 学工程与读码的四条纪律" steps={aiRules} />
 
 ## 常见误区与边界
 
 <DataTable
-  caption="新生进入安全方向前最常见的四个思维误区"
-  headers={["常见误区", "为什么会坑自己", "正确做法"]}
+  caption="刚进安全方向时最容易踩的四个思维误区"
+  headers={["常见误区", "会踩什么坑", "稳妥做法"]}
   rows={[
-    ["把「跑自动化扫描器」当成学安全", "既容易干扰他人业务或触碰未授权红线，又完全不懂原理，换个场景立刻失效", "先看懂协议、源码和数据流，再把工具当验证手段"],
-    ["拿到陌生项目只问 AI 总结，自己不打开源码", "模型可能漏掉中间件、隐式配置或版本差异，让你得出假结论", "用 AI 缩小范围，但关键判断必须自己跳到具体文件和行号核实"],
-    ["用 AI 直接代写基础实验和脚手架", "省了当下 10 分钟，丢了定位 Traceback 和理解请求链的肌肉记忆", "先自己写最小版本，卡住时让 AI 逐行解释报错原因而非直接贴全量成品"],
-    ["以为「只看不改」就能随便扫公网网站", "未授权的高频探测、目录爆破与越权试探本身就可能干扰服务正常功能、触发封禁甚至法律风险", "一切演练严格限定在本地环境、公开靶场和明确授权范围"],
+    ["把跑扫描器当成学安全", "既容易扰动他人业务踩红线，又不懂原理，换个环境立刻失灵", "先搞懂协议、源码和数据流，工具只用来验证判断"],
+    ["拿到陌生项目只问 AI 总结，不自己翻源码", "模型可能漏看中间件、隐式配置或版本差异，给出错误结论", "用 AI 缩范围，关键判断一定跳回具体文件和行号核实"],
+    ["基础实验全让 AI 代写", "省下眼前的十分钟，丢掉读 Traceback 和顺请求链的手感", "先自己写最小版本，卡住时让 AI 解释报错，不直接粘成品"],
+    ["觉得「只看不改」就能随便扫公网网站", "未授权的高频探测、目录爆破和越权试探本身就可能干扰服务甚至触法", "所有演练严格留在本地环境、公开靶场和明确授权范围"],
   ]}
   columnRatios={[1.6, 1.9, 2.3]}
 />
@@ -155,16 +158,16 @@ export const homework = [
 <CheatSheet
   title="陌生项目快速摸底命令速查"
   items={[
-    { term: "find . -maxdepth 2 -not -path '*/.*'", description: '两层内看清项目目录结构，避开隐藏路径干扰。' },
-    { term: "grep -rnE 'environ|getenv|SECRET|TOKEN' .", description: '快速找出全部环境变量、密钥配置与令牌校验位置。' },
-    { term: "grep -rnE 'route|app\\.(get|post)|do_(GET|POST)' .", description: '定位 Web 项目的路由分发与请求入口。' },
-    { term: 'Fail-Closed（默认拒绝）', description: '配置缺失、令牌为空或鉴权异常时一律拒绝访问，宁严勿漏。' },
-    { term: 'AI 协作铁律', description: '先脱敏、再给最小复现上下文、所有结论回源码与终端实证。' },
+    { term: "find . -maxdepth 2 -not -path '*/.*'", description: '两层内看清目录结构，避开隐藏目录干扰。' },
+    { term: "grep -rnE 'environ|getenv|SECRET|TOKEN' .", description: '扫出环境变量、密钥配置和令牌校验行。' },
+    { term: "grep -rnE 'route|app\\.(get|post)|do_(GET|POST)' .", description: '定位 Web 项目的路由分发和请求入口。' },
+    { term: 'Fail-Closed（默认拒绝）', description: '配置缺失、令牌为空或鉴权异常时一律拒绝，宁严勿漏。' },
+    { term: 'AI 协作底线', description: '先脱敏，给最小复现上下文，所有结论回源码和终端实证。' },
   ]}
 />
 
 <KeyTakeaway>
-安全的核心视角是识别每一处「信任边界」，行为的底线是严格遵守法律对非法侵入、干扰服务与窃取数据的禁令并坚持本课程「仅测试明确授权目标」的纪律；面对陌生代码库，先用命令行定位入口、配置和外部输入流，再把 AI 当成高效的解释与初筛助手，并坚持用源码行号和真实运行结果验证每一条结论。下一课我们用一场涵盖五关的本地综合前哨实战，给整个基础学期画上句号。
+看系统时盯住每一条「信任边界」，动手时严守法律禁令和本课程「仅测明确授权目标」的纪律。面对陌生代码，先用 find 和 grep 标出入口、配置和外部输入，再拿 AI 辅助解释，但每条结论都回源码行号和终端实跑核实。
 </KeyTakeaway>
 
 ## 学习验收
@@ -173,6 +176,8 @@ export const homework = [
 
 ## 课后作业
 
-<StepList title="课后作业" steps={homework} />
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
 
 <SourceList sources={manifest.sources} />

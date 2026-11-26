@@ -17,7 +17,7 @@
       "lab-check"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "用五步流程图串联现代前后端分离请求如何穿过 Nginx 反向代理、CORS 预检、三段 JWS 形态 JWT 验签与服务端对象级授权，最终以 JSON 返回页面",
+    "visualStory": "用五步流程图交代前后端分离与 Nginx 分流路径，再通过交互式 JWT 验签与反代实验台实时对比 200/401/403、CORS 预检与 X-Forwarded-For 信任边界",
     "learningObjectives": [
       "说明前后端分离架构与传统服务端渲染页面的核心区别，并说出 Nginx 反向代理在其中的职责",
       "用独立配置和独立 PID 启动仅监听 127.0.0.1 的 Nginx 静态托管与 /api/ 反代实例，解释 proxy_pass 与 Host、X-Real-IP、X-Forwarded-For 的含义",
@@ -75,21 +75,21 @@
   "segments": [
     {
       "kind": "必读",
-      "title": "从单机页面到前后端分离与 Nginx 反代",
+      "title": "前后端分离与 Nginx 反向代理",
       "heading": "一、",
       "minutes": 30,
       "checkpoint": "用独立配置启动 Nginx 8088，分别拿到静态首页（200）和反代后的 /api/whoami-proxy JSON。"
     },
     {
       "kind": "动手",
-      "title": "CORS 预检与 JWT 拆解实操",
+      "title": "CORS 预检与 JWT 拆解",
       "heading": "二、",
       "minutes": 30,
       "checkpoint": "发一次完整 CORS 预检（204 无 Content-Length），并用 decode_jwt.py 在无密钥时读出 Payload、有密钥时核对 alg 与签名。"
     },
     {
       "kind": "进阶",
-      "title": "认证 ≠ 授权与真实上线配置边界",
+      "title": "认证 ≠ 授权与上线配置底线",
       "heading": "三、",
       "minutes": 30,
       "checkpoint": "复现未认证 401、读自己 200 与越权 403 拦截，并用独立 PID 清理实验 Nginx。"
@@ -367,9 +367,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "flow-simulator",
+    "kind": "flow-and-jwt-inspector",
     "primaryAnimations": 0,
-    "supportingInteractions": 1,
+    "supportingInteractions": 2,
     "scrollReveals": 0
   }
 }

@@ -130,8 +130,15 @@ class ApiHandler(BaseHTTPRequestHandler):
             self.send_json(400, {"error": "username and password must be strings"})
             return
         user = USERS.get(username)
-        if not user or not hmac.compare_digest(user["password"], password):
-            self.send_json(401, {"error": "invalid credentials"})
+        if not user or not hmac.compare_digest(
+            user["password"].encode("utf-8"), password.encode("utf-8")
+        ):
+            # RFC 9110 §15.5.2: 401 响应必须携带 WWW-Authenticate 质询头
+            self.send_json(
+                401,
+                {"error": "invalid credentials"},
+                extra_headers={"WWW-Authenticate": 'Bearer realm="modern-web-lab"'},
+            )
             return
         token = sign_jwt(
             {

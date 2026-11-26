@@ -25,7 +25,10 @@ export function validateLearningPaths() {
     const ordered = stages.flatMap((stage) => (Array.isArray(stage.topics) ? stage.topics : []));
     for (const id of duplicates(ordered)) report(file, id, `${label}.stages.topics`, `同一条路线里专题重复出现：${id}`, '每个专题在一条路线里只排一次。');
     stages.forEach((stage, index) => {
-      for (const field of ['name', 'goal', 'topics']) requireValue(stage[field], file, null, `${label}.stages.${index}.${field}`, '路线阶段字段缺失。');
+      for (const field of ['name', 'topics']) requireValue(stage[field], file, null, `${label}.stages.${index}.${field}`, '路线阶段字段缺失。');
+      if (stage.goal !== undefined && (typeof stage.goal !== 'string' || !stage.goal.trim())) {
+        report(file, null, `${label}.stages.${index}.goal`, '路线阶段 goal 若填写必须为非空字符串。', '填写非空 goal 或移除该字段。');
+      }
     });
 
     const position = new Map(ordered.map((id, index) => [id, index]));

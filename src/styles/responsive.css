@@ -796,6 +796,80 @@
   .permission-bits__ledger-row {
     grid-template-columns: 3rem 6.6rem minmax(0, 1fr);
   }
+
+  /* 第 8 阶段交互实验台窄屏自适应（防 390px 横向溢出） */
+  .crypto-lab__grid,
+  .jwt-inspector__cols,
+  .jq-split,
+  .mem-map__layout,
+  .asm-trace__layout,
+  .quest-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .jwt-panel--gates,
+  .jq-output,
+  .mem-map__detail {
+    border-block-start: var(--training-rule-light);
+    border-inline-start: 0;
+  }
+
+  .stage8-lab__controls,
+  .stage8-lab__tabs,
+  .stage8-lab__presets--pad,
+  .crypto-lab__grid,
+  .jwt-token-strip,
+  .jwt-panel,
+  .route-matrix,
+  .tunnel-lab__cmd,
+  .tunnel-lab__svg-wrap,
+  .tunnel-lab__readout,
+  .capture-list,
+  .log-anatomy,
+  .log-workbench__bar,
+  .log-workbench__out,
+  .jq-events,
+  .jq-output,
+  .mem-map__stack,
+  .mem-map__detail,
+  .asm-regs,
+  .quest-progress,
+  .quest-grid,
+  .quest-detail {
+    padding-inline: 0.9rem;
+  }
+
+  .route-matrix > div {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.2rem;
+  }
+
+  .mem-band {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .asm-reg-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .asm-line {
+    grid-template-columns: 2.1rem 4.8rem minmax(0, 1fr);
+  }
+
+  /* 窄屏保留第 8 阶段 SVG 图的可读字号：允许在键盘可聚焦容器内左右滚动，根页面 0 横向溢出 */
+  .stage8-scroll-hint {
+    display: block;
+    padding-inline: 0.9rem;
+  }
+
+  .lesson-diagram .stage8-scroll-hint {
+    padding-inline: 0;
+  }
+
+  .stage8-svg-scroll svg,
+  .tunnel-lab__svg-wrap svg {
+    min-inline-size: 38rem;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

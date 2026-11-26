@@ -1,6 +1,6 @@
 ---
 title: Linux 运行时：虚拟内存、系统调用与环境变量
-description: 把 C 语言里的堆/栈与命令行里的进程权限接成一张操作系统运行视图：看懂 /proc/self/maps 虚拟内存权限、用 strace 透视系统调用、理解环境变量/动态链接器安全边界与生产 systemd 服务
+description: 把 C 里的堆栈和命令行里的进程权限接在一起：看懂 /proc/self/maps 权限分区、用 strace 追踪系统调用，再理清环境变量与最小权限 systemd 服务
 pageType: lesson
 template: splash
 ---
@@ -17,13 +17,15 @@ import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
+import LinuxMemoryMap from '../../../components/linux-memory-map';
+import SyscallBoundaryDiagram from '../../../components/syscall-boundary-diagram.astro';
 import manifest from '../../../data/lessons/linux-runtime-and-services.json';
 
 export const homework = [
-  { title: '完成验收第 3 题', detail: '编译运行 mem_layout.c，对照 readelf -d / ldd 与 strace 输出记下加载 libc.so.6 与打开 /etc/hostname 的系统调用。' },
-  { title: '用 strace 排查一次“文件找不到”', detail: '执行 strace -e trace=openat cat /tmp/no-such-file-here，观察最后返回了 -1 ENOENT (No such file or directory)，体会无源码时怎样用 strace 定位程序到底在找哪个路径。' },
-  { title: '看懂 /proc/self/maps 的完整权限列', detail: '在你自己的 Kali 终端里运行 cat /proc/self/maps（注意此时看到的是 cat 进程自己的内存映射），找出 [heap]、[stack] 和 libc.so.6 各自对应的权限字段，确认哪几行带 x（可执行）、哪几行带 w（可写）。' },
-  { title: '对照检查服务最小权限', detail: '回看本课的 sample.service，想一想如果把专用账号 User=training-api 偷懒改成 User=root，一旦这个 Web 服务出现远程命令执行类漏洞，攻击者获得的权限范围会扩大多少？' },
+  { title: '完成验收第 3 题', detail: '编译运行 mem_layout.c，对照 readelf -d、ldd 与 strace 输出，记下加载 libc.so.6 和打开 /etc/hostname 的系统调用。' },
+  { title: '用 strace 查一次「找不到文件」', detail: '跑 strace -e trace=openat cat /tmp/no-such-file-here，找到末尾的 -1 ENOENT (No such file or directory)，记住没源码时怎么查程序到底在找哪个路径。' },
+  { title: '核对 /proc/self/maps 的权限列', detail: '在 Kali 里跑 cat /proc/self/maps（这里看到的是 cat 进程自己的内存映射），找出 [heap]、[stack] 和 libc.so.6 的权限位，确认哪几行带 x、哪几行带 w。' },
+  { title: '算一笔最小权限的账', detail: '回看 sample.service：如果把专用账号 User=training-api 改成 User=root，一旦这个服务出了命令执行漏洞，攻击者会多拿到哪些系统权限？用两句话写下来。' },
 ];
 
 <LessonHero
@@ -34,7 +36,7 @@ export const homework = [
     { text: "Linux 运行时" },
     { text: "虚拟内存、系统调用与服务", accent: true },
   ]}
-  summary="你已经会写 C 里的栈和堆，也会在终端里看进程和权限，但很多同学脑子里这两块还是脱节的。这一课站到操作系统的视角把它们连起来：进程在内存里长什么样、普通代码怎么请内核干活、线上程序又靠什么机制 24 小时稳定跑着。"
+  summary="前面你写过 C 里的栈和堆，也在终端里管过进程和权限。这一课从操作系统运行时把两块接起来：看清进程内存如何分区与授权、用户态代码怎样通过系统调用请求内核，以及线上服务怎样配置环境变量与最小权限。"
 />
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
@@ -43,17 +45,23 @@ export const homework = [
 
 <LessonPacing segments={manifest.segments} />
 
-## 引导问题：为什么两个同时运行的程序，变量地址长得差不多却不会互相覆盖
+## 引导问题：两个同时跑的程序，指针地址几乎一样，为什么没打架
 
-你同时打开两个终端，都跑同一个 C 程序，打印出来的指针地址可能都是 `0x7ffc...`。它们没有打架，是因为每个进程看到的都是内核给它分配的**独立虚拟地址空间**；同样，你的程序只是调用了一句 `fopen("/etc/hostname", "r")`，为什么就能被权限系统挡住或放行？因为真正去摸磁盘的不是你的代码，而是**Linux 内核**。
+开两个终端，同时跑同一个 C 程序，打印出来的栈变量地址往往都是 `0x7ffc...` 开头。它们互不覆盖，是因为每个进程看到的都不是真实物理内存，而是内核分给它的**独立虚拟地址空间**。
+
+同样，C 代码里只写了一句 `fopen("/etc/hostname", "r")`，权限检查是在哪儿发生的？真正去摸磁盘的不是你的代码，而是**Linux 内核**。
 
 ## 一、虚拟内存地图：代码、数据、堆、共享库与栈
 
-下载这份 32 行的 C 程序到 `~/lab/runtime`，它同时打印环境变量、函数地址、全局变量地址、堆地址与栈变量地址，并读取一次 `/etc/hostname`：
+把这份 32 行的 C 程序放到 `~/lab/runtime`。它一次把环境变量、函数地址、全局变量、堆、栈和读文件全摆出来：
 
-<CodeFile file="labs/linux-runtime-and-services/mem_layout.c" mark="4,7-8,14-19,21" note="一次性把代码段、数据段、堆、栈、环境变量与文件打开全部放到同一个最小程序里观察。" />
+<CodeFile file="labs/linux-runtime-and-services/mem_layout.c" mark="4,7-8,14-19,21" note="32 行代码，把代码段、数据段、堆、栈、环境变量和文件打开收进同一个实验。" />
 
-在 Kali 里编译运行，再顺手看一眼 `/proc/self/maps`（来源：[proc(5)](#source-linux-proc-5)）：
+先点开下面的交互内存图，对照 `mem_layout.c` 看各段 `rwxp` 权限，再切换模拟重启观察 ASLR 如何让再次执行后的地址发生变化：
+
+<LinuxMemoryMap client:visible motionLevel="explanatory" />
+
+在 Kali 里编译运行，并看一眼 `/proc/self/maps`（来源：[proc(5)](#source-linux-proc-5)）：
 
 <TerminalSession
   environment="KALI 终端"
@@ -63,55 +71,57 @@ export const homework = [
     {
       cmd: 'APP_MODE=staging ./mem_layout',
       out: 'APP_MODE = staging\ncode   (main)   = 0x651e9f721199\ndata   (global) = 0x651e9f724048\nheap   (malloc) = 0x651ed7c13010\nstack  (local)  = 0x7ffcf30ab724\nhostname_file   = fedb80b68d79',
-      note: '因为 ASLR（地址空间随机化），你机器上的十六进制数会与这里不同；在本例默认 x86-64 Linux PIE 布局下，这四组小块示例地址呈现典型的 code < data < heap < stack 从低到高顺序（大块 malloc 分配也可能改走独立 mmap 映射区）。',
+      note: '开了 ASLR（地址空间随机化），你机器上的十六进制数会和这里不同。在默认 x86-64 Linux PIE 布局下，这四组小块地址通常呈 code < data < heap < stack 由低到高（大块 malloc 也可能走独立匿名 mmap 区）。',
     },
     {
       cmd: "awk 'NR<=6 || /heap|stack|libc\\.so/' /proc/self/maps | head -n 10",
       out: '5e666cb1b000-5e666cb26000 r--p 00000000 00:26 531315                     /usr/bin/gawk\n5e666cb26000-5e666cbc7000 r-xp 0000b000 00:26 531315                     /usr/bin/gawk\n…\n5e66845bb000-5e66845dc000 rw-p 00000000 00:00 0                          [heap]\n7d5369225000-7d536924d000 r--p 00000000 00:26 525206                     /usr/lib/x86_64-linux-gnu/libc.so.6\n7d536924d000-7d53693b5000 r-xp 00028000 00:26 525206                     /usr/lib/x86_64-linux-gnu/libc.so.6',
-      note: '/proc/self 指向「正在打开该文件的进程本身」——这里实际打开 /proc/self/maps 的是 awk（/usr/bin/gawk），用 cat 查看时看到的就是 cat 进程自己的映射。注意第二列权限：r-xp 只读可执行，rw-p 可读写但不可执行。',
+      note: '/proc/self 始终指向「正在打开这个文件的进程自己」——这里打开它的是 awk（/usr/bin/gawk），用 cat 看就是 cat 自己。留意第二列权限：r-xp 只读可执行，rw-p 可读写但不可执行。',
     },
   ]}
 />
 
 <DataTable
   caption="Linux 进程虚拟地址空间五个常见区域（典型 x86-64 PIE 布局）"
-  headers={["区域", "存放内容", "典型权限", "为什么这样设"]}
+  headers={["区域", "存什么", "常见权限", "为什么这样设"]}
   rows={[
-    ["代码段（.text）", "编译后的机器指令（如 main）", "r-xp", "只读防篡改，可执行供 CPU 取指"],
+    ["代码段（.text）", "编译好的机器指令（如 main）", "r-xp", "只读防篡改，可执行供 CPU 取指"],
     ["数据段（.rodata / .data）", "字符串常量、已初始化全局变量", "r--p / rw-p", "常量只读，全局变量可读写但不可执行"],
-    ["堆（[heap]）与匿名 mmap", "小块 malloc 常由 [heap]（brk）提供；大块分配常走匿名 mmap 映射", "rw-p", "按需动态分配，不可执行（NX 防护）"],
-    ["共享库映射区", "libc.so.6 等动态库的代码与数据", "r-xp / rw-p", "多进程共享只读代码页以节省物理内存"],
-    ["栈（[stack]）", "函数栈帧、局部变量、返回地址", "rw-p", "随函数调用自动压栈弹栈，不可执行"],
+    ["堆（[heap]）与匿名 mmap", "小块 malloc 常走 [heap]（brk）；大块分配常走匿名 mmap", "rw-p（视 mmap prot 标志而定）", "malloc 场景默认不可执行（NX）；注意匿名 mmap 权限取决于传入的 prot 标志"],
+    ["共享库映射区", "libc.so.6 等动态库分片映射为只读段、代码段与私有数据段", "r--p / r-xp / rw-p", "代码页 r-xp 可供多进程共享，私有数据页 rw-p 独立写时复制"],
+    ["栈（[stack]）", "函数栈帧、局部变量、返回地址", "rw-p", "默认编译布局下不可执行（NX），随调用压栈弹栈"],
   ]}
   columnRatios={[1.2, 1.9, 0.9, 2.0]}
 />
 
 ## 二、用户态、内核态与 `strace` 系统调用追踪
 
-Linux 把 CPU 权限切成了**用户态（User Space）**和**内核态（Kernel Space）**。普通程序跑在用户态，不能直接读写硬盘扇区或网卡寄存器；凡是打开文件、打印到屏幕、建网络连接、创建子进程，都必须向内核发起一次**系统调用（System Call）**（来源：[syscalls(2)](#source-linux-syscalls-2)）。
+Linux 把权限划成**用户态（User Space）**和**内核态（Kernel Space）**。普通程序跑在用户态，不能直接碰硬盘扇区或网卡寄存器；凡是打开文件、往终端写字、建网络连接、拉起子进程，都得向内核发一次**系统调用（System Call）**（来源：[syscalls(2)](#source-linux-syscalls-2)）。
 
-你不需要读懂内核源码，学会用 **`strace`** 就能把任意程序的系统调用像 X 光片一样拍出来（来源：[strace(1)](#source-linux-strace-1)）：
+<SyscallBoundaryDiagram />
+
+不用去啃内核源码，学会 **`strace`** 就能把程序发出的每次系统调用原样打印出来（来源：[strace(1)](#source-linux-strace-1)）：
 
 <TerminalSession
   environment="KALI 终端"
-  title="查看自己编译程序的共享库依赖，并用 strace 观察系统调用"
+  title="查看自编译程序的共享库依赖，并用 strace 追踪系统调用"
   steps={[
     {
       cmd: 'ldd ./mem_layout',
       out: '\tlinux-vdso.so.1 (0x00007ffccef75000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000773921fc2000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007739221c2000)',
-      note: '仅对自己信任的程序使用 ldd：它会调用动态链接器解析依赖，展示 printf 和 fopen 所在的 libc.so.6。遇到陌生或不受信任的二进制，应先用只读静态命令 readelf -d ./program | grep NEEDED 查看依赖，绝不直接跑 ldd。',
+      note: '只对自己信任的程序跑 ldd——它会调动态链接器去解析依赖。遇到陌生二进制，先跑只读静态命令 readelf -d ./program | grep NEEDED，别直接跑 ldd。',
     },
     {
       cmd: "strace -e trace=openat,write ./mem_layout 2>&1 | grep -E 'etc/hostname|APP_MODE|code   |stack  |libc\\.so'",
       out: 'openat(AT_FDCWD, "/usr/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3\nopenat(AT_FDCWD, "/etc/hostname", O_RDONLY) = 3\nwrite(1, "APP_MODE = (unset)\\ncode   (main)"..., 182APP_MODE = (unset)\ncode   (main)   = 0x60c83a8c0199\nstack  (local)  = 0x7ffc59ba0c84',
-      note: '第一行是动态链接器加载 libc；第二行是 fopen("/etc/hostname") 发出的 openat 并拿到文件描述符 3；第三行是 printf 最终落成的 write(1, ...)。',
+      note: '第一行是 ld-linux 用 openat 打开 libc（随后靠 mmap 映射进地址空间）；第二行是 fopen("/etc/hostname") 底层发起的 openat 返回 fd=3（fopen 再把它包装成 FILE*）；第三行是 stdio 缓冲合并后的一次 write(1, ...)，182 是本次写入的字节数。',
     },
   ]}
 />
 
 （来源：[ld.so(8)](#source-linux-ld-so-8)、[ldd(1)](#source-linux-ldd-1)、[strace(1)](#source-linux-strace-1)）
 
-以后遇到「程序明明装了却报找不到配置文件」「服务一启动就秒退但屏幕没日志」，一条 `strace -e trace=file <命令>` 往往一分钟内就能看到它在哪条路径收到了 `ENOENT`（不存在）或 `EACCES`（权限拒绝）。
+以后碰上「明明装了却报找不到配置」「进程退出但无输出」，敲一条 `strace -e trace=file <命令>`，往往就能在失败的系统调用末尾看到 `strace` 译出的 `-1 ENOENT`（不存在）或 `-1 EACCES`（没权限）。
 
 ## 三、环境变量、动态链接器与生产服务单元
 
@@ -119,30 +129,30 @@ Linux 把 CPU 权限切成了**用户态（User Space）**和**内核态（Kerne
 
 （来源：[environ(7)](#source-linux-environ-7)、[ld.so(8)](#source-linux-ld-so-8)）
 
-- **`PATH` 顺序**：终端敲 `python3` 时，shell 会按 `$PATH` 从左到右依次查找第一个同名可执行文件（可用 `echo "$PATH"` 和 `which python3` 核实）。写脚本或定时任务时，用绝对路径（如 `/usr/bin/python3`）可以避免被前面目录里的同名文件劫持。
-- **配置注入边界**：环境变量适合传递非敏感运行参数（如 `APP_MODE=staging`），但会被子进程继承，且同用户进程可读 `/proc/<pid>/environ`；因此既不要在调试页或日志里打印整个环境表，在生产 systemd 服务里也应优先用专门的凭据机制存放密钥。
-- **`LD_PRELOAD` 与安全执行模式**：动态链接器 `ld.so` 支持用 `LD_PRELOAD` 在普通进程启动时优先加载自定义 `.so` 共享库（常用于调试和性能分析）。当程序处于安全执行模式（如带 `setuid`/`setgid` 或特定文件能力）时，按 [ld.so(8)](#source-linux-ld-so-8) 规则，动态链接器会严格受限——包含路径斜杠（`/`）的条目会被忽略，只允许从标准搜索目录加载同样带 `setuid` 位的预加载库，以防止普通用户随意劫持提权程序。
+- **`PATH` 查找顺序**：敲 `python3` 时，shell 按 `$PATH` 从左往右查找同名可执行文件；平时用 `command -v python3`（可同时区分 shell 别名、内建命令与外部文件）和 `echo "$PATH"` 核实。写脚本或定时任务时直接写绝对路径（如 `/usr/bin/python3`），避免被前面目录的同名文件拦截。
+- **环境变量的保密边界**：传 `APP_MODE=staging` 这类普通开关很顺手，但它会继承给子进程，且进程的初始环境记录在 `/proc/<pid>/environ`（受 `ptrace` 权限检查 `PTRACE_MODE_READ_FSCREDS` 约束，默认配置下同用户通常可读，在部分安全加固策略下也可能被拒绝）。因此不要在日志或调试页倾倒环境变量；线上存放敏感密钥优先使用专门的凭据机制。
+- **`LD_PRELOAD` 与安全执行模式**：动态链接器 `ld.so` 允许普通进程靠 `LD_PRELOAD` 抢先加载自定义 `.so` 共享库，常用来做调试和性能分析。遇到带 `setuid`/`setgid` 或特殊文件能力的程序时，按 [ld.so(8)](#source-linux-ld-so-8) 会进入安全执行模式：带路径斜杠（`/`）的条目直接忽略，只允许从标准搜索目录加载同样带 `setuid` 位的预加载库，挡住普通用户随意劫持提权程序。
 
-### 2. 真实服务器怎样托管后台进程
+### 2. 线上主机怎么托管后台服务
 
-在练习机里你用 `python3 api_server.py` 占着一个终端；真实服务器关掉 SSH 后服务还得继续跑，且崩溃后要自动拉起。Linux 发行版普遍用 **systemd** 管理常驻服务、用 **cron** 跑定时任务（来源：[systemd.exec(5)](#source-systemd-exec)、[crontab(5)](#source-linux-crontab-5)）：
+练习机里在终端前景跑 `python3 api_server.py` 即可；线上主机关闭 SSH 后服务需要常驻并支持失败自动拉起。主流 Linux 发行版用 **systemd** 管常驻服务、用 **cron** 跑定时任务（来源：[systemd.exec(5)](#source-systemd-exec)、[crontab(5)](#source-linux-crontab-5)）。下面是一份生产风格的服务单元**配置骨架**（注意：`LoadCredential` 会在 `$CREDENTIALS_DIRECTORY/jwt_secret` 提供只读凭据文件，应用代码需要按文件路径读取；若直接运行第 39 课只读 `APP_JWT_SECRET` 环境变量的练习脚本，还需改写其密钥读取入口）：
 
-<CodeFile file="labs/linux-runtime-and-services/sample.service" mark="7-18" note="生产服务关键边界：为业务分配独立非 root 专用账号（training-api）、固定工作目录、普通配置放 EnvironmentFile、敏感密钥用 LoadCredential 交给 systemd Credentials 隔离提供，并配置失败自动重启。" />
+<CodeFile file="labs/linux-runtime-and-services/sample.service" mark="7-18" note="线上单元配置骨架：单独的最小权限账号（training-api）、固定工作目录、普通配置放 EnvironmentFile、敏感密钥交 LoadCredential 生成受控凭据文件（应用须从 $CREDENTIALS_DIRECTORY 读取），并开失败自动重启。" />
 
-<Callout type="note" title="Web 安全与系统运维的交汇点">
-以后做 Linux 安全审计或排查服务故障时，顺手查三件事几乎必有收获：`ss -lntp`（谁在监听哪些端口）、`ps aux`（服务是不是错用 `root` 或与其他业务混用账号在跑）、以及 `systemctl status <服务>` / `crontab -l`（后台和定时任务在以谁的身份执行什么路径）。
+<Callout variant="info" title="排查 Linux 主机时的三个顺手命令">
+接手一台陌生的 Linux 服务机时，先顺手敲三样往往能省掉很多猜想：`ss -lntp` 看谁在监听哪些端口，`ps aux` 检查服务账号是否误用了 `root`，`systemctl status <服务>` 和 `crontab -l` 看后台与定时任务以谁的身份执行什么路径。
 </Callout>
 
 ## 常见报错与排错
 
 <DataTable
-  caption="Linux 运行时排查最常撞上的四个问题"
+  caption="Linux 运行时排查最常碰到的四个问题"
   headers={["现象或报错", "常见原因", "处理办法"]}
   rows={[
-    ["strace 报 Operation not permitted", "容器或系统限制了 ptrace 权限，或试图追踪其他用户的进程", "在自己的虚拟机里追踪自己启动的进程；Docker 调试需加 --cap-add=SYS_PTRACE"],
-    ["cron 里脚本手动能跑，定时跑却失败", "cron 默认使用极简 PATH（通常只有 /usr/bin:/bin），找不到自定义目录下的命令", "在脚本或 crontab 里写命令绝对路径，并把 stderr 重定向到日志文件"],
-    ["二进制文件执行报 cannot open shared object file", "缺少依赖的 .so 共享库，或库不在动态链接器搜索路径里", "陌生二进制先用 readelf -d ./程序 | grep NEEDED 静态查看依赖；确认程序可信后再用 ldd ./程序 检查解析结果并安装缺失运行库"],
-    ["把敏感密钥写进全局 /etc/environment 或普通环境文件", "环境变量会继承给子进程，且 /proc/<pid>/environ 可被同用户读取", "EnvironmentFile 仅放普通非敏感配置；真实生产密钥使用 systemd 的 LoadCredential / LoadCredentialEncrypted 机制，并分配独立专用服务账号"],
+    ["strace 报 Operation not permitted", "容器或系统禁了 ptrace，或在追踪别的用户进程", "在自己虚拟机里追自己起的进程；Docker 调试需加 --cap-add=SYS_PTRACE"],
+    ["脚本手动能跑，放进 cron 就失败", "cron 默认给极简 PATH（通常只有 /usr/bin:/bin），找不到自定义目录下的命令", "脚本和 crontab 里写命令绝对路径，顺手把 stderr 重定向到日志文件"],
+    ["执行程序报 cannot open shared object file", "缺依赖的 .so 共享库，或库不在动态链接器搜索路径里", "陌生二进制先用 readelf -d ./程序 | grep NEEDED 静态查依赖；确认可信后再用 ldd 检查并补装库"],
+    ["把敏感密钥写进全局 /etc/environment 或普通环境文件", "环境变量会继承给子进程，且默认配置下同用户进程常可读取 /proc/<pid>/environ", "EnvironmentFile 只放普通配置；线上密钥走 systemd 的 LoadCredential / LoadCredentialEncrypted 并让应用从凭据文件读取"],
   ]}
   columnRatios={[1.7, 1.9, 2.3]}
 />
@@ -150,16 +160,16 @@ Linux 把 CPU 权限切成了**用户态（User Space）**和**内核态（Kerne
 <CheatSheet
   title="本课常用命令速查"
   items={[
-    { term: 'cat /proc/self/maps', description: '查看当前打开该文件的进程（如 cat 自身）虚拟内存各段起止地址与 rwxp 权限。' },
-    { term: 'readelf -d ./program | grep NEEDED  /  ldd ./program', description: '陌生二进制先用 readelf -d 静态查依赖；可信程序再用 ldd 看实际解析路径。' },
-    { term: 'strace -e trace=openat,write ./program', description: '只追踪文件打开与写入相关的系统调用，快速定位路径与权限故障。' },
-    { term: 'echo "$PATH"  /  which python3', description: '核对命令搜索顺序与实际命中的可执行文件位置。' },
-    { term: 'systemctl status <service>  /  journalctl -u <service> -n 50', description: '在真实 Linux 主机查看 systemd 服务状态与最近 50 条日志。' },
+    { term: 'cat /proc/self/maps', description: '看当前打开该文件的进程（如 cat 自己）虚拟内存各段地址与 rwxp 权限。' },
+    { term: 'readelf -d ./program | grep NEEDED  /  ldd ./program', description: '陌生程序先用 readelf -d 静态查依赖；确认可信再用 ldd 看解析路径。' },
+    { term: 'strace -e trace=openat,write ./program', description: '只盯文件打开和写入系统调用，快速定位路径和权限报错。' },
+    { term: 'echo "$PATH"  /  command -v python3', description: '核对命令搜索顺序，并区分 shell 别名、内建命令与实际命中的可执行文件路径。' },
+    { term: 'systemctl status <service>  /  journalctl -u <service> -n 50', description: '在真实 Linux 主机查 systemd 服务状态与最近 50 条日志。' },
   ]}
 />
 
 <KeyTakeaway>
-进程看到的地址是内核隔离出的虚拟内存（代码 r-xp、数据/堆/匿名 mmap/栈通常 rw-p），所有文件与网络动作都要跨过系统调用边界交由内核检查；学会用 /proc/maps、readelf -d、ldd（仅可信程序）和 strace 透视进程，再掌握专用服务账号与 systemd Credentials 凭据隔离，你就真正打通了“写代码”与“看懂系统运行”的隔阂。下一课我们把磁盘上的可执行文件拆开，看懂 ELF 结构与最基本的 x86-64 汇编。
+每个进程运行在内核隔离的虚拟地址空间中：在本课默认 x86-64 PIE 布局里，代码段为 r-xp，数据、堆与栈默认为 rw-p（权限分离，具体匿名映射仍取决于 mmap 标志）。文件与 I/O 操作都必须经系统调用交由内核裁决。结合 /proc/maps、readelf -d、ldd（仅可信程序）与 strace 排查运行时，再配合独立服务账号和 LoadCredential 文件凭据，就能把代码行为和系统运行接起来。
 </KeyTakeaway>
 
 ## 学习验收
@@ -168,6 +178,8 @@ Linux 把 CPU 权限切成了**用户态（User Space）**和**内核态（Kerne
 
 ## 课后作业
 
-<StepList title="课后作业" steps={homework} />
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
 
 <SourceList sources={manifest.sources} />

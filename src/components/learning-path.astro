@@ -21,7 +21,7 @@ const pad = (value: number) => String(value).padStart(2, '0');
         <div class="path-stage-body">
           <header class="path-stage-head">
             <h2 id={`path-stage-${index + 1}`}>{stage.name}</h2>
-            <p>{stage.goal}</p>
+            {stage.goal && <p>{stage.goal}</p>}
             <span class="path-stage-count">{completed} / {stage.lessons.length} 已上线</span>
           </header>
           <ol class="path-lessons" start={stage.lessons[0]?.number}>

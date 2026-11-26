@@ -1,0 +1,66 @@
+---
+import LessonDiagram from './lesson-diagram.astro';
+---
+<LessonDiagram
+  eyebrow="TLS & PROXY / 普通隧道 vs 调试代理"
+  title="同样经过代理，为什么普通 CONNECT 看不见正文，Burp / mitmproxy 却能看见"
+  ariaLabel="对比普通 CONNECT 透传代理与导入本地 CA 的两段 TLS 调试代理"
+  class="tls-proxy-diagram"
+  note="HTTPS 并没有失效：调试代理之所以能看到明文，前提是你主动把代理 CA 装进了测试浏览器。所以绝不要在日常主力设备安装来路不明的根证书。"
+>
+  <p class="stage8-scroll-hint" aria-hidden="true">窄屏可左右滑动查看完整图示</p>
+  <div class="stage8-svg-scroll" tabindex="0" role="region" aria-label="普通 CONNECT 代理与两段 TLS 调试代理对比图（窄屏可左右滚动查看）">
+    <svg viewBox="0 0 740 300" role="img" aria-label="上泳道为普通 CONNECT 透传代理单段端到端 TLS，下泳道为导入本地 Proxy CA 后的前后两段 TLS">
+      <defs>
+        <marker id="tls-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" class="diagram-arrow-head" />
+        </marker>
+      </defs>
+
+      {/* 泳道 A：普通透传代理 */}
+      <text x="16" y="24" class="diagram-lane-label">情况 A：普通代理（如本课 mini_proxy.py）—— 一条完整 TLS 穿过代理</text>
+
+      <rect x="16" y="38" width="142" height="72" rx="6" class="diagram-box diagram-box--start" />
+      <text x="87" y="68" text-anchor="middle" class="diagram-box-label">浏览器 / curl</text>
+      <text x="87" y="90" text-anchor="middle" class="diagram-box-sub">只信真实源站证书</text>
+
+      <rect x="288" y="38" width="164" height="72" rx="6" class="diagram-box" />
+      <text x="370" y="68" text-anchor="middle" class="diagram-box-label">普通代理 :8888</text>
+      <text x="370" y="90" text-anchor="middle" class="diagram-box-sub">只见 CONNECT 与密文流</text>
+
+      <rect x="582" y="38" width="142" height="72" rx="6" class="diagram-box diagram-box--store" />
+      <text x="653" y="68" text-anchor="middle" class="diagram-box-label">目标 HTTPS 站</text>
+      <text x="653" y="90" text-anchor="middle" class="diagram-box-sub">127.0.0.1:8443</text>
+
+      <line x1="158" y1="74" x2="288" y2="74" class="tls-line tls-line--safe" marker-end="url(#tls-arrow)" />
+      <line x1="452" y1="74" x2="582" y2="74" class="tls-line tls-line--safe" marker-end="url(#tls-arrow)" />
+      <text x="370" y="130" text-anchor="middle" class="tls-caption tls-caption--safe">端到端 TLS 1.3 密文直通源站，普通代理无法解开 HTTP 请求头和正文</text>
+
+      <line x1="16" y1="152" x2="724" y2="152" class="tls-divider" />
+
+      {/* 泳道 B：导入 Proxy CA 的调试代理 */}
+      <text x="16" y="178" class="diagram-lane-label diagram-lane-label--fail">情况 B：调试代理（Burp / mitmproxy）—— 信任代理 CA 后拆成两段 TLS</text>
+
+      <rect x="16" y="192" width="142" height="78" rx="6" class="diagram-box diagram-box--start" />
+      <text x="87" y="220" text-anchor="middle" class="diagram-box-label">测试浏览器</text>
+      <text x="87" y="242" text-anchor="middle" class="diagram-box-sub">已手动导入代理 CA</text>
+
+      <rect x="272" y="192" width="196" height="78" rx="6" class="diagram-box tls-box--mitm" />
+      <text x="370" y="218" text-anchor="middle" class="diagram-box-label">调试代理（中间解密）</text>
+      <text x="370" y="238" text-anchor="middle" class="diagram-box-sub">动态签发临时站点证书</text>
+      <text x="370" y="256" text-anchor="middle" class="tls-caption tls-caption--danger">内存可见明文 · 可放行或改包</text>
+
+      <rect x="582" y="192" width="142" height="78" rx="6" class="diagram-box diagram-box--store" />
+      <text x="653" y="220" text-anchor="middle" class="diagram-box-label">目标 HTTPS 站</text>
+      <text x="653" y="242" text-anchor="middle" class="diagram-box-sub">出示真实站点证书</text>
+
+      <line x1="158" y1="231" x2="272" y2="231" class="tls-line tls-line--danger" marker-end="url(#tls-arrow)" />
+      <text x="215" y="219" text-anchor="middle" class="tls-caption tls-caption--danger">第 1 段 TLS</text>
+
+      <line x1="468" y1="231" x2="582" y2="231" class="tls-line tls-line--safe" marker-end="url(#tls-arrow)" />
+      <text x="525" y="219" text-anchor="middle" class="tls-caption tls-caption--safe">第 2 段 TLS</text>
+
+      <text x="370" y="290" text-anchor="middle" class="diagram-box-sub">浏览器验代理 CA 签的假证书 → 代理明文查看 → 代理再以客户端身份连真实站点</text>
+    </svg>
+  </div>
+</LessonDiagram>

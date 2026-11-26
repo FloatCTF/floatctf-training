@@ -258,7 +258,19 @@ export function validateLesson(topic) {
   if (/<table[\s>]/i.test(page.text)) report(pagePath, lessonId, 'table', '正文使用了原生 <table>。', 'Starlight 会把 table 设为 display:block 导致半宽表；教学表统一使用 DataTable 组件。');
   if (keyTakeaways === 0) report(pagePath, lessonId, 'KeyTakeaway', '专题页缺少可复习的结论区域。', '加入一个重点结论卡。');
   if (!/(常见|边界|局限|排错|故障)/.test(page.text)) report(pagePath, lessonId, 'limitations', '专题页缺少常见错误、边界、局限或排错内容。', '增加与主题匹配的边界说明。');
-  if (!(manifest.runnableExamples || []).length && !/<(?:FlowSimulator|NeuralNetworkSimulator|RetrievalSandbox|BackpropPlayground|ContextWindowEvolution|AgentTraceReplay|PromptInjectionSandbox|XorExplorer|LinearFitPlayground|NeuronPlayground|ActivationFlow|AttentionExplorer|SamplingPlayground|AiStackExplorer|AiMlDlExplorer|TerminalSession|PathExplorer|PermissionBits|EncodingExplorer|CodeStepper|CodeFile|GitGraph|HttpExchange)\b/.test(page.text) && !/```[a-z0-9-]+/i.test(page.text)) {
+  const stripCodeFromMdx = (raw) =>
+    raw
+      .replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$/gm, '')
+      .replace(/`[^`\n]+`/g, '');
+  const mdxWithoutCode = stripCodeFromMdx(page.text);
+  const calloutTagPattern = /<Callout\b((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+  for (const match of mdxWithoutCode.matchAll(calloutTagPattern)) {
+    const attrs = match[1];
+    if (/(?:^|[\s])type\s*=/.test(attrs)) {
+      report(pagePath, lessonId, 'Callout', 'Callout 使用了无效属性 type。', 'Callout 只接受 variant="info|warning|danger|success"，请改用 variant。');
+    }
+  }
+  if (!(manifest.runnableExamples || []).length && !/<(?:FlowSimulator|NeuralNetworkSimulator|RetrievalSandbox|BackpropPlayground|ContextWindowEvolution|AgentTraceReplay|PromptInjectionSandbox|XorExplorer|LinearFitPlayground|NeuronPlayground|ActivationFlow|AttentionExplorer|SamplingPlayground|AiStackExplorer|AiMlDlExplorer|TerminalSession|PathExplorer|PermissionBits|EncodingExplorer|CodeStepper|CodeFile|GitGraph|HttpExchange|CryptoTransformLab|JwtAuthInspector|TunnelPacketLab|LogTriageWorkbench|LinuxMemoryMap|AssemblyTraceExplorer|BridgeQuestBoard)\b(?:[^>"']|"[^"]*"|'[^']*')*\/?>/.test(mdxWithoutCode) && !/```[a-z0-9-]+/i.test(page.text)) {
     report(pagePath, lessonId, 'example', '专题页缺少具体例子、可运行代码、实验或交互演示。', '加入至少一种可验证实践内容。');
   }
   if (keyTakeaways > data.policy.content.maxKeyTakeaways) report(pagePath, lessonId, 'KeyTakeaway', `重点结论卡数量为 ${keyTakeaways}。`, `最多保留 ${data.policy.content.maxKeyTakeaways} 个。`);

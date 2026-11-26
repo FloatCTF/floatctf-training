@@ -17,7 +17,7 @@
       "lab-check"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "先用一份按代理改写结果实发录制的 POST /checkout 报文说明前端限制为何无法充当安全边界，再用五步流程拆解本地调试代理如何借助本地 CA 把一条 HTTPS 连接拆成前后两段 TLS",
+    "visualStory": "先用实时密码学对照实验台直观区分编码、哈希、加密与签名，再用真实录制的 POST /checkout 报文验证前端不可信，最后用双泳道图示对照普通 CONNECT 隧道与本地 CA 两段 TLS 调试代理",
     "learningObjectives": [
       "用同一段输入区分编码、哈希、对称加密、非对称密钥协商与数字签名，说出各自解决什么问题以及能否还原",
       "使用 openssl 生成本地迷你 CA 与带 SAN 扩展的站点证书，并解释 curl 为何拒绝未受信任的证书链",
@@ -64,8 +64,8 @@
       "id": "check-local-ca-and-proxy",
       "kind": "practice",
       "title": "自己做一次 HTTPS 校验与代理观察",
-      "question": "一、按本课步骤用 make_certs.sh 生成本地证书，修改 san.ext 去掉 IP:127.0.0.1 后重签 site.crt，再用 curl --noproxy '*' --cacert ca.crt https://127.0.0.1:8443/ 测试，记录错误信息并解释原因（随后恢复原版证书）。二、不带 --replace 启动 mini_proxy.py，用 curl --noproxy '' -x http://127.0.0.1:8888 访问 http://127.0.0.1:8080/checkout 并手动把 -d 里的 qty 改成 2、price 改成 1，核对服务端返回的 tampered 与 final_charge。",
-      "answer": "一、去掉 IP:127.0.0.1 后，即使传入 --cacert ca.crt，curl 仍会因为证书里的 Subject Alternative Name 不包含 127.0.0.1 而校验主机名失败（常见为 curl: (60) SSL: no alternative certificate subject name matches target IP address '127.0.0.1'），说明客户端同时核对「证书链是否可信」与「SAN 是否匹配当前访问的主机」。二、代理日志打印完整的 POST 请求与正文，服务端返回 qty 为 2、client_sent_price 为 1、server_catalog_price 为 35、tampered 为 true、final_charge 为 70。自查标准：你能复现两种证书失败的不同报错，并指出最终金额始终由服务端 CATALOG 决定。",
+      "question": "一、按本课步骤运行 make_certs.sh 生成本地证书后，复制一份脚本（或直接编辑 make_certs.sh 第 21 行，因为默认脚本会在第 28 行删除临时 san.ext 并在重跑时覆写它），把 SAN 里的 IP:127.0.0.1 删掉，只留 DNS:localhost 后重跑脚本并重启 https_server.py，再用 curl --noproxy '*' --cacert ca.crt https://127.0.0.1:8443/ 测试，记录错误信息并解释原因（测完恢复第 21 行重新签发并重启服务）。二、不带 --replace 启动 mini_proxy.py，用 curl --noproxy '' -x http://127.0.0.1:8888 访问 http://127.0.0.1:8080/checkout 并手动把 -d 里的 qty 改成 2、price 改成 1，核对服务端返回的 tampered 与 final_charge。",
+      "answer": "一、从 make_certs.sh 第 21 行删去 IP:127.0.0.1 并重签重启服务后，即使传入 --cacert ca.crt，curl 仍会因为证书里的 Subject Alternative Name 不包含 127.0.0.1 而校验主机名失败（常见为 curl: (60) SSL: no alternative certificate subject name matches target IP address '127.0.0.1'），说明客户端同时核对「证书链是否可信」与「SAN 是否匹配当前访问的主机」。二、代理日志打印完整的 POST 请求与正文，服务端返回 qty 为 2、client_sent_price 为 1、server_catalog_price 为 35、tampered 为 true、final_charge 为 70。自查标准：你能复现两种证书失败的不同报错，恢复证书，并指出最终金额始终由服务端 CATALOG 决定。",
       "sourceIds": [
         "rfc5280",
         "rfc9525",
@@ -78,7 +78,7 @@
   "segments": [
     {
       "kind": "必读",
-      "title": "先分清几件总被混为一谈的事",
+      "title": "先分清四类总被混叫成「加密」的操作",
       "heading": "一、",
       "minutes": 30,
       "checkpoint": "能用同一段文本说出 Base64、SHA-256、对称加密、非对称密钥协商与数字签名的区别。"
@@ -492,7 +492,7 @@
     }
   ],
   "visualNarrative": {
-    "kind": "flow-and-http-exchange",
+    "kind": "crypto-lab-http-exchange-and-tls-diagram",
     "primaryAnimations": 0,
     "supportingInteractions": 2,
     "scrollReveals": 0

@@ -28,7 +28,7 @@ export function StageControls({
   return (
     <div className={className}>
       {leading}
-      <div className="learning-sim-actions" aria-label={ariaLabel}>
+      <div className="learning-sim-actions" role="group" aria-label={ariaLabel}>
         <button type="button" onClick={sim.advance} disabled={sim.running || sim.stage >= maxStage}>{stepLabel}</button>
         <button type="button" onClick={sim.toggleRunning} disabled={sim.stage >= maxStage} aria-pressed={sim.running}>
           {sim.running ? '暂停' : '连续播放'}

@@ -76,15 +76,64 @@
   .sidebar-pane,
   .right-sidebar,
   .simulator-control { display: none !important; }
-  :root { color-scheme: light; }
+  :root,
+  :root[data-theme='light'],
+  :root[data-theme='dark'] {
+    background: var(--training-page-bg) !important;
+    color-scheme: light !important;
+    --sl-color-bg: var(--training-page-bg) !important;
+    --sl-color-bg-nav: var(--training-page-bg) !important;
+    --sl-color-bg-sidebar: var(--training-page-bg) !important;
+    --sl-color-text: var(--training-text) !important;
+    --sl-color-white: var(--training-heading) !important;
+  }
   @page {
+    background: var(--training-page-bg);
     margin: 16mm 15mm 18mm;
     size: A4;
   }
 
   html,
-  body {
+  body,
+  .page,
+  .main-frame,
+  .main-pane,
+  .content-panel {
     background: var(--training-page-bg) !important;
+    color: var(--training-text) !important;
+  }
+
+  /* 打印态统一 Expressive Code 为浅底深字，防止暗色偏好或无脚本打印落回浅色前景 --0 */
+  .expressive-code {
+    --ec-codeBg: var(--training-code-bg) !important;
+    --ec-codeFg: var(--training-code-text) !important;
+    --ec-brdCol: var(--training-border) !important;
+    --ec-frm-edBg: var(--training-code-bg) !important;
+    --ec-frm-edTabBarBg: var(--training-table-header) !important;
+    --ec-frm-edActTabBg: var(--training-table-header) !important;
+    --ec-frm-edActTabFg: var(--training-heading) !important;
+    --ec-frm-trmBg: var(--training-code-bg) !important;
+    --ec-frm-trmTtbBg: var(--training-table-header) !important;
+    --ec-frm-trmTtbFg: var(--training-heading) !important;
+    --ec-markBg: var(--training-warning-bg) !important;
+    --ec-markBrdCol: var(--training-accent) !important;
+  }
+
+  .expressive-code pre,
+  .expressive-code .frame,
+  .expressive-code .frame .header,
+  .expressive-code .frame .title {
+    background: var(--training-code-bg) !important;
+    color: var(--training-code-text) !important;
+  }
+
+  .expressive-code .ec-line .code,
+  .expressive-code .ec-line .gutter {
+    color: var(--training-code-text) !important;
+  }
+
+  .expressive-code .ec-line .code span[style*='--1'] {
+    color: var(--1, var(--training-code-text)) !important;
   }
 
   .sl-markdown-content * {
@@ -131,8 +180,9 @@
 
   .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 {
     break-after: avoid;
-    margin-block-start: 14mm;
-    padding-block-start: 5mm;
+    break-inside: avoid;
+    margin-block-start: 12mm;
+    padding-block-start: 4mm;
   }
 
   .page-lesson .sl-markdown-content > .sl-heading-wrapper.level-h2 h2,
@@ -328,16 +378,60 @@
   a[href^='http']::after { overflow-wrap: anywhere; font-size: 0.76em; content: ' (' attr(href) ')';
     color: var(--training-muted);
   }
-  .terminal-session,
   .code-stepper,
   .git-graph,
   .http-exchange,
   .nested-layers,
   .path-explorer,
   .permission-bits,
-  .encoding-explorer {
+  .encoding-explorer,
+  .tls-proxy-diagram,
+  .syscall-diagram,
+  .trust-boundary-diagram {
     break-inside: avoid;
     box-shadow: none;
+  }
+  /* 长代码文件、多步终端与含对照表的实验台允许跨页自然分页，避免半页空白与孤立标题 */
+  .code-file,
+  .code-file .expressive-code,
+  .code-file figure,
+  .code-file pre,
+  .terminal-session,
+  .terminal-session pre,
+  .stage8-lab {
+    break-inside: auto !important;
+    box-shadow: none;
+  }
+  .code-file .ec-line,
+  .terminal-session__step,
+  .stage8-ledger .learning-sim-ledger-row {
+    break-inside: avoid;
+  }
+  .code-file .header,
+  .terminal-session__bar,
+  .stage8-lab .xor-explorer__header,
+  .stage8-ledger .learning-sim-ledger-head {
+    break-after: avoid;
+  }
+  .stage8-lab__controls,
+  .stage8-lab__tabs,
+  .stage8-lab__presets,
+  .crypto-card__toggle,
+  .quest-progress__reset,
+  .stage8-scroll-hint {
+    display: none !important;
+  }
+  .stage8-svg-scroll,
+  .tunnel-lab__svg-wrap {
+    overflow: visible;
+  }
+  .stage8-svg-scroll svg,
+  .tunnel-lab__svg-wrap svg {
+    max-inline-size: 100%;
+    min-inline-size: 0 !important;
+  }
+  .stage8-ledger .learning-sim-ledger-row {
+    min-inline-size: 0;
   }
   .terminal-session__body { overflow: visible; }
   .terminal-session__out { white-space: pre-wrap; overflow-wrap: anywhere; }

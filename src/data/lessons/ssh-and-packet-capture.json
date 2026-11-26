@@ -17,7 +17,7 @@
       "lab-check"
     ],
     "motionLevel": "explanatory",
-    "visualStory": "用五步流程图呈现 ssh -L 本地端口转发怎样把只监听远端 127.0.0.1 的内网管理接口安全拉回本机，再用真实 tcpdump 抓包结果准确对照明文 HTTP 与 TLS 1.3 流量在链路上的可见范围",
+    "visualStory": "用双视角交互实验台先以双机拓扑步进厘清 ssh -L 两个 127.0.0.1 的归属与加密状态，再以真实回环抓包对比 8080 明文 HTTP 与 8443 TLS 1.3 的可见范围",
     "learningObjectives": [
       "用 ssh-keygen 生成 Ed25519 密钥对并在隔离目录配置专用 sshd_config（显式限定仅回环与仅公钥）及 ~/.ssh/config 别名",
       "解释 ssh -L 本地端口转发的写法与流量路径，在不暴露内网端口的前提下访问只监听 127.0.0.1 的服务并规范清理隧道与练习实例",
@@ -289,7 +289,7 @@
     }
   ],
   "visualNarrative": {
-    "kind": "flow-simulator",
+    "kind": "tunnel-and-packet-lab",
     "primaryAnimations": 0,
     "supportingInteractions": 1,
     "scrollReveals": 0

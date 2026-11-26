@@ -1,27 +1,27 @@
 [
   {
-    "label": "浏览器加载静态前端",
-    "detail": "首次打开页面只取回 HTML/JS 静态资源，页面里还没有用户私有数据。",
+    "label": "浏览器先拉静态外壳",
+    "detail": "本课 SPA 模式下首次请求只取回静态 HTML 和 JS，页面里还没有用户私有数据。",
     "state": "normal"
   },
   {
-    "label": "Nginx 反向代理分流",
-    "detail": "Nginx 统一对外监听：静态资源直接读磁盘返回，/api/ 前缀转发给上游后端，并补写 Host 与 X-Real-IP（同源访问时通常无需 CORS 预检）。",
+    "label": "Nginx 反代按路径分流",
+    "detail": "静态文件直接从磁盘返回，/api/ 转发给上游后端并补写 Host 与来源头；同源访问不触发 CORS 跨源预检。",
     "state": "normal"
   },
   {
     "label": "CORS 与 Token 认证",
-    "detail": "跨源且触发预检的调用前，浏览器先发 OPTIONS 询问策略；后端校验三段 JWS 形态 JWT 的签名与过期时间，确认「你是谁」。",
+    "detail": "跨源且需预检（未命中预检缓存）时浏览器先发 OPTIONS；后端检查 JWS 的 alg 白名单、签名和 exp 完成认证。",
     "state": "normal"
   },
   {
-    "label": "服务端授权判定",
-    "detail": "认证通过不等于可以读任意记录：服务端把 Token 里的 uid 与请求的 uid= 比对，不匹配直接回 403。",
+    "label": "服务端授权核对",
+    "detail": "认证通过不等于有权访问他人对象：后端核对 Token 里的 uid 与请求的 uid，不匹配返回 403。",
     "state": "danger"
   },
   {
-    "label": "返回 JSON 更新页面",
-    "detail": "后端返回结构化 JSON，前端脚本局部更新 DOM，整个过程不需要整页刷新。",
+    "label": "返回 JSON 局部刷新",
+    "detail": "后端返回结构化 JSON，前端脚本按需更新局部页面，地址栏不触发整页重加载。",
     "state": "success"
   }
 ]

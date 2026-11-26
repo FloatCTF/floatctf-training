@@ -15,8 +15,8 @@
       "exercise",
       "lab-check"
     ],
-    "motionLevel": "static",
-    "visualStory": "用五关清单、四份本地实跑材料与最终验收对照表，把日志分析、JWT 解码、参数边界核对、Python 自动化翻页与 x86-64 ELF 汇编读图串成一次完整的本地闯关体验",
+    "motionLevel": "subtle",
+    "visualStory": "用五关白盒体检交互任务看板串联本地实操目标、通关信号与排错提示，配合四份本地材料完成日志、JWT、参数边界、自动翻页与 ELF 反汇编五关闯关",
     "learningObjectives": [
       "综合运用 awk、sort、uniq 从固定访问日志样本中快速识别 403 越权探测来源 IP 与目标路径",
       "用 curl 与 jq 获取接口返回的 JWT，解码 Payload 并用演示密钥验证 HS256 算法与签名完整性",
@@ -309,9 +309,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "static-tables",
+    "kind": "bridge-quest-board",
     "primaryAnimations": 0,
-    "supportingInteractions": 0,
+    "supportingInteractions": 1,
     "scrollReveals": 0
   }
 }

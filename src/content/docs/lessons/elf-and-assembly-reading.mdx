@@ -1,6 +1,6 @@
 ---
 title: 程序怎样在 CPU 上跑：ELF 结构与 x86-64 汇编读图
-description: 哪怕你主攻 Web 安全，拿到一个 Linux 二进制也不该完全抓瞎：用 file、readelf、strings 和 objdump 拆开真实 ELF 文件，看懂 10 个高频寄存器与最基本的 x86-64 汇编
+description: 把 C 源码、ELF 节区与 x86-64 Intel 反汇编对应起来：用 file、readelf、strings 和 objdump 读懂常见寄存器、调用约定与条件跳转
 pageType: lesson
 template: splash
 ---
@@ -18,14 +18,15 @@ import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
 import FlowSimulator from '../../../components/flow-simulator';
+import AssemblyTraceExplorer from '../../../components/assembly-trace-explorer';
 import elfLoad from '../../../data/flows/elf-load-run.json';
 import manifest from '../../../data/lessons/elf-and-assembly-reading.json';
 
 export const homework = [
-  { title: '完成验收第 3 题', detail: '编译 check_pin.c，依次运行 file、readelf -h/-S、strings 与 objdump，圈出实现 a * 3 的三条汇编指令。' },
-  { title: '试试开优化（-O2）后汇编变了多少', detail: '用 gcc -Wall -O2 check_pin.c -o check_pin_o2 再反汇编 check_pin，看看编译器是不是把整个 compute_code(1400, 226) 直接折叠成了常量 0x114a（4426）？' },
-  { title: '对比 strip 前后的符号表', detail: '复制一份 cp check_pin check_pin_stripped && strip check_pin_stripped，再用 file 和 objdump 看它发生了什么变化，体会为什么线上二进制经常被 strip 去掉函数名。' },
-  { title: '换一种视角看第 45 课的 check_ticket.c', detail: '提前想一想：拿到一个没有源码的小校验程序时，先 file、再 strings、再 objdump 找判断分支，这三步能帮你省掉多少盲猜？' },
+  { title: '完成验收第 3 题', detail: '编译 check_pin.c，依次跑 file、readelf -h/-S、strings 和 objdump，圈出实现 a * 3 的三条汇编指令。' },
+  { title: '试试加 -O2 优化后汇编少了多少', detail: '用 gcc -Wall -O2 check_pin.c -o check_pin_o2 编译再反汇编 check_pin，看看编译器是不是把 compute_code(1400, 226) 直接折成了常量 0x114a（4426）。' },
+  { title: '对比 strip 前后的符号表', detail: '跑 cp check_pin check_pin_stripped && strip check_pin_stripped，再用 file 和 objdump 对比差异，体会为什么发布版二进制常把函数名剥掉。' },
+  { title: '提前想想第 45 课的 check_ticket', detail: '拿到一个没有源码的小校验程序，按 file → strings → objdump 找判断分支这三步走，能省掉多少盲猜？' },
 ];
 
 <LessonHero
@@ -36,7 +37,7 @@ export const homework = [
     { text: "程序怎样在 CPU 上跑" },
     { text: "ELF 与 x86-64 汇编读图", accent: true },
   ]}
-  summary="就算你以后主攻 Web 安全，比赛、应急响应或读底层组件时也难免碰到没有源码的 Linux 可执行文件。你不需要从头手写汇编，只要能用 file、readelf、strings 和 objdump 把它拆开，读懂最常见的十条指令与调用约定，拿到一个陌生二进制就不会两眼一抹黑。"
+  summary="即便后续主攻 Web 安全，在比赛、应急排查或阅读底层组件时也会遇到无源码的 Linux 二进制。这一课把 ELF 结构、x86-64 Intel 反汇编与 C 函数一一对照，建立基础的静态读图能力。"
 />
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
@@ -45,21 +46,21 @@ export const homework = [
 
 <LessonPacing segments={manifest.segments} />
 
-## 引导问题：编译完的二进制是一堆乱码，逆向分析的人到底在看什么
+## 引导问题：编译出来的二进制像一团乱码，分析的人到底在看什么
 
-第 19 课你已经知道 `gcc` 把 `.c` 源码翻译成了机器码，可打开编译产物只能看到乱码。拿到一个别人发来的校验程序 `check_pin`，没有源码，怎么知道它究竟在比较什么数字？
+第 19 课你已经知道 `gcc` 把 `.c` 源码译成了机器码，用编辑器直接打开全是乱码。假如别人发来一个叫 `check_pin` 的校验程序，不给源码，怎么知道它究竟在比对哪个数字？
 
-答案不在猜，而在按固定顺序把 ELF 文件的结构和对应函数的机器指令反译出来读。先看清一个可执行文件从磁盘到 CPU 执行的五步过程：
+靠的不是硬猜，而是按顺序把 ELF 文件的结构和关键函数的机器码反译出来读。先拖动五步条，看清一个 ELF 文件从磁盘走到 CPU 的过程：
 
 <FlowSimulator client:visible title="从磁盘上的 ELF 到 CPU 逐条执行" steps={elfLoad} motionLevel="explanatory" />
 
 ## 一、拆开 ELF：`file`、`readelf` 与 `strings`
 
-下载本课的 28 行示例源码到 `~/lab/elf`（假装一会你只拿到了编译出来的 `check_pin`，用源码和反汇编对照着学最容易建立直觉）：
+把本课 28 行的 C 源码放到 `~/lab/elf`。我们先假装稍后只拿到编译出的 `check_pin`，用源码和反汇编对照着看最容易上手：
 
-<CodeFile file="labs/elf-and-assembly-reading/check_pin.c" mark="4-6,8-14" note="compute_code 与 check_pin 两个小函数正好用来观察参数传递、算术运算和条件跳转。" />
+<CodeFile file="labs/elf-and-assembly-reading/check_pin.c" mark="4-6,8-14" note="compute_code 和 check_pin 两个短函数正好用来看参数传递、算术运算和条件跳转。" />
 
-在 x86-64 Kali 环境里用 `-O0`（关掉编译优化，让汇编忠实保留每一步；若你使用 ARM64 虚拟机，指令集和寄存器名会变为 AArch64，本课以最常见的 x86-64 Linux 为例）编译，然后跑静态观察三连招（来源：[elf(5)](#source-linux-elf-5)、[readelf](#source-binutils-readelf)、[strings](#source-binutils-strings)）：
+本课按 x86-64 Linux 演示（若在 ARM64 虚拟机上编译，指令和寄存器会变为 AArch64）。用 `-O0` 保留接近源码的函数与指令结构以便对照，再依次运行 `file`、`readelf` 和 `strings` 查看二进制静态信息（来源：[elf(5)](#source-linux-elf-5)、[readelf](#source-binutils-readelf)、[strings](#source-binutils-strings)）：
 
 <TerminalSession
   environment="KALI 终端"
@@ -69,86 +70,88 @@ export const homework = [
     {
       cmd: 'file check_pin',
       out: 'check_pin: ELF 64-bit LSB pie executable, x86-64, version 1 (SYSV), dynamically linked, interpreter /lib64/ld-linux-x86-64.so.2, BuildID[sha1]=…, for GNU/Linux 3.2.0, not stripped',
-      note: '一句话交代了五个关键事实：64 位 ELF、小端序（LSB）、x86-64、动态链接、未去除函数符号名（not stripped）。',
+      note: '一行交代五个关键信息：64 位 ELF、小端序（LSB）、x86-64、动态链接、保留了函数符号名（not stripped）。',
     },
     {
       cmd: "readelf -h check_pin | grep -E 'Class:|Data:|Type:|Machine:|Entry point'",
       out: '  Class:                             ELF64\n  Data:                              2\'s complement, little endian\n  Type:                              DYN (Position-Independent Executable file)\n  Machine:                           Advanced Micro Devices X86-64\n  Entry point address:               0x1060',
-      note: 'readelf -h 读取文件最开头的 ELF Header。',
+      note: 'readelf -h 读的是文件最开头的 ELF Header。',
     },
     {
       cmd: "readelf -S check_pin | grep -E '\\.(text|rodata|data|bss|plt) '",
       out: '  [ 9] .rela.plt         RELA             0000000000000610  00000610\n  [11] .plt              PROGBITS         0000000000001020  00001020\n  [13] .text             PROGBITS         0000000000001060  00001060\n  [15] .rodata           PROGBITS         0000000000002000  00002000\n  [24] .got.plt          PROGBITS         0000000000003fe8  00002fe8\n  [25] .data             PROGBITS         0000000000004010  00003010\n  [26] .bss              NOBITS           0000000000004020  00003020',
-      note: '.text 放机器码，.rodata 放只读提示语，.data/.bss 放全局变量，.plt/.got.plt 协助调用 libc 里的 puts 和 atoi。',
+      note: '.text 放机器码，.rodata 放只读提示语，.data/.bss 放全局变量，.plt/.got.plt 帮程序调用 libc 里的 puts 和 atoi。',
     },
     {
       cmd: "strings check_pin | grep -E 'PIN|Usage:'",
       out: 'Usage: ./check_pin <number>\nPIN OK: welcome to the lab\nPIN DENIED',
-      note: 'strings 直接扫描出了 .rodata 里的提示语——但注意：正确的数字 4426 并没有以明文字符串存进去，而是算出来的。',
+      note: 'strings 直接扫出了 .rodata 里的提示语。但注意：正确数字 4426 并没有存成字符串，而是运行时算出来的。',
     },
   ]}
 />
 
 ## 二、x86-64 寄存器与调用约定最小集
 
-读汇编不需要背几百条指令，先记住下面两张极小的表就够读懂绝大多数 C 编译出的核心逻辑（来源：[System V AMD64 ABI](#source-sysv-amd64-abi)）：
+读基础汇编不需要背几百条指令。先记住下面两张短表，已经够看懂大多数 C 函数的主体逻辑（来源：[System V AMD64 ABI](#source-sysv-amd64-abi)）：
 
 <DataTable
-  caption="x86-64 Linux（System V ABI）必记寄存器"
-  headers={["64 位名", "低 32 位名", "常见职责"]}
+  caption="x86-64 Linux（System V ABI）高频寄存器"
+  headers={["64 位名", "低 32 位名", "常见分工"]}
   rows={[
-    ["rax", "eax", "存放函数返回值，也常作算术累加器"],
-    ["rdi / rsi / rdx", "edi / esi / edx", "依次传递函数的第 1、第 2、第 3 个整型/指针参数（第 4–6 个用 rcx、r8、r9）"],
-    ["rsp", "esp", "栈顶指针（Stack Pointer），随 push/pop/call/ret 移动"],
-    ["rbp", "ebp", "当前函数栈帧基址（Frame Pointer），-O0 下局部变量常写作 [rbp-0x4]"],
-    ["rip", "—", "指令指针，指向 CPU 下一条要执行的机器指令地址"],
+    ["rax", "eax", "放函数返回值，也常做算术累加器"],
+    ["rdi / rsi / rdx", "edi / esi / edx", "依次传第 1、2、3 个整型/指针参数（第 4–6 个用 rcx、r8、r9）"],
+    ["rsp", "esp", "栈顶指针，随 push / pop / call / ret 移动"],
+    ["rbp", "ebp", "当前栈帧基址，-O0 下局部变量常写作 [rbp-0x4]"],
+    ["rip", "—", "指令指针，指向 CPU 下一条要执行的指令地址（PIE 反汇编里的 0x1149 是相对偏移，运行时需加上 ASLR 基址）"],
   ]}
   columnRatios={[1.2, 1.2, 3.0]}
 />
 
 <DataTable
-  caption="最常出现的七类 Intel 语法指令（目标在左，源在右）"
-  headers={["指令", "含义", "等价 C 直觉"]}
+  caption="七类高频 Intel 语法指令（目标在左，源在右）"
+  headers={["指令", "作用", "C 语言直觉"]}
   rows={[
-    ["mov dst, src", "把 src 的值复制到 dst（中括号 [...] 表示取该地址处的内存值）", "dst = src"],
+    ["mov dst, src", "把 src 复制给 dst（[...] 表示读写这个地址里的内存）", "dst = src"],
     ["add / sub dst, src", "加法 / 减法，结果写回 dst", "dst += src / dst -= src"],
-    ["shl / shr dst, n", "左移 / 右移 n 位（左移 2 位等价于乘以 4）", "dst <<= n / dst >>= n"],
-    ["cmp a, b", "用 a 减 b 并更新 CPU 标志位，不改 a 和 b 本身", "准备做 if 比较"],
-    ["je / jne addr", "相等时跳转 / 不相等时跳转（紧跟在 cmp 后）", "if (a == b) / if (a != b)"],
+    ["shl / shr dst, n", "逻辑左移 / 无符号逻辑右移 n 位（固定位宽内无溢出时左移 2 位等价于乘以 4；有符号右移用 sar）", "无符号 dst <<= n / dst >>= n"],
+    ["cmp a, b", "算 a - b 并更新 CPU 标志位，不改 a 和 b 自身", "准备做 if 比较"],
+    ["je / jne addr", "相等就跳 / 不相等就跳（紧跟在 cmp 后）", "if (a == b) / if (a != b)"],
     ["call func", "把下一条指令地址压栈，再跳去执行 func", "func(...)"],
-    ["leave / ret", "恢复上一层栈帧 / 从栈顶弹出返回地址跳回调用者", "return eax;"],
+    ["leave / ret", "收起栈帧 / 从栈顶弹出返回地址回到调用方", "return eax;"],
   ]}
   columnRatios={[1.3, 2.3, 1.5]}
 />
 
-## 三、用 `objdump` 逐行读懂一段真实反汇编
+## 三、用 `objdump` 逐行读懂真实反汇编
 
-加上 `-M intel` 让 `objdump` 按更符合直觉的 Intel 语法输出（来源：[objdump 文档](#source-binutils-objdump)）：
+加上 `-M intel` 让 `objdump` 按目标在左、源在右的 Intel 语法输出（来源：[objdump 文档](#source-binutils-objdump)）。先用下面的交互步进器单步跟着 `rip` 走一遍 `check_pin`，再和终端里的原始反汇编逐行对照：
+
+<AssemblyTraceExplorer client:visible motionLevel="explanatory" />
 
 <TerminalSession
   environment="KALI 终端"
-  title="反汇编 compute_code 与 check_pin，手工算出正确 PIN"
+  title="反汇编 compute_code 与 check_pin，算出正确 PIN"
   steps={[
     {
       cmd: 'objdump -d -M intel --disassemble=compute_code check_pin',
       out: '…\nDisassembly of section .text:\n\n0000000000001149 <compute_code>:\n    1149:\t55                   \tpush   rbp\n    114a:\t48 89 e5             \tmov    rbp,rsp\n    114d:\t89 7d fc             \tmov    DWORD PTR [rbp-0x4],edi\n    1150:\t89 75 f8             \tmov    DWORD PTR [rbp-0x8],esi\n    1153:\t8b 55 fc             \tmov    edx,DWORD PTR [rbp-0x4]\n    1156:\t89 d0                \tmov    eax,edx\n    1158:\t01 c0                \tadd    eax,eax\n    115a:\t01 c2                \tadd    edx,eax\n    115c:\t8b 45 f8             \tmov    eax,DWORD PTR [rbp-0x8]\n    115f:\t01 d0                \tadd    eax,edx\n    1161:\t5d                   \tpop    rbp\n    1162:\tc3                   \tret\n…',
-      note: '首尾省略号对应 GNU objdump 自带的文件格式头与 .init/.plt/.plt.got/.fini 空节标题。114d–1150 把第 1 参数 edi 和第 2 参数 esi 存进栈槽；1156–115a 把 a 复制一份相加得 2a，再加回 edx 得 3a；115c–115f 加上 b 放进返回值 eax（不同 gcc 版本指令选择可能略有差异）。',
+      note: '首尾省略号是 GNU objdump 自带的文件头和空节标题。114d–1150 把第 1 参数 edi、第 2 参数 esi 放进栈槽；1156–115a 把 a 自加得 2a 再加回 edx 得 3a；115c–115f 加上 b 留在返回值 eax（不同 gcc 版本选用的指令可能稍有差别）。',
     },
     {
       cmd: 'objdump -d -M intel --disassemble=check_pin check_pin',
       out: '…\nDisassembly of section .text:\n\n0000000000001163 <check_pin>:\n    1163:\t55                   \tpush   rbp\n    1164:\t48 89 e5             \tmov    rbp,rsp\n    1167:\t48 83 ec 18          \tsub    rsp,0x18\n    116b:\t89 7d ec             \tmov    DWORD PTR [rbp-0x14],edi\n    116e:\tbe e2 00 00 00       \tmov    esi,0xe2\n    1173:\tbf 78 05 00 00       \tmov    edi,0x578\n    1178:\te8 cc ff ff ff       \tcall   1149 <compute_code>\n    117d:\t89 45 fc             \tmov    DWORD PTR [rbp-0x4],eax\n    1180:\t8b 45 ec             \tmov    eax,DWORD PTR [rbp-0x14]\n    1183:\t3b 45 fc             \tcmp    eax,DWORD PTR [rbp-0x4]\n    1186:\t75 07                \tjne    118f <check_pin+0x2c>\n    1188:\tb8 01 00 00 00       \tmov    eax,0x1\n    118d:\teb 05                \tjmp    1194 <check_pin+0x31>\n    118f:\tb8 00 00 00 00       \tmov    eax,0x0\n    1194:\tc9                   \tleave\n    1195:\tc3                   \tret\n…',
-      note: '116e–1178 往 edi 放 0x578（1400）、往 esi 放 0xe2（226）再调 compute_code，得到 1400×3+226=4426；1183–1188 与用户输入比对，相等返回 1，否则跳去 118f 返回 0。',
+      note: '116e–1178 把 0x578（1400）放进 edi、0xe2（226）放进 esi 去调 compute_code，算出 1400×3+226=4426；1183–1188 和用户输入比对，相等回 1，不等跳去 118f 回 0。',
     },
     {
       cmd: './check_pin 1234; ./check_pin 4426',
       out: 'PIN DENIED\nPIN OK: welcome to the lab',
-      note: '不依赖源码，顺着寄存器和两条跳转就把校验逻辑完整还原了出来。',
+      note: '不翻源码，顺着寄存器和两条跳转就把校验公式还原出来了。',
     },
   ]}
 />
 
-<Callout type="note" title="什么时候停在 objdump，什么时候上反编译器">
-对几十行的小函数，直接看 `objdump -d -M intel` 最干净、零误差；遇到几万行的大型二进制或去符号（stripped）程序时，安全研究员会用 Ghidra、IDA 或 Binary Ninja 把汇编还原成类 C 伪代码——但伪代码偶尔会推断失真，能看懂这节课的基础汇编就是你复核反编译结果的底气。
+<Callout variant="info" title="什么时候用 objdump，什么时候上反编译器">
+几十行的小函数直接看 `objdump -d -M intel` 最直接，输出即文件内的原始机器指令反汇编（注意静态反汇编只展示潜在代码路径，不能单独证明某条路径在运行时一定被执行）。遇到几万行的大程序或去符号（stripped）二进制时，再配合 Ghidra、IDA 或 Binary Ninja 辅助阅读，并用这里的基础汇编核对伪代码细节。
 </Callout>
 
 ## 常见报错与排错
@@ -157,10 +160,10 @@ export const homework = [
   caption="看 ELF 和反汇编时最容易踩的四个坑"
   headers={["现象", "原因", "处理方式"]}
   rows={[
-    ["objdump 出来的指令看起来和教材相反", "默认输出 AT&T 语法（源在左、目标在右、寄存器带 %）", "统一加 -M intel 切到目标在左的 Intel 语法"],
-    ["objdump --disassemble=main 找不到符号", "二进制已被 strip 去掉了符号表", "先用 readelf -h 看 Entry point，或从 strings 提示语的交叉引用入手（借助 gdb/Ghidra）"],
-    ["十六进制常量 0x578 心算出错", "直接把 0x578 当十进制 578 用了", "在终端用 python3 -c 'print(0x578, 0xe2)' 一秒换算"],
-    ["开启 -O2 编译后看不到 compute_code 的调用", "编译器把常量算式在编译期直接算完并内联了", "学机制时加 -O0 保留结构，看真实发布版二进制时做好内联和优化的心理预期"],
+    ["objdump 出来的操作数方向和上面相反", "默认输出 AT&T 语法（源在左、目标在右、寄存器带 %）", "统一加 -M intel 切到目标在左的 Intel 语法"],
+    ["objdump --disassemble=main 找不到符号", "二进制被 strip 删掉了符号表", "先用 readelf -h 看 Entry point，或用 gdb / Ghidra 从 strings 提示语的交叉引用往回找"],
+    ["把 0x578 心算成了 578", "忘了 0x 前缀是十六进制", "顺手敲 python3 -c 'print(0x578, 0xe2)' 换算成十进制"],
+    ["加了 -O2 编译后看不到 compute_code 调用", "编译器在编译期就把常量算完并内联掉了", "学机制时加 -O0 保留结构，分析发布版程序时做好函数内联的心理准备"],
   ]}
   columnRatios={[1.7, 1.9, 2.2]}
 />
@@ -168,16 +171,16 @@ export const homework = [
 <CheatSheet
   title="本课常用命令速查"
   items={[
-    { term: 'file ./program', description: '一眼确认架构、位数、字节序、动态链接与是否 stripped。' },
-    { term: 'readelf -h ./program  /  readelf -S ./program', description: '查看 ELF 文件头与 .text/.rodata/.data/.bss 等节表。' },
-    { term: 'strings ./program | grep 关键词', description: '快速扫描二进制里的静态可打印字符串。' },
-    { term: 'objdump -d -M intel --disassemble=func ./program', description: '按 Intel 语法只反汇编指定函数。' },
-    { term: 'System V AMD64: rdi, rsi, rdx -> rax', description: '64 位 Linux 前三个整型参数与返回值寄存器口诀。' },
+    { term: 'file ./program', description: '一眼看清架构、位数、字节序、动态链接和是否 stripped。' },
+    { term: 'readelf -h ./program  /  readelf -S ./program', description: '查 ELF 文件头和 .text/.rodata/.data/.bss 等节表。' },
+    { term: 'strings ./program | grep 关键词', description: '扫描二进制里的静态可打印字符串。' },
+    { term: 'objdump -d -M intel --disassemble=func ./program', description: '按 Intel 语法只反汇编关心的单个函数。' },
+    { term: 'System V AMD64: rdi, rsi, rdx -> rax', description: '64 位 Linux 前三个整型参数与返回值寄存器。' },
   ]}
 />
 
 <KeyTakeaway>
-二进制不是黑魔法：file 定身份，readelf 看分区，strings 找线索，objdump -d -M intel 对着 rdi/rsi/rax 与 cmp/jne 读逻辑。哪怕你主攻 Web 安全，掌握这套最小静态读图能力，也能在跨方向题目和底层排错里从容上手。下一课我们把视野拉回全局，讲清安全思维、法律红线与 AI 时代的高效读码工作流。
+分析 Linux 二进制按固定顺序推进：file 确认架构与链接方式，readelf 查看 ELF 头与节区，strings 提取静态字符串，再用 objdump -d -M intel 对照 rdi/rsi/rax 与 cmp/jne 把汇编和 C 逻辑对应起来。
 </KeyTakeaway>
 
 ## 学习验收
@@ -186,6 +189,8 @@ export const homework = [
 
 ## 课后作业
 
-<StepList title="课后作业" steps={homework} />
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
 
 <SourceList sources={manifest.sources} />

@@ -1889,3 +1889,110 @@
   line-height: 1.65;
   margin: 0;
 }
+
+/* 第 8 阶段静态 SVG 图示（TLS/代理、系统调用边界、信任边界） */
+.stage8-svg-scroll {
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.stage8-svg-scroll:focus-visible {
+  outline: 0.2rem solid var(--training-focus);
+  outline-offset: 0.14rem;
+}
+
+.stage8-scroll-hint {
+  color: var(--training-muted);
+  display: none;
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0 0 0.45rem;
+}
+
+.tls-proxy-diagram svg,
+.syscall-diagram svg,
+.trust-boundary-diagram svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 46rem;
+}
+
+.tls-line {
+  fill: none;
+  stroke-width: 2.4;
+}
+
+.tls-line--safe {
+  stroke: var(--training-safe);
+}
+
+.tls-line--danger {
+  stroke: var(--training-danger-text);
+  stroke-dasharray: 6 4;
+}
+
+.tls-box--mitm {
+  fill: color-mix(in srgb, var(--training-danger-bg) 55%, var(--training-surface-bg));
+  stroke: var(--training-danger-text);
+  stroke-width: 2;
+}
+
+.tls-divider {
+  stroke: var(--training-border);
+  stroke-dasharray: 4 4;
+  stroke-width: 1;
+}
+
+.tls-caption {
+  font-size: 12.5px;
+  font-weight: 700;
+}
+
+.tls-caption--safe {
+  fill: var(--training-success-text);
+}
+
+.tls-caption--danger {
+  fill: var(--training-danger-text);
+}
+
+.sys-zone {
+  stroke: var(--training-border);
+  stroke-width: 1.2;
+}
+
+.sys-zone--user {
+  fill: color-mix(in srgb, var(--training-page-bg) 75%, var(--training-surface-bg));
+}
+
+.sys-zone--kernel {
+  fill: color-mix(in srgb, var(--training-info-bg) 38%, var(--training-surface-bg));
+}
+
+.sys-boundary {
+  stroke: var(--training-accent);
+  stroke-dasharray: 6 4;
+  stroke-width: 2.2;
+}
+
+.sys-pill {
+  fill: var(--training-accent);
+}
+
+.sys-pill-text {
+  fill: var(--training-page-bg);
+  font-family: var(--training-font-code);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.tb-card {
+  fill: color-mix(in srgb, var(--training-danger-bg) 34%, var(--training-surface-bg));
+  stroke: color-mix(in srgb, var(--training-danger-text) 55%, var(--training-border));
+  stroke-width: 1.2;
+}
+
+.diagram-box-sub--tight {
+  font-size: 11.5px;
+}

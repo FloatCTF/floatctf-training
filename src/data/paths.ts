@@ -3,7 +3,7 @@ import { findTopic, type CatalogTopic } from './catalog';
 
 export interface LearningPathStage {
   name: string;
-  goal: string;
+  goal?: string;
   topics: string[];
 }
 
@@ -24,7 +24,7 @@ export interface PathLesson {
 
 export interface ResolvedStage {
   name: string;
-  goal: string;
+  goal?: string;
   lessons: PathLesson[];
 }
 

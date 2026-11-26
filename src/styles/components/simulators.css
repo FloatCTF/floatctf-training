@@ -1471,3 +1471,1206 @@
 .pi-static-compare p {
   margin: 0;
 }
+
+/* 第 8 阶段交互实验台公共骨架（38-45 课） */
+.stage8-lab {
+  background: var(--training-surface-bg);
+  border: var(--training-rule-heavy);
+  box-shadow: var(--training-shadow-sm);
+  margin-block: 2.25rem;
+  overflow: hidden;
+}
+
+.stage8-lab__controls,
+.stage8-lab__tabs {
+  align-items: center;
+  background: var(--training-code-bg);
+  border-block-start: var(--training-rule-light);
+  color: var(--training-code-text);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 0.9rem;
+  justify-content: space-between;
+  padding: 0.85rem 1.25rem;
+}
+
+.stage8-lab__tabs button,
+.stage8-lab__presets button,
+.crypto-card__toggle button,
+.quest-progress__reset {
+  background: transparent;
+  border: 0.08rem solid color-mix(in srgb, var(--training-border) 85%, transparent);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  cursor: pointer;
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  font-weight: 700;
+  min-block-size: 2.75rem;
+  padding: 0.35rem 0.8rem;
+}
+
+.stage8-lab__tabs button,
+.stage8-lab__controls .stage8-lab__presets button {
+  border-color: color-mix(in srgb, var(--training-code-text) 42%, transparent);
+  color: var(--training-code-text);
+}
+
+.stage8-lab__tabs button[aria-pressed='true'],
+.stage8-lab__presets button[aria-pressed='true'],
+.crypto-card__toggle button[aria-pressed='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
+}
+
+.stage8-lab button:focus-visible,
+.stage8-lab input:focus-visible {
+  outline: 0.2rem solid var(--training-focus);
+  outline-offset: 0.14rem;
+}
+
+.stage8-lab__input {
+  display: grid;
+  flex: 1 1 16rem;
+  gap: 0.35rem;
+  min-inline-size: 0;
+}
+
+.stage8-lab__input span {
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+.stage8-lab__input input {
+  background: var(--training-surface-bg);
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.84rem;
+  inline-size: 100%;
+  min-block-size: 2.75rem;
+  padding: 0.45rem 0.7rem;
+}
+
+.stage8-lab__presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.stage8-lab__presets--pad {
+  border-block-end: var(--training-rule-light);
+  padding: 0.85rem 1.25rem;
+}
+
+.stage8-lab__body {
+  min-inline-size: 0;
+}
+
+.stage8-lab__footer-note {
+  border-block-start: var(--training-rule-light);
+  color: var(--training-muted);
+  font-size: 0.82rem;
+  line-height: 1.7;
+  margin: 0;
+  padding: 0.85rem 1.25rem;
+}
+
+.stage8-badge {
+  border-radius: 999px;
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 800;
+  padding: 0.18rem 0.6rem;
+  white-space: nowrap;
+}
+
+.stage8-badge--neutral {
+  background: var(--training-info-bg);
+  color: var(--training-info-text);
+}
+
+.stage8-badge--accent {
+  background: var(--training-page-bg);
+  border: 0.08rem solid var(--training-accent);
+  color: var(--training-accent);
+}
+
+.stage8-sr-status {
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}
+
+.stage8-badge--safe {
+  background: var(--training-success-bg);
+  color: var(--training-success-text);
+}
+
+.stage8-badge--warning {
+  background: var(--training-warning-bg);
+  color: var(--training-warning-text);
+}
+
+.stage8-badge--danger {
+  background: var(--training-danger-bg);
+  color: var(--training-danger-text);
+}
+
+.stage8-verdict {
+  border-radius: var(--training-radius-sm);
+  margin-block-start: 0.85rem;
+  padding: 0.75rem 0.9rem;
+}
+
+.stage8-verdict--safe {
+  background: var(--training-success-bg);
+  color: var(--training-success-text);
+}
+
+.stage8-verdict--warning {
+  background: var(--training-warning-bg);
+  color: var(--training-warning-text);
+}
+
+.stage8-verdict--danger {
+  background: var(--training-danger-bg);
+  color: var(--training-danger-text);
+}
+
+.stage8-verdict strong {
+  display: block;
+  font-size: 0.84rem;
+  margin-block-end: 0.25rem;
+}
+
+.stage8-verdict p {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.stage8-ledger .learning-sim-ledger-row {
+  grid-template-columns: 1.05fr 1.25fr 1.25fr 1.45fr;
+}
+
+.stage8-ledger .learning-sim-ledger-row:has(> :nth-child(3):last-child) {
+  grid-template-columns: 1fr 1.3fr 1.7fr;
+}
+
+.stage8-ledger + .stage8-ledger {
+  margin-block-start: 0.9rem;
+}
+
+.stage8-ledger code {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* L38 · CryptoTransformLab */
+.crypto-lab__grid {
+  display: grid;
+  gap: 0.9rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  padding: 1.15rem 1.25rem;
+}
+
+.crypto-card {
+  background: color-mix(in srgb, var(--training-page-bg) 55%, var(--training-surface-bg));
+  border: 0.08rem solid var(--training-border);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  padding: 0.95rem 1rem;
+}
+
+.crypto-card__head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+.crypto-card__head strong {
+  color: var(--training-heading);
+  font-size: 0.9rem;
+}
+
+.crypto-card__label {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.crypto-card__code {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  display: block;
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  padding: 0.55rem 0.7rem;
+  white-space: pre-wrap;
+}
+
+.crypto-card__meta,
+.crypto-card__note {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+  line-height: 1.65;
+  margin: 0;
+}
+
+.crypto-card__meta code {
+  color: var(--training-heading);
+  overflow-wrap: anywhere;
+}
+
+.crypto-card__meter {
+  display: grid;
+  gap: 0.3rem;
+  font-size: 0.76rem;
+}
+
+.crypto-card__bar {
+  background: color-mix(in srgb, var(--training-border) 35%, transparent);
+  block-size: 0.45rem;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.crypto-card__bar span {
+  background: var(--training-accent);
+  block-size: 100%;
+  display: block;
+  transition: inline-size 260ms ease;
+}
+
+.crypto-card__toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.crypto-card__result {
+  border-radius: var(--training-radius-sm);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.55;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+}
+
+.crypto-card__result.is-safe {
+  background: var(--training-success-bg);
+  color: var(--training-success-text);
+}
+
+.crypto-card__result.is-danger {
+  background: var(--training-danger-bg);
+  color: var(--training-danger-text);
+}
+
+/* L39 · JwtAuthInspector */
+.jwt-token-strip {
+  background: var(--training-page-bg);
+  border-block-end: var(--training-rule-light);
+  color: var(--training-heading);
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  padding: 0.85rem 1.25rem;
+}
+
+.jwt-part--header { color: var(--training-class-one); font-weight: 700; }
+.jwt-part--payload { color: var(--training-class-zero); font-weight: 700; }
+.jwt-part--sig { color: var(--training-success-text); font-weight: 700; }
+.jwt-dot { color: var(--training-muted); font-weight: 900; padding-inline: 0.1rem; }
+
+.jwt-inspector__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+}
+
+.jwt-panel {
+  min-inline-size: 0;
+  padding: 1.05rem 1.25rem;
+}
+
+.jwt-panel--gates {
+  background: color-mix(in srgb, var(--training-page-bg) 55%, var(--training-surface-bg));
+  border-inline-start: var(--training-rule-light);
+}
+
+.jwt-panel__kicker {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  margin: 0 0 0.4rem;
+}
+
+.jwt-panel pre {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  margin: 0 0 0.8rem;
+  overflow-x: auto;
+  padding: 0.65rem 0.8rem;
+}
+
+.jwt-panel__req {
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.jwt-gates {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.jwt-gates li {
+  background: var(--training-surface-bg);
+  border: 0.08rem solid var(--training-border);
+  border-inline-start-width: 0.28rem;
+  margin: 0;
+  padding: 0.55rem 0.75rem;
+}
+
+.jwt-gates li.is-pass { border-inline-start-color: var(--training-safe); }
+.jwt-gates li.is-fail { border-inline-start-color: var(--training-danger-text); }
+.jwt-gates li.is-skip { border-inline-start-color: var(--training-muted); opacity: 0.7; }
+
+.jwt-gates strong {
+  color: var(--training-heading);
+  display: block;
+  font-size: 0.8rem;
+}
+
+.jwt-gates span {
+  color: var(--training-muted);
+  display: block;
+  font-size: 0.76rem;
+  line-height: 1.55;
+  margin-block-start: 0.15rem;
+}
+
+.route-matrix {
+  display: grid;
+  gap: 0.6rem;
+  margin: 0;
+  padding: 1rem 1.25rem;
+}
+
+.route-matrix--compact {
+  padding: 0.65rem 0 0;
+}
+
+.route-matrix > div {
+  border-block-end: var(--training-rule-light);
+  display: grid;
+  gap: 0.4rem 1rem;
+  grid-template-columns: 7.5rem minmax(0, 1fr);
+  padding-block-end: 0.55rem;
+}
+
+.route-matrix > div:last-child {
+  border-block-end: 0;
+  padding-block-end: 0;
+}
+
+.route-matrix dt {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.route-matrix dd {
+  font-size: 0.82rem;
+  line-height: 1.6;
+  margin: 0;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* L40 · TunnelPacketLab */
+.tunnel-lab__cmd {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.78rem;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.75rem 1.25rem;
+}
+
+.tunnel-mark--local {
+  background: color-mix(in srgb, var(--training-class-zero) 28%, transparent);
+  color: var(--training-code-text);
+  padding: 0.08rem 0.25rem;
+}
+
+.tunnel-mark--remote {
+  background: color-mix(in srgb, var(--training-accent) 42%, transparent);
+  color: var(--training-code-text);
+  padding: 0.08rem 0.25rem;
+}
+
+.tunnel-lab__svg-wrap {
+  margin: 0;
+  overflow-x: auto;
+  padding: 1rem 1.25rem 0.5rem;
+  scrollbar-width: thin;
+}
+
+.tunnel-lab__svg-wrap:focus-visible {
+  outline: 0.2rem solid var(--training-focus);
+  outline-offset: -0.2rem;
+}
+
+.tunnel-lab__svg-wrap svg {
+  display: block;
+  inline-size: 100%;
+  max-inline-size: 46rem;
+}
+
+.t-zone {
+  fill: color-mix(in srgb, var(--training-page-bg) 68%, var(--training-surface-bg));
+  stroke: var(--training-border);
+  stroke-width: 1.2;
+}
+
+.t-zone-title {
+  fill: var(--training-muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.t-node {
+  fill: var(--training-surface-bg);
+  stroke: var(--training-border);
+  stroke-width: 1.6;
+  transition: stroke 200ms ease, fill 200ms ease;
+}
+
+.t-node.is-on {
+  fill: color-mix(in srgb, var(--training-accent) 16%, var(--training-surface-bg));
+  stroke: var(--training-accent);
+  stroke-width: 2.6;
+}
+
+.t-tunnel {
+  fill: color-mix(in srgb, var(--training-success-bg) 65%, var(--training-surface-bg));
+  stroke: var(--training-safe);
+  stroke-dasharray: 5 3;
+  stroke-width: 1.8;
+}
+
+.t-tunnel.is-on {
+  fill: var(--training-success-bg);
+  stroke-dasharray: none;
+  stroke-width: 2.8;
+}
+
+.t-node-name,
+.t-tunnel-title {
+  fill: var(--training-heading);
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.t-node-sub {
+  fill: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 11px;
+}
+
+.t-link {
+  stroke: var(--training-heading);
+  stroke-width: 2;
+}
+
+.t-link--enc {
+  stroke: var(--training-safe);
+  stroke-width: 2.6;
+}
+
+.tunnel-lab__readout {
+  border-block-start: var(--training-rule-light);
+  padding: 0.85rem 1.25rem;
+}
+
+.tunnel-lab__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1rem;
+  font-size: 0.78rem;
+  margin-block-end: 0.4rem;
+}
+
+.tunnel-lab__pills strong {
+  color: var(--training-accent);
+}
+
+.tunnel-lab__readout p {
+  font-size: 0.84rem;
+  line-height: 1.7;
+  margin: 0;
+}
+
+.capture-list {
+  display: grid;
+  gap: 0.65rem;
+  list-style: none;
+  margin: 0;
+  padding: 1rem 1.25rem;
+}
+
+.capture-row {
+  border: 0.08rem solid var(--training-border);
+  border-inline-start-width: 0.3rem;
+  margin: 0;
+  padding: 0.7rem 0.85rem;
+}
+
+.capture-row--visible { border-inline-start-color: var(--training-warning-text); }
+.capture-row--encrypted { border-inline-start-color: var(--training-safe); }
+
+.capture-row__head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+  margin-block-end: 0.3rem;
+}
+
+.capture-row__summary {
+  margin: 0 0 0.25rem;
+  overflow-wrap: anywhere;
+}
+
+.capture-row__detail {
+  color: var(--training-muted);
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* L41 · LogTriageWorkbench */
+.log-anatomy {
+  border-block-end: var(--training-rule-light);
+  padding: 0.95rem 1.25rem;
+}
+
+.log-anatomy__kicker {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem;
+}
+
+.log-anatomy__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.log-anatomy__chip {
+  background: var(--training-page-bg);
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  cursor: pointer;
+  display: grid;
+  gap: 0.1rem;
+  min-block-size: 2.75rem;
+  padding: 0.3rem 0.6rem;
+  text-align: start;
+}
+
+.log-anatomy__chip small {
+  color: var(--training-accent);
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.log-anatomy__chip code {
+  font-size: 0.72rem;
+}
+
+.log-anatomy__chip[aria-pressed='true'] {
+  background: var(--training-accent);
+  border-color: var(--training-accent);
+  color: var(--training-page-bg);
+}
+
+.log-anatomy__chip[aria-pressed='true'] small {
+  color: var(--training-page-bg);
+}
+
+.log-anatomy__note {
+  font-size: 0.82rem;
+  line-height: 1.65;
+  margin: 0.65rem 0 0;
+}
+
+.log-workbench__bar {
+  background: color-mix(in srgb, var(--training-page-bg) 55%, var(--training-surface-bg));
+  border-block-end: var(--training-rule-light);
+  display: grid;
+  gap: 0.55rem;
+  padding: 0.85rem 1.25rem;
+}
+
+.log-workbench__cmd {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  display: block;
+  font-family: var(--training-font-code);
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+  padding: 0.55rem 0.75rem;
+}
+
+.log-workbench__note {
+  color: var(--training-muted);
+  font-size: 0.8rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+.log-workbench__note.is-error {
+  color: var(--training-danger-text);
+  font-weight: 700;
+}
+
+.log-workbench__out {
+  padding: 0.9rem 1.25rem;
+}
+
+.log-workbench__out pre {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.78rem;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.8rem 0.95rem;
+}
+
+.log-workbench__count {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin: 0 0 0.5rem;
+}
+
+.log-lines {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  display: grid;
+  font-family: var(--training-font-code);
+  font-size: 0.72rem;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  max-block-size: 16rem;
+  overflow: auto;
+  padding: 0.75rem 0.85rem;
+}
+
+.log-lines li {
+  display: grid;
+  gap: 0.6rem;
+  grid-template-columns: 1.6rem minmax(0, 1fr);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.log-lines code {
+  overflow-wrap: anywhere;
+}
+
+.log-lines mark {
+  background: var(--training-accent);
+  border-radius: 2px;
+  color: var(--training-page-bg);
+  font-weight: 700;
+  padding-inline: 0.14rem;
+}
+
+.log-lines__no {
+  opacity: 0.55;
+}
+
+.log-lines__empty {
+  grid-template-columns: 1fr !important;
+  opacity: 0.75;
+}
+
+.jq-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.jq-events {
+  display: grid;
+  gap: 0.45rem;
+  list-style: none;
+  margin: 0;
+  padding: 1rem 1.25rem;
+}
+
+.jq-events li {
+  align-items: baseline;
+  border: 0.08rem solid var(--training-border);
+  border-inline-start-width: 0.28rem;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.76rem;
+  gap: 0.35rem 0.65rem;
+  margin: 0;
+  padding: 0.5rem 0.7rem;
+}
+
+.jq-events li.is-hit {
+  background: color-mix(in srgb, var(--training-accent) 9%, var(--training-surface-bg));
+  border-inline-start-color: var(--training-accent);
+}
+
+.jq-events li.is-miss {
+  background: var(--training-page-bg);
+  border-style: dashed;
+  border-inline-start-style: solid;
+  border-inline-start-color: var(--training-border);
+}
+
+.jq-output {
+  border-inline-start: var(--training-rule-light);
+  min-inline-size: 0;
+  padding: 1rem 1.25rem;
+}
+
+.jq-output pre {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  margin: 0;
+  overflow-x: auto;
+  padding: 0.75rem 0.85rem;
+}
+
+/* L42 · LinuxMemoryMap */
+.mem-map__run-tag {
+  font-family: var(--training-font-code);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.mem-map__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+
+.mem-map__stack {
+  display: grid;
+  gap: 0.45rem;
+  padding: 1rem 1.25rem;
+}
+
+.mem-map__axis {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.mem-band {
+  align-items: center;
+  background: var(--training-page-bg);
+  border: 0.08rem solid var(--training-border);
+  border-inline-start-width: 0.32rem;
+  border-radius: var(--training-radius-sm);
+  color: var(--training-heading);
+  cursor: pointer;
+  display: grid;
+  gap: 0.35rem 0.7rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-block-size: 3.1rem;
+  padding: 0.5rem 0.75rem;
+  text-align: start;
+}
+
+.mem-band--exec { border-inline-start-color: var(--training-class-zero); }
+.mem-band--ro { border-inline-start-color: var(--training-class-one); }
+.mem-band--rw { border-inline-start-color: var(--training-safe); }
+
+.mem-band[aria-pressed='true'] {
+  background: color-mix(in srgb, var(--training-accent) 13%, var(--training-surface-bg));
+  border-color: var(--training-accent);
+}
+
+.mem-band__addr {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+}
+
+.mem-band__name strong {
+  display: block;
+  font-size: 0.84rem;
+}
+
+.mem-band__name small {
+  color: var(--training-muted);
+  display: block;
+  font-size: 0.72rem;
+}
+
+.mem-band__perm {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  font-size: 0.7rem;
+  padding: 0.16rem 0.45rem;
+}
+
+.mem-map__detail {
+  background: color-mix(in srgb, var(--training-page-bg) 55%, var(--training-surface-bg));
+  border-inline-start: var(--training-rule-light);
+  min-inline-size: 0;
+  padding: 1rem 1.25rem;
+}
+
+.mem-map__detail h4 {
+  color: var(--training-heading);
+  font-size: 1rem;
+  margin: 0 0 0.35rem;
+}
+
+.mem-map__addr-line {
+  font-size: 0.78rem;
+  margin: 0 0 0.45rem;
+}
+
+.mem-map__source {
+  color: var(--training-muted);
+  font-size: 0.74rem;
+  line-height: 1.55;
+  margin: 0 0 0.7rem;
+}
+
+.mem-map__bits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-block-end: 0.85rem;
+}
+
+.mem-map__bits span {
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  padding: 0.18rem 0.5rem;
+}
+
+.mem-map__bits span.is-on {
+  background: var(--training-success-bg);
+  border-color: var(--training-safe);
+  color: var(--training-success-text);
+}
+
+.mem-map__bits span.is-off {
+  color: var(--training-muted);
+}
+
+.mem-map__detail pre {
+  background: var(--training-code-bg);
+  border-radius: var(--training-radius-sm);
+  color: var(--training-code-text);
+  font-size: 0.74rem;
+  margin: 0 0 0.75rem;
+  overflow-x: auto;
+  padding: 0.55rem 0.75rem;
+}
+
+.mem-map__wx,
+.mem-map__desc {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  margin: 0 0 0.5rem;
+}
+
+/* L43 · AssemblyTraceExplorer */
+.asm-trace__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+}
+
+.asm-listing {
+  background: var(--training-code-bg);
+  color: var(--training-code-text);
+  display: grid;
+  font-family: var(--training-font-code);
+  font-size: 0.73rem;
+  gap: 0.25rem;
+  list-style: none;
+  margin: 0;
+  padding: 0.95rem 1.05rem;
+}
+
+.asm-line {
+  align-items: baseline;
+  border-inline-start: 0.22rem solid transparent;
+  border-radius: 3px;
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: 2.3rem 5.4rem minmax(0, 1fr);
+  margin: 0;
+  padding: 0.26rem 0.45rem;
+}
+
+.asm-line.is-current {
+  background: color-mix(in srgb, var(--training-accent) 28%, transparent);
+  border-inline-start-color: var(--training-accent);
+  font-weight: 700;
+}
+
+.asm-line__tag {
+  color: color-mix(in srgb, var(--training-class-zero) 38%, var(--training-code-text));
+  font-size: 0.64rem;
+  font-weight: 700;
+}
+
+.asm-line--compute_code .asm-line__tag {
+  color: color-mix(in srgb, var(--training-class-one) 42%, var(--training-code-text));
+}
+
+.asm-line__addr {
+  opacity: 0.7;
+}
+
+.asm-line__code {
+  overflow-wrap: anywhere;
+}
+
+.asm-regs {
+  min-inline-size: 0;
+  padding: 1rem 1.25rem;
+}
+
+.asm-reg-grid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0 0 0.75rem;
+}
+
+.asm-reg-grid > div {
+  background: color-mix(in srgb, var(--training-page-bg) 60%, var(--training-surface-bg));
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  padding: 0.45rem 0.6rem;
+}
+
+.asm-reg-grid dt {
+  color: var(--training-muted);
+  font-family: var(--training-font-code);
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.asm-reg-grid dd {
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin: 0.15rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.asm-regs__stack,
+.asm-regs__c {
+  font-size: 0.78rem;
+  line-height: 1.55;
+  margin: 0 0 0.45rem;
+  overflow-wrap: anywhere;
+}
+
+.asm-regs__note {
+  border-inline-start: 0.24rem solid var(--training-accent);
+  font-size: 0.82rem;
+  line-height: 1.65;
+  margin: 0.65rem 0 0;
+  padding: 0.45rem 0.7rem;
+}
+
+.asm-regs__note.is-safe {
+  background: var(--training-success-bg);
+  border-inline-start-color: var(--training-safe);
+  color: var(--training-success-text);
+}
+
+.asm-regs__note.is-danger {
+  background: var(--training-danger-bg);
+  border-inline-start-color: var(--training-danger-text);
+  color: var(--training-danger-text);
+}
+
+/* L45 · BridgeQuestBoard */
+.quest-progress {
+  border-block-end: var(--training-rule-light);
+  display: grid;
+  gap: 0.45rem;
+  padding: 0.9rem 1.25rem;
+}
+
+.quest-progress__meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 0.82rem;
+  gap: 0.6rem;
+  justify-content: space-between;
+}
+
+.quest-progress__bar {
+  background: color-mix(in srgb, var(--training-border) 30%, transparent);
+  block-size: 0.55rem;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.quest-progress__bar span {
+  background: var(--training-safe);
+  block-size: 100%;
+  display: block;
+  transition: inline-size 260ms ease;
+}
+
+.quest-grid {
+  display: grid;
+  gap: 0.65rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  padding: 1rem 1.25rem;
+}
+
+.quest-card {
+  background: var(--training-page-bg);
+  border: 0.08rem solid var(--training-border);
+  border-radius: var(--training-radius-sm);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-inline-size: 0;
+  overflow: hidden;
+}
+
+.quest-card.is-active {
+  border-color: var(--training-accent);
+  box-shadow: inset 0 0 0 0.08rem var(--training-accent);
+}
+
+.quest-card.is-done {
+  border-block-start: 0.25rem solid var(--training-safe);
+}
+
+.quest-card__select {
+  background: transparent;
+  border: 0;
+  color: var(--training-heading);
+  cursor: pointer;
+  display: grid;
+  gap: 0.25rem;
+  padding: 0.65rem 0.7rem;
+  text-align: start;
+}
+
+.quest-card__select strong {
+  font-size: 0.8rem;
+  line-height: 1.35;
+}
+
+.quest-card__select small {
+  color: var(--training-muted);
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.quest-card__check {
+  align-items: center;
+  border-block-start: var(--training-rule-light);
+  cursor: pointer;
+  display: flex;
+  font-family: var(--training-font-code);
+  font-size: 0.7rem;
+  gap: 0.4rem;
+  min-block-size: 2.5rem;
+  padding: 0.3rem 0.7rem;
+}
+
+.quest-detail {
+  background: color-mix(in srgb, var(--training-page-bg) 55%, var(--training-surface-bg));
+  border-block-start: var(--training-rule-light);
+  padding: 1rem 1.25rem;
+}
+
+.quest-detail__head {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: space-between;
+}
+
+/* 清除 Starlight 全局行内 code 边框对暗色代码面板与列标签的嵌套干扰 */
+.stage8-lab .asm-listing code,
+.stage8-lab .log-lines code,
+.stage8-lab .tunnel-lab__cmd code,
+.stage8-lab .capture-row__summary code,
+.stage8-lab .log-anatomy__chip code,
+.stage8-lab .asm-reg-grid code {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  padding: 0;
+}
+
+.stage8-lab .asm-line__addr {
+  white-space: nowrap;
+}

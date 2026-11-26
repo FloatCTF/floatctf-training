@@ -1,27 +1,27 @@
 [
   {
     "label": "磁盘上的 ELF 文件",
-    "detail": "编译链接产出 ELF：文件头声明架构与入口地址，.text 存机器码，.rodata 存只读字符串。",
+    "detail": "编译链接产出 ELF：文件头记录架构与入口偏移，.text 放机器码，.rodata 放只读字符串。",
     "state": "normal"
   },
   {
     "label": "execve 映射进虚拟内存",
-    "detail": "shell 调用 execve 时，Linux 内核按程序头表把代码段映射为只读可执行（r-xp），数据段映射为读写（rw-p）。",
+    "detail": "shell 调用 execve 时，内核按程序头映射各段；PIE 程序的相对偏移会在运行时加上 ASLR 随机基址。",
     "state": "normal"
   },
   {
-    "label": "动态链接器加载共享库",
-    "detail": "ld-linux 解析依赖的 libc.so.6，把 puts、atoi 等库函数地址接入进程空间。",
+    "label": "动态链接器解析共享库",
+    "detail": "ld-linux 加载依赖的 libc.so.6，并按立即绑定或延迟绑定（PLT/GOT）解析 puts、atoi 等外部符号。",
     "state": "normal"
   },
   {
-    "label": "CPU 按 %rip 取指执行",
-    "detail": "指令指针 %rip 沿机器码前进，函数调用按 System V AMD64 约定把前两个参数放进 %edi、%esi，返回值放回 %eax。",
+    "label": "CPU 按 rip 取指执行",
+    "detail": "指令指针 rip 沿机器码推进；按 System V AMD64 约定，前两个整型参数放进 edi、esi，返回值放回 eax。",
     "state": "danger"
   },
   {
     "label": "比较跳转并退出",
-    "detail": "cmp 与 je/jne 按比较结果决定走向「PIN OK」还是「PIN DENIED」，最终把退出码交回内核。",
+    "detail": "cmp 与 je/jne 按零标志位决定走向 0x1188（回 1）或 0x118f（回 0），最后把退出码交回内核。",
     "state": "success"
   }
 ]

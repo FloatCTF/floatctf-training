@@ -1,0 +1,68 @@
+---
+import LessonDiagram from './lesson-diagram.astro';
+---
+<LessonDiagram
+  eyebrow="SYSCALL BOUNDARY / 用户态如何请内核干活"
+  title="普通 C 函数只是在用户态排队，真正碰磁盘和屏幕都要跨过系统调用线"
+  ariaLabel="用户态程序经过 libc 发起 openat 和 write 系统调用进入 Linux 内核态的示意图"
+  class="syscall-diagram"
+  note="strace 守在「用户态 ↔ 内核态」边界上：底层系统调用返回 fd 或 -errno（strace 记为 -1 EACCES），libc 再将其包装成 FILE*（失败返回 NULL 并设置 errno）。stdio 带缓冲，本课 182 字节是这次缓冲合并 write 的实际长度。"
+>
+  <p class="stage8-scroll-hint" aria-hidden="true">窄屏可左右滑动查看完整图示</p>
+  <div class="stage8-svg-scroll" tabindex="0" role="region" aria-label="用户态与内核态系统调用边界图（窄屏可左右滚动查看）">
+    <svg viewBox="0 0 780 268" role="img" aria-label="左侧用户态展示 mem_layout 调用 fopen 和 printf 经 libc 封装，中间红色虚线为 strace 截获的系统调用边界，右侧内核态展示权限校验与文件系统返回值">
+      <defs>
+        <marker id="sys-arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 1 L 10 5 L 0 9 z" class="diagram-arrow-head" />
+        </marker>
+      </defs>
+
+      {/* 顶部边界标牌 */}
+      <line x1="390" y1="28" x2="390" y2="258" class="sys-boundary" />
+      <rect x="330" y="6" width="120" height="24" rx="12" class="sys-pill" />
+      <text x="390" y="22" text-anchor="middle" class="sys-pill-text">strace 观察线</text>
+
+      {/* 用户态背景 */}
+      <rect x="12" y="38" width="322" height="218" rx="8" class="sys-zone sys-zone--user" />
+      <text x="28" y="62" class="diagram-label">用户态（User Space · 权限受限）</text>
+
+      <rect x="26" y="78" width="134" height="64" rx="6" class="diagram-box diagram-box--start" />
+      <text x="93" y="105" text-anchor="middle" class="diagram-box-label">mem_layout</text>
+      <text x="93" y="126" text-anchor="middle" class="diagram-box-sub">fopen / printf</text>
+
+      <rect x="184" y="78" width="136" height="64" rx="6" class="diagram-box" />
+      <text x="252" y="105" text-anchor="middle" class="diagram-box-label">libc.so.6</text>
+      <text x="252" y="126" text-anchor="middle" class="diagram-box-sub">封装 syscall + 缓冲</text>
+
+      <line x1="160" y1="110" x2="182" y2="110" class="diagram-arrow" marker-end="url(#sys-arrow)" />
+
+      <text x="28" y="174" class="diagram-box-sub diagram-box-sub--tight">• 不能直接摸硬盘扇区或网卡</text>
+      <text x="28" y="198" class="diagram-box-sub diagram-box-sub--tight">• 只能看到内核分配的虚拟地址</text>
+      <text x="28" y="222" class="diagram-box-sub diagram-box-sub--tight">• fopen 拿到包装后的 FILE*（失败 NULL）</text>
+
+      {/* 内核态背景 */}
+      <rect x="446" y="38" width="322" height="218" rx="8" class="sys-zone sys-zone--kernel" />
+      <text x="462" y="62" class="diagram-label">内核态（Kernel Space · 统一裁决）</text>
+
+      <rect x="460" y="78" width="134" height="64" rx="6" class="diagram-box diagram-box--store" />
+      <text x="527" y="105" text-anchor="middle" class="diagram-box-label">权限与路径校验</text>
+      <text x="527" y="126" text-anchor="middle" class="diagram-box-sub">查 uid / gid 与 rwx</text>
+
+      <rect x="616" y="78" width="138" height="64" rx="6" class="diagram-box diagram-box--human" />
+      <text x="685" y="105" text-anchor="middle" class="diagram-box-label">文件系统 / 终端</text>
+      <text x="685" y="126" text-anchor="middle" class="diagram-box-sub diagram-box-sub--tight">/etc/hostname · fd 1</text>
+
+      <line x1="594" y1="110" x2="614" y2="110" class="diagram-arrow" marker-end="url(#sys-arrow)" />
+
+      <text x="462" y="174" class="diagram-box-sub diagram-box-sub--tight">• openat("/etc/hostname") → fd = 3</text>
+      <text x="462" y="198" class="diagram-box-sub diagram-box-sub--tight">• write(1, ...) → 182（本次写入字节数）</text>
+      <text x="462" y="222" class="diagram-box-sub diagram-box-sub--tight">• 无权限回 -errno（strace 记 -1 EACCES）</text>
+
+      {/* 跨界箭头 */}
+      <line x1="322" y1="98" x2="458" y2="98" class="tls-line tls-line--danger" marker-end="url(#sys-arrow)" />
+      <text x="390" y="90" text-anchor="middle" class="tls-caption tls-caption--danger diagram-box-sub--tight">openat / write</text>
+      <line x1="458" y1="124" x2="322" y2="124" class="tls-line tls-line--safe" marker-end="url(#sys-arrow)" />
+      <text x="390" y="142" text-anchor="middle" class="tls-caption tls-caption--safe diagram-box-sub--tight">fd / -errno</text>
+    </svg>
+  </div>
+</LessonDiagram>

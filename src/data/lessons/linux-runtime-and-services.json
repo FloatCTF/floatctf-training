@@ -16,8 +16,8 @@
       "exercise",
       "lab-check"
     ],
-    "motionLevel": "static",
-    "visualStory": "把一个 32 行 C 程序打印出的代码/全局/堆/栈四组地址，与 /proc/self/maps 权限列、strace 系统调用流和 systemd 服务单元逐一对照，连成操作系统运行全景",
+    "motionLevel": "explanatory",
+    "visualStory": "用交互式进程虚拟内存地图（含 ASLR 随机基址切换与 rwxp 权限拆解）和用户态→内核态系统调用边界图，把 mem_layout.c、/proc/self/maps 与 strace 输出直观串联起来",
     "learningObjectives": [
       "从 /proc/<pid>/maps 和程序输出里分辨代码段（r-xp）、数据段、堆（[heap] 及大块匿名 mmap）、共享库（libc.so.6）与栈（[stack]）的虚拟地址与权限，并明确 /proc/self 指向当前打开文件的进程",
       "解释用户态与内核态的分界，并用 strace 观察一个普通程序在打开文件和打印输出时发出的 openat、write 系统调用",
@@ -313,9 +313,9 @@
     }
   ],
   "visualNarrative": {
-    "kind": "static-tables",
+    "kind": "memory-map-and-syscall-diagram",
     "primaryAnimations": 0,
-    "supportingInteractions": 0,
+    "supportingInteractions": 1,
     "scrollReveals": 0
   }
 }

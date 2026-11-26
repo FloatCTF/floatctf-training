@@ -1,6 +1,6 @@
 ---
 title: 现代 Web 架构：前后端分离、API、JWT 与 Nginx 反代
-description: 用独立回环 Nginx 反向代理加 Python JSON API 搭出真实的前后端分离结构；亲手看懂 proxy_pass、X-Forwarded-For、CORS 预检、三段 JWS 形态 JWT 拆解，以及认证（401）与授权（403）的边界
+description: 用本机隔离 Nginx 和 Python JSON API 搭出前后端分离架构，拆解 JWT 校验与反代来源头，理清 CORS 预检与 401/403 边界
 pageType: lesson
 template: splash
 ---
@@ -18,21 +18,22 @@ import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
 import FlowSimulator from '../../../components/flow-simulator';
+import JwtAuthInspector from '../../../components/jwt-auth-inspector';
 import webStack from '../../../data/flows/modern-web-stack.json';
 import manifest from '../../../data/lessons/modern-web-architecture.json';
 
 export const prodChecklist = [
-  { title: '密钥不进 Git 仓库，且生产不用手写 JWT 校验', detail: 'JWT 签名密钥和数据库口令通过环境变量或受限凭据注入，把 .env 写进 .gitignore；HS256 共享密钥长度至少 256 位（32 字节，由密码学安全随机数生成），生产项目优先采用受维护的 JWT 库而非手写解析。' },
-  { title: '禁止公网读到 .git 与备份文件', detail: 'Nginx 静态目录只放构建产物（如 dist/），不要把整份代码仓库根目录直接指给 root，避免 /.git/config、/.env、/backup.sql 被直接下载。' },
-  { title: '生产环境关掉详细堆栈与调试页', detail: '报错堆栈会暴露文件路径、框架版本甚至环境变量；面向用户返回简洁错误码，把详细异常写进服务端日志。' },
-  { title: '认清反代层与业务层的分工', detail: 'TLS 终结、静态文件、限流和日志常由 Nginx 承担，但涉及用户权限和业务归属的判定必须落在后端代码里。' },
+  { title: '密钥不进 Git，生产别手写 JWT 校验', detail: '签名密钥和数据库口令经环境变量或凭据系统注入，把 .env 写进 .gitignore。HS256 密钥至少 32 字节（256 位）随机值，线上用受维护的 JWT 库，不要自己拼解析器。' },
+  { title: '别把整个仓库根目录暴露给 Nginx', detail: '静态目录只放构建产物（如 dist/），防止公网直接下载 /.git/config、/.env 或数据库备份文件。' },
+  { title: '上线前关掉详细报错页', detail: '堆栈信息会泄露文件路径、框架版本和配置细节。返回给用户简洁错误码，把详细异常记在服务端日志里。' },
+  { title: '分清反代层和业务层的职责', detail: 'TLS 终结、静态文件、限流和接入日志交给 Nginx；谁能看哪条记录这类权限判断，必须写在后端业务代码里。' },
 ];
 
 export const homework = [
-  { title: '完成验收第 3 题', detail: '跑通 Alice 登录并对比 uid=101 与 uid=102 的 200/403 响应，同时用 curl --noproxy "*" -H "X-Forwarded-For: 198.51.100.99" 观察反代头拼接结果。' },
-  { title: '制造并排查一次 502 Bad Gateway', detail: '先停掉 9000 端口的 api_server.py，保持本课独立 Nginx（8088）运行，再请求 /api/whoami-proxy。记录 curl 返回的状态码和 /tmp/modern-web-nginx/error.log 里的对应报错行。' },
-  { title: '测试 proxy_pass 末尾斜杠的差异', detail: '对照 Nginx 官方文档思考：把 location /api/ 里的 proxy_pass http://127.0.0.1:9000; 改成带末尾斜杠的 http://127.0.0.1:9000/; 后，上游实际收到的路径会变成什么？' },
-  { title: '在真实网站里做一次只读观察', detail: '打开一个现代网站的 F12 → Network → Fetch/XHR，找一个返回 JSON 的接口，查看它的请求头用的是 Cookie 还是 Authorization: Bearer，并观察同源接口与跨源接口是否分别触发 OPTIONS 预检。' },
+  { title: '完成验收第 3 题', detail: '用 Alice 登录拿到 Token，对比请求 uid=101（200）和 uid=102（403）的差异，再带上伪造头 X-Forwarded-For: 198.51.100.99 观察反代拼接结果。' },
+  { title: '亲手制造一次 502 Bad Gateway', detail: '停掉 9000 端口的 api_server.py，保留本课独立 Nginx（8088），再访问 /api/whoami-proxy。记下状态码和 /tmp/modern-web-nginx/error.log 里的对应报错。' },
+  { title: '查清 proxy_pass 末尾斜杠的坑', detail: '对照 Nginx 官方文档判断：如果把 location /api/ 里的 proxy_pass http://127.0.0.1:9000; 改成带末尾斜杠的 http://127.0.0.1:9000/;，后端实际收到的路径会怎么变？' },
+  { title: '在常用网站里做一次只读观察', detail: '打开 F12 → Network → Fetch/XHR，找一个返回 JSON 的接口：看看它带的是 Cookie 还是 Authorization: Bearer，同源接口和跨源接口有没有触发 OPTIONS 预检。' },
 ];
 
 <LessonHero
@@ -43,7 +44,7 @@ export const homework = [
     { text: "现代 Web 架构" },
     { text: "API、JWT 与 Nginx 反代", accent: true },
   ]}
-  summary="前面用 php -S 跑出的页面属于「传统服务端渲染」：后端每次直接吐出整页 HTML。现代生产网站大多长成另一副样子：Nginx 在最前排托管静态前端并转发 /api/，后端只吐 JSON，身份凭据常见 Cookie 之外的 JWT。看懂这四层，下学期学现代 Web 安全才不会只懂老式表单。"
+  summary="第 37 课的留言板由 PHP 每次返回整页 HTML，而很多现代 Web 系统把静态前端、JSON API 与 Nginx 反向代理拆成独立层。这一课用 4 个本地文件把这条链路搭起来，实测 CORS 预检、JWT 校验与 401/403 边界。"
 />
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
@@ -52,98 +53,102 @@ export const homework = [
 
 <LessonPacing segments={manifest.segments} />
 
-## 引导问题：你点开一个现代网站，为什么地址栏没刷新数据却变了
+## 引导问题：点开现代网站时，为什么地址栏没刷新，页面数据却变了
 
-第 37 课的留言板里，提交表单后服务器回 303，浏览器重新请求整份 `index.php`。可在今天常见的管理后台、网盘或校内系统里，打开开发者工具的 Network 面板，你会发现：
+第 37 课的留言板提交表单后会跳回整份 `index.php`；而在常见的单页应用（SPA）后台里，打开 Network 面板往往能看到另一条请求路径：
 
-1. 第一个请求拿回的 HTML 几乎是个空壳，外加一堆打包好的 `.js` 文件；
-2. 后面每一次登录、翻页、改资料，浏览器都只向 `/api/...` 发请求，收回来的是 JSON；
-3. 响应头里经常写着 `Server: nginx`，但后端明明是用 Python、Java、Go 或 Node 写的。
+1. 首次打开页面取回的是静态 HTML 外壳和打包好的 `.js` 脚本。
+2. 登录、翻页、查资料时，前端脚本向 `/api/...` 发接口请求，拿到 JSON 后局部更新 DOM。
+3. 响应头里写着 `Server: nginx`，真正执行业务的后端则是上游的 Python、Java、Go 或 Node 进程。
 
-这一课把这套现代结构缩成 4 个本地文件，用课程专属的独立回环 Nginx 实例在 Kali 里跑起来，不改动系统 `/etc/nginx` 配置。
+下面用 4 个本地文件起一个隔离在 `/tmp/modern-web-nginx` 的 Nginx 实例（不动系统 `/etc/nginx`），把这条链路跑通。
 
-## 一、从单机页面到前后端分离与 Nginx 反代
+## 一、前后端分离与 Nginx 反向代理
 
 <DataTable
-  caption="传统服务端渲染 vs 现代前后端分离"
-  headers={["对比维度", "传统服务端渲染（如第 37 课留言板）", "现代前后端分离（SPA + API）"]}
+  caption="两种常见示例架构对比（第 37 课服务端渲染 vs 本课 SPA + JSON API）"
+  headers={["对比项", "本系列第 37 课（传统服务端渲染示例）", "本课示例（前后端分离 SPA + API）"]}
   rows={[
-    ["页面怎样生成", "后端把数据和 HTML 模板拼成完整网页发给浏览器", "Nginx 直接发静态 HTML/JS，浏览器用 fetch 拉 JSON 再局部渲染"],
-    ["常见会话形态", "Cookie 里存随机会话编号，状态记在服务端", "Cookie + Session，或请求头携带 Authorization: Bearer <JWT>"],
-    ["部署入口", "一个后端进程直接对外（或单层转发）", "Nginx 统一对外监听，按路径分流静态资源与多个后端服务"],
-    ["高频安全风险", "表单注入、模板 XSS、文件包含", "对象级越权（IDOR）、JWT/鉴权缺陷、CORS 误配、Nginx 反代路径/头部误解"],
+    ["页面怎么生成", "后端把数据和模板拼成整页 HTML 发给浏览器", "Nginx 直接发静态 HTML/JS，浏览器用 fetch 拉 JSON 局部更新"],
+    ["常见凭据方式", "本课选用 Cookie + 服务端 Session（现代系统同样可用）", "本课选用请求头 Authorization: Bearer <JWT>（也可用 HttpOnly Cookie）"],
+    ["对外入口", "单个后端直接对外，或只做简单转发", "Nginx 统一接入口，按路径分流静态文件和多个后端接口"],
+    ["典型排查重点", "模板输出编码、表单校验、会话属性（两类架构都可能遇到越权与注入）", "对象级越权（IDOR）、JWT 校验、CORS 策略与反代来源头边界"],
   ]}
   columnRatios={[1.1, 2.2, 2.3]}
 />
 
-先看一次请求穿过整套现代架构的五步路线：
+先拖动下面的五步条，看一次请求怎样穿过 Nginx、鉴权层和后端：
 
 <FlowSimulator client:visible title="一次现代前后端分离请求走过的五步" steps={webStack} motionLevel="explanatory" />
 
-### 1. 准备本地独立 Nginx 与 JSON API
+### 1. 准备独立 Nginx 配置与最小 JSON API
 
-把下面四个文件下载到 `~/lab/modern-web`。为了不触碰宿主机原有的 `/etc/nginx` 或正在运行的系统 Nginx，`nginx-site.conf` 是一份完整独立配置，配合 `-p /tmp/modern-web-nginx` 启动专用回环实例：
+把下面四个文件放进 `~/lab/modern-web`。为了不碰系统的 `/etc/nginx`，`nginx-site.conf` 是一份自包含配置，稍后用 `-p /tmp/modern-web-nginx` 启动独立回环实例：
 
-<CodeFile file="labs/modern-web-architecture/nginx-site.conf" mark="2-3,22-23,31-36" note="第 2–3 行将 PID 与日志隔离在 /tmp/modern-web-nginx；第 22–23 行指向静态目录；第 31–36 行把 /api/ 转发给本机 9000 端口并补写 Host 与来源 IP 头。" />
+<CodeFile file="labs/modern-web-architecture/nginx-site.conf" mark="2-3,22-23,31-36" note="第 2–3 行把 PID 和日志隔离在 /tmp/modern-web-nginx；第 22–23 行指到静态目录；第 31–36 行把 /api/ 转给本机 9000 端口并补写来源头。" />
 
-<CodeFile file="labs/modern-web-architecture/index.html" mark="10-21" note="页面本身是纯静态文件，登录后把 access_token 放进 Authorization: Bearer 请求头。" />
+<CodeFile file="labs/modern-web-architecture/index.html" mark="10-21" note="纯静态页面，登录后把拿到的 access_token 放进 Authorization: Bearer 请求头。" />
 
-<CodeFile file="labs/modern-web-architecture/api_server.py" note="纯标准库原理教学实现：要求显式注入 >=32 字节 APP_JWT_SECRET，演示 HS256 JWT、RFC 9110 合规的 204/401 响应、对象级 403 校验与反代头回显。" />
+<CodeFile file="labs/modern-web-architecture/api_server.py" note="标准库教学后端：强制要求 >=32 字节 APP_JWT_SECRET，演示 HS256 JWT、204 预检、401 质询头、对象级 403 拦截与反代头回显。" />
 
-<CodeFile file="labs/modern-web-architecture/decode_jwt.py" mark="23-24,31-42" note="第 23–24 行无需密钥即可解出 Header 与 Payload；第 31–42 行先核对 alg 是否为 HS256，再用密钥验证第三段 MAC。" />
+<CodeFile file="labs/modern-web-architecture/decode_jwt.py" mark="23-24,31-42" note="第 23–24 行不用密钥就能读出 Header 和 Payload；第 31–42 行先查 alg 是不是 HS256，再用密钥核对第三段 MAC。" />
 
 （来源：[Nginx proxy_pass 文档](#source-nginx-proxy-pass)）
 
-### 2. 启动独立 Nginx 与后端 API，看清统一入口和反代头
+### 2. 起服务，看清统一入口和反代来源头
 
-在终端 A 显式传入至少 32 字节（256 位，符合 [RFC 7518 §3.2](#source-rfc7518)）的实验密钥并启动后端；在终端 B 准备独立目录 `/tmp/modern-web-nginx` 并启动本课专用 Nginx：
+在终端 A 传入至少 32 字节的实验密钥（符合 [RFC 7518 §3.2](#source-rfc7518) 对 HS256 密钥长度的下限要求）启动后端，在终端 B 启动独立回环 Nginx：
 
 <TerminalSession
   environment="KALI 终端 A"
-  title="通过环境变量注入 >=32 字节实验密钥并启动 JSON API（9000 端口）"
+  title="注入 >=32 字节实验密钥并启动 JSON API（9000 端口）"
   steps={[
     { cmd: 'cd ~/lab/modern-web' },
     {
       cmd: "APP_JWT_SECRET='kali-lab-hs256-secret-key-2026-demo' python3 api_server.py",
       out: 'Local JSON API on http://127.0.0.1:9000  (Ctrl+C to stop)\n…（每收到一个上游转发请求会打印一行 [API] 日志）',
-      note: '后端只监听 127.0.0.1:9000，不设或密钥短于 32 字节会直接拒绝启动。本例密钥仅作本地实验演示，生产应使用 CSPRNG 生成随机密钥并交由受维护 JWT 库校验。',
+      note: '后端只听 127.0.0.1:9000；不设密钥或短于 32 字节会直接拒绝启动。本例密钥仅作本地实验，线上必须用安全随机数生成并交由成熟 JWT 库校验。',
     },
   ]}
 />
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="用专用目录与 PID 启动独立回环 Nginx（不改动系统站点）"
+  title="在 /tmp/modern-web-nginx 启动独立 Nginx（不动系统站点）"
   steps={[
     {
       cmd: 'mkdir -p /tmp/modern-web-nginx/www && cp ~/lab/modern-web/index.html /tmp/modern-web-nginx/www/',
-      note: '把静态首页放进本课独立运行目录，无需 sudo，也不会改动 /etc/nginx/sites-enabled/default。',
+      note: '把静态首页拷进本课临时目录，不用 sudo，也不会改 /etc/nginx/sites-enabled/default。',
     },
     {
       cmd: 'nginx -p /tmp/modern-web-nginx -e error.log -c "$HOME/lab/modern-web/nginx-site.conf" -t && nginx -p /tmp/modern-web-nginx -e error.log -c "$HOME/lab/modern-web/nginx-site.conf"',
       out: 'nginx: the configuration file /home/kali/lab/modern-web/nginx-site.conf syntax is ok\nnginx: configuration file /home/kali/lab/modern-web/nginx-site.conf test is successful',
-      note: '改完配置永远先跑 nginx -t 检查语法再启动；-p 和 -e 将 PID、临时目录与错误日志全部隔离在 /tmp/modern-web-nginx。',
+      note: '改完 Nginx 配置先跑 -t 验语法再启动；-p 和 -e 把 PID、临时文件和错误日志全收在 /tmp/modern-web-nginx 里。',
     },
     {
       cmd: "curl --noproxy '*' -sS -i http://127.0.0.1:8088/ | head -n 6",
       out: 'HTTP/1.1 200 OK\nServer: nginx/1.30.4\nDate: Wed, 25 Nov 2026 09:43:59 GMT\nContent-Type: text/html\nContent-Length: 1044\nLast-Modified: Wed, 25 Nov 2026 09:43:58 GMT',
-      note: '根路径由 Nginx 直接从磁盘返回静态 HTML，没有惊动 Python 后端。Nginx 版本号与时间随机器而异。',
+      note: '访问 / 时 Nginx 直接从磁盘发静态文件，没有打扰 Python 后端。版本号和时间随机器而异。',
     },
     {
       cmd: "curl --noproxy '*' -sS http://127.0.0.1:8088/api/whoami-proxy",
       out: '{\n  "tcp_peer": "127.0.0.1",\n  "host": "127.0.0.1",\n  "x_real_ip": "127.0.0.1",\n  "x_forwarded_for": "127.0.0.1"\n}',
-      note: '后端看到的 TCP 对端永远是 Nginx（127.0.0.1），真实来源靠 Nginx 写入 X-Real-IP / X-Forwarded-For；但如果客户端自己提前塞了伪造的 X-Forwarded-For，它会排在列表最左边。',
+      note: '后端看到的 TCP 对端永远是 Nginx，真实客户端地址靠 Nginx 补写 X-Real-IP 和 X-Forwarded-For。但如果客户端自己提前塞了假 X-Forwarded-For，那个假地址会排在列表最左边。',
     },
   ]}
 />
 
 （来源：[Nginx proxy_pass 文档](#source-nginx-proxy-pass)、[MDN X-Forwarded-For](#source-mdn-xff)）
 
-## 二、CORS 预检与 JWT 拆解实操
+## 二、CORS 预检与 JWT 拆解
 
-### 1. 为什么浏览器会触发 CORS 预检，而 curl 一切正常
+动手敲命令之前，先用下面的交互台把 **JWT 三段验签 / 401 与 403 的差别**，以及 **Nginx 同源反代 / CORS 预检 / 伪造 XFF** 一并点一遍：
 
-并不是所有跨源请求都会预检，但前端页面跑在 `http://127.0.0.1:8088` 而直接调用另一个端口 `http://127.0.0.1:9000`（端口不同即**跨源**），且携带 `Content-Type: application/json` 或 `Authorization` 这类非简单请求头时，浏览器会先发一次 **OPTIONS 预检请求**，带上 `Origin`、`Access-Control-Request-Method` 和 `Access-Control-Request-Headers`，检查服务端是否同时放行来源、方法与请求头；随后的实际请求响应同样必须携带匹配的 `Access-Control-Allow-Origin`（来源：[MDN CORS](#source-mdn-cors)、[Fetch 预检规范](#source-fetch-cors)）：
+<JwtAuthInspector client:visible motionLevel="explanatory" />
+
+### 1. 浏览器为什么发 OPTIONS 预检，curl 却畅通无阻
+
+并非每次跨源请求都会触发预检；而且当服务端返回 `Access-Control-Max-Age` 时，浏览器会在缓存期内复用预检结果。但只要前端跑在 `http://127.0.0.1:8088` 却直接调 `http://127.0.0.1:9000`（端口不同即**跨源**），带了 `Content-Type: application/json` 或 `Authorization` 这类非简单请求头且未命中预检缓存，浏览器就会先发 **OPTIONS 预检请求**询问来源、方法和请求头是否允许；随后的正式响应也必须带匹配的 `Access-Control-Allow-Origin`（来源：[MDN CORS](#source-mdn-cors)、[Fetch 预检规范](#source-fetch-cors)）：
 
 <TerminalSession
   environment="KALI 终端 B"
@@ -152,96 +157,96 @@ export const homework = [
     {
       cmd: "curl --noproxy '*' -sS -i -X OPTIONS -H 'Origin: http://127.0.0.1:8088' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: content-type' http://127.0.0.1:9000/api/login",
       out: 'HTTP/1.1 204 No Content\nServer: BaseHTTP/0.6 Python/3.14.10\nDate: Wed, 25 Nov 2026 09:43:59 GMT\nAccess-Control-Allow-Origin: http://127.0.0.1:8088\nVary: Origin\nAccess-Control-Allow-Headers: Authorization, Content-Type\nAccess-Control-Allow-Methods: GET, POST, OPTIONS',
-      note: '注意按 RFC 9110 §8.6，204 No Content 响应不得携带 Content-Length。浏览器核对来源、方法与请求头均获准后才会发真正的 POST；而 curl 不执行同源策略，所以 CORS 永远不是防 curl 调接口的服务端防火墙。',
+      note: '按 RFC 9110 §8.6，204 响应不带 Content-Length。浏览器核对完才发真正的 POST；而 curl 不遵守同源策略，所以 CORS 管不住命令行直接调接口。',
     },
   ]}
 />
 
-对比看本站的 Nginx 架构：当浏览器访问 `http://127.0.0.1:8088/` 并请求同域同端口的 `http://127.0.0.1:8088/api/login` 时，前端与接口属于**同源（Same-Origin）**，通常完全不会触发跨源 CORS 预检。
+回头看刚才的 Nginx 入口：前端页面和 `/api/login` 都挂在 `http://127.0.0.1:8088` 下，协议、主机、端口全相同，属于**同源**，浏览器也就不会多发这趟跨源预检。
 
-### 2. 登录拿到 JWT，再亲手把它拆开
+### 2. 登录拿到 JWT，再亲手拆开验签
 
-**JWT（JSON Web Token，[RFC 7519](#source-rfc7519)）** 最常见的是**三段 JWS 紧凑形态**（规范里也存在加密形态 JWE，这里聚焦最常见的签名/MAC 形态），由三段 Base64URL 字符串用英文句点 `.` 拼成：`Header.Payload.Signature`。
+**JWT（JSON Web Token，[RFC 7519](#source-rfc7519)）** 平时最常见的是**三段 JWS 紧凑形态**（规范里另有加密形态 JWE，这里讲最常用的签名/MAC 形态）。它把三段 Base64URL 字符串用 `.` 接起来：`Header.Payload.Signature`。
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="登录拿 JWT，并用 decode_jwt.py 拆解与验签"
+  title="登录拿 JWT，再用 decode_jwt.py 拆解与验签"
   steps={[
     {
       cmd: `LOGIN=$(curl --noproxy '*' -sS -X POST -H 'Content-Type: application/json' -d '{"username":"alice","password":"demo-alice"}' http://127.0.0.1:8088/api/login) && echo "$LOGIN"`,
       out: '{\n  "token_type": "Bearer",\n  "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsInVpZCI6MTAxLCJyb2xlIjoic3R1ZGVudCIsImV4cCI6MTc5NTYwMzQzOX0._VMjg4MwIRDHL98frGtyZuGsVUkoGMMwhWg0ADqi-uI",\n  "uid": 101\n}',
-      note: 'exp 时间戳和第三段 MAC 每次登录都不同。',
+      note: 'exp 过期时间和第三段 MAC 每次登录都会变。',
     },
     {
       cmd: `TOKEN=$(echo "$LOGIN" | jq -r .access_token) && python3 ~/lab/modern-web/decode_jwt.py "$TOKEN" 'kali-lab-hs256-secret-key-2026-demo'`,
       out: 'HEADER : {"alg": "HS256", "typ": "JWT"}\nPAYLOAD: {"sub": "alice", "uid": 101, "role": "student", "exp": 1795603439}\nSIGNATURE VALID: True',
-      note: '不用密钥也能读出 HEADER 和 PAYLOAD——千万别把密码或隐私字段塞进 JWS 形态的 JWT Payload。只有第三段校验值需要核对算法与密钥。',
+      note: '不用密钥就能解出 HEADER 和 PAYLOAD——千万别把密码或隐私塞进 JWS 的 Payload。真正需要密钥和算法校验的是第三段。',
     },
     {
       cmd: `python3 ~/lab/modern-web/decode_jwt.py "$TOKEN" 'wrong-secret'`,
       out: 'HEADER : {"alg": "HS256", "typ": "JWT"}\nPAYLOAD: {"sub": "alice", "uid": 101, "role": "student", "exp": 1795603439}\nSIGNATURE VALID: False',
-      note: '如果有人改了 Payload 里的 uid、换了不支持的 alg 或拿错了密钥，校验立刻变成 False。',
+      note: '私改 Payload、换掉 alg 或密钥对不上，验签结果立刻翻成 False。',
     },
   ]}
 />
 
 <DataTable
   caption="Session + Cookie vs 三段 JWS 形态 JWT"
-  headers={["维度", "Session + Cookie", "JWT（常见三段 JWS + Bearer）"]}
+  headers={["对比项", "Session + Cookie", "JWT（三段 JWS + Bearer）"]}
   rows={[
-    ["状态存在哪", "服务端内存 / Redis / 数据库存会话表", "用户声明直接写在 Payload，服务端靠验签与 exp 校验确认有效"],
-    ["浏览器怎么带", "由浏览器按域和路径自动附带 Cookie 头", "常由前端脚本显式写入 Authorization: Bearer 头（也可存进 HttpOnly Cookie）"],
-    ["主动踢人 / 吊销", "服务端删掉会话记录立刻失效", "到期前默认持续有效，强制踢人需额外维护黑名单或缩短有效期"],
-    ["典型坑点", "Cookie 漏配 HttpOnly / Secure / SameSite", "误把 Payload 当加密、未限制 alg、弱密钥可被爆破、存 localStorage 易被 XSS 读走"],
+    ["状态存在哪", "服务端内存、Redis 或数据库里的会话表", "用户声明直接写在 Payload，服务端靠验签和 exp 判有效"],
+    ["客户端怎么带", "浏览器按域和路径自动加 Cookie 头", "前端脚本写入 Authorization: Bearer 头（也可放进 HttpOnly Cookie）"],
+    ["中途踢人下线", "服务端删掉会话记录立刻失效", "到期前默认有效；缩短有效期只能缩小风险窗口，主动即时撤销须配合检查撤销名单或版本号"],
+    ["常见坑点", "Cookie 漏配 HttpOnly / Secure / SameSite", "把 Payload 当加密、不限 alg 白名单、密钥太弱、存 localStorage 易被 XSS 读走"],
   ]}
   columnRatios={[1.1, 2.2, 2.3]}
 />
 
-## 三、认证 ≠ 授权与真实上线配置边界
+## 三、认证 ≠ 授权与上线配置底线
 
-### 1. 用同一个真 Token 测出「认证」和「授权」的分界线
+### 1. 用同一个真 Token 试出「认证」和「授权」的分界
 
-实战和 SRC 里占比极高的一类问题叫**失效访问控制 / 对象级越权（IDOR / BOLA）**（来源：[OWASP A01:2021](#source-owasp-a01-bac)）。很多新手写完后端登录校验，就以为接口已经安全了——其实验完 Token 只回答了**「你是谁（认证，Authentication）」**，还没回答**「你能不能看这条数据（授权，Authorization）」**。
+实际项目里极常见的一类漏洞叫**失效访问控制 / 对象级越权（IDOR / BOLA）**（来源：[OWASP A01:2021](#source-owasp-a01-bac)）。很多接口只检查「Token 是不是真的」，却忘了查「这个人能不能看这条数据」。
 
-先看未带令牌访问受保护接口 `/api/profile`（返回 `401` 且按 [RFC 9110](#source-rfc9110) 附带 `WWW-Authenticate: Bearer` 质询头），再用 Alice（`uid=101`）的真 Token 分别请求自己和 Bob（`uid=102`）的资料：
+对受保护接口 `/api/profile` 而言，完成 `alg` 白名单、签名和 `exp` 有效期校验，只是通过了**认证（Authentication，你是谁）**，还没有回答**授权（Authorization，你能否读写目标对象）**。下面依次测三条受保护资源请求：不带令牌（按 [RFC 9110](#source-rfc9110) 回 `401` 并附 `WWW-Authenticate: Bearer`，登录失败同样附质询头）、带 Alice（`uid=101`）的真 Token 查自己、再用同一把真 Token 查 Bob（`uid=102`）：
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="对比：未认证 401 vs 已认证读自己 200 vs 越权读他人 403"
+  title="对比：未认证 401 vs 查自己 200 vs 越权查他人 403"
   steps={[
     {
       cmd: "curl --noproxy '*' -sS -i 'http://127.0.0.1:8088/api/profile'",
       out: 'HTTP/1.1 401 Unauthorized\nServer: nginx/1.30.4\n…\nWWW-Authenticate: Bearer realm="modern-web-lab"\n\n{\n  "error": "missing Bearer token"\n}',
-      note: '缺少或无效凭据属于未通过认证，返回 401 并通过 WWW-Authenticate 告知客户端认证方式为 Bearer。',
+      note: '没带凭据或凭据无效，属于未通过认证，回 401 并用 WWW-Authenticate 说明需要 Bearer 令牌。',
     },
     {
       cmd: `curl --noproxy '*' -sS -i -H "Authorization: Bearer $TOKEN" 'http://127.0.0.1:8088/api/profile?uid=101'`,
       out: 'HTTP/1.1 200 OK\nServer: nginx/1.30.4\n…\n{\n  "uid": 101,\n  "username": "alice",\n  "role": "student",\n  "note": "Alice 的个人实验记录"\n}',
-      note: 'Token 里的 uid 与请求的 uid 都是 101，认证和授权同时通过。',
+      note: 'Token 里的 uid 和查询参数都是 101，认证和授权一起通过。',
     },
     {
       cmd: `curl --noproxy '*' -sS -i -H "Authorization: Bearer $TOKEN" 'http://127.0.0.1:8088/api/profile?uid=102'`,
       out: 'HTTP/1.1 403 Forbidden\nServer: nginx/1.30.4\n…\n{\n  "error": "forbidden",\n  "detail": "authenticated as alice (uid=101), cannot read uid=102"\n}',
-      note: '本示例按常见 HTTP 语义返回 403：服务端认出了你是 Alice，但拒绝你读取他人记录（部分线上系统为避免暴露对象 ID 是否存在，也会刻意统一返回 404）。如果业务代码漏掉这一行归属比对，改一个数字就能读走全站用户数据。',
+      note: '服务端认出了你是 Alice，但拒绝你看别人的记录，返回 403（部分线上系统为隐藏对象是否存在，也会统一回 404）。漏掉这行归属比对，改一个数字就能把全站用户资料翻个遍。',
     },
   ]}
 />
 
-### 2. 真实上线前必须守住的四条工程边界与实验清理
+### 2. 上线前守住四条工程底线，做完记得停服务
 
 （来源：[OWASP Authentication Cheat Sheet](#source-owasp-authn-cs)）
 
 <StepList title="生产部署基线检查" steps={prodChecklist} />
 
-实验完成后，只定向停止本课在 `/tmp/modern-web-nginx` 启动的独立 Nginx 实例并清理临时目录，再去终端 A 按 `Ctrl+C` 停掉 `api_server.py`（不会影响主机上其他 Nginx 服务）：
+做完实验后，用独立 PID 定向停掉 `/tmp/modern-web-nginx` 里的本课 Nginx，再回终端 A 按 `Ctrl+C` 停掉 `api_server.py`：
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="定向停止本课独立 Nginx 实例并清理临时目录"
+  title="定向停止本课独立 Nginx 并清理临时目录"
   steps={[
     {
       cmd: 'nginx -p /tmp/modern-web-nginx -e error.log -c "$HOME/lab/modern-web/nginx-site.conf" -s stop && rm -rf /tmp/modern-web-nginx',
-      note: '通过独立 PID 文件 /tmp/modern-web-nginx/nginx.pid 精准停止本课实例，不干扰系统默认服务。',
+      note: '按 /tmp/modern-web-nginx/nginx.pid 只停本课实例，不碰主机上其他服务。',
     },
   ]}
 />
@@ -249,14 +254,14 @@ export const homework = [
 ## 常见报错与排错
 
 <DataTable
-  caption="配置现代前后端架构时最常撞上的五个报错"
-  headers={["现象或报错", "常见根因", "排查与修复"]}
+  caption="搭现代前后端架构时最容易碰到的五个报错"
+  headers={["现象或报错", "常见原因", "排查与处理"]}
   rows={[
-    ["Nginx 返回 502 Bad Gateway", "上游后端没启动、端口写错，或后端进程崩溃", "先用 ss -lntp 看 9000 是否在监听，再看 /tmp/modern-web-nginx/error.log（生产环境常为 /var/log/nginx/error.log）里的 connect() failed"],
-    ["生产 Nginx 访问静态页返回 403 Forbidden", "系统级 Nginx 工作进程（如 www-data）对 700 权限的个人主目录缺少读/遍历权限", "生产部署时将静态产物放到独立目录（如 /var/www/...），目录设 755、文件设 644"],
-    ["浏览器报 CORS policy blocked", "跨源且触发预检时，后端未回匹配的 Access-Control-Allow-Origin / Methods / Headers，或未处理 OPTIONS", "优先通过同域 Nginx 反代消除跨源；确需跨源时按白名单配置 Origin，避免带凭据接口盲配 *"],
-    ["api_server.py 启动报错或 JWT 报 invalid signature", "未设置 >=32 字节的 APP_JWT_SECRET、两端密钥不一致，或 Token 到期（exp <= 当前时间）", "核对环境变量长度与内容，先用 decode_jwt.py 在本地独立检查 Header 的 alg 与签名"],
-    ["拿 X-Forwarded-For 做白名单被绕过", "客户端自己发请求时就能伪造 X-Forwarded-For 最左侧的地址", "仅信任由受控反代覆写的 X-Real-IP，或按已知反代跳数从右往左取值"],
+    ["Nginx 返回 502 Bad Gateway", "上游后端没起、端口写错，或后端挂了", "用 ss -lntp 查 9000 是否在监听，再看 /tmp/modern-web-nginx/error.log（线上常在 /var/log/nginx/error.log）里的 connect() failed"],
+    ["生产 Nginx 访问静态页返回 403", "系统 Nginx 工作进程（如 www-data）进不去 700 权限的个人主目录", "生产环境把静态文件放独立目录（如 /var/www/...），目录 755、文件 644"],
+    ["浏览器报 CORS policy blocked", "跨源且触发预检时，后端没回匹配的 Access-Control-Allow-* 头或没处理 OPTIONS", "能用同源 Nginx 反代就优先同源；必须跨源时按白名单配 Origin，带凭据接口不能盲配 *"],
+    ["api_server.py 拒启或 JWT 报 invalid signature", "没设 >=32 字节 APP_JWT_SECRET、密钥不一致或 Token 过期（exp <= 当前时间）", "核对环境变量长度，先用 decode_jwt.py 在本地独立检查 alg 与签名"],
+    ["拿 X-Forwarded-For 做白名单被绕过", "客户端自己发请求就能在最左边塞假 IP", "先确认直连 TCP 对端确为受控反代，再信任反代覆写的 X-Real-IP 或按已知反代跳数从右往左取"],
   ]}
   columnRatios={[1.6, 1.9, 2.3]}
 />
@@ -264,16 +269,16 @@ export const homework = [
 <CheatSheet
   title="本课常用命令速查"
   items={[
-    { term: 'nginx -p /tmp/modern-web-nginx -e error.log -c "$HOME/lab/modern-web/nginx-site.conf" -t', description: '校验本课独立 Nginx 配置语法，不触碰系统配置。' },
-    { term: 'curl -i -X OPTIONS -H "Origin: ..." -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" URL', description: '手动发一次完整 CORS 预检请求，核对放行头与 204 响应。' },
-    { term: 'curl -H "Authorization: Bearer $TOKEN" URL', description: '按现代 API 约定在请求头携带 Bearer Token。' },
-    { term: 'python3 decode_jwt.py "$TOKEN" [SECRET]', description: '拆解三段 JWS 形态 JWT，并在传入密钥时先核对 alg 再验证 HS256 签名。' },
-    { term: '401 Unauthorized / 403 Forbidden（本例语义）', description: '本例中 401（含 WWW-Authenticate: Bearer）表示未通过认证；403 表示已认证但无权访问目标对象。' },
+    { term: 'nginx -p /tmp/modern-web-nginx -e error.log -c "$HOME/lab/modern-web/nginx-site.conf" -t', description: '检查本课独立 Nginx 配置语法，不改动系统配置。' },
+    { term: 'curl -i -X OPTIONS -H "Origin: ..." -H "Access-Control-Request-Method: POST" -H "Access-Control-Request-Headers: content-type" URL', description: '手动发一次完整 CORS 预检，核对放行头与 204 响应。' },
+    { term: 'curl -H "Authorization: Bearer $TOKEN" URL', description: '按现代 API 惯例在请求头携带 Bearer Token。' },
+    { term: 'python3 decode_jwt.py "$TOKEN" [SECRET]', description: '拆开三段 JWS 形态 JWT，传入密钥时先查 alg 再验 HS256 签名。' },
+    { term: '401 Unauthorized / 403 Forbidden', description: '本例中 401（带 WWW-Authenticate: Bearer）代表未通过认证，403 代表已认证但无权访问目标对象。' },
   ]}
 />
 
 <KeyTakeaway>
-现代 Web 往往由 Nginx 统一接入，把静态前端与 JSON API 拆开：同源经反代时通常无需跨源预检，跨源触发预检时由浏览器按 CORS 规则核对来源、方法与请求头；常见三段 JWS 形态 JWT 的前两段只是 Base64URL 编码而非加密；认证通过（非 401）也绝不等于授权通过（防 403 越权）。下一课我们补齐远程运维的 SSH 密钥隧道与底层 tcpdump 流量抓包。
+前后端分离架构常用 Nginx 统一托管静态前端并转发 JSON API：同源经反代可避开跨源预检，跨源请求由浏览器按 CORS 策略决定是否放行脚本读取。三段 JWS 形态 JWT 的前两段仅作 Base64URL 编码而非加密；服务端需依次校验 alg 白名单、签名和 exp 完成认证（失败回 401），再独立核对对象归属完成授权（失败回 403）。
 </KeyTakeaway>
 
 ## 学习验收
@@ -282,6 +287,8 @@ export const homework = [
 
 ## 课后作业
 
-<StepList title="课后作业" steps={homework} />
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
 
 <SourceList sources={manifest.sources} />

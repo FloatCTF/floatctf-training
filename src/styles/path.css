@@ -143,6 +143,10 @@
   min-width: 0;
 }
 
+.path-stage-count {
+  margin-inline-start: auto;
+}
+
 .path-stage-count,
 .path-lesson-series,
 .path-lesson-status {

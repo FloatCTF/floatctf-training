@@ -1,198 +1,135 @@
 {
   "schemaVersion": 1,
-  "testedAt": "2026-11-25",
-  "target": "http://127.0.0.1:4324/",
+  "testedAt": "2026-11-26",
+  "target": "http://127.0.0.1:4331/",
   "browser": "Orca Headless Chromium",
-  "scope": "新增并全部上线的第 8 阶段 8 门课（第 38–45 课）及首页入口、学期路线页、计算机基础/工程工具/CTF 实践分类页；前 37 课与既有 11 门安全/AI 课沿用上一轮读数。截图只在本地留档，不随仓库分发。",
+  "scope": "按 codex/gpt-6.2-sol 盲审收口后的第 8 阶段全部 8 门课（第 38–45 课，含 7 个 React 交互实验台、3 张 SVG 机制图与 3 处保留五步流程）及首页、新生学期路线页、计算机基础/工程工具/CTF 实践分类页（v5 复验）。截图只在本地留档，不随仓库分发。",
   "pages": [
     "/",
+    "/paths/freshman/",
     "/categories/cs-foundations/",
-    "/categories/ctf-practice/",
     "/categories/engineering-tools/",
-    "/categories/programming/",
-    "/lessons/elf-and-assembly-reading/",
+    "/categories/ctf-practice/",
     "/lessons/https-tls-and-proxy/",
-    "/lessons/linux-runtime-and-services/",
     "/lessons/modern-web-architecture/",
-    "/lessons/regex-and-log-triage/",
-    "/lessons/security-mindset-and-ai-workflow/",
     "/lessons/ssh-and-packet-capture/",
-    "/lessons/web-security-bridge-lab/",
-    "/lessons/c-arrays-and-strings/",
-    "/lessons/c-compile-and-run/",
-    "/lessons/c-debugging-memory-errors/",
-    "/lessons/c-files-and-projects/",
-    "/lessons/c-functions-and-stack/",
-    "/lessons/c-pointers/",
-    "/lessons/c-structs-and-heap/",
-    "/lessons/c-types-and-control-flow/",
-    "/lessons/data-representation/",
-    "/lessons/docker-compose-labs/",
-    "/lessons/docker-images-and-containers/",
-    "/lessons/git-branches-and-collaboration/",
-    "/lessons/git-local-workflow/",
-    "/lessons/guestbook-capstone/",
-    "/lessons/html-css-dom/",
-    "/lessons/http-basics/",
-    "/lessons/java-jvm-and-objects/",
-    "/lessons/java-web-project-reading/",
-    "/lessons/javascript-in-the-browser/",
-    "/lessons/network-basics/",
-    "/lessons/php-forms-and-sessions/",
-    "/lessons/php-functions-and-files/",
-    "/lessons/php-objects-and-serialization/",
-    "/lessons/php-pdo-database/",
-    "/lessons/php-request-lifecycle/",
-    "/lessons/php-types-and-arrays/",
-    "/lessons/python-collections/",
-    "/lessons/python-control-flow/",
-    "/lessons/python-files-and-exceptions/",
-    "/lessons/python-functions-and-modules/",
-    "/lessons/python-network-scripting/",
-    "/lessons/python-strings-and-bytes/",
-    "/lessons/python-variables-and-types/",
-    "/lessons/shell-files-and-paths/",
-    "/lessons/shell-permissions-and-pipes/",
-    "/lessons/sql-basics/",
-    "/lessons/vm-kali-setup/",
-    "/paths/freshman/"
+    "/lessons/regex-and-log-triage/",
+    "/lessons/linux-runtime-and-services/",
+    "/lessons/elf-and-assembly-reading/",
+    "/lessons/security-mindset-and-ai-workflow/",
+    "/lessons/web-security-bridge-lab/"
   ],
   "checks": [
     {
       "id": "desktop-light",
       "status": "pass",
-      "evidence": "首页入口：8 个阶段 · 45 课 · 已上线 45；VII CTF 实践卡片已亮起",
-      "screenshot": "qa/screenshots/stage8-home.png"
+      "evidence": "1280×900 真浅色主题（断言 --training-page-bg: #F4F0E5）下首页、路线页与 3 个分类页横向溢出 0px，控制台错误 0 条",
+      "screenshot": "qa/screenshots/stage8-v5-home-light.png"
     },
     {
       "id": "desktop-dark",
       "status": "pass",
-      "evidence": "第 38 课深色主题桌面首屏，无横向溢出",
-      "screenshot": "qa/screenshots/modern-web-b1-lesson38-desktop-dark.png"
+      "evidence": "1280×900 深色主题下第 38/39/43/44 课及路线第 8 阶段渲染完整，实测 SHA 徽标对比度 5.35:1、JWT 签名 11.38:1，横向溢出 0px",
+      "screenshot": "qa/screenshots/stage8-v5-l38-crypto-dark.png"
     },
     {
       "id": "lesson-editorial-desktop-light",
       "status": "pass",
-      "evidence": "第 38–45 课全部 8 页桌面浅色核查通过：DataTable 100% 全宽、CodeFile 下载 21/21 HTTP 200、CheatSheet 词条完整、5 处 FlowSimulator 均为 5 步单行",
-      "screenshot": "qa/screenshots/stage8-modern-web-architecture-desktop.png"
+      "evidence": "第 38–45 课全部 8 页桌面浅色复验通过：7 个 React 交互岛水合与交互断言全绿，浅色 JWT 签名 6.80:1、SHA 徽标 5.55:1，3 张 SVG 无裁切",
+      "screenshot": "qa/screenshots/stage8-v5-l39-jwt-light.png"
     },
     {
       "id": "mobile-light",
       "status": "pass",
-      "evidence": "390 宽度下第 38–45 课全部 8 页横向溢出均为 0px",
-      "screenshot": "qa/screenshots/modern-web-b1-lesson38-mobile.png"
+      "evidence": "390×844 真浅色主题（逐页断言 data-theme=light 与 #F4F0E5）下第 38–45 课全部 8 页根节点横向溢出 0px，3 张静态 SVG 在可聚焦滚动区内以 608px 可读宽度呈现",
+      "screenshot": "qa/screenshots/stage8-v5-https-mobile-light.png"
     },
     {
       "id": "lesson-mobile",
       "status": "pass",
-      "evidence": "第 38–45 课 390px 移动端首屏与正文均 0 横向溢出",
-      "screenshot": "qa/screenshots/modern-web-b1-lesson38-mobile.png"
+      "evidence": "第 38–45 课 390×844 真浅色移动端正文、表格与交互工作台均 0px 根溢出，单列堆叠清晰",
+      "screenshot": "qa/screenshots/stage8-v5-regex-mobile-light.png"
     },
     {
       "id": "category-page",
       "status": "pass",
-      "evidence": "计算机基础（10 课）、工程工具（10 课）与 CTF 实践（1 课）分类页均正常渲染且 0 溢出",
-      "screenshot": "qa/screenshots/foundations-b1-category.png"
+      "evidence": "计算机基础（10 课）、工程工具（10 课）与 CTF 实践（1 课）分类页真浅色渲染正常且 0px 溢出",
+      "screenshot": "qa/screenshots/stage8-v5-category-cs-light.png"
     },
     {
       "id": "directory-semantics",
       "status": "pass",
-      "evidence": "路线页第 8 阶段 38–45 课全部 8/8 已上线可点击，共 45 条课程链接",
-      "screenshot": "qa/screenshots/stage8-path-bottom.png"
+      "evidence": "新生路线页第 8 阶段已去除阶段说明文字，8 / 8 已上线在浅/深色桌面及 390×844 移动端均齐右对齐且 0px 溢出，38–45 课可点击",
+      "screenshot": "qa/screenshots/stage8-v5-path-dark.png"
     },
     {
       "id": "print",
-      "status": "not-run",
-      "reason": "本轮未对第 38–45 课单独执行打印媒体模拟；前 37 课沿用上一轮记录"
+      "status": "pass",
+      "evidence": "抽查第 38/43/45 课从暗色主题直接导出 Chromium PDF 并用 PDFKit 渲染目检关键页：A4 纸边纯白、Expressive Code 深字浅底可读（含第 45 课 station_access.log）、无孤立章号/表头，且第 45 课打印后返回屏幕勾选进度保持 2/5（全 8 课逐页分页审核未执行）",
+      "screenshot": "qa/screenshots/stage8-v5-l45-print.png"
     },
     {
       "id": "reduced-motion",
       "status": "not-run",
-      "reason": "本轮未对第 38–45 课单独执行 reduced-motion 模拟；复用组件自带静态回退"
+      "reason": "7 个新交互实验台已接 useMotionPresentation/useSimulator 自动收敛至静态表且保留用户状态，未单独在浏览器中切换 prefers-reduced-motion 截图留档"
     },
     {
       "id": "no-javascript",
       "status": "not-run",
-      "reason": "本轮未对第 38–45 课单独执行关闭 JavaScript 模拟；复用组件自带静态回退"
+      "reason": "已直接核验 7 课 dist/lessons/*/index.html 含 data-presentation=static 与 .stage8-ledger（44 课含静态 SVG 与五步流程），但本轮未在浏览器全局禁用 JS 开关后单独截图"
     },
     {
       "id": "internal-links",
       "status": "pass",
-      "evidence": "第 38–45 课全部 #source-* 页内锚点 0 断链；干净 Git 导出构建中 21 个实验下载文件全部返回 HTTP 200；首页/路线页/分类页链接一致"
+      "evidence": "第 38–45 课全部 #source-* 页内锚点 0 断链；16 处 CodeFile mark 行号有效且语义核对一致；首页/路线页/分类页链接一致"
     },
     {
       "id": "lesson-keyboard",
       "status": "not-run",
-      "reason": "已验证 HttpExchange 按钮与 FlowSimulator 滑杆交互，未做完整 Tab 顺序走查"
+      "reason": "已实测第 38 课按钮键盘聚焦与按压，补齐五关复选框唯一 aria-label、日志输入 aria-invalid/aria-describedby 与 StageControls role=group，未执行全 8 课完整 Tab 与读屏器走查"
     },
     {
       "id": "deployment-csp-pagefind",
       "status": "not-run",
-      "reason": "本轮只做本地静态产物检查，未在 nginx 与 CSP 下验收"
+      "reason": "本地静态构建产出 Astro 69 页、Pagefind 扫描 72 HTML、实际索引 68 页（pagefind-entry.json），未在生产 nginx 与 CSP 响应头下验收"
     },
     {
       "id": "console",
       "status": "pass",
-      "evidence": "第 38–45 课及 5 个受影响入口页（共 13 页）核查过程中控制台错误为零"
+      "evidence": "v5 巡检覆盖第 38–45 课及 5 个入口/路线/分类页（共 13 页），控制台错误数为 0"
     },
     {
       "id": "performance",
       "status": "not-run",
-      "reason": "本轮未做性能测量"
+      "reason": "本轮未做性能基准测量"
     }
   ],
   "screenshots": [
-    "qa/screenshots/stage8-elf-and-assembly-reading-desktop.png",
-    "qa/screenshots/stage8-home.png",
-    "qa/screenshots/stage8-modern-web-architecture-desktop.png",
-    "qa/screenshots/stage8-path-bottom.png",
-    "qa/screenshots/stage8-web-security-bridge-lab-desktop.png",
-    "qa/screenshots/modern-web-b1-home.png",
-    "qa/screenshots/modern-web-b1-lesson38-cheatsheet.png",
-    "qa/screenshots/modern-web-b1-lesson38-desktop-dark.png",
-    "qa/screenshots/modern-web-b1-lesson38-desktop-light.png",
-    "qa/screenshots/modern-web-b1-lesson38-flow.png",
-    "qa/screenshots/modern-web-b1-lesson38-http.png",
-    "qa/screenshots/modern-web-b1-lesson38-mobile.png",
-    "qa/screenshots/modern-web-b1-path-stage8.png",
-    "qa/screenshots/modern-web-b1-path.png",
-    "qa/screenshots/foundations-b1-category.png",
-    "qa/screenshots/foundations-b1-permission-bits-reduced.png",
-    "qa/screenshots/foundations-b2-home-panel.png",
-    "qa/screenshots/foundations-b2-lesson10-print.png",
-    "qa/screenshots/foundations-b2-lesson5-desktop-light.png",
-    "qa/screenshots/foundations-b2-lesson7-desktop-dark.png",
-    "qa/screenshots/foundations-b2-lesson8-mobile.png",
-    "qa/screenshots/foundations-b2-stepper-nojs.png",
-    "qa/screenshots/foundations-b3-git-graph-mobile.png",
-    "qa/screenshots/foundations-b3-git-graph-nojs.png",
-    "qa/screenshots/foundations-b3-home-panel.png",
-    "qa/screenshots/foundations-b3-lesson11-desktop-light.png",
-    "qa/screenshots/foundations-b3-lesson11-print.png",
-    "qa/screenshots/foundations-b3-lesson12-desktop-dark.png",
-    "qa/screenshots/foundations-b3-lesson12-mobile.png",
-    "qa/screenshots/foundations-b4-http-exchange-mobile.png",
-    "qa/screenshots/foundations-b4-http-exchange-nojs.png",
-    "qa/screenshots/foundations-b4-lesson13-print.png",
-    "qa/screenshots/foundations-b4-lesson14-desktop-light.png",
-    "qa/screenshots/foundations-b4-lesson17-desktop-dark.png",
-    "qa/screenshots/foundations-b4-lesson18-mobile.png",
-    "qa/screenshots/foundations-b5-lesson22-mobile.png",
-    "qa/screenshots/foundations-b5-lesson23-desktop-light.png",
-    "qa/screenshots/foundations-b5-lesson24-desktop-dark.png",
-    "qa/screenshots/foundations-b5-lesson26-print.png",
-    "qa/screenshots/foundations-b5-memory-stepper-mobile.png",
-    "qa/screenshots/foundations-b5-memory-stepper-nojs.png",
-    "qa/screenshots/foundations-b6-home.png",
-    "qa/screenshots/foundations-b6-lesson27-print.png",
-    "qa/screenshots/foundations-b6-lesson29-desktop-light.png",
-    "qa/screenshots/foundations-b6-lesson31-desktop-dark.png",
-    "qa/screenshots/foundations-b6-lesson32-mobile.png",
-    "qa/screenshots/foundations-b7-home.png",
-    "qa/screenshots/foundations-b7-lesson34-desktop-dark.png",
-    "qa/screenshots/foundations-b7-lesson35-print.png",
-    "qa/screenshots/foundations-b7-lesson36-mobile.png",
-    "qa/screenshots/foundations-b7-lesson37-desktop-light.png",
-    "qa/screenshots/foundations-b7-path.png"
+    "qa/screenshots/stage8-v5-home-light.png",
+    "qa/screenshots/stage8-v5-path-light.png",
+    "qa/screenshots/stage8-v5-path-dark.png",
+    "qa/screenshots/stage8-v5-path-mobile-light.png",
+    "qa/screenshots/stage8-v5-category-cs-light.png",
+    "qa/screenshots/stage8-v5-category-eng-light.png",
+    "qa/screenshots/stage8-v5-category-ctf-light.png",
+    "qa/screenshots/stage8-v5-l38-crypto-light.png",
+    "qa/screenshots/stage8-v5-l38-crypto-dark.png",
+    "qa/screenshots/stage8-v5-l39-jwt-light.png",
+    "qa/screenshots/stage8-v5-l39-jwt-dark.png",
+    "qa/screenshots/stage8-v5-l40-tunnel-light.png",
+    "qa/screenshots/stage8-v5-l41-log-light.png",
+    "qa/screenshots/stage8-v5-l42-memmap-light.png",
+    "qa/screenshots/stage8-v5-l42-syscall-light.png",
+    "qa/screenshots/stage8-v5-l43-asm-light.png",
+    "qa/screenshots/stage8-v5-l43-asm-dark.png",
+    "qa/screenshots/stage8-v5-l44-trust-light.png",
+    "qa/screenshots/stage8-v5-l44-trust-dark.png",
+    "qa/screenshots/stage8-v5-l45-quest-light.png",
+    "qa/screenshots/stage8-v5-https-mobile-light.png",
+    "qa/screenshots/stage8-v5-regex-mobile-light.png",
+    "qa/screenshots/stage8-v5-linux-mobile-light.png",
+    "qa/screenshots/stage8-v5-security-mobile-light.png",
+    "qa/screenshots/stage8-v5-web-mobile-light.png",
+    "qa/screenshots/stage8-v5-l45-print.png"
   ]
 }

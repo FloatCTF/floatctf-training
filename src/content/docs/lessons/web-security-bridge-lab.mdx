@@ -1,6 +1,6 @@
 ---
 title: 综合前哨实战：白盒体检与跨方向体验
-description: 不讲新语法，用一次五关纯本地闯关把整个「现代 Web 与安全前哨」阶段串起来：日志筛选、JWT 验签、前端边界验证、Python 自动翻页，以及一道极简 ELF 反汇编跨方向体验
+description: 不讲新语法，用五道纯本地小关串起日志筛选、JWT 验签、参数边界核对、Python 自动翻页和极简 ELF 反汇编，检验进 Web 安全前的动手底子
 pageType: lesson
 template: splash
 ---
@@ -17,19 +17,20 @@ import KeyTakeaway from '../../../components/key-takeaway.astro';
 import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
+import BridgeQuestBoard from '../../../components/bridge-quest-board';
 import manifest from '../../../data/lessons/web-security-bridge-lab.json';
 
 export const nextStageSteps = [
-  { title: 'Web 安全主线（已有 5 门深度专题）', detail: '按顺序进入本站「Web 安全」分类：SQL 注入 → SQL 注入进阶 → XSS → SSRF → RCE。你在第 38–44 课练熟的抓包、反代、Cookie、鉴权与读码能力会立刻派上用场。' },
-  { title: 'AI 与机器学习安全拓展', detail: '想看现代 AI 系统怎样工作以及提示注入、模型提取等新攻击面，可直接沿本站「AI 与机器学习」分类从机器学习基础一直读到 AI 安全。' },
-  { title: '用复盘习惯代替刷题焦虑', detail: '从下一阶段开始，每做完一道靶场题或一次白盒审计，坚持记三句话：入口在哪、哪条信任边界被打破、服务端怎么根治。' },
+  { title: 'Web 安全主线（5 门核心专题）', detail: '按顺序进入本站「Web 安全」分类：SQL 注入 → SQL 注入进阶 → XSS → SSRF → RCE。第 38–44 课练熟的抓包、反代、Cookie、鉴权和读码都会直接用到。' },
+  { title: 'AI 与机器学习安全拓展', detail: '想了解大模型底层原理和提示注入、模型提取等新攻击面，可以顺着本站「AI 与机器学习」路线从机器学习基础一路读到 AI 安全。' },
+  { title: '养成三句话复盘习惯', detail: '之后每做完一道靶场题或一次源码体检，顺手记三句话：入口在哪、哪条信任边界失守、服务端该怎么根治。' },
 ];
 
 export const homework = [
-  { title: '完成验收第 3 题', detail: '脱离页面参考，自己重跑全部五关并写下每关三句话的「现象 → 命令 → 结论」复盘笔记。' },
-  { title: '给关卡 3 加上本地代理', detail: '把第 38 课的 mini_proxy.py 串在 curl（记得带 --noproxy ""）和 bridge_station.py（8099）之间，发原始 price=20 经代理改写为 price=1，验证同样触发 boundary-ok。' },
-  { title: '扩展关卡 4 脚本', detail: '改写 verify_progress.py，让它不写死 range(1, 4)，而是先读第 1 页响应里的 total_pages 字段再动态循环。' },
-  { title: '写下你的下学期学习计划', detail: '在 Web 安全、系统/二进制和 AI 安全里选定一个主方向和一个副方向，安排好下个月打算精读的前三门专题。' },
+  { title: '完成验收第 3 题', detail: '不看页面参考，自己重跑全部五关，给每关写三行「现象 → 命令 → 结论与防护」复盘。' },
+  { title: '给关卡 3 接上本地代理', detail: '把第 38 课的 mini_proxy.py 串在 curl（记得带 --noproxy ""）和 bridge_station.py（8099）之间，发 price=20 让代理改写成 price=1，验证同样触发 boundary-ok。' },
+  { title: '改进关卡 4 的翻页脚本', detail: '改写 verify_progress.py，把写死的 range(1, 4) 改成先读第 1 页返回里的 total_pages，再动态遍历所有页。' },
+  { title: '定下下个月的学习计划', detail: '在 Web 安全、系统/二进制和 AI 安全里选一个主方向和一个副方向，列好下个月打算精读的三门课。' },
 ];
 
 <LessonHero
@@ -40,7 +41,7 @@ export const homework = [
     { text: "综合前哨实战" },
     { text: "白盒体检与跨方向体验", accent: true },
   ]}
-  summary="这是基础学期与正式安全专题之间的最后一道关口。不讲任何新概念，直接把你刚学完的日志排查、JWT 拆解、前端边界验证、Python 脚本自动化和 ELF 汇编读图串成五道纯本地小关卡——全部通关，说明你已经准备好进入 Web 安全实战了。"
+  summary="用五道纯本地小关集中演练五项基础能力：awk 聚合日志、JWT 拆解验签、HTTP 参数边界核对、Python 自动翻页抓取，以及 x86-64 ELF 静态反汇编。"
 />
 <div class="lesson-start-grid">
   <LearningObjectives items={manifest.lessonPlan.learningObjectives} />
@@ -49,126 +50,120 @@ export const homework = [
 
 <LessonPacing segments={manifest.segments} />
 
-## 引导问题：不靠现成扫描器，只凭基础工具能解决多少真实问题
+## 引导问题：不靠现成扫描器，光凭基础工具能解决多少问题
 
-很多新手以为做安全一定要先装满几十个大工具。实际上，真正决定你能不能看懂题目和系统的，永远是前面打好的几项硬功：看懂日志、看懂 HTTP 与凭据、敢自己写 15 行脚本自动化、拿到二进制不会慌。
+不少初学者以为做安全得先装满几十个大工具。真进靶场或读陌生代码库就会发现，日常最常用的依然是五项基本功：筛日志找线索、拆解 HTTP 与凭据、写十几行小脚本翻页汇总，以及读懂基础汇编。
 
-<DataTable
-  caption="本课五关总览（全部运行在 127.0.0.1 本地环境）"
-  headers={["关卡", "考察模块", "通关信号"]}
-  rows={[
-    ["关卡 1", "文本与日志筛选（第 41 课）", "找出触发 403 的异常 IP 与路径"],
-    ["关卡 2", "JWT 拆解与签名校验（第 38、39 课）", "验签通过并读出 checkpoint: jwt-ok"],
-    ["关卡 3", "客户端参数与服务端目录价核对（第 38 课）", "触发 mismatch: true 与 checkpoint: boundary-ok"],
-    ["关卡 4", "Python 自动化翻页汇总（第 15、41 课）", "自动拉完 3 页固定审计样本汇总 flagged_count: 2"],
-    ["关卡 5", "跨方向体验：x86-64 ELF 汇编读图（第 43 课）", "从反汇编算出 2017 并得到 CHECKPOINT: elf-ok"],
-  ]}
-  columnRatios={[0.8, 2.2, 2.5]}
-/>
+下面这张交互任务看板把五关的目标、关键命令和核对信号收在了一起——在自己终端每跑通一关，可以勾选记录进度：
 
-<Callout type="warning" title="实验边界">
-本课所有练习脚本仅监听 `127.0.0.1:8099` 或操作本地文件，客户端命令与 `verify_progress.py` 均显式绕过外部代理，不涉及任何外部网络目标。
+<BridgeQuestBoard client:visible motionLevel="subtle" />
+
+<Callout variant="warning" title="实验边界">
+本课所有练习脚本只监听 `127.0.0.1:8099` 或读写本地文件；命令和 `verify_progress.py` 都显式绕开外部代理，不触碰任何外部目标。
 </Callout>
 
 ## 一、启动练习靶站并完成关卡 1–2（日志与 JWT）
 
-把本课四份材料下载到 `~/lab/bridge`，并把第 39 课的 `decode_jwt.py` 也放进同一目录（可从[第 39 课](/lessons/modern-web-architecture/)复制，或直接[下载 decode_jwt.py](/labs/modern-web-architecture/decode_jwt.py)）：
+把本课四份材料放进 `~/lab/bridge`，再把第 39 课的 `decode_jwt.py` 也拷进同一目录（可从[第 39 课](/lessons/modern-web-architecture/)复制，或直接[下载 decode_jwt.py](/labs/modern-web-architecture/decode_jwt.py)）：
 
-<CodeFile file="labs/web-security-bridge-lab/station_access.log" note="关卡 1 固定样本：找出反复收到 403 的来源 IP 和被试探的路径。" />
+<CodeFile file="labs/web-security-bridge-lab/station_access.log" note="关卡 1 样本：汇总连续收到 403 的来源 IP 与请求路径作为优先核查线索。" />
 
-<CodeFile file="labs/web-security-bridge-lab/bridge_station.py" note="关卡 2–4 的本地练习站（127.0.0.1:8099），包含 /api/demo-token、/api/order（演示目录价核对与差异信号，不做真实计费落库）以及提供固定审计样本的 /api/audit。" />
+<CodeFile file="labs/web-security-bridge-lab/bridge_station.py" note="关卡 2–4 的本地练习站（127.0.0.1:8099）：提供 /api/demo-token、演示目录价边界信号的 /api/order，以及返回 3 页固定审计样本的 /api/audit。" />
 
-在终端 A 启动本地练习站，在终端 B 依次完成关卡 1 和关卡 2（来源：[GNU Awk 手册](#source-gnu-gawk)、[RFC 7519](#source-rfc7519)、[jq 手册](#source-jq-manual)）：
+终端 A 起练习站，终端 B 依次过关卡 1 和关卡 2（来源：[GNU Awk 手册](#source-gnu-gawk)、[RFC 7519](#source-rfc7519)、[jq 手册](#source-jq-manual)）：
 
 <TerminalSession
   environment="KALI 终端 A"
   replay="skip"
   title="启动综合前哨本地练习站（127.0.0.1:8099）"
   steps={[
-    { cmd: 'cd ~/lab/bridge && python3 bridge_station.py', out: 'Bridge practice station on http://127.0.0.1:8099 (Ctrl+C to stop)', note: '保持该终端运行，直到完成关卡 4 后再按 Ctrl+C 停止。' },
+    { cmd: 'cd ~/lab/bridge && python3 bridge_station.py', out: 'Bridge practice station on http://127.0.0.1:8099 (Ctrl+C to stop)', note: '关卡 2–4 需要它保持运行；关卡 5 是本地二进制检查，不依赖 8099，可在过完关卡 4 或全部完成后按 Ctrl+C 停止。' },
   ]}
 />
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="关卡 1（日志筛 403）与关卡 2（拉取并验签 JWT）"
+  title="关卡 1（日志筛 403）与关卡 2（取 JWT 并验签）"
   steps={[
     { cmd: 'cd ~/lab/bridge' },
     {
       cmd: `awk '$9 == 403 { print $1, $7 }' station_access.log | sort | uniq -c`,
       out: '      3 203.0.113.88 /api/admin/export',
-      note: '关卡 1 通过：203.0.113.88 连续 3 次尝试访问无权限的管理导出接口 /api/admin/export。',
+      note: '关卡 1 通过：日志记录显示 203.0.113.88 对 /api/admin/export 连续收到 3 次 403，属于待进一步核查的异常线索（单凭日志行数不能直接定性意图）。',
     },
     {
       cmd: `TOK=$(curl --noproxy '*' -sS http://127.0.0.1:8099/api/demo-token | jq -r .token) && python3 decode_jwt.py "$TOK" 'bridge-lab-demo-key-32-bytes-min'`,
       out: 'HEADER : {"alg": "HS256", "typ": "JWT"}\nPAYLOAD: {"sub": "freshman", "track": "web-bridge", "checkpoint": "jwt-ok"}\nSIGNATURE VALID: True',
-      note: '关卡 2 通过：用 jq 提取令牌后解码看到 checkpoint: jwt-ok，且 HS256 算法与签名校验为 True。',
+      note: '关卡 2 通过：用 jq 提取令牌后，decode_jwt.py 在确认 alg 为 HS256 后核对签名并输出 SIGNATURE VALID: True，同时载荷含 checkpoint: jwt-ok。',
     },
   ]}
 />
 
 ## 二、完成关卡 3–4（参数边界核对与 Python 自动翻页）
 
-关卡 3 验证 `/api/order` 在客户端上报异常价格时如何返回服务端目录价（`server_price`）与 `mismatch: true` 信号（该接口用于演示参数边界判定，不执行真实扣款，来源：[OWASP Input Validation Cheat Sheet](#source-owasp-input-validation)）；关卡 4 的 `/api/audit` 返回 `bridge_station.py` 里预置的 3 页固定审计样本，`verify_progress.py` 是关卡 4 专用的自动翻页与过滤参考脚本（并非跨关卡自动判分器，且显式使用 `ProxyHandler({})` 绕过外部代理，来源：[Python urllib.request](#source-python-urllib)）：
+关卡 3 测 `/api/order`：客户端故意报 `price=1`，看服务端怎么返回目录价 `server_price` 和 `mismatch: true` 信号（该接口只做边界判定演示，不做真实扣款，来源：[OWASP Input Validation Cheat Sheet](#source-owasp-input-validation)）。
 
-<CodeFile file="labs/web-security-bridge-lab/verify_progress.py" mark="7,9-16" note="关卡 4 参考脚本：第 7 行显式构造无代理 opener 防止外部 HTTP_PROXY 劫持回环请求；第 9–16 行遍历 page=1..3 汇总固定样本中 flagged 为 true 的记录。" />
+关卡 4 测 `/api/audit`：这个接口返回 `bridge_station.py` 里预置的 3 页固定审计样本。`verify_progress.py` 是本关专用的翻页筛选脚本（不是跨关判分器），里面用 `ProxyHandler({})` 显式绕开了外部代理（来源：[Python urllib.request](#source-python-urllib)）：
+
+<CodeFile file="labs/web-security-bridge-lab/verify_progress.py" mark="7,9-16" note="第 7 行构造无代理 opener 防止外部 HTTP_PROXY 劫持回环请求；第 9–16 行翻完 3 页，挑出 flagged 为 true 的记录。" />
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="关卡 3（参数边界验证）与关卡 4（自动遍历 3 页固定审计样本）"
+  title="关卡 3（参数边界核对）与关卡 4（自动遍历 3 页审计样本）"
   steps={[
     {
       cmd: `curl --noproxy '*' -sS -d 'item=handbook&price=1' http://127.0.0.1:8099/api/order`,
       out: '{\n  "item": "handbook",\n  "client_price": 1,\n  "server_price": 20,\n  "mismatch": true,\n  "checkpoint": "boundary-ok"\n}',
-      note: '关卡 3 通过：客户端上报 price=1，服务端返回目录价 server_price: 20 并标出 mismatch: true 与 checkpoint: boundary-ok。',
+      note: '关卡 3 通过：客户端传 price=1，服务端以目录价 20 为准，并标出 mismatch: true 与 boundary-ok。',
     },
     {
       cmd: 'python3 verify_progress.py',
       out: '{\n  "flagged_count": 2,\n  "flagged": [\n    {\n      "page": 2,\n      "id": 3,\n      "path": "/api/admin/export",\n      "status": 403,\n      "flagged": true,\n      "reason": "missing role"\n    },\n    {\n      "page": 3,\n      "id": 5,\n      "path": "/api/order",\n      "status": 200,\n      "flagged": true,\n      "reason": "client price mismatch"\n    }\n  ]\n}',
-      note: '关卡 4 通过：自动拉完 3 页预置样本并筛出分散在不同页码的 2 条 flagged 记录，独立于你前面手工发出的实时请求。',
+      note: '关卡 4 通过：自动翻完 3 页固定样本，汇总出分散在不同页码的 2 条 flagged 记录。',
     },
   ]}
 />
 
 ## 三、完成关卡 5（ELF 初探）并衔接到 Web 安全专题
 
-最后一关做一次跨方向浅尝：假装你只拿到了编译后的 `check_ticket` 二进制（源码仅供核对），在 x86-64 Linux 环境用 `-O0` 编译后，用第 43 课的 `objdump -d -M intel` 读懂 `expected_ticket` 的核心指令（来源：[objdump 文档](#source-binutils-objdump)）。不同架构（如 ARM64）或不同版本编译器生成的具体指令可能略有差异，但核心计算逻辑一致：
+最后一关不依赖前面 8099 的本地服务（如果之前还没停终端 A，现在或全部完成后按 `Ctrl+C` 停止即可）。假装手里只有编译好的 `check_ticket`（源码留作事后核对）：在 x86-64 Linux 下用 `-O0` 编译，先自己用 `objdump -d -M intel` 读懂 `expected_ticket` 里的位移和加法并算出票号，再运行程序核对（来源：[objdump 文档](#source-binutils-objdump)）。换用 ARM64 或不同版本编译器时具体指令会有出入，但算法逻辑不变：
 
-<CodeFile file="labs/web-security-bridge-lab/check_ticket.c" mark="4-6,14" note="练习时先直接编译后看反汇编，尝试只靠汇编还原计算公式，再回头对照第 5 行。" />
+<CodeFile file="labs/web-security-bridge-lab/check_ticket.c" mark="4-6,14" note="建议先编译并直接读反汇编自己算出目标票号，再回头对照第 5 行源码。" />
 
 <TerminalSession
   environment="KALI 终端 B"
-  title="关卡 5：从反汇编还原 500×4+17=2017 并验证通关"
+  title="关卡 5：从反汇编推算票号并验证通关"
   steps={[
     { cmd: 'gcc -Wall -O0 check_ticket.c -o check_ticket' },
     {
       cmd: 'objdump -d -M intel --disassemble=expected_ticket check_ticket',
       out: '…\nDisassembly of section .text:\n\n0000000000001149 <expected_ticket>:\n    1149:\t55                   \tpush   rbp\n    114a:\t48 89 e5             \tmov    rbp,rsp\n    114d:\t89 7d fc             \tmov    DWORD PTR [rbp-0x4],edi\n    1150:\t8b 45 fc             \tmov    eax,DWORD PTR [rbp-0x4]\n    1153:\tc1 e0 02             \tshl    eax,0x2\n    1156:\t83 c0 11             \tadd    eax,0x11\n    1159:\t5d                   \tpop    rbp\n    115a:\tc3                   \tret\n…',
-      note: '首尾省略号对应 GNU objdump 输出的文件格式头与 .init/.plt/.plt.got/.fini 节标题。shl eax, 0x2 是左移 2 位（乘以 4），add eax, 0x11 是加 17；当入参为 500 时，500 × 4 + 17 = 2017。',
+      note: '首尾省略号是 GNU objdump 的文件头和空节标题。shl eax, 0x2 是逻辑左移 2 位（固定位宽无溢出下等价于 ×4），add eax, 0x11 是加 17；先自己代入入参 500 算出结果，再看下一条运行结果核对。',
     },
     {
       cmd: './check_ticket 2017',
       out: 'CHECKPOINT: elf-ok',
-      note: '关卡 5 通过！全部五关集齐。别忘了按 Ctrl+C 停掉终端 A 的 bridge_station.py。',
+      note: '关卡 5 通过！若终端 A 的 bridge_station.py 仍在运行，别忘了按 Ctrl+C 停止。',
     },
   ]}
 />
 
 ### 接下来往哪走
 
-到这里，整个基础学期与现代实战前哨就全部打通了。接下来可以正式进入专业方向：
+跑完五关后，可以按下面的方向路线选择下一阶段精读内容：
 
 <StepList title="通关后的下一步路线" steps={nextStageSteps} />
 
 ## 常见卡点与排查
 
 <DataTable
-  caption="五关自测时最容易卡住的三个细节"
+  caption="五关自测时最容易卡住的四个地方"
   headers={["现象", "原因", "解决办法"]}
   rows={[
-    ["关卡 2 提示找不到 decode_jwt.py", "没有把第 39 课的脚本放进当前目录 ~/lab/bridge", "执行 cp ~/lab/modern-web/decode_jwt.py ~/lab/bridge/，或直接下载 /labs/modern-web-architecture/decode_jwt.py"],
-    ["关卡 2、3、4 报 Connection refused 或走了外部代理", "终端 A 的 bridge_station.py 没启动，或宿主机 HTTP_PROXY 劫持了回环请求", "确认终端 A 正在监听 127.0.0.1:8099，并在 curl 中加 --noproxy '*'"],
-    ["关卡 5 反汇编里看不到 shl eax, 0x2", "使用了 ARM64 环境、开启了 -O2 优化，或编译器版本选择了其他等价指令", "在 x86-64 环境用 gcc -Wall -O0 编译并用 -M intel 指定 Intel 语法；如架构不同则重点跟踪参数寄存器与乘 4 加 17 逻辑"],
+    ["关卡 2 提示找不到 decode_jwt.py", "忘了把第 39 课的脚本放进 ~/lab/bridge", "运行 cp ~/lab/modern-web/decode_jwt.py ~/lab/bridge/，或直接下载 /labs/modern-web-architecture/decode_jwt.py"],
+    ["关卡 2、3、4 报 Connection refused", "终端 A 还没启动 bridge_station.py 或已提前停止", "回终端 A 确认 python3 bridge_station.py 正在监听 127.0.0.1:8099（可用 ss -lntp 核对）"],
+    ["curl 请求返回代理错误或非预期响应", "宿主机 HTTP_PROXY / ALL_PROXY 把回环流量劫持去了外部代理", "确认 curl 命令带上 --noproxy '*'（verify_progress.py 已内置 ProxyHandler({}) 绕过代理）"],
+    ["关卡 5 反汇编里看不到 shl eax, 0x2", "在 ARM64 环境、开了 -O2 优化，或编译器选了等价指令", "在 x86-64 环境用 gcc -Wall -O0 编译加 -M intel；其他架构重点跟参数寄存器和乘 4 加 17 逻辑"],
   ]}
   columnRatios={[1.6, 1.9, 2.3]}
 />
@@ -176,16 +171,16 @@ export const homework = [
 <CheatSheet
   title="五关核心命令速查"
   items={[
-    { term: "awk '$9 == 403 { print $1, $7 }' station_access.log | sort | uniq -c", description: '关卡 1：从访问日志汇总 403 越权探测来源。' },
-    { term: "TOK=$(curl --noproxy '*' -sS http://127.0.0.1:8099/api/demo-token | jq -r .token)", description: '关卡 2：用 curl 接 jq 提取 JWT 并交给 decode_jwt.py 验签。' },
-    { term: "curl --noproxy '*' -sS -d 'item=handbook&price=1' http://127.0.0.1:8099/api/order", description: '关卡 3：验证服务端目录价边界与 mismatch 信号。' },
-    { term: 'python3 verify_progress.py', description: '关卡 4：无代理脚本自动翻页拉取并筛选固定样本中的异常记录。' },
-    { term: 'objdump -d -M intel --disassemble=expected_ticket check_ticket', description: '关卡 5：跨方向读懂位移与加法汇编逻辑。' },
+    { term: "awk '$9 == 403 { print $1, $7 }' station_access.log | sort | uniq -c", description: '关卡 1：从访问日志汇总 403 记录的来源与路径线索。' },
+    { term: "TOK=$(curl --noproxy '*' -sS http://127.0.0.1:8099/api/demo-token | jq -r .token)", description: '关卡 2：curl 接 jq 取 JWT 再用 decode_jwt.py 验签。' },
+    { term: "curl --noproxy '*' -sS -d 'item=handbook&price=1' http://127.0.0.1:8099/api/order", description: '关卡 3：核对服务端目录价与 mismatch 边界信号。' },
+    { term: 'python3 verify_progress.py', description: '关卡 4：无代理脚本翻完 3 页审计样本并筛出异常记录。' },
+    { term: 'objdump -d -M intel --disassemble=expected_ticket check_ticket', description: '关卡 5：跨方向读懂位移和加法汇编。' },
   ]}
 />
 
 <KeyTakeaway>
-安全实战从来不是靠神秘工具“一键出结果”，而是把日志筛选、凭据结构、信任边界验证、脚本自动化和底层读图这些扎实基础组合起来解决问题。走到这里，你已经跨过新手与工程实战之间的断层，可以直接开始系统学习 Web 安全与 AI 安全专题了。
+每完成一关都按三行复盘（观察到的现象 → 验证命令 → 结论与服务端防线），把日志筛查、凭据核验、边界测试、短脚本翻页与汇编读图沉淀成可迁移的排错流程，再按兴趣在 Web 安全、系统二进制与 AI 安全之间选定下一阶段主线。
 </KeyTakeaway>
 
 ## 学习验收
@@ -194,6 +189,8 @@ export const homework = [
 
 ## 课后作业
 
-<StepList title="课后作业" steps={homework} />
+预计用时 45 分钟。
+
+<StepList title="下次课之前完成" steps={homework} />
 
 <SourceList sources={manifest.sources} />
