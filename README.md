@@ -68,7 +68,7 @@ npm run build
 - 打 `v*` tag 会额外产出一份**永久版本化** release，用于固定版本部署。
 - 每次构建还会上传保留 90 天的 Actions artifact，便于回滚。
 
-部署机**只下载、不构建**——不需要 Node，也不执行本仓库任何代码；仓库是私有的，所以需要一个只读凭据：
+部署机**只下载、不构建**——不需要 Node，也不执行本仓库任何代码（本仓库当前为公开仓库，可直接拉取；若私有化或使用私有镜像，配只读凭据即可）：
 
 ```bash
 gh release download training-latest -R FloatCTF/floatctf-training -p 'training-dist.tar.gz*'
@@ -79,7 +79,7 @@ sha256sum -c training-dist.tar.gz.sha256
 
 | 变量 | 默认 | 说明 |
 | --- | --- | --- |
-| `TRAINING_BASE` | `/training/` | 子路径部署前缀，构建期生效；改了要重跑工作流 |
+| `TRAINING_BASE` | `/training/` | 子路径部署前缀，构建期生效；FloatCTF 主站 `platform.training.sync` 硬校验此值为 `/training/` |
 | `TRAINING_SITE` | 空 | 站点公开地址，写入 canonical/og:url/sitemap；未设置会退回 `http://training.local` 并输出告警 |
 
 ## 协作流程（同仓分支 + PR）

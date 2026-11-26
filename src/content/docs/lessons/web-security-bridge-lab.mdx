@@ -18,6 +18,7 @@ import SourceList from '../../../components/source-list.astro';
 import TerminalSession from '../../../components/terminal-session.astro';
 import CodeFile from '../../../components/code-file.astro';
 import BridgeQuestBoard from '../../../components/bridge-quest-board';
+import { withBase } from '../../../lib/base-url';
 import manifest from '../../../data/lessons/web-security-bridge-lab.json';
 
 export const nextStageSteps = [
@@ -64,7 +65,7 @@ export const homework = [
 
 ## 一、启动练习靶站并完成关卡 1–2（日志与 JWT）
 
-把本课四份材料放进 `~/lab/bridge`，再把第 39 课的 `decode_jwt.py` 也拷进同一目录（可从[第 39 课](/lessons/modern-web-architecture/)复制，或直接[下载 decode_jwt.py](/labs/modern-web-architecture/decode_jwt.py)）：
+把本课四份材料放进 `~/lab/bridge`，再把第 39 课的 `decode_jwt.py` 也拷进同一目录（可从<a href={withBase('/lessons/modern-web-architecture/')}>第 39 课</a>复制，或直接<a href={withBase('/labs/modern-web-architecture/decode_jwt.py')} download="decode_jwt.py">下载 decode_jwt.py</a>）：
 
 <CodeFile file="labs/web-security-bridge-lab/station_access.log" note="关卡 1 样本：汇总连续收到 403 的来源 IP 与请求路径作为优先核查线索。" />
 
@@ -160,7 +161,7 @@ export const homework = [
   caption="五关自测时最容易卡住的四个地方"
   headers={["现象", "原因", "解决办法"]}
   rows={[
-    ["关卡 2 提示找不到 decode_jwt.py", "忘了把第 39 课的脚本放进 ~/lab/bridge", "运行 cp ~/lab/modern-web/decode_jwt.py ~/lab/bridge/，或直接下载 /labs/modern-web-architecture/decode_jwt.py"],
+    ["关卡 2 提示找不到 decode_jwt.py", "忘了把第 39 课的脚本放进 ~/lab/bridge", "运行 cp ~/lab/modern-web/decode_jwt.py ~/lab/bridge/，或从本节开头的链接重新下载 decode_jwt.py"],
     ["关卡 2、3、4 报 Connection refused", "终端 A 还没启动 bridge_station.py 或已提前停止", "回终端 A 确认 python3 bridge_station.py 正在监听 127.0.0.1:8099（可用 ss -lntp 核对）"],
     ["curl 请求返回代理错误或非预期响应", "宿主机 HTTP_PROXY / ALL_PROXY 把回环流量劫持去了外部代理", "确认 curl 命令带上 --noproxy '*'（verify_progress.py 已内置 ProxyHandler({}) 绕过代理）"],
     ["关卡 5 反汇编里看不到 shl eax, 0x2", "在 ARM64 环境、开了 -O2 优化，或编译器选了等价指令", "在 x86-64 环境用 gcc -Wall -O0 编译加 -M intel；其他架构重点跟参数寄存器和乘 4 加 17 逻辑"],
